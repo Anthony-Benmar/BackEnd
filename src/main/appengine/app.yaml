@@ -1,0 +1,20 @@
+runtime: java11
+service: default
+
+handlers:
+  - url: /tasks/.*
+    script: auto
+    secure: always
+    login: admin
+  - url: .*
+    script: auto
+    secure: always
+
+inbound_services:
+  - warmup
+
+env_variables:
+  PORT: 8080
+  APP_PROPERTIES_FILES: common.properties, application.properties
+
+entrypoint: 'java -jar webapp.jar'

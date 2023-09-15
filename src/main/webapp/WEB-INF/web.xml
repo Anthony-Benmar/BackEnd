@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="3.0" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
+    <filter>
+        <filter-name>AuthorizationFilter</filter-name>
+        <filter-class>com.bbva.fga.authorization.AuthorizationFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>AuthorizationFilter</filter-name>
+        <servlet-name>RESTEasyServlet</servlet-name>
+        <servlet-name>FGAServiceDiscovery</servlet-name>
+        <url-pattern>/swagger/*</url-pattern>
+        <url-pattern>/</url-pattern>
+    </filter-mapping>
+
+    <filter>
+        <filter-name>SchedulerAuthorizationFilter</filter-name>
+        <filter-class>com.bbva.fga.authorization.SchedulerAuthorizationFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>SchedulerAuthorizationFilter</filter-name>
+        <url-pattern>/crons/*</url-pattern>
+    </filter-mapping>
+    <servlet>
+        <servlet-name>RESTEasyServlet</servlet-name>
+        <servlet-class>org.jboss.resteasy.plugins.server.servlet.HttpServlet30Dispatcher</servlet-class>
+        <init-param>
+            <param-name>javax.ws.rs.Application</param-name>
+<!--            <param-value>com.bbva.config.JaxRsApplication</param-value>-->
+            <param-value>com.bbva.config.App</param-value>
+        </init-param>
+        <init-param>
+            <param-name>resteasy.servlet.mapping.prefix</param-name>
+            <param-value>/v1</param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>RESTEasyServlet</servlet-name>
+        <url-pattern>/v1/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>FGAServiceDiscovery</servlet-name>
+        <servlet-class>com.bbva.fga.discovery.ServiceDiscoveryServlet</servlet-class>
+        <init-param>
+            <param-name>wspackage</param-name>
+            <param-value>com.bbva.resources</param-value>
+        </init-param>
+        <init-param>
+            <param-name>wsBasePath</param-name>
+            <param-value>/v1</param-value>
+        </init-param>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>FGAServiceDiscovery</servlet-name>
+        <url-pattern>/fga/discovery</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>SampleCron</servlet-name>
+        <servlet-class>com.bbva.crons.SampleCron</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>SampleCron</servlet-name>
+        <url-pattern>/crons/sample</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>MigrationServlet</servlet-name>
+        <servlet-class>com.bbva.crons.MigrationServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>MigrationServlet</servlet-name>
+        <url-pattern>/crons/migration</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>InactivateDictionaryCron</servlet-name>
+        <servlet-class>com.bbva.crons.InactivateDictionaryCron</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>InactivateDictionaryCron</servlet-name>
+        <url-pattern>/crons/InactivateDictionaryCron</url-pattern>
+    </servlet-mapping>
+
+</web-app>

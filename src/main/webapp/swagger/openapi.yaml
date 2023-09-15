@@ -1,0 +1,327 @@
+openapi: '3.0.1'
+info:
+  version: 1.0.1
+  title: BBVA GCP Web Services
+  contact:
+    name: API Support
+    email: juan.lozano.pinchi.contractor@bbva.com
+license:
+  name: FGA CLI
+version: 1.0.1
+tags:
+  - name: Hello
+paths:
+  /v1/hello:
+    get:
+      tags:
+        - Hello
+      responses:
+        "200":
+          description: OK
+  /v1/user/all:
+    get:
+      tags:
+        - User
+      summary: Returns a list of users.
+      description: Optional extended description in CommonMark or HTML.
+      responses:
+        '200':    # status code
+          description: A JSON array of user names
+          content:
+            application/json:
+              schema:
+                type: array
+  /v1/user/delete/{userId}:
+    get:
+      tags:
+        - User
+      summary: Delete a user by ID.
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: Parameter description in CommonMark or HTML.
+          schema:
+            type : integer
+            format: int64
+            minimum: 1
+      responses:
+        '200':
+          description: OK
+  /v1/catalog/{catalogId}:
+    get:
+      tags:
+        - catalog
+      summary: Returns a catalog by ID.
+      parameters:
+        - name: catalogId
+          in: path
+          required: true
+          description: Parameter description in CommonMark or HTML.
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        '200':
+          description: OK
+  /v1/authentication/validate:
+    post:
+      tags:
+        - authentication
+      summary: validate email GCP.
+      requestBody:
+        description: data user
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      google:
+                        type: string
+                      fullName:
+                        type: string
+                      email:
+                        type: string
+                      photoUrl:
+                        type: string
+                  roles:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        role:
+                          type: string
+                        menus:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              id:
+                                type: integer
+                              label:
+                                type: string
+                              icon:
+                                type: string
+                              url:
+                                type: string
+  /v1/issue_ticket/insert:
+    post:
+      tags:
+        - issue_ticket
+      summary: generate issue ticket.
+      requestBody:
+        description: data issue
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                workOrderId:
+                  type: integer
+                workOrderCode:
+                  type: string
+                folio:
+                  type: string
+                boardId:
+                  type: integer
+                projectId:
+                  type: integer
+                sourceId:
+                  type: string
+                sourceName:
+                  type: string
+                flowType:
+                  type: integer
+                registerUserId:
+                  type: string
+                token:
+                  type: string
+                workOrderDetail:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      templateId:
+                        type: integer
+                      issueCode:
+                        type: string
+      responses:
+        '200':
+          description: OK
+  /v1/issue_ticket/listSourcesGenerated:
+    post:
+      tags:
+        - issue_ticket
+      summary: list sources generated.
+      requestBody:
+        description: data sources
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/sourceTicketRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/sourceTicketResponse'
+  /v1/issue_ticket/listIssuesGenerated:
+    post:
+      tags:
+        - issue_ticket
+      summary: list issues jira generated.
+      requestBody:
+        description: data issues
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/sourceTicketRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/sourceTicketResponse'
+  /v1/mesh/jobs-dependencies:
+    post:
+      tags:
+        - mesh
+      summary: data of jobs dependencies.
+      requestBody:
+        description: data jobs
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/job-request'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jobs-response'
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        email:
+          type: string
+        googleId:
+          type: string
+        imageUrl:
+          type: string
+        name:
+          type: string
+    sourceTicketRequest:
+      type: object
+      properties:
+        records_amount:
+          type: integer
+        page:
+          type: integer
+        workOrderId:
+          type: integer
+        projectId:
+          type: integer
+        type:
+          type: integer
+    sourceTicketResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+        pages_amount:
+          type: integer
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              workOrderId:
+                type: integer
+              workOrderDetailId:
+                type: integer
+              templateId:
+                type: integer
+              template:
+                type: string
+              boardId:
+                type: integer
+              typeId:
+                type: integer
+              boardName:
+                type: string
+              old_source_id:
+                type: string
+              issueTicketCode:
+                type: string
+              labelOne:
+                type: string
+              folio_code:
+                type: string
+              source:
+                type: string
+              feature:
+                type: string
+              projectName:
+                type: string
+              projectId:
+                type: integer
+    job-request:
+      type: object
+      properties:
+        orderDate:
+          type: string
+        jobName:
+          type: string
+        jobNameLong:
+          type: string
+    jobs-response:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: string
+          parentId:
+            type: string
+          jobName:
+            type: string
+          jsonName:
+            type: string
+          folder:
+            type: string
+          application:
+            type: string
+          orderDate:
+            type: string
+          frequency:
+            type: string
+          jobType:
+            type: string
+          executionDate:
+            type: string
+          status:
+            type: string

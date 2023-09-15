@@ -1,0 +1,2140 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "version": "1.0.1",
+    "title": "BBVA GCP Web Services",
+    "contact": {
+      "name": "API Support",
+      "email": "paul.rivera.tadeo.contractor@dev.bbva.com"
+    }
+  },
+  "license": {
+    "name": "FGA CLI"
+  },
+  "version": "1.0.1",
+  "tags": [
+    {
+      "name": "Hello"
+    }
+  ],
+  "paths": {
+    "/v1/board/pagination": {
+      "post": {
+        "tags": [
+          "Board"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/boardPaginationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/boardPaginationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/board/list": {
+      "post": {
+        "tags": [
+          "Board"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/boardListRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/boardListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/buc/pagination": {
+      "post": {
+        "tags": [
+          "Buc"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/bucPaginationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/bucPaginationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/buc/readonly": {
+      "post": {
+        "tags": [
+          "Buc"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/bucReadonlyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/bucReadonlyResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/bui/pagination": {
+      "post": {
+        "tags": [
+          "Bui"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/buiPaginationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/buiPaginationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/bui/readonly": {
+      "post": {
+        "tags": [
+          "Bui"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/buiReadonlyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/buiReadonlyResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/source/pagination": {
+      "post": {
+        "tags": [
+          "Source"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/sourcePaginationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/sourcePaginationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/source/readonly": {
+      "post": {
+        "tags": [
+          "Source"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/sourceReadonlyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/sourceReadonlyResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/hello": {
+      "get": {
+        "tags": [
+          "Hello"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/v1/user/all": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Returns a list of users.",
+        "description": "Optional extended description in CommonMark or HTML.",
+        "responses": {
+          "200": {
+            "description": "A JSON array of user names",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/user/delete/{userId}": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Delete a user by ID.",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "description": "Parameter description in CommonMark or HTML.",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/v1/user/pagination": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "summary": "List users.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserPaginationDtoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserPaginationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/user/update/roles": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Update roles of user.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRolesRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateRolesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/catalog/list": {
+      "post": {
+        "tags": [
+          "Catalog"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/catalogoListRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/catalogoListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/catalog/{catalogId}": {
+      "get": {
+        "tags": [
+          "catalog"
+        ],
+        "summary": "Returns a catalog by ID.",
+        "parameters": [
+          {
+            "name": "catalogId",
+            "in": "path",
+            "required": true,
+            "description": "Parameter description in CommonMark or HTML.",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/v1/authentication/validate": {
+      "post": {
+        "tags": [
+          "authentication"
+        ],
+        "summary": "validate email GCP.",
+        "requestBody": {
+          "description": "data user",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/User"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer"
+                        },
+                        "google": {
+                          "type": "string"
+                        },
+                        "fullName": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "photoUrl": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "roles": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "role": {
+                            "type": "string"
+                          },
+                          "menus": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "integer"
+                                },
+                                "label": {
+                                  "type": "string"
+                                },
+                                "icon": {
+                                  "type": "string"
+                                },
+                                "url": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/issue_ticket/insert": {
+      "post": {
+        "tags": [
+          "issue_ticket"
+        ],
+        "summary": "generate issue ticket.",
+        "requestBody": {
+          "description": "data issue",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "workOrderId": {
+                    "type": "integer"
+                  },
+                  "workOrderCode": {
+                    "type": "string"
+                  },
+                  "folio": {
+                    "type": "string"
+                  },
+                  "boardId": {
+                    "type": "integer"
+                  },
+                  "projectId": {
+                    "type": "integer"
+                  },
+                  "sourceId": {
+                    "type": "string"
+                  },
+                  "sourceName": {
+                    "type": "string"
+                  },
+                  "flowType": {
+                    "type": "integer"
+                  },
+                  "registerUserId": {
+                    "type": "string"
+                  },
+                  "token": {
+                    "type": "string"
+                  },
+                  "workOrderDetail": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "templateId": {
+                          "type": "integer"
+                        },
+                        "issueCode": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/v1/issue_ticket/listSourcesGenerated": {
+      "post": {
+        "tags": [
+          "issue_ticket"
+        ],
+        "summary": "list sources generated.",
+        "requestBody": {
+          "description": "data sources",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/sourceTicketRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/sourceTicketResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/issue_ticket/listIssuesGenerated": {
+      "post": {
+        "tags": [
+          "issue_ticket"
+        ],
+        "summary": "list issues jira generated.",
+        "requestBody": {
+          "description": "data issues",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/sourceTicketRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/sourceTicketResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/mesh/jobs-dependencies": {
+      "post": {
+        "tags": [
+          "mesh"
+        ],
+        "summary": "data of jobs dependencies.",
+        "requestBody": {
+          "description": "data jobs",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/job-request"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jobs-response"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/authentication/validate/permissions": {
+      "post": {
+        "tags": [
+          "authentication"
+        ],
+        "summary": "validate permissions rol GCP.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidateDtoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidateDtoResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/rol/all": {
+      "post": {
+        "tags": [
+          "rol"
+        ],
+        "summary": "list all roles.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RolDataResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/rol/detail/permissions": {
+      "post": {
+        "tags": [
+          "rol"
+        ],
+        "summary": "list permissions of rol.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RolDataDetailPermissionsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RolDataDetailPermissionsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/rol/register": {
+      "post": {
+        "tags": [
+          "rol"
+        ],
+        "summary": "register rol.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RolDataRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RolDataResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/rol/update": {
+      "post": {
+        "tags": [
+          "rol"
+        ],
+        "summary": "update rol.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RolDataRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RolDataResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "googleId": {
+            "type": "string"
+          },
+          "imageUrl": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "sourceTicketRequest": {
+        "type": "object",
+        "properties": {
+          "records_amount": {
+            "type": "integer"
+          },
+          "page": {
+            "type": "integer"
+          },
+          "workOrderId": {
+            "type": "integer"
+          },
+          "projectId": {
+            "type": "integer"
+          },
+          "type": {
+            "type": "integer"
+          }
+        }
+      },
+      "sourceTicketResponse": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer"
+          },
+          "pages_amount": {
+            "type": "integer"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "workOrderId": {
+                  "type": "integer"
+                },
+                "workOrderDetailId": {
+                  "type": "integer"
+                },
+                "templateId": {
+                  "type": "integer"
+                },
+                "template": {
+                  "type": "string"
+                },
+                "boardId": {
+                  "type": "integer"
+                },
+                "typeId": {
+                  "type": "integer"
+                },
+                "boardName": {
+                  "type": "string"
+                },
+                "old_source_id": {
+                  "type": "string"
+                },
+                "issueTicketCode": {
+                  "type": "string"
+                },
+                "labelOne": {
+                  "type": "string"
+                },
+                "folio_code": {
+                  "type": "string"
+                },
+                "source": {
+                  "type": "string"
+                },
+                "feature": {
+                  "type": "string"
+                },
+                "projectName": {
+                  "type": "string"
+                },
+                "projectId": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      },
+      "job-request": {
+        "type": "object",
+        "properties": {
+          "orderDate": {
+            "type": "string"
+          },
+          "jobName": {
+            "type": "string"
+          },
+          "jobNameLong": {
+            "type": "string"
+          }
+        }
+      },
+      "jobs-response": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "parentId": {
+              "type": "string"
+            },
+            "jobName": {
+              "type": "string"
+            },
+            "jsonName": {
+              "type": "string"
+            },
+            "folder": {
+              "type": "string"
+            },
+            "application": {
+              "type": "string"
+            },
+            "orderDate": {
+              "type": "string"
+            },
+            "frequency": {
+              "type": "string"
+            },
+            "jobType": {
+              "type": "string"
+            },
+            "executionDate": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "boardPaginationRequest": {
+        "type": "object",
+        "properties": {
+          "records_amount": {
+            "type": "integer"
+          },
+          "page": {
+            "type": "integer"
+          },
+          "id_fuente": {
+            "type": "integer"
+          },
+          "fuente_origen": {
+            "type": "string"
+          },
+          "fuente_datio": {
+            "type": "string"
+          },
+          "funcional_descripcion": {
+            "type": "string"
+          }
+        }
+      },
+      "boardPaginationResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "count": {
+                "type": "integer"
+              },
+              "pages_amount": {
+                "type": "integer"
+              },
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "fuente": {
+                      "type": "integer"
+                    },
+                    "deuda_tecnica": {
+                      "type": "integer"
+                    },
+                    "fuente_antigua": {
+                      "type": "string"
+                    },
+                    "proyecto": {
+                      "type": "integer"
+                    },
+                    "proyecto_sdatool": {
+                      "type": "string"
+                    },
+                    "proyecto_nombre": {
+                      "type": "string"
+                    },
+                    "fuente_origen": {
+                      "type": "string"
+                    },
+                    "estado_fuente": {
+                      "type": "integer"
+                    },
+                    "estado_fuente_descripcion": {
+                      "type": "string"
+                    },
+                    "estado_deuda": {
+                      "type": "integer"
+                    },
+                    "estado_deuda_descripcion": {
+                      "type": "string"
+                    },
+                    "tipologia": {
+                      "type": "integer"
+                    },
+                    "tipologia_descripcion": {
+                      "type": "string"
+                    },
+                    "tabla_master": {
+                      "type": "string"
+                    },
+                    "estado_deuda_tecnica": {
+                      "type": "integer"
+                    },
+                    "estado_deuda_tecnica_descripcion": {
+                      "type": "string"
+                    },
+                    "tabla_raw": {
+                      "type": "string"
+                    },
+                    "complejidad_deuda": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "boardListRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          }
+        }
+      },
+      "boardListResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer"
+                },
+                "code": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "bucPaginationRequest": {
+        "type": "object",
+        "properties": {
+          "records_amount": {
+            "type": "integer"
+          },
+          "page": {
+            "type": "integer"
+          },
+          "folio_code": {
+            "type": "string"
+          },
+          "codigo_campo": {
+            "type": "string"
+          },
+          "nombre_proyecto": {
+            "type": "string"
+          },
+          "id_fuente": {
+            "type": "integer"
+          },
+          "prioridad": {
+            "type": "integer"
+          },
+          "estado_resolucion": {
+            "type": "integer"
+          },
+          "descripcion_funcional": {
+            "type": "string"
+          }
+        }
+      },
+      "bucPaginationResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "count": {
+                "type": "integer"
+              },
+              "pages_amount": {
+                "type": "integer"
+              },
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "folioId": {
+                      "type": "integer"
+                    },
+                    "folioCodigo": {
+                      "type": "string"
+                    },
+                    "proyectoId": {
+                      "type": "integer"
+                    },
+                    "sdatool": {
+                      "type": "string"
+                    },
+                    "proyectoNombre": {
+                      "type": "string"
+                    },
+                    "casoUsoId": {
+                      "type": "integer"
+                    },
+                    "casoUsoCodigo": {
+                      "type": "string"
+                    },
+                    "casoUsoNombre": {
+                      "type": "string"
+                    },
+                    "tipoEstadoId": {
+                      "type": "integer"
+                    },
+                    "tipoEstadoNombre": {
+                      "type": "string"
+                    },
+                    "bucFuenteCampo": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "bucFieldId": {
+                            "type": "integer"
+                          },
+                          "fuenteId": {
+                            "type": "string"
+                          },
+                          "fuenteNombre": {
+                            "type": "string"
+                          },
+                          "bucCampoNombre": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "bucReadonlyRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          }
+        }
+      },
+      "bucReadonlyResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "roadmap": {
+                "type": "object",
+                "properties": {
+                  "folio": {
+                    "type": "string"
+                  },
+                  "sdatool": {
+                    "type": "string"
+                  },
+                  "prioridad": {
+                    "type": "string"
+                  },
+                  "codigo_campo": {
+                    "type": "string"
+                  },
+                  "dato_funcional": {
+                    "type": "string"
+                  },
+                  "descripcion_funcional": {
+                    "type": "string"
+                  }
+                }
+              },
+              "resolucion": {
+                "type": "object",
+                "properties": {
+                  "estado_resolucion": {
+                    "type": "string"
+                  },
+                  "resolucion": {
+                    "type": "string"
+                  },
+                  "comentario_resolucion": {
+                    "type": "string"
+                  },
+                  "logica": {
+                    "type": "string"
+                  },
+                  "fields": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "id_fuente": {
+                          "type": "string"
+                        },
+                        "fuente_dictaminada": {
+                          "type": "string"
+                        },
+                        "campo_dictaminado": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "buiPaginationRequest": {
+        "type": "object",
+        "properties": {
+          "records_amount": {
+            "type": "integer"
+          },
+          "page": {
+            "type": "integer"
+          },
+          "sdatool": {
+            "type": "string"
+          },
+          "proposed_table": {
+            "type": "string"
+          },
+          "analyst_in_charge": {
+            "type": "string"
+          },
+          "folio_code": {
+            "type": "string"
+          },
+          "id_fuente": {
+            "type": "integer"
+          },
+          "tipo": {
+            "type": "integer"
+          },
+          "estado": {
+            "type": "integer"
+          }
+        }
+      },
+      "buiPaginationResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "count": {
+                "type": "integer"
+              },
+              "pages_amount": {
+                "type": "integer"
+              },
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "sourceId": {
+                      "type": "integer"
+                    },
+                    "fuenteAnteriorId": {
+                      "type": "integer"
+                    },
+                    "sourceName": {
+                      "type": "string"
+                    },
+                    "folioId": {
+                      "type": "integer"
+                    },
+                    "folioCode": {
+                      "type": "string"
+                    },
+                    "projectId": {
+                      "type": "integer"
+                    },
+                    "sdatool": {
+                      "type": "string"
+                    },
+                    "projectName": {
+                      "type": "string"
+                    },
+                    "resolutionSourceTypeId": {
+                      "type": "integer"
+                    },
+                    "resolutionSourceType": {
+                      "type": "string"
+                    },
+                    "ingestSourceTypeId": {
+                      "type": "integer"
+                    },
+                    "ingestSourceType": {
+                      "type": "string"
+                    },
+                    "statusFolioTypeId": {
+                      "type": "integer"
+                    },
+                    "statusFolioType": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "buiReadonlyRequest": {
+        "type": "object",
+        "properties": {
+          "buiId": {
+            "type": "integer"
+          }
+        }
+      },
+      "buiReadonlyResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "roadmap": {
+                "type": "object",
+                "properties": {
+                  "folio": {
+                    "type": "string"
+                  },
+                  "project": {
+                    "type": "string"
+                  },
+                  "sdatool": {
+                    "type": "string"
+                  },
+                  "tabla": {
+                    "type": "string"
+                  },
+                  "historia": {
+                    "type": "string"
+                  },
+                  "periocidad": {
+                    "type": "string"
+                  },
+                  "fechaRegistro": {
+                    "type": "string"
+                  },
+                  "descTabla": {
+                    "type": "string"
+                  }
+                }
+              },
+              "dictamen": {
+                "type": "object",
+                "properties": {
+                  "estatus": {
+                    "type": "string"
+                  },
+                  "analista_proyecto": {
+                    "type": "string"
+                  },
+                  "analista_ca": {
+                    "type": "string"
+                  },
+                  "resolucion": {
+                    "type": "string"
+                  },
+                  "folio_reuso": {
+                    "type": "string"
+                  },
+                  "fecha_sprint_cierre": {
+                    "type": "string"
+                  },
+                  "comentario_resolucion": {
+                    "type": "string"
+                  },
+                  "tipo": {
+                    "type": "string"
+                  }
+                }
+              },
+              "tdsDictaminada": {
+                "type": "object",
+                "properties": {
+                  "id_tds": {
+                    "type": "string"
+                  },
+                  "fuenteId": {
+                    "type": "string"
+                  },
+                  "fuente_tds": {
+                    "type": "string"
+                  },
+                  "historia_ingestar": {
+                    "type": "string"
+                  },
+                  "comentario": {
+                    "type": "string"
+                  },
+                  "estado_tds": {
+                    "type": "string"
+                  },
+                  "id_reemplazado": {
+                    "type": "string"
+                  },
+                  "estado_deuda": {
+                    "type": "string"
+                  },
+                  "comentario_deuda": {
+                    "type": "string"
+                  }
+                }
+              },
+              "ingesta": {
+                "type": "object",
+                "properties": {
+                  "persistencia_destino": {
+                    "type": "string"
+                  },
+                  "dashboard": {
+                    "type": "string"
+                  },
+                  "fecha_dashboard": {
+                    "type": "string"
+                  },
+                  "comentario_general": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "sourcePaginationRequest": {
+        "type": "object",
+        "properties": {
+          "records_amount": {
+            "type": "integer"
+          },
+          "page": {
+            "type": "integer"
+          },
+          "id_fuente": {
+            "type": "integer"
+          },
+          "nombre_fuente": {
+            "type": "string"
+          },
+          "uuaa_aplicativo": {
+            "type": "string"
+          },
+          "estado": {
+            "type": "integer"
+          },
+          "origen": {
+            "type": "integer"
+          },
+          "estado_deuda": {
+            "type": "integer"
+          },
+          "uuaa_master": {
+            "type": "string"
+          },
+          "descripcion_tds": {
+            "type": "string"
+          },
+          "tabla_master": {
+            "type": "string"
+          },
+          "propietario_global": {
+            "type": "integer"
+          }
+        }
+      },
+      "sourcePaginationResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "count": {
+                "type": "integer"
+              },
+              "pages_amount": {
+                "type": "integer"
+              },
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "sourceId": {
+                      "type": "integer"
+                    },
+                    "id": {
+                      "type": "string"
+                    },
+                    "fuente": {
+                      "type": "string"
+                    },
+                    "descripcion": {
+                      "type": "string"
+                    },
+                    "estado_id": {
+                      "type": "integer"
+                    },
+                    "estado": {
+                      "type": "string"
+                    },
+                    "tipo_origen_id": {
+                      "type": "integer"
+                    },
+                    "tipo_origen": {
+                      "type": "string"
+                    },
+                    "uuaa_master_id": {
+                      "type": "integer"
+                    },
+                    "uuaa_master": {
+                      "type": "string"
+                    },
+                    "deuda_id": {
+                      "type": "integer"
+                    },
+                    "deuda": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "sourceReadonlyRequest": {
+        "type": "object",
+        "properties": {
+          "sourceId": {
+            "type": "integer"
+          }
+        }
+      },
+      "sourceReadonlyResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "informacionGeneral": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "ruta_master": {
+                    "type": "string"
+                  },
+                  "descripcion_tds": {
+                    "type": "string"
+                  },
+                  "fuente_tds": {
+                    "type": "string"
+                  },
+                  "estado_tds": {
+                    "type": "string"
+                  },
+                  "reemplazo": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "id_reemplazado": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  "dictamen_url": {
+                    "type": "string"
+                  },
+                  "uuaa_master": {
+                    "type": "string"
+                  },
+                  "estado_deuda": {
+                    "type": "string"
+                  },
+                  "tipologia": {
+                    "type": "string"
+                  },
+                  "owner_global_model": {
+                    "type": "string"
+                  }
+                }
+              },
+              "detalleFuenteTds": {
+                "type": "object",
+                "properties": {
+                  "tipo_origen": {
+                    "type": "string"
+                  },
+                  "comentarios_tds": {
+                    "type": "string"
+                  },
+                  "periodicidad": {
+                    "type": "string"
+                  },
+                  "detalla_periodicidad": {
+                    "type": "string"
+                  },
+                  "tipo_descarga_datio": {
+                    "type": "string"
+                  },
+                  "informacion_master": {
+                    "type": "string"
+                  },
+                  "campos": {
+                    "type": "string"
+                  },
+                  "uuaa_raw": {
+                    "type": "string"
+                  },
+                  "nombre_origen": {
+                    "type": "string"
+                  }
+                }
+              },
+              "mapaFuncional": {
+                "type": "object",
+                "properties": {
+                  "uuaa_master": {
+                    "type": "string"
+                  },
+                  "nivel_1": {
+                    "type": "string"
+                  },
+                  "nivel_2": {
+                    "type": "string"
+                  },
+                  "nivel_3": {
+                    "type": "string"
+                  },
+                  "descripcion": {
+                    "type": "string"
+                  }
+                }
+              },
+              "deudaDictamen": {
+                "type": "object",
+                "properties": {
+                  "estado_fuente": {
+                    "type": "string"
+                  },
+                  "comentarios_deuda": {
+                    "type": "string"
+                  },
+                  "nivel_deuda": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "catalogoListRequest": {
+        "type": "object",
+        "properties": {
+          "catalog": {
+            "type": "integer"
+          }
+        }
+      },
+      "catalogoListResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "catalog": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "catalogId": {
+                      "type": "integer"
+                    },
+                    "catalogDescription": {
+                      "type": "string"
+                    },
+                    "element": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "elementId": {
+                            "type": "integer"
+                          },
+                          "description": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "ValidateDtoRequest": {
+        "type": "object",
+        "properties": {
+          "roleId": {
+            "type": "integer"
+          }
+        }
+      },
+      "ValidateDtoResponse": {
+        "type": "object",
+        "properties": 
+         {
+          "data": {
+            "type": "object",
+            "properties": {
+              "permisos": {
+                "type": "object",
+                "properties": {
+                  "jira": {
+                    "type": "object",
+                    "properties": {
+                      "generar": {
+                        "type": "object",
+                        "properties": {
+                          "autorizado": {
+                            "type": "boolean"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "success": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RolDataResponse": {
+        "type": "object",
+        "properties": 
+         {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "idRole": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "nombre": {
+                  "type": "string"
+                },
+                "descripcion": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string",
+            "format": "nullable"
+          }
+         }
+      },
+      "RolDataDetailPermissionsRequest": {
+        "type": "object",
+        "properties": 
+         {
+          "idRole": {
+            "type": "integer",
+            "format": "int32"
+          }
+         }
+      },
+      "RolDataDetailPermissionsResponse": {
+        "type": "object",
+        "properties": 
+         {
+          "data": {
+            "type": "object",
+            "properties": {
+              "menu": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "idMenu": {
+                      "type": "integer",
+                      "format": "int32"
+                    },
+                    "nombre": {
+                      "type": "string"
+                    },
+                    "acciones": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "idCompuesto": {
+                            "type": "string"
+                          },
+                          "nombre": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "menuSeleccionado": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              },
+              "accionSeleccionado": {
+                "type": "string",
+                "format": "nullable"
+              }
+            }
+          },
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string",
+            "format": "nullable"
+          }
+         }
+      },
+      "RolDataRequest": {
+        "type": "object",
+        "properties": 
+         {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "idRole": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "nombre": {
+                  "type": "string"
+                },
+                "descripcion": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string",
+            "format": "nullable"
+          }
+         }
+      },
+      "UserPaginationDtoRequest": {
+        "type": "object",
+        "properties": 
+         {
+          "registro": {
+            "type": "string"
+          },
+          "rol": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "nombreCompleto": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "records_amount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          }
+         }
+      },
+      "UserPaginationResponse": {
+        "type": "object",
+        "properties": 
+         {
+          "data": {
+            "type": "object",
+            "properties": {
+              "count": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "pages_amount": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "format": "int32"
+                    },
+                    "registro": {
+                      "type": "string",
+                      "format": "nullable"
+                    },
+                    "nombreCompleto": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string"
+                    },
+                    "fechaHoraAlta": {
+                      "type": "string"
+                    },
+                    "roles": {
+                      "type": "string"
+                    },
+                    "idsRoles": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "format": "int32"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          }
+         }
+      },
+      "UpdateRolesRequest": {
+        "type": "object",
+        "properties": 
+         {
+          "idUser": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+         }
+      },
+      "UpdateRolesResponse": {
+        "type": "object",
+        "properties": 
+         {
+          "data": {
+            "type": "object",
+            "properties": {
+              "idUser": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "roles": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          },
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          }
+         }
+      }
+    }
+  }
+}
