@@ -4,7 +4,6 @@
 
 buildAgent = "gcp-agent-${new Date().getTime()}"
 
-
 pipeline {
     agent {
         kubernetes {
@@ -46,13 +45,6 @@ spec:
         CLI_MODE = 'jenkins'
         BOT_GCP_READER_USER = credentials('bot_gcp_reader_vdc_user')
         BOT_GCP_READER_PASSWORD = credentials('bot_gcp_reader_vdc_password')
-
-        NO_PROXY = "172.20.0.0/16,10.60.0.0/16,169.254.169.254,.igrupobbva,.jenkins,.internal,localhost,127.0.0.1,127.20.0.1,central-jenkins-cache.s3.eu-west-1.amazonaws.com,central-jenkins-cache.s3.amazonaws.com,.eu-west-1.amazonaws.com,jenkins.globaldevtools.bbva.com,globaldevtools.bbva.com"
-        HTTPS_PROXY = "http://proxy.cloud.local:8080"
-        HTTP_PROXY = "http://proxy.cloud.local:8080"
-        https_proxy = "http://proxy.cloud.local:8080"
-        http_proxy = "http://proxy.cloud.local:8080"
-        no_proxy = "172.20.0.0/16,10.60.0.0/16,169.254.169.254,.igrupobbva,.jenkins,.internal,localhost,127.0.0.1,127.20.0.1,central-jenkins-cache.s3.eu-west-1.amazonaws.com,central-jenkins-cache.s3.amazonaws.com,.eu-west-1.amazonaws.com,jenkins.globaldevtools.bbva.com,globaldevtools.bbva.com"
     }
 
     stages {
