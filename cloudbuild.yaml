@@ -26,7 +26,7 @@ substitutions:
   _GCP_VDC_READER_USER_VERSION: 'latest'
   _GCP_VDC_READER_PASS: 'bot-gcp-reader-vdc-password'
   _GCP_VDC_READER_PASS_VERSION: 'latest'
-  _GCP_SM_PROJECT: 'bbva-gob-dicc-datos-pe-sp'
+  _GCP_SM_PROJECT: 'bbva-devtools-gcp'
 
 logsBucket: 'gs://$PROJECT_ID-cloudbuild-logs'
 timeout: "1200s"
