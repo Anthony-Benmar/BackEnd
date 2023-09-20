@@ -27,6 +27,7 @@ import java.util.logging.Logger;
 @Path("/user")
 @Produces(MediaType.APPLICATION_JSON)
 public class UserResource {
+
     private static final Logger LOGGER = Logger.getLogger(UserResource.class.getName());
     private final UserDao userDao = new UserDao();
     private final UserService userService = new UserService();
