@@ -1,5 +1,6 @@
 runtime: java11
 service: default
+instance_class: F4
 
 handlers:
   - url: /tasks/.*
