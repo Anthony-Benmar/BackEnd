@@ -28,10 +28,6 @@ public class JaxRsApplication extends Application {
         classes.add(RolResource.class);
         classes.add(CorsResponseFilter.class);
         classes.add(GovernmentResources.class);
-        classes.add(ProcessResources.class);
-        classes.add(BatchResources.class);
-        classes.add(DictionaryGenerationResources.class);
-        classes.add(UseCaseTrackingResources.class);
         return classes;
     }
 }

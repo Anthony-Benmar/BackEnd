@@ -24,11 +24,11 @@ public interface BoardMapper {
             "#{fuenteDatio}," +
             "#{functionalDescription})")
     List<BoardPaginationEntity> pagination(@Param("page") Integer page,
-                                           @Param("records_amount") Integer records_amount,
-                                           @Param("sourceId") Number sourceId,
-                                           @Param("fuenteOrigen") String fuenteOrigen,
-                                           @Param("fuenteDatio") String fuenteDatio,
-                                           @Param("functionalDescription") String functionalDescription);
+                                             @Param("records_amount") Integer records_amount,
+                                             @Param("sourceId") Number sourceId,
+                                             @Param("fuenteOrigen") String fuenteOrigen,
+                                             @Param("fuenteDatio") String fuenteDatio,
+                                             @Param("functionalDescription") String functionalDescription);
 
     @Select("CALL SP_BOARD_FILTERED_BY_ID(#{id})")
     List<BoardListEntity> lista(@Param("id") Integer id);

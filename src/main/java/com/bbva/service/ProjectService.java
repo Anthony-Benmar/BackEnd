@@ -18,8 +18,8 @@ import com.bbva.dto.project.response.ProjectPortafolioSelectResponse;
 import com.bbva.entities.User;
 import com.bbva.entities.common.PeriodPEntity;
 import com.bbva.entities.map_dependecy.MapDependencyEntity;
-import com.bbva.entities.project.ProjectPortafolioEntity;
 import com.bbva.entities.use_case_definition.UseCaseDefinitionEntity;
+import com.bbva.entities.project.ProjectPortafolioEntity;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -50,9 +50,7 @@ public class ProjectService {
                 var sponsorOwner = dataUser.stream()
                         .filter(f->f.userId.equals(project.getSponsorOwnerId()))
                         .findFirst().orElse(new User());
-                result.setProductOwnerCode(productOwner.employeeId);
                 result.setProductOwnerName(productOwner.fullName);
-                result.setSponsorOwnerCode(sponsorOwner.employeeId);
                 result.setSponsorName(sponsorOwner.fullName);
             }
         }
@@ -63,6 +61,7 @@ public class ProjectService {
         result.setProjectDesc(project.getProjectDesc());
         result.setSdatoolId(project.getSdatoolId());
         result.setPortafolioCode(project.getPortafolioCode());
+        result.setScheduleId(project.getScheduleId());
         result.setProjectType(project.getProjectType());
         result.setSponsorId(project.getSponsorOwnerId());
         result.setProductOwnerId(project.getProductOwnerId());
@@ -81,11 +80,6 @@ public class ProjectService {
         return new SuccessDataResult(result);
     }
 
-    public IDataResult<List<ProjectListForSelectDtoResponse>> listForSelect() {
-        var result = projectDao.listForSelect();
-        return new SuccessDataResult(result, "Succesfull");
-    }
-    
     public IDataResult<ProjectPortafolioFilterDtoResponse> portafolioFilter(ProjectPortafolioFilterDTORequest dto) {
         var result = projectDao.portafolioFilter(dto);
         return new SuccessDataResult(result);
@@ -93,20 +87,9 @@ public class ProjectService {
 
     public IDataResult<ProjectPortafolioFilterDtoResponse> insertProject(ProjectPortafolioDTORequest dto)
             throws ExecutionException, InterruptedException {
+
         try {
-            ProjectPortafolioEntity project = new ProjectPortafolioEntity(
-                    dto.getProjectId(),
-                    dto.getProjectName(),
-                    dto.getProjectDesc(),
-                    dto.getSdatoolId(),
-                    dto.getPortafolioCode(),
-                    dto.getProjectType(),
-                    dto.getSponsorId(),
-                    dto.getProductOwnerId(),
-                    dto.getRegulatoryProjectBoolean(),
-                    dto.getProjectDomainType(),
-                    dto.getRuleAssociatedLink(),
-                    dto.getPeriodId());
+            ProjectPortafolioEntity project = new ProjectPortafolioEntity(dto.getProjectId(), dto.getProjectName(), dto.getProjectDesc(), dto.getSdatoolId(), dto.getPortafolioCode(), dto.getScheduleId(), dto.getProjectType(), dto.getSponsorId(), dto.getProductOwnerId(), dto.getRegulatoryProjectBoolean(), dto.getProjectDomainType(), dto.getRuleAssociatedLink(), dto.getPeriodId());
             project.setStatusType(dto.getStatusType());
 
             var resultProject = projectDao.insertProject(project);
@@ -116,18 +99,15 @@ public class ProjectService {
                 UseCaseDefinitionDao caseDefinitionDao = new UseCaseDefinitionDao();
                 UseCaseDefinitionEntity caseDefinition = new UseCaseDefinitionEntity(0, projectId, null, null);
                 caseDefinition.setStatusType(1);
-
                 var resultUseCase = caseDefinitionDao.insert(caseDefinition);
-
                 if (resultUseCase.success) {
                     MapDependencyDao mapDependencyDao = new MapDependencyDao();
-
                     dto.getProcess().forEach(x -> {
                         MapDependencyEntity mapDependency = new MapDependencyEntity(
                                 0,
                                 caseDefinition.getUseCaseId(),
                                 x.getKeyDataProcessType(),
-                                x.getProcessName(),
+                                0,
                                 x.getSloOwnerId(),
                                 x.getArisCode(),
                                 x.getDependencyMapLink()
@@ -138,10 +118,10 @@ public class ProjectService {
                 } else {
                     return new ErrorDataResult(resultUseCase.message);
                 }
-                return new SuccessDataResult(null);
             } else {
-                return new ErrorDataResult(resultProject.message);
+                return new ErrorDataResult( resultProject.message);
             }
+            return new SuccessDataResult(null);
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
             return new ErrorDataResult( e.getMessage());
@@ -156,28 +136,45 @@ public class ProjectService {
                 return new ErrorDataResult(null,"500", "ProjectId must to be not null");
             }
 
-            ProjectPortafolioEntity project = new ProjectPortafolioEntity(
-                    dto.getProjectId(),
-                    dto.getProjectName(),
-                    dto.getProjectDesc(),
-                    dto.getSdatoolId(),
-                    dto.getPortafolioCode(),
-                    dto.getProjectType(),
-                    dto.getSponsorId(),
-                    dto.getProductOwnerId(),
-                    dto.getRegulatoryProjectBoolean(),
-                    dto.getProjectDomainType(),
-                    dto.getRuleAssociatedLink(),
-                    dto.getPeriodId());
+            ProjectPortafolioEntity project = new ProjectPortafolioEntity(dto.getProjectId(), dto.getProjectName(), dto.getProjectDesc(), dto.getSdatoolId(), dto.getPortafolioCode(), dto.getScheduleId(), dto.getProjectType(), dto.getSponsorId(), dto.getProductOwnerId(), dto.getRegulatoryProjectBoolean(), dto.getProjectDomainType(), dto.getRuleAssociatedLink(), dto.getPeriodId());
             project.setStatusType(dto.getStatusType());
 
             var resultProject = projectDao.updateProject(project);
 
             if (resultProject.success) {
-                return new SuccessDataResult(dto);
+
+                UseCaseDefinitionDao useCaseDefinitionDao = new UseCaseDefinitionDao();
+                var listaUseCase = useCaseDefinitionDao.listForProjectID(project.getProjectId());
+
+                if (listaUseCase.size() > 0) {
+
+                    int useCaseDefinitionId = listaUseCase.get(0).getUseCaseId();
+
+                    MapDependencyDao mapDependencyDao = new MapDependencyDao();
+                    dto.getProcess().forEach(x -> {
+                        MapDependencyEntity mapDependency = new MapDependencyEntity(
+                                x.getMapDependencyId(),
+                                useCaseDefinitionId,
+                                x.getKeyDataProcessType(),
+                                0,
+                                x.getSloOwnerId(),
+                                x.getArisCode(),
+                                x.getDependencyMapLink()
+                        );
+
+                        if (x.getMapDependencyId().equals(0)) {
+                            mapDependencyDao.insert(mapDependency);
+                        } else {
+                            mapDependencyDao.update(mapDependency);
+                        }
+                    });
+
+                }
             } else {
                 return new ErrorDataResult(null,"500", resultProject.message);
             }
+
+            return new SuccessDataResult(dto);
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
             return new ErrorDataResult(null,"500", e.getMessage());

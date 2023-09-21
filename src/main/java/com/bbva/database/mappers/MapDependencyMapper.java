@@ -30,13 +30,13 @@ public interface MapDependencyMapper {
     })
     List<MapDependencyListByProjectResponse> listMapDependencyByProjectById(@Param("projectId") int projectId);
 
-    @Insert("INSERT INTO  data_map_dependency(use_case_id, key_data_process_type, process_name, slo_owner_id, aris_code, dependency_map_link) " +
-            "VALUES (#{useCaseId},#{keyDataProcessType},#{processName}, #{sloOwnerId}, #{arisCode}, #{dependencyMapLink})")
+    @Insert("INSERT INTO  data_map_dependency(use_case_id, key_data_process_type, process_name_type, slo_owner_id, aris_code, dependency_map_link) " +
+            "VALUES (#{useCaseId},#{keyDataProcessType},#{processNameType}, #{sloOwnerId}, #{arisCode}, #{dependencyMapLink})")
     @Options(useGeneratedKeys = true, keyProperty = "mapDependencyId", keyColumn = "map_dependency_id")
     boolean insert(MapDependencyEntity entity);
 
     @Update("UPDATE data_map_dependency \n" +
-            "SET key_data_process_type = #{keyDataProcessType}, process_name = #{processName}, slo_owner_id = #{sloOwnerId},\n" +
+            "SET key_data_process_type = #{keyDataProcessType}, process_name_type = #{processNameType}, slo_owner_id = #{sloOwnerId},\n" +
             "aris_code = #{arisCode}, dependency_map_link = #{dependencyMapLink}\n" +
             "WHERE map_dependency_id = #{mapDependencyId}")
     boolean update(MapDependencyEntity entity);

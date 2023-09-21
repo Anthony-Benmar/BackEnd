@@ -15,6 +15,7 @@ public class ProjectPortafolioDTORequest {
     private int statusType;
     private String sdatoolId;
     private String portafolioCode;
+    private Integer scheduleId;
     private Integer projectType;
     private Integer sponsorId;
     private Integer productOwnerId;

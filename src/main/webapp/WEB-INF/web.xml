@@ -75,13 +75,6 @@
         <url-pattern>/crons/migration</url-pattern>
     </servlet-mapping>
 
-    <servlet>
-        <servlet-name>InactivateDictionaryCron</servlet-name>
-        <servlet-class>com.bbva.crons.InactivateDictionaryCron</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>InactivateDictionaryCron</servlet-name>
-        <url-pattern>/crons/InactivateDictionaryCron</url-pattern>
-    </servlet-mapping>
+
 
 </web-app>

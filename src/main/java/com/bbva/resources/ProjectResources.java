@@ -11,6 +11,7 @@ import com.bbva.dto.project.response.ProjectPortafolioFilterDtoResponse;
 import com.bbva.dto.project.response.ProjectPortafolioSelectResponse;
 import com.bbva.entities.common.PeriodPEntity;
 import com.bbva.service.ProjectService;
+import org.apache.ibatis.annotations.Delete;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
@@ -91,15 +92,6 @@ public class ProjectResources {
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<List<ProjectListForSelectDtoResponse>> projectSelect(PeriodPEntity period) {
         IDataResult<List<ProjectListForSelectDtoResponse>> result = projectService.listForSelect(period);
-        return result;
-    }
-
-    @POST
-    @Path("/listAll")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public IDataResult<List<ProjectListForSelectDtoResponse>> projectSelect() {
-        IDataResult<List<ProjectListForSelectDtoResponse>> result = projectService.listForSelect();
         return result;
     }
 

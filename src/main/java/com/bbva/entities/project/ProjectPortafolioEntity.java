@@ -14,6 +14,7 @@ public class ProjectPortafolioEntity extends BaseEntity {
     private String projectDesc;
     private String sdatoolId;
     private String portafolioCode;
+    private Integer scheduleId;
     private Integer projectType;
     private Integer sponsorOwnerId;
     private Integer productOwnerId;

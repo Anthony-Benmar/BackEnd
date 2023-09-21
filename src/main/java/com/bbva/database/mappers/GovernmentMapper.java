@@ -1,40 +1,20 @@
 package com.bbva.database.mappers;
-import com.bbva.dto.government.request.InsertConceptRequestDTO;
-import com.bbva.dto.government.request.InsertSourceRequestDTO;
-import com.bbva.dto.government.request.UpdateConceptRequestDTO;
-import com.bbva.dto.government.request.UpdateSourceRequestDTO;
-import com.bbva.dto.government.response.SourceDefinitionDTOResponse;
-import com.bbva.entities.InsertEntity;
-import com.bbva.entities.UpdateEntity;
 import com.bbva.entities.government.SourceConceptEntity;
 import com.bbva.entities.government.SourceDefinitionEntity;
+import com.bbva.entities.map_dependecy.MapDependencyEntity;
+import com.bbva.entities.project.ProjectFilterEntity;
+import com.bbva.entities.project.ProjectPortafolioEntity;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;
 public interface GovernmentMapper {
 
-    @Select("CALL SP_FILTER_SOURCE(" +
-            "#{pageCurrent}," +
-            "#{recordsAmount}," +
-            "#{projectId}," +
-            "#{dominioId})")
-    @Results({
-            @Result(property = "ucSourceId", column = "uc_source_id"),
-            @Result(property = "useCaseId", column = "use_case_id"),
-            @Result(property = "ucSourceName", column = "uc_source_name"),
-            @Result(property = "ucSourceDesc", column = "uc_source_desc"),
-            @Result(property = "ucSourceType", column = "uc_source_type"),
-            @Result(property = "elementName", column = "element_name"),
-            @Result(property = "ucFrequencyType", column = "uc_frequency_type"),
-            @Result(property = "depthMonthNumber", column = "depth_month_number"),
-            @Result(property = "ansDesc", column = "ans_desc"),
-            @Result(property = "priorityNumber", column = "priority_number"),
-            @Result(property = "recordsCount", column = "records_count")
-    })
-    List<SourceDefinitionDTOResponse> sourceFilter(@Param("pageCurrent") int page,
-                                                   @Param("recordsAmount") int recordsAmount,
-                                                   @Param("projectId") int projectId,
-                                                   @Param("dominioId") String dominioId);
+    @Select("SELECT s.uc_source_id, s.use_case_id, s.uc_source_name, s.uc_source_desc, s.uc_source_type,c.element_name, s.uc_frequency_type,s.depth_month_number,s.ans_desc,s.priority_number "+
+            "FROM data_use_case_source s "+
+            "LEFT JOIN data_use_case_definition d ON d.use_case_id=s.use_case_id "+
+            "LEFT JOIN catalog c ON c.element_id = s.uc_source_type AND c.catalog_id =1003 "+
+            "WHERE d.project_id = #{project_id}")
+    List<SourceDefinitionEntity> listSources(@Param("project_id") Integer project_id);
 
     @Select("SELECT s.uc_source_id,p.project_id,p.project_name,p.portafolio_code, s.use_case_id, s.uc_source_name, s.uc_source_desc, s.uc_source_type,c.element_name, s.uc_frequency_type,s.depth_month_number,s.ans_desc,s.priority_number,s.system_owner_id " +
             "FROM data_use_case_source s " +
@@ -44,103 +24,29 @@ public interface GovernmentMapper {
             "WHERE s.uc_source_id = #{uc_source_id}")
     SourceDefinitionEntity getSourceById(@Param("uc_source_id") Integer uc_source_id);
 
-    @Select("CALL SP_INSERT_SOURCE(" +
-            "#{project_id}," +
-            "#{uc_source_name}," +
-            "#{uc_source_desc}," +
-            "#{source_id}," +
-            "#{depth_month_number}," +
-            "#{uc_frequency_type}," +
-            "#{status_type}," +
-            "#{operation_user}," +
-            "#{uc_source_type}," +
-            "#{ans_desc}," +
-            "#{system_owner_id}," +
-            "#{priority_number})")
-    @Results({
-            @Result(property = "last_insert_id", column = "last_insert_id"),
-            @Result(property = "new_register", column = "new_register")
-    })
-    InsertEntity insertSourceDef(InsertSourceRequestDTO entity);
+    @Insert("INSERT INTO data_use_case_source (use_case_id,uc_source_name,uc_source_desc,source_id,depth_month_number,uc_frequency_type,status_type,operation_user,operation_date,uc_source_type,ans_desc,system_owner_id,priority_number)" +
+            "VALUES (#{use_case_id},#{uc_source_name},#{uc_source_desc},#{source_id},#{depth_month_number},#{uc_frequency_type},#{status_type},#{operation_user},now(),#{uc_source_type},#{ans_desc},#{system_owner_id},#{priority_number})")
+    @Options(useGeneratedKeys = true, keyProperty = "uc_source_id", keyColumn = "uc_source_id")
+    boolean insertSourceDef(SourceDefinitionEntity entity);
 
-    @Select("CALL SP_INSERT_CONCEPT(" +
-            "#{uc_data_code}," +
-            "#{uc_source_id}," +
-            "#{uc_data_group_desc}," +
-            "#{uc_data_func_name}," +
-            "#{uc_data_desc}," +
-            "#{uc_data_example}," +
-            "#{physical_name}," +
-            "#{status_type}," +
-            "#{user_comment_desc}," +
-            "#{operation_user}," +
-            "#{relevant_field_bool}," +
-            "#{cci_field_bool}," +
-            "#{field_type}," +
-            "#{granularity_data_type}," +
-            "#{field_domain_desc}," +
-            "#{field_subdomain_desc}," +
-            "#{data_owner_id}," +
-            "#{ownership_id})")
-    @Results({
-            @Result(property = "last_insert_id", column = "last_insert_id"),
-            @Result(property = "new_register", column = "new_register")
-    })
-    InsertEntity insertConcept(InsertConceptRequestDTO entity);
+    @Insert("INSERT INTO data_use_case_data (uc_data_code,uc_source_id,uc_data_group_desc,uc_data_func_name,uc_data_desc,uc_data_example,physical_name,status_type,user_comment_desc,operation_user,operation_date,relevant_field_bool,cci_field_bool,field_type,granularity_data_type,field_domain_desc,field_subdomain_desc,data_owner_id,ownership_id) "+
+            "VALUES (#{uc_data_code},#{uc_source_id},#{uc_data_group_desc},#{uc_data_func_name},#{uc_data_desc},#{uc_data_example},#{physical_name},#{status_type},#{user_comment_desc},#{operation_user},now(),#{relevant_field_bool},#{cci_field_bool},#{field_type},#{granularity_data_type},#{field_domain_desc},#{field_subdomain_desc},#{data_owner_id},#{ownership_id})")
+    @Options(useGeneratedKeys = true, keyProperty = "uc_data_id", keyColumn = "uc_data_id")
+    boolean insertConcept(SourceConceptEntity entity);
 
-    @Select("CALL SP_UPDATE_SOURCE(" +
-            "#{uc_source_id}," +
-            "#{project_id}," +
-            "#{uc_source_name}," +
-            "#{uc_source_desc}," +
-            "#{source_id}," +
-            "#{depth_month_number}," +
-            "#{uc_frequency_type}," +
-            "#{status_type}," +
-            "#{operation_user}," +
-            "#{uc_source_type}," +
-            "#{ans_desc}," +
-            "#{system_owner_id}," +
-            "#{priority_number})")
-    @Results({
-            @Result(property = "last_updated_id", column = "last_updated_id"),
-            @Result(property = "updated_register", column = "updated_register")
-    })
-    UpdateEntity updateSourceDef(UpdateSourceRequestDTO entity);
+    @Update("UPDATE data_use_case_source " +
+            "SET uc_source_name = #{uc_source_name},uc_source_desc = #{uc_source_desc},depth_month_number = #{depth_month_number},uc_frequency_type = #{uc_frequency_type},operation_user = #{operation_user},uc_source_type = #{uc_source_type},ans_desc = #{ans_desc},system_owner_id = #{system_owner_id},priority_number = #{priority_number},operation_date = NOW() " +
+            "WHERE uc_source_id= #{uc_source_id};")
+    boolean updateSourceDef(SourceDefinitionEntity entity);
 
-    @Select("CALL SP_UPDATE_CONCEPT(" +
-            "#{uc_data_id}," +
-            "#{uc_data_code}," +
-            "#{uc_source_id}," +
-            "#{uc_data_group_desc}," +
-            "#{uc_data_func_name}," +
-            "#{uc_data_desc}," +
-            "#{uc_data_example}," +
-            "#{physical_name}," +
-            "#{status_type}," +
-            "#{user_comment_desc}," +
-            "#{operation_user}," +
-            "#{relevant_field_bool}," +
-            "#{cci_field_bool}," +
-            "#{field_type}," +
-            "#{granularity_data_type}," +
-            "#{field_domain_desc}," +
-            "#{field_subdomain_desc}," +
-            "#{data_owner_id}," +
-            "#{ownership_id})")
-    @Results({
-            @Result(property = "last_updated_id", column = "last_updated_id"),
-            @Result(property = "updated_register", column = "updated_register")
-    })
-    UpdateEntity updateConcept(UpdateConceptRequestDTO entity);
+    @Update("UPDATE data_use_case_data "+
+            "SET uc_data_code = #{uc_data_code},uc_source_id = #{uc_source_id},uc_data_group_desc = #{uc_data_group_desc},uc_data_func_name = #{uc_data_func_name},uc_data_desc = #{uc_data_desc},uc_data_example = #{uc_data_example},physical_name = #{physical_name},status_type = #{status_type},user_comment_desc  = #{user_comment_desc },operation_user = #{operation_user},operation_date =NOW(),relevant_field_bool = #{relevant_field_bool},cci_field_bool = #{cci_field_bool},field_type = #{field_type},granularity_data_type = #{granularity_data_type},field_domain_desc = #{field_domain_desc},field_subdomain_desc = #{field_subdomain_desc},data_owner_id = #{data_owner_id},ownership_id = #{ownership_id} "+
+            "WHERE uc_data_id= #{uc_data_id};")
+    boolean updateConcept(SourceConceptEntity entity);
 
     @Delete("DELETE FROM data_use_case_data " +
             "WHERE uc_data_id=#{uc_data_id};")
     boolean deleteConcept(@Param("uc_data_id") Integer uc_data_id);
-
-    @Delete("DELETE FROM data_use_case_source " +
-            "WHERE uc_source_id=#{uc_source_id};")
-    boolean deleteSource(@Param("uc_source_id") Integer uc_source_id);
 
     @Delete("DELETE FROM data_map_dependency " +
             "WHERE map_dependency_id = #{dependencyId};")

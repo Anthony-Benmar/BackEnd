@@ -6,7 +6,6 @@ import lombok.Setter;
 @Setter
 @Getter
 public class MapDependencyDTORequest {
-    private Integer projectId;
     private Integer mapDependencyId;
     private Integer useCaseId;
     private Integer keyDataProcessType;

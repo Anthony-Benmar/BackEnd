@@ -15,6 +15,7 @@ public class ProjectPortafolioSelectResponse {
     private String projectDesc;
     private String sdatoolId;
     private String portafolioCode;
+    private Integer scheduleId;
     private Integer projectType;
     private Integer sponsorId;
     private String sponsorName;
@@ -26,6 +27,4 @@ public class ProjectPortafolioSelectResponse {
     private List<MapDependencyListByProjectResponse> process;
     private String periodId;
     private int statusType;
-    private String productOwnerCode;
-    private String sponsorOwnerCode;
 }
