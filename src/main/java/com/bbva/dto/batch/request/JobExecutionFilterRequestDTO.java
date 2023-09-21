@@ -13,6 +13,4 @@ public class JobExecutionFilterRequestDTO extends PaginationMasterDtoRequest {
     private String folder;
     private String dataproc;
     private String orderId;
-    private String projectName;
-    private String sdatoolId;
 }
