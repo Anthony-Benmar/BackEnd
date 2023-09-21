@@ -58,6 +58,8 @@ public class MyBatisConnectionFactory {
             Configuration configuration = new Configuration(environment);
             configuration.addMappers("com.bbva.database.mappers");
             sqlSessionFactory = new SqlSessionFactoryBuilder().build(configuration);
+            MainApp.ROOT_LOOGER.log(Level.INFO,"CONFIG DATABASE: " + configuration.getObjectFactory());
+
         } catch (Exception e) {
             MainApp.ROOT_LOOGER.log(Level.INFO,"Error connection Database: " + e.getMessage(), e);
             MainApp.ROOT_LOOGER.log(Level.SEVERE,"Error connection Database: " + e.getMessage(), e);
