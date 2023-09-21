@@ -49,7 +49,7 @@ public class MyBatisConnectionFactory {
                     Integer.parseInt(properties.getProperty("database.minimum_idle"))
             );
             config.setConnectionTestQuery("SELECT 1");
-
+            MainApp.ROOT_LOOGER.log(Level.INFO,"CONFIG DATABASE: " + config);
             HikariDataSource dataSource = new HikariDataSource(config);
             TransactionFactory transactionFactory = new JdbcTransactionFactory();
             Environment environment = new Environment("mysql", transactionFactory, dataSource);

@@ -26,6 +26,7 @@ public class MainAppErrorHandler extends ErrorHandler {
                 .put("status", status)
                 .put("success", false)
                 .put("message", "Ocurrio un error!")
+                .put("message2", response)
                 .toString();
 
         response.setContentType(MediaType.APPLICATION_JSON);
