@@ -10,6 +10,7 @@ import com.bbva.dto.project.request.ProjectPortafolioFilterDTORequest;
 import com.bbva.dto.project.response.*;
 import com.bbva.entities.common.PeriodPEntity;
 import com.bbva.entities.common.ProjectByPeriodEntity;
+import com.bbva.entities.common.ProjectEntity;
 import com.bbva.entities.project.ProjectFilterEntity;
 import com.bbva.entities.project.ProjectPortafolioEntity;
 import com.bbva.entities.project.ProjectPortafolioFilterEntity;
@@ -81,6 +82,23 @@ public class ProjectDao {
         }
     }
 
+    public List<ProjectListForSelectDtoResponse> listForSelect() {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ProjectMapper mapper = session.getMapper(ProjectMapper.class);
+            List<ProjectListForSelectDtoResponse> projectList = new ArrayList<>();
+            List<ProjectEntity> projectEntityList = mapper.listforselect();
+            projectEntityList.forEach(projectEntity -> {
+                ProjectListForSelectDtoResponse objectProject = new ProjectListForSelectDtoResponse();
+                objectProject.setId(Integer.parseInt(projectEntity.getProject_id()));
+                objectProject.setSdatool(projectEntity.getSdatool_id());
+                objectProject.setName(projectEntity.getProject_name());
+                projectList.add(objectProject);
+            });
+            return projectList;
+        }
+    }
+    
     public ProjectPortafolioFilterDtoResponse portafolioFilter(ProjectPortafolioFilterDTORequest dto) {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         List<ProjectPortafolioFilterEntity> lista;
@@ -91,11 +109,18 @@ public class ProjectDao {
         ProjectPortafolioFilterDtoResponse response = new ProjectPortafolioFilterDtoResponse();
         try (SqlSession session = sqlSessionFactory.openSession()) {
             ProjectMapper mapper = session.getMapper(ProjectMapper.class);
-            lista = mapper.portafolioFilter(1, 0, dto.getProjectName(), dto.getDomainType(), dto.getIsRegulatory());
+            lista = mapper.portafolioFilter(
+                    dto.getPage(),
+                    dto.getRecords_amount(),
+                    dto.getProjectId(),
+                    dto.getDomainType(),
+                    dto.getIsRegulatory(),
+                    dto.getWithSources()
+            );
         }
         log.info(JSONUtils.convertFromObjectToJson(response.getData()));
         recordsCount = (lista.size() > 0) ? lista.get(0).getRecordsCount() : 0;
-        // pagesAmount = dto.getRecords_amount()>0 ? (int) Math.ceil(recordsCount.floatValue() / dto.getRecords_amount().floatValue()) : 1;
+        pagesAmount = dto.getRecords_amount() > 0 ? (int) Math.ceil(recordsCount.floatValue() / dto.getRecords_amount().floatValue()) : 1;
 
         response.setCount(recordsCount);
         response.setPages_amount(pagesAmount);
@@ -112,6 +137,15 @@ public class ProjectDao {
             project = mapper.getProjectById(projectId);
         }
         return project;
+    }
+
+    public ProjectEntity findById(int projectId) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ProjectMapper mapper = session.getMapper(ProjectMapper.class);
+            return mapper.findById(projectId);
+        }
     }
 
     public DataResult<ProjectPortafolioEntity> insertProject(ProjectPortafolioEntity item) {

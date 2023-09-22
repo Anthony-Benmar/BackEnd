@@ -1,6 +1,5 @@
 package com.bbva.database.mappers;
 
-import com.bbva.entities.common.CatalogEntity;
 import com.bbva.entities.common.ProjectByPeriodEntity;
 import com.bbva.entities.common.ProjectEntity;
 import com.bbva.entities.project.ProjectPortafolioEntity;
@@ -8,7 +7,6 @@ import com.bbva.entities.project.ProjectFilterEntity;
 import com.bbva.entities.project.ProjectPortafolioFilterEntity;
 import org.apache.ibatis.annotations.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public interface ProjectMapper {
@@ -25,9 +23,10 @@ public interface ProjectMapper {
     @Select("CALL SP_PROJECT_PORTFOLIO_PAGED_FILTERED(" +
             "#{pageCurrent}," +
             "#{recordsAmount}," +
-            "#{projectName}," +
+            "#{projectId}," +
             "#{dominioId}," +
-            "#{isRegulatory})")
+            "#{isRegulatory}," +
+            "#{withSources})")
     @Results({
             @Result(property = "projectId", column = "project_id"),
             @Result(property = "projectName", column = "project_name"),
@@ -43,9 +42,10 @@ public interface ProjectMapper {
     })
     List<ProjectPortafolioFilterEntity> portafolioFilter(@Param("pageCurrent") int page,
                                                          @Param("recordsAmount") int recordsAmount,
-                                                         @Param("projectName") String projectName,
+                                                         @Param("projectId") int projectId,
                                                          @Param("dominioId") String dominioId,
-                                                         @Param("isRegulatory") String isRegulatory);
+                                                         @Param("isRegulatory") String isRegulatory,
+                                                         @Param("withSources") Boolean withSources);
 
     @Select({"<script>" +
             "SELECT p.project_id,p.sdatool_id,p.project_name,p.status_type FROM data_project p " +
@@ -53,6 +53,10 @@ public interface ProjectMapper {
             "<foreach item='item' index='index' collection='list' open='(' separator=',' close=')'> #{item} </foreach>" +
             "</script>"})
     List<ProjectEntity> readonly(@Param("list") int[] listId);
+
+    @Select({"SELECT project_id, sdatool_id, project_name, status_type FROM data_project " +
+            "WHERE project_id = #{projectId}"})
+    ProjectEntity findById(@Param("projectId") int projectId);
 
     @Select({"<script>" +
             "SELECT p.project_id,p.sdatool_id,p.project_name,p.status_type FROM data_project p " +
@@ -69,16 +73,16 @@ public interface ProjectMapper {
     List<ProjectByPeriodEntity> listProjectsByPeriod(@Param("period_id") String period_id);
 
     @Insert("INSERT INTO data_project(project_name, project_desc, sdatool_id, status_type, product_owner_id, portafolio_code, " +
-            "schedule_id, project_type, project_domain_type, sponsor_owner_id, rule_associated_link, " +
+            "project_type, project_domain_type, sponsor_owner_id, rule_associated_link, " +
             "regulatory_project_boolean, operation_date, period_id) " +
-            "VALUES (#{projectName},#{projectDesc},#{sdatoolId}, #{statusType}, #{productOwnerId}, #{portafolioCode},#{scheduleId}, " +
+            "VALUES (#{projectName},#{projectDesc},#{sdatoolId}, #{statusType}, #{productOwnerId}, #{portafolioCode}, " +
             "#{projectType}, #{projectDomainType}, #{sponsorOwnerId}, #{ruleAssociatedLink}, #{regulatoryProjectBoolean}, now(), #{periodId})")
     @Options(useGeneratedKeys = true, keyProperty = "projectId", keyColumn = "project_id")
     boolean insertProject(ProjectPortafolioEntity project);
 
     @Update("UPDATE data_project SET project_name = #{projectName}, project_desc = #{projectDesc}, sdatool_id= #{sdatoolId}," +
             "status_type = #{statusType}, product_owner_id= #{productOwnerId}, portafolio_code= #{portafolioCode}, " +
-            "schedule_id=#{scheduleId}, project_type=#{projectType}, project_domain_type=#{projectDomainType}, " +
+            "project_type=#{projectType}, project_domain_type=#{projectDomainType}, " +
             "sponsor_owner_id=#{sponsorOwnerId}, rule_associated_link=#{ruleAssociatedLink}, regulatory_project_boolean =#{regulatoryProjectBoolean}, period_id=#{periodId} " +
             "WHERE project_id = #{projectId}")
     boolean updateProject(ProjectPortafolioEntity project);
@@ -95,7 +99,6 @@ public interface ProjectMapper {
             @Result(property = "sdatoolId", column = "sdatool_id"),
             @Result(property = "productOwnerId", column = "product_owner_id"),
             @Result(property = "portafolioCode", column = "portafolio_code"),
-            @Result(property = "scheduleId", column = "schedule_id"),
             @Result(property = "projectType", column = "project_type"),
             @Result(property = "projectDomainType", column = "project_domain_type"),
             @Result(property = "sponsorOwnerId", column = "sponsor_owner_id"),

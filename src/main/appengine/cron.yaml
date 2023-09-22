@@ -5,3 +5,7 @@ cron:
   - description: "Daily Migration cron job"
     url: /crons/migration
     schedule: every 24 hours
+  - description: Desactivar diccionarios antiguos
+    url: /crons/InactivateDictionaryCron
+    schedule: every 24 hours from 23:00 to 23:00
+    timezone: America/Lima

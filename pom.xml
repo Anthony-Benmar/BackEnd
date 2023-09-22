@@ -54,19 +54,20 @@
 
     <repositories>
         <repository>
-            <id>gcp-global-mvn-repository</id>
-            <name>BBVA GCP Repository Group</name>
-            <url>https://globaldevtools.bbva.com/artifactory-api/gcp-global-mvn-repository</url>
+            <name>BBVA GCP Repository Virtual</name>
+            <id>gl-gcp-maven-virtual</id>
+            <url>https://artifactory.globaldevtools.bbva.com/artifactory/gl-gcp-maven-virtual</url>
         </repository>
     </repositories>
 
+    
     <dependencies>
 
-<!--        <dependency>-->
-<!--            <groupId>com.google.appengine.tools</groupId>-->
-<!--            <artifactId>appengine-gcs-client</artifactId>-->
-<!--            <version>0.8</version>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>com.google.appengine.tools</groupId>-->
+        <!--            <artifactId>appengine-gcs-client</artifactId>-->
+        <!--            <version>0.8</version>-->
+        <!--        </dependency>-->
 
         <dependency>
             <groupId>com.bbva.fga</groupId>
@@ -83,6 +84,13 @@
         <dependency>
             <groupId>org.jboss.resteasy</groupId>
             <artifactId>resteasy-jackson2-provider</artifactId>
+            <version>${resteasy.version}</version>
+        </dependency>
+
+        <!-- Multipart support -->
+        <dependency>
+            <groupId>org.jboss.resteasy</groupId>
+            <artifactId>resteasy-multipart-provider</artifactId>
             <version>${resteasy.version}</version>
         </dependency>
 
@@ -161,7 +169,51 @@
             <artifactId>json-smart</artifactId>
             <version>2.4.8</version>
         </dependency>
-        
+
+        <!-- https://mvnrepository.com/artifact/joda-time/joda-time -->
+        <dependency>
+            <groupId>joda-time</groupId>
+            <artifactId>joda-time</artifactId>
+            <version>2.10.10</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/commons-beanutils/commons-beanutils -->
+        <dependency>
+            <groupId>commons-beanutils</groupId>
+            <artifactId>commons-beanutils</artifactId>
+            <version>1.9.4</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.apache.poi/poi-ooxml -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>5.2.3</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.apache.poi/poi -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi</artifactId>
+            <version>5.2.3</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.api-client</groupId>
+            <artifactId>google-api-client</artifactId>
+            <version>2.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.oauth-client</groupId>
+            <artifactId>google-oauth-client-jetty</artifactId>
+            <version>1.34.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.apis</groupId>
+            <artifactId>google-api-services-sheets</artifactId>
+            <version>v4-rev20220927-2.0.0</version>
+        </dependency>
+
     </dependencies>
 
     <profiles>

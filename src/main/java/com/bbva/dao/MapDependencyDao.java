@@ -1,5 +1,8 @@
 package com.bbva.dao;
 
+import com.bbva.core.results.DataResult;
+import com.bbva.core.results.ErrorDataResult;
+import com.bbva.core.results.SuccessDataResult;
 import com.bbva.database.MyBatisConnectionFactory;
 import com.bbva.database.mappers.MapDependencyMapper;
 import com.bbva.dto.map_dependency.response.MapDependencyListByProjectResponse;
@@ -26,35 +29,35 @@ public class MapDependencyDao {
         return list;
     }
 
-    public boolean insert(MapDependencyEntity item) {
+    public DataResult<MapDependencyEntity> insert(MapDependencyEntity item) {
         try{
             SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
             try (SqlSession session = sqlSessionFactory.openSession()) {
                 MapDependencyMapper mapper = session.getMapper(MapDependencyMapper.class);
                 mapper.insert(item);
                 session.commit();
-                return true;
+                return new SuccessDataResult(item);
             }
         }
         catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
-            return false;
+            return new ErrorDataResult(null, "500",e.getMessage());
         }
     }
 
-    public boolean update(MapDependencyEntity item) {
+    public DataResult<MapDependencyEntity> update(MapDependencyEntity item) {
         try{
             SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
             try (SqlSession session = sqlSessionFactory.openSession()) {
                 MapDependencyMapper mapper = session.getMapper(MapDependencyMapper.class);
                 mapper.update(item);
                 session.commit();
-                return true;
+                return new SuccessDataResult(item);
             }
         }
         catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
-            return false;
+            return new ErrorDataResult(null, "500",e.getMessage());
         }
     }
 }

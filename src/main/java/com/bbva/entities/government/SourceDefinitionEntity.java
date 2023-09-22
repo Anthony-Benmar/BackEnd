@@ -30,5 +30,4 @@ public class SourceDefinitionEntity {
     private int project_id;
     private String project_name;
     private String portafolio_code;
-
 }
