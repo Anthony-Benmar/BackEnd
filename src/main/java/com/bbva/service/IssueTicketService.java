@@ -5,8 +5,8 @@ import com.bbva.core.abstracts.IDataResult;
 import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dao.IssueTicketDao;
-import com.bbva.database.MyBatisConnectionFactory;
 import com.bbva.dto.issueticket.request.WorkOrderDtoRequest;
+import com.bbva.dto.issueticket.request.authJiraDtoRequest;
 import com.bbva.dto.issueticket.response.issueTicketDtoResponse;
 import com.bbva.dto.issueticket.request.sourceTicketDtoRequest;
 import com.bbva.dto.issueticket.response.sourceTicketDtoResponse;
@@ -18,8 +18,18 @@ import com.bbva.entities.issueticket.WorkOrderDetail;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mysql.cj.util.StringUtils;
-import org.apache.ibatis.session.SqlSession;
-import org.apache.ibatis.session.SqlSessionFactory;
+import org.apache.http.Header;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.CookieStore;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.cookie.Cookie;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.BasicCookieStore;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.cookie.BasicClientCookie;
+import org.apache.http.util.EntityUtils;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -32,15 +42,54 @@ import java.util.stream.Collectors;
 
 public class IssueTicketService {
     private final IssueTicketDao issueTicketDao = new IssueTicketDao();
-    private static final String URL_API_JIRA = "https://globaldevtools.bbva.com/jira/rest/api/2/issue/";
-    private static final String URL_API_JIRA_BULK = "https://globaldevtools.bbva.com/jira/rest/api/2/issue/bulk";
+    private static final String URL_API_BASE = "https://jira.globaldevtools.bbva.com";
+    private static final String URL_API_JIRA = URL_API_BASE + "/rest/api/2/issue/";
+    private static final String URL_API_JIRA_BULK = URL_API_BASE + "/rest/api/2/issue/bulk";
+    private static final String URL_API_JIRA_SESSION = URL_API_BASE + "/rest/auth/1/session";
+    private static final String URL_API_JIRA_SQL = URL_API_BASE + "/rest/api/2/search?jql=";
     private static final String HEADER_COOKIE_JIRA = "_oauth2_proxy=";
+    private CookieStore cookieStore = new BasicCookieStore();
     private HttpClient httpClient;
 
     public boolean expiredTokenValidate(long time) {
         Date dateNowUTC = Date.from(Instant.now());
         Date dateTokenUTC = Date.from(Instant.ofEpochMilli(time*1000L));
         return dateNowUTC.after(dateTokenUTC);
+    }
+
+    public CloseableHttpClient getBasicSession(String username, String password) throws Exception
+    {
+        var authJira =  new authJiraDtoRequest(username,password);
+        var gson = new GsonBuilder().setPrettyPrinting().create();
+
+        HttpPost httpPost = new HttpPost(URL_API_JIRA_SESSION);
+        StringEntity requestEntity = new StringEntity(gson.toJson(authJira));
+        httpPost.setEntity(requestEntity);
+        httpPost.setHeader("Content-Type", "application/json");
+
+        var httpclient = HttpClients.createDefault();
+        CloseableHttpResponse response = httpclient.execute(httpPost);
+        Integer responseCode = response.getStatusLine().getStatusCode();
+        if (responseCode>=400){
+            return null;
+        }
+        cookieStore = new BasicCookieStore();
+        Header[] headers = response.getAllHeaders();
+        for (Header header : headers) {
+            if (header.getName().equalsIgnoreCase("Set-Cookie")) {
+                String cookieValue = header.getValue();
+                String[] cookieParts = cookieValue.split(";")[0].split("=");
+                if (cookieParts.length == 2) {
+                    String cookieName = cookieParts[0].trim();
+                    String cookieValueTrimmed = cookieParts[1].trim();
+                    var cookie = new BasicClientCookie(cookieName, cookieValueTrimmed);
+                    cookieStore.addCookie(cookie);
+                }
+            }
+        }
+
+        return httpclient;
+
     }
 
     public IDataResult insert(WorkOrderDtoRequest dto)
@@ -56,28 +105,20 @@ public class IssueTicketService {
             if (countWorkOrder>0) {
                 return new ErrorDataResult(null,"500","Existe un registro con los mismos datos (proyecto, proceso, folio, id fuente, fuente)");
             }
+            var workOrderDetailsRequest = dto.workOrderDetail.stream()
+                    .map(s -> new WorkOrderDetail(0, 0, s.templateId, "", "ready", dto.registerUserId, new Date(), null))
+                    .collect(Collectors.toList());
 
-            SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
-            SqlSession session = sqlSessionFactory.openSession();
+            var issuesRequests = issueTicketDao.getDataRequestIssueJira2(workOrderRequest, workOrderDetailsRequest);
+
             try{
-                issueTicketDao.insertWorkOrder(session,workOrderRequest);
-                if (dto.workOrderDetail != null && dto.workOrderDetail.stream().count() > 0) {
-                    var workOrderDetailsRequest = dto.workOrderDetail.stream().map(s -> {
-                        var workorderid = dto.workOrderId > 0 ? dto.workOrderId : workOrderRequest.work_order_id;
-                        return new WorkOrderDetail(0, workorderid, s.templateId, "", "ready", dto.registerUserId, new Date(), null);
-                    }).collect(Collectors.toList());
-
-                    createTicketJira2(dto.token, workOrderRequest, workOrderDetailsRequest);
-                    workOrderDetailsRequest = workOrderDetailsRequest.stream().filter(w -> !StringUtils.isNullOrEmpty(w.issue_code)).collect(Collectors.toList());
-                    issueTicketDao.InsertWorkOrderDetail(session, workOrderDetailsRequest);
-                }
-                session.commit();
+                createTicketJira2(dto, issuesRequests, workOrderDetailsRequest);
             }catch (HandledException ex){
-                session.rollback();
                 return new ErrorDataResult(ex.getCause(),ex.getCode(),ex.getMessage());
-            }finally {
-                session.close();
             }
+            workOrderDetailsRequest = workOrderDetailsRequest.stream().filter(w -> !StringUtils.isNullOrEmpty(w.issue_code)).collect(Collectors.toList());
+            issueTicketDao.insertWorkOrderAndDetail(workOrderRequest, workOrderDetailsRequest);
+
         }catch (Exception ex){
             return new ErrorDataResult(ex.getCause(),"500","No se pudo realizar el registro");
         }
@@ -122,16 +163,14 @@ public class IssueTicketService {
             WorkOrder workOrderRequest = new WorkOrder(dto.workOrderId, dto.workOrderCode, dto.folio, dto.boardId, dto.projectId, dto.sourceId, dto.sourceName
                     , dto.flowType, 1, 1, dto.registerUserId, new Date(), null, 0);
 
-            if (dto.workOrderDetail != null && dto.workOrderDetail.stream().count() > 0) {
-                workOrderDetailsRequest = dto.workOrderDetail.stream().map(s -> {
-                    var workorderid = dto.workOrderId > 0 ? dto.workOrderId : workOrderRequest.work_order_id;
-                    return new WorkOrderDetail(0, workorderid, s.templateId, "", "ready", dto.registerUserId, new Date(), null);
-                }).collect(Collectors.toList());
-
-                createTicketJira2(dto.token, workOrderRequest, workOrderDetailsRequest);
-                workOrderDetailsRequest = workOrderDetailsRequest.stream().filter(w -> !StringUtils.isNullOrEmpty(w.issue_code)).collect(Collectors.toList());
-                issueTicketDao.InsertWorkOrderDetail(workOrderDetailsRequest);
-            }
+            workOrderDetailsRequest = dto.workOrderDetail.stream().map(s -> {
+                var workorderid = dto.workOrderId > 0 ? dto.workOrderId : workOrderRequest.work_order_id;
+                return new WorkOrderDetail(0, workorderid, s.templateId, "", "ready", dto.registerUserId, new Date(), null);
+            }).collect(Collectors.toList());
+            var issuesRequests = issueTicketDao.getDataRequestIssueJira2(workOrderRequest, workOrderDetailsRequest);
+            createTicketJira2(dto, issuesRequests, workOrderDetailsRequest);
+            workOrderDetailsRequest = workOrderDetailsRequest.stream().filter(w -> !StringUtils.isNullOrEmpty(w.issue_code)).collect(Collectors.toList());
+            issueTicketDao.InsertWorkOrderDetail(workOrderDetailsRequest);
 
         }catch (HandledException ex){
             return new ErrorDataResult(ex.getCause(),ex.getCode(),ex.getMessage());
@@ -170,13 +209,12 @@ public class IssueTicketService {
         }
     }
 
-    private void createTicketJira2(String cookie_oauth, WorkOrder workOrder, List<WorkOrderDetail> workOrderDetail)
+    private void createTicketJira2(WorkOrderDtoRequest objAuth, IssueBulkDto issuesRequests, List<WorkOrderDetail> workOrderDetail)
             throws Exception
     {
-        var issuesRequests = issueTicketDao.getDataRequestIssueJira2(workOrder, workOrderDetail);
-        var issuesGenerateds = PostResponseAsync2(cookie_oauth, issuesRequests);
-        for (int i = 0; i < issuesGenerateds.issues.size() && i < workOrderDetail.size(); i++) {
-            workOrderDetail.get(i).setIssue_code(issuesGenerateds.issues.get(i).getKey());
+        var issuesGenerates = PostResponseAsync3(objAuth, issuesRequests);
+        for (int i = 0; i < issuesGenerates.issues.size() && i < workOrderDetail.size(); i++) {
+            workOrderDetail.get(i).setIssue_code(issuesGenerates.issues.get(i).getKey());
         }
     }
 
@@ -262,6 +300,39 @@ public class IssueTicketService {
         return issueCreated;
     }
 
+    private IssueBulkResponse PostResponseAsync3(WorkOrderDtoRequest objAuth, IssueBulkDto issueJira)
+            throws Exception
+    {
+        // NOTA: el api bulk de jira permite hasta 50 issues por petición
+        var gson = new GsonBuilder().setPrettyPrinting().create();
+        String jsonString = gson.toJson(issueJira);
+
+        HttpPost httpPost = new HttpPost(URL_API_JIRA_BULK);
+        StringEntity requestEntity = new StringEntity(jsonString, "UTF-8");
+        httpPost.setEntity(requestEntity);
+        httpPost.setHeader("Content-Type", "application/json");
+
+        Integer responseCode =0;
+        String responseBodyString = "";
+        HttpEntity entity = null;
+        try(CloseableHttpClient session = getBasicSession(objAuth.username, objAuth.token)){
+            httpPost.setHeader("Cookie", createCookieHeader(cookieStore.getCookies()));
+            CloseableHttpResponse response = session.execute(httpPost);
+            responseCode = response.getStatusLine().getStatusCode();
+            entity = response.getEntity();
+            responseBodyString = EntityUtils.toString(entity);
+        }
+
+        if (responseCode.equals(302)) {
+            throw new HandledException(responseCode.toString(), "Token Expirado");
+        }
+        if (responseCode>=400 && responseCode<=500) {
+            throw new HandledException(responseCode.toString(), "Error al intentar generar tickets, revise los datos ingresados");
+        }
+        var issueCreated = gson.fromJson(responseBodyString, IssueBulkResponse.class);
+        return issueCreated;
+    }
+
     private Object PutResponseEditAsync(String cookie_oauth,String issueTicketCode, IssueDto issueJira)
             throws Exception
     {
@@ -291,5 +362,16 @@ public class IssueTicketService {
         responseBody = response.body();
 
         return responseBody;
+    }
+
+    private static String createCookieHeader(List<Cookie> cookieList) {
+        StringBuilder cookieHeader = new StringBuilder();
+        for (Cookie responseCookie : cookieList) {
+            cookieHeader.append(responseCookie.getName()).append("=").append(responseCookie.getValue()).append("; ");
+        }
+        if (cookieHeader.length() > 0) {
+            cookieHeader.delete(cookieHeader.length() - 2, cookieHeader.length());
+        }
+        return cookieHeader.toString();
     }
 }

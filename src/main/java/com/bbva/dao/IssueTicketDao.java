@@ -51,15 +51,24 @@ public class IssueTicketDao {
         }
     }
 
-    public WorkOrder insertWorkOrder(SqlSession session, WorkOrder item) {
+    public void insertWorkOrderAndDetail(WorkOrder workorder, List<WorkOrderDetail> workerDetails) {
         try{
-            IssueTicketMapper issueMapper = session.getMapper(IssueTicketMapper.class);
-            issueMapper.insertWorkOrder(item);
-            return item;
+            SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+            try (SqlSession session = sqlSessionFactory.openSession()) {
+                IssueTicketMapper issueMapper = session.getMapper(IssueTicketMapper.class);
+                try{
+                    issueMapper.insertWorkOrder(workorder);
+                    workerDetails.forEach(wod->wod.setWork_order_id(workorder.work_order_id));
+                    issueMapper.InsertDetailList(workerDetails);
+                    session.commit();
+                }catch (Exception e){
+                    session.rollback();
+                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                }
+            }
         }
         catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
-            return new WorkOrder();
         }
     }
 
