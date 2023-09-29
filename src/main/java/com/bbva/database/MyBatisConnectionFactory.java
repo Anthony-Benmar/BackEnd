@@ -26,7 +26,9 @@ public class MyBatisConnectionFactory {
     public static void initialiceInstance(){
         try {
             HikariConfig config = new HikariConfig();
+            MainApp.ROOT_LOOGER.log(Level.INFO,"GET INSTANCE");
             Properties properties = AppProperties.getInstance();
+            MainApp.ROOT_LOOGER.log(Level.INFO,"END GET INSTANCE");
             config.setJdbcUrl(properties.getProperty("database.url"));
 
             if (EnvironmentUtils.isLocalEnvironment()) {
