@@ -51,22 +51,7 @@ public class IssueTicketDao {
         }
     }
 
-    public WorkOrder insertWorkOrder(WorkOrder item) {
-        try{
-            SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
-            try (SqlSession session = sqlSessionFactory.openSession()) {
-                IssueTicketMapper issueMapper = session.getMapper(IssueTicketMapper.class);
-                issueMapper.insertWorkOrder(item);
-                return item;
-            }
-        }
-        catch (Exception e) {
-            LOGGER.log(Level.SEVERE, e.getMessage(), e);
-            return new WorkOrder();
-        }
-    }
-
-    public WorkOrder insertWorkOrder2(SqlSession session, WorkOrder item) {
+    public WorkOrder insertWorkOrder(SqlSession session, WorkOrder item) {
         try{
             IssueTicketMapper issueMapper = session.getMapper(IssueTicketMapper.class);
             issueMapper.insertWorkOrder(item);
@@ -75,27 +60,6 @@ public class IssueTicketDao {
         catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
             return new WorkOrder();
-        }
-    }
-
-    public void insertWorkOrderAndDetail(WorkOrder workorder, List<WorkOrderDetail> workerDetails) {
-        try{
-            SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
-            try (SqlSession session = sqlSessionFactory.openSession()) {
-                IssueTicketMapper issueMapper = session.getMapper(IssueTicketMapper.class);
-                try{
-                    issueMapper.insertWorkOrder(workorder);
-                    workerDetails.forEach(wod->wod.setWork_order_id(workorder.work_order_id));
-                    issueMapper.InsertDetailList(workerDetails);
-                    session.commit();
-                }catch (Exception e){
-                    session.rollback();
-                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
-                }
-            }
-        }
-        catch (Exception e) {
-            LOGGER.log(Level.SEVERE, e.getMessage(), e);
         }
     }
 
@@ -179,8 +143,8 @@ public class IssueTicketDao {
     {
         var result = new HashMap<Integer, IssueDto>();
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
-        Board board = null;
-        List<Template> templates = null;
+        Board board = new Board();
+        List<Template> templates = new ArrayList<Template>();
         try (SqlSession session = sqlSessionFactory.openSession()) {
             BoardMapper boardMapper = session.getMapper(BoardMapper.class);
             List<Board> boards = boardMapper.list();
@@ -195,6 +159,7 @@ public class IssueTicketDao {
             templates = templates.stream().filter(t-> acceptableTemplate_id.contains(t.template_id))
                     .collect(Collectors.toList());
         }
+
 
         for (WorkOrderDetail item:workOrderDetail)
         {
@@ -240,7 +205,7 @@ public class IssueTicketDao {
         result.issueUpdates = new ArrayList<IssueUpdate>();
 
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
-        Board board = new Board();
+        Board board = null;
         List<Template> templates = new ArrayList<Template>();
         try (SqlSession session = sqlSessionFactory.openSession()) {
             BoardMapper boardMapper = session.getMapper(BoardMapper.class);
@@ -381,6 +346,7 @@ public class IssueTicketDao {
                     wo.feature, "",wo.project_id,0);
         }).collect(Collectors.toList());
 
+
         var groupWorkOrder  = listWorkOrderResult.stream()
                 .collect(Collectors.groupingBy(p -> Arrays.asList(p.folio_code, p.old_source_id, p.source, Integer.toString(p.boardId), p.boardName, p.feature)));
 
@@ -390,24 +356,17 @@ public class IssueTicketDao {
                     var sourceDetailList = w.getValue().stream()
                             .map(d-> new sourceTicketDetailDtoResponse(d.workOrderId,d.typeId,d.typeDesc))
                             .collect(Collectors.toList());
-                    var maxWordOrderId= sourceDetailList.stream()
-                            .max(Comparator.comparing(sourceTicketDetailDtoResponse::getWorkOrderId))
-                            .get();
-                    return new sourceTicketGroupByDtoResponse(maxWordOrderId.workOrderId,keys.get(0), keys.get(1),keys.get(2), Integer.parseInt(keys.get(3)),keys.get(4), keys.get(5), sourceDetailList);
+                    return new sourceTicketGroupByDtoResponse(keys.get(0), keys.get(1),keys.get(2), Integer.parseInt(keys.get(3)),keys.get(4), keys.get(5), sourceDetailList);
                 }).collect(Collectors.toList());
 
-        result = result.stream().sorted(Comparator.comparing(sourceTicketGroupByDtoResponse::getId).reversed())
-                .collect(Collectors.toList());
-
         Integer count =  (int)result.stream().count();
-        var pages_amount = 1;
+        var pages_amount = dto.getRecords_amount()>0 ? (int)Math.ceil(count.floatValue() / dto.getRecords_amount().floatValue()):1;
 
         if(dto.records_amount>0){
             result = result.stream()
                     .skip(dto.records_amount * (dto.page - 1))
                     .limit(dto.records_amount)
                     .collect(Collectors.toList());
-            pages_amount = (int)Math.ceil(count.floatValue() / dto.getRecords_amount().floatValue());
         }
 
         return new sourceTicketDtoResponse(count.intValue(), pages_amount, result);
@@ -424,8 +383,7 @@ public class IssueTicketDao {
         try (SqlSession session = sqlSessionFactory.openSession()) {
             TemplateMapper templatedMapper = session.getMapper(TemplateMapper.class);
             templates = templatedMapper.list();
-            templates = templates.stream().filter(t->t.type_id.equals(dto.type) && t.status.equals(1))
-                    .collect(Collectors.toList());
+            templates = templates.stream().filter(t->t.type_id.equals(dto.type) && t.status.equals(1)).collect(Collectors.toList());
             IssueTicketMapper issueTicketMapper = session.getMapper(IssueTicketMapper.class);
             workOrder = issueTicketMapper.ListWorkOrder(1,0,dto.workOrderId,0).stream().findFirst().orElse(null);
             workOrderDetails = issueTicketMapper.ListWorkOrderDetails(1,0,0,dto.workOrderId);
@@ -466,7 +424,7 @@ public class IssueTicketDao {
         result.addAll(extendResult);
 
         Long count = result.stream().count();
-        var pages_amount = 1;
+        var pages_amount = dto.getRecords_amount()>0? (int)Math.ceil(count.floatValue() / dto.getRecords_amount().floatValue()) : 1;
 
         result = result.stream().sorted(Comparator.comparing(issueTicketDetailDtoResponse::getOrden))
                 .collect(Collectors.toList());
@@ -477,7 +435,6 @@ public class IssueTicketDao {
                     .skip(dto.records_amount * (dto.page - 1))
                     .limit(dto.records_amount)
                     .collect(Collectors.toList());
-            pages_amount = (int)Math.ceil(count.floatValue() / dto.getRecords_amount().floatValue());
         }
 
         return new issueTicketDtoResponse(count.intValue(), pages_amount, result);
