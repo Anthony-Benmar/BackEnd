@@ -26,19 +26,21 @@ public class MyBatisConnectionFactory {
     public static void initialiceInstance(){
         try {
             HikariConfig config = new HikariConfig();
-            MainApp.ROOT_LOOGER.log(Level.INFO,"GET INSTANCE");
             Properties properties = AppProperties.getInstance();
-            MainApp.ROOT_LOOGER.log(Level.INFO,"END GET INSTANCE");
             config.setJdbcUrl(properties.getProperty("database.url"));
 
             if (EnvironmentUtils.isLocalEnvironment()) {
                 config.setUsername(properties.getProperty("database.username"));
                 config.setPassword(properties.getProperty("database.password"));
             } else {
+                MainApp.ROOT_LOOGER.log(Level.INFO,"DB - USERNAME: " + properties.getProperty("datasource.property.user"));
                 config.setUsername(properties.getProperty("datasource.property.user"));
+                MainApp.ROOT_LOOGER.log(Level.INFO,"DB - PWD: " + properties.getProperty("datasource.property.pwd"));
                 config.setPassword(properties.getProperty("datasource.property.pwd"));
+                MainApp.ROOT_LOOGER.log(Level.INFO,"DB - socketFactory: " + properties.getProperty("datasource.property.socket"));
                 config.addDataSourceProperty("socketFactory",
                         properties.getProperty("datasource.property.socket"));
+                MainApp.ROOT_LOOGER.log(Level.INFO,"DB - cloudSqlInstance: " +  properties.getProperty("database.cloud_sql_instance"));
                 config.addDataSourceProperty("cloudSqlInstance",
                         properties.getProperty("database.cloud_sql_instance"));
                 config.addDataSourceProperty("ipTypes", "PUBLIC,PRIVATE");
@@ -51,17 +53,15 @@ public class MyBatisConnectionFactory {
                     Integer.parseInt(properties.getProperty("database.minimum_idle"))
             );
             config.setConnectionTestQuery("SELECT 1");
-            MainApp.ROOT_LOOGER.log(Level.INFO,"CONFIG DATABASE JDS_URL: " + config.getJdbcUrl());
-            MainApp.ROOT_LOOGER.log(Level.INFO,"CONFIG DATABASE USER: " + config.getUsername());
-            MainApp.ROOT_LOOGER.log(Level.INFO,"CONFIG DATABASE DATA SOURCE PROPERTIES: " + config.getDataSourceProperties());
+
             HikariDataSource dataSource = new HikariDataSource(config);
+            MainApp.ROOT_LOOGER.log(Level.INFO,"---- TEST ----");
+
             TransactionFactory transactionFactory = new JdbcTransactionFactory();
             Environment environment = new Environment("mysql", transactionFactory, dataSource);
             Configuration configuration = new Configuration(environment);
             configuration.addMappers("com.bbva.database.mappers");
             sqlSessionFactory = new SqlSessionFactoryBuilder().build(configuration);
-            MainApp.ROOT_LOOGER.log(Level.INFO,"CONFIG DATABASE: " + configuration.getObjectFactory());
-
         } catch (Exception e) {
             MainApp.ROOT_LOOGER.log(Level.INFO,"Error connection Database: " + e.getMessage(), e);
             MainApp.ROOT_LOOGER.log(Level.SEVERE,"Error connection Database: " + e.getMessage(), e);
