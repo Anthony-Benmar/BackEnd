@@ -2,6 +2,8 @@ package com.bbva.database;
 import com.bbva.fga.core.AppProperties;
 import com.bbva.fga.utils.EnvironmentUtils;
 import com.bbva.jetty.MainApp;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.apache.ibatis.mapping.Environment;
@@ -28,7 +30,7 @@ public class MyBatisConnectionFactory {
             HikariConfig config = new HikariConfig();
             Properties properties = AppProperties.getInstance();
             config.setJdbcUrl(properties.getProperty("database.url"));
-
+            MainApp.ROOT_LOOGER.log(Level.INFO,"DB - URL: " + properties.getProperty("database.url"));
             if (EnvironmentUtils.isLocalEnvironment()) {
                 config.setUsername(properties.getProperty("database.username"));
                 config.setPassword(properties.getProperty("database.password"));
@@ -54,6 +56,9 @@ public class MyBatisConnectionFactory {
             );
             config.setConnectionTestQuery("SELECT 1");
 
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            String jsonConfigString = gson.toJson(config);
+            MainApp.ROOT_LOOGER.log(Level.INFO,"DB - HIKARI CONFIG: " +  jsonConfigString);
             HikariDataSource dataSource = new HikariDataSource(config);
             MainApp.ROOT_LOOGER.log(Level.INFO,"---- TEST ----");
 
