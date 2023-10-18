@@ -62,6 +62,7 @@ public class MyBatisConnectionFactory {
             HikariDataSource dataSource = new HikariDataSource(config);
             MainApp.ROOT_LOOGER.log(Level.INFO,"---- TEST ----");
 
+            
             TransactionFactory transactionFactory = new JdbcTransactionFactory();
             Environment environment = new Environment("mysql", transactionFactory, dataSource);
             Configuration configuration = new Configuration(environment);
