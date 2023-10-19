@@ -56,12 +56,14 @@ public class MyBatisConnectionFactory {
             );
             config.setConnectionTestQuery("SELECT 1");
 
+            
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
             String jsonConfigString = gson.toJson(config);
             MainApp.ROOT_LOOGER.log(Level.INFO,"DB - HIKARI CONFIG: " +  jsonConfigString);
             HikariDataSource dataSource = new HikariDataSource(config);
             MainApp.ROOT_LOOGER.log(Level.INFO,"---- TEST ----");
 
+            
             TransactionFactory transactionFactory = new JdbcTransactionFactory();
             Environment environment = new Environment("mysql", transactionFactory, dataSource);
             Configuration configuration = new Configuration(environment);
