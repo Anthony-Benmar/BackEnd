@@ -52,6 +52,7 @@ public class MyBatisConnectionFactory {
             );
             dataSource.setConnectionTestQuery("SELECT 1");
 
+            
             TransactionFactory transactionFactory = new JdbcTransactionFactory();
             Environment environment = new Environment("mysql", transactionFactory, dataSource);
             Configuration configuration = new Configuration(environment);
