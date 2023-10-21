@@ -1,14 +1,9 @@
 package com.bbva.database;
 
-import com.bbva.config.SecretManagerService;
 import com.bbva.fga.core.AppProperties;
 import com.bbva.fga.utils.EnvironmentUtils;
-
-import com.bbva.jetty.MainApp;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.apache.ibatis.mapping.Environment;
 import org.apache.ibatis.session.Configuration;
@@ -16,15 +11,11 @@ import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.apache.ibatis.transaction.TransactionFactory;
 import org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory;
-
-
-
-import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-
 public class MyBatisConnectionFactory {
+
     private static final Logger LOGGER = Logger.getLogger(MyBatisConnectionFactory.class.getName());
 
     private static SqlSessionFactory sqlSessionFactory;
@@ -33,17 +24,16 @@ public class MyBatisConnectionFactory {
         try {
             HikariDataSource dataSource = new HikariDataSource();
             dataSource.setJdbcUrl(AppProperties.getInstance().getProperty("database.url"));
-            if (!EnvironmentUtils.isLocalEnvironment()) {
+            if (EnvironmentUtils.isLocalEnvironment()) {
                 dataSource.setUsername(AppProperties.getInstance().getProperty("database.username"));
                 dataSource.setPassword(AppProperties.getInstance().getProperty("database.password"));
             } else {
                 dataSource.addDataSourceProperty(
                         "user",
-                        SecretManagerService.getSecretValue("bbva-gob-dicc-datos-pe-sp-db-root", "user"));
+                        AppProperties.getInstance().getProperty("database.username"));
                 dataSource.addDataSourceProperty(
                         "password",
-                        SecretManagerService.getSecretValue("bbva-gob-dicc-datos-pe-sp-db-root", "password"));
-
+                        AppProperties.getInstance().getProperty("database.password"));
                 dataSource.addDataSourceProperty(
                         "socketFactory",
                         "com.google.cloud.sql.mysql.SocketFactory"
@@ -64,7 +54,7 @@ public class MyBatisConnectionFactory {
 
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
             String jsonConfigString = gson.toJson(dataSource);
-            MainApp.ROOT_LOOGER.log(Level.INFO,"DB - HIKARI CONFIG: " +  jsonConfigString);
+            LOGGER.log(Level.INFO,"DB - HIKARI CONFIG: " +  jsonConfigString);
 
             TransactionFactory transactionFactory = new JdbcTransactionFactory();
             Environment environment = new Environment("mysql", transactionFactory, dataSource);
@@ -83,5 +73,4 @@ public class MyBatisConnectionFactory {
     public static SqlSessionFactory getInstance() {
         return sqlSessionFactory;
     }
-
 }
