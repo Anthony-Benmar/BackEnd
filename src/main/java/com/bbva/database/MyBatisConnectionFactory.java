@@ -1,5 +1,6 @@
 package com.bbva.database;
 
+import com.bbva.config.SecretManagerService;
 import com.bbva.fga.core.AppProperties;
 import com.bbva.fga.utils.EnvironmentUtils;
 
@@ -16,6 +17,8 @@ import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.apache.ibatis.transaction.TransactionFactory;
 import org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory;
 
+
+
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -30,16 +33,17 @@ public class MyBatisConnectionFactory {
         try {
             HikariDataSource dataSource = new HikariDataSource();
             dataSource.setJdbcUrl(AppProperties.getInstance().getProperty("database.url"));
-            if (EnvironmentUtils.isLocalEnvironment()) {
+            if (!EnvironmentUtils.isLocalEnvironment()) {
                 dataSource.setUsername(AppProperties.getInstance().getProperty("database.username"));
                 dataSource.setPassword(AppProperties.getInstance().getProperty("database.password"));
             } else {
                 dataSource.addDataSourceProperty(
                         "user",
-                        AppProperties.getInstance().getProperty("database.username"));
+                        SecretManagerService.getSecretValue("bbva-gob-dicc-datos-pe-sp-db-root", "user"));
                 dataSource.addDataSourceProperty(
                         "password",
-                        AppProperties.getInstance().getProperty("database.password"));
+                        SecretManagerService.getSecretValue("bbva-gob-dicc-datos-pe-sp-db-root", "password"));
+
                 dataSource.addDataSourceProperty(
                         "socketFactory",
                         "com.google.cloud.sql.mysql.SocketFactory"
@@ -57,6 +61,10 @@ public class MyBatisConnectionFactory {
                     Integer.parseInt(AppProperties.getInstance().getProperty("database.minimum_idle"))
             );
             dataSource.setConnectionTestQuery("SELECT 1");
+
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            String jsonConfigString = gson.toJson(dataSource);
+            MainApp.ROOT_LOOGER.log(Level.INFO,"DB - HIKARI CONFIG: " +  jsonConfigString);
 
             TransactionFactory transactionFactory = new JdbcTransactionFactory();
             Environment environment = new Environment("mysql", transactionFactory, dataSource);
