@@ -52,10 +52,6 @@ public class MyBatisConnectionFactory {
             );
             dataSource.setConnectionTestQuery("SELECT 1");
 
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            String jsonConfigString = gson.toJson(dataSource);
-            LOGGER.log(Level.INFO,"DB - HIKARI CONFIG: " +  jsonConfigString);
-
             TransactionFactory transactionFactory = new JdbcTransactionFactory();
             Environment environment = new Environment("mysql", transactionFactory, dataSource);
             Configuration configuration = new Configuration(environment);
