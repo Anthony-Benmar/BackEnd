@@ -42,10 +42,8 @@ public class MyBatisConnectionFactory {
                         properties.getProperty("database.cloud_sql_instance"));
                 config.addDataSourceProperty("ipTypes", "PUBLIC,PRIVATE");
             }
-            // config.setAutoCommit(false);
-            config.setMaximumPoolSize(
-                    Integer.parseInt(properties.getProperty("database.maximum_pool_size"))
-            );
+            config.setAutoCommit(false);
+            // config.setMaximumPoolSize(Integer.parseInt(properties.getProperty("database.maximum_pool_size")));
             config.setMinimumIdle(
                     Integer.parseInt(properties.getProperty("database.minimum_idle"))
             );
