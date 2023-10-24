@@ -40,7 +40,7 @@ public class MyBatisConnectionFactory {
                         properties.getProperty("datasource.property.socket"));
                 config.addDataSourceProperty("cloudSqlInstance",
                         properties.getProperty("database.cloud_sql_instance"));
-                config.addDataSourceProperty("ipTypes", "PUBLIC,PRIVATE");
+                config.addDataSourceProperty("ipTypes", "PUBLIC");
             }
             config.setAutoCommit(false);
             // config.setMaximumPoolSize(Integer.parseInt(properties.getProperty("database.maximum_pool_size")));
