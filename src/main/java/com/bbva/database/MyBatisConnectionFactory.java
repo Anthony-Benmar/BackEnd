@@ -2,8 +2,6 @@ package com.bbva.database;
 import com.bbva.fga.core.AppProperties;
 import com.bbva.fga.utils.EnvironmentUtils;
 import com.bbva.jetty.MainApp;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.apache.ibatis.mapping.Environment;
@@ -30,6 +28,7 @@ public class MyBatisConnectionFactory {
             HikariConfig config = new HikariConfig();
             Properties properties = AppProperties.getInstance();
             config.setJdbcUrl(properties.getProperty("database.url"));
+
             if (EnvironmentUtils.isLocalEnvironment()) {
                 config.setUsername(properties.getProperty("database.username"));
                 config.setPassword(properties.getProperty("database.password"));
@@ -40,21 +39,16 @@ public class MyBatisConnectionFactory {
                         properties.getProperty("datasource.property.socket"));
                 config.addDataSourceProperty("cloudSqlInstance",
                         properties.getProperty("database.cloud_sql_instance"));
-                // config.addDataSourceProperty("ipTypes", "PUBLIC");
+                config.addDataSourceProperty("ipTypes", "PUBLIC,PRIVATE");
             }
             config.setAutoCommit(false);
-            config.setMaximumPoolSize(Integer.parseInt(properties.getProperty("database.maximum_pool_size")));
+            // config.setMaximumPoolSize(Integer.parseInt(properties.getProperty("database.maximum_pool_size")));
             config.setMinimumIdle(
                     Integer.parseInt(properties.getProperty("database.minimum_idle"))
             );
             config.setConnectionTestQuery("SELECT 1");
 
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            String jsonConfigString = gson.toJson(config);
-            MainApp.ROOT_LOOGER.log(Level.INFO,"DB - HIKARI CONFIG: " +  jsonConfigString);
             HikariDataSource dataSource = new HikariDataSource(config);
-            MainApp.ROOT_LOOGER.log(Level.INFO,"---- TEST ----");
-
             TransactionFactory transactionFactory = new JdbcTransactionFactory();
             Environment environment = new Environment("mysql", transactionFactory, dataSource);
             Configuration configuration = new Configuration(environment);

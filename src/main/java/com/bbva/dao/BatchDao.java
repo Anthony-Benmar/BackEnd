@@ -39,14 +39,13 @@ public class BatchDao {
                     dto.getEndDate(),
                     dto.getFolder(),
                     dto .getDataproc(),
-                    dto.getOrderId(),
-                    dto.getProjectName(),
-                    dto.getSdatoolId()
+                    dto.getOrderId()
             );
         }
         log.info(JSONUtils.convertFromObjectToJson(response.getData()));
         recordsCount = (lista.size() > 0) ? lista.get(0).getRecordsCount() : 0;
         pagesAmount = dto.getRecords_amount() > 0 ? (int) Math.ceil(recordsCount.floatValue() / dto.getRecords_amount().floatValue()) : 1;
+
 
         response.setCount(recordsCount);
         response.setPages_amount(pagesAmount);

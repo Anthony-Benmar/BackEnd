@@ -16,8 +16,8 @@ public class HelloResource {
 
     @GET
     public Response hello(@Context HttpServletRequest httpServletRequest) {
-        // var userSession = UserSessionHelper.getInstance().getUserSession(httpServletRequest, false);
-        // MainApp.ROOT_LOOGER.log(Level.INFO, "User session: {0}", userSession);
+        var userSession = UserSessionHelper.getInstance().getUserSession(httpServletRequest, false);
+        MainApp.ROOT_LOOGER.log(Level.INFO, "User session: {0}", userSession);
         return Response.status(200).entity("{\"message\":\"Hello world!\"}").build();
     }
 }
