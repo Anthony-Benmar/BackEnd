@@ -21,7 +21,9 @@ public interface BatchMapper {
             "#{endDate}," +
             "#{folder}," +
             "#{dataproc}," +
-            "#{orderId})")
+            "#{orderId}," +
+            "#{projectName}," +
+            "#{sdatoolId})")
     @Results({
             @Result(property = "jobName", column = "job_name"),
             @Result(property = "folder", column = "folder"),
@@ -48,6 +50,7 @@ public interface BatchMapper {
             @Result(property = "updatedAt", column = "updated_at"),
             @Result(property = "createdBy", column = "created_by"),
             @Result(property = "createdAt", column = "created_at"),
+            @Result(property = "sdatoolId", column = "sdatool_id"),
             @Result(property = "recordsCount", column = "records_count")
     })
     List<JobExecutionFilterData> filter(@Param("pageCurrent") int page,
@@ -57,7 +60,9 @@ public interface BatchMapper {
                                         @Param("endDate") String endDate,
                                         @Param("folder") String folder,
                                         @Param("dataproc") String dataproc,
-                                        @Param("orderId") String orderId);
+                                        @Param("orderId") String orderId,
+                                        @Param("projectName") String projectName,
+                                        @Param("sdatoolId") String sdatoolId);
 
     @Select("CALL SP_INSERT_RELIABILITY_INCIDENCE(" +
             "#{jobName}," +

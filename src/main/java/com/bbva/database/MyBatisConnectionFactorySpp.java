@@ -32,7 +32,6 @@ public class MyBatisConnectionFactorySpp {
             Properties properties = AppProperties.getInstance();
             config.setJdbcUrl(properties.getProperty("database.urlspp"));
 
-            
             if (EnvironmentUtils.isLocalEnvironment()) {
                 config.setUsername(properties.getProperty("database.usernamespp"));
                 config.setPassword(properties.getProperty("database.passwordspp"));

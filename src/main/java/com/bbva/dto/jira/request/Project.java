@@ -11,4 +11,6 @@ public class Project {
     public String key;
     public String name;
     public String projectTypeKey;
+    public AvatarUrls avatarUrls;
+    public ProjectCategory projectCategory;
 }

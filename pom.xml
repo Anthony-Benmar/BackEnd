@@ -87,7 +87,6 @@
             <version>${resteasy.version}</version>
         </dependency>
 
-
         <!-- Multipart support -->
         <dependency>
             <groupId>org.jboss.resteasy</groupId>
