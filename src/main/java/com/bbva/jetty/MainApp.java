@@ -59,7 +59,7 @@ public class MainApp {
         webAppContext.setContextPath("/");
         webAppContext.setResourceBase(webAppDir.toURI().toString());
         webAppContext.setDescriptor(WEBAPP_RESOURCES_LOCATION + "/WEB-INF/web.xml");
-        webAppContext.setErrorHandler(new MainAppErrorHandler());
+        // webAppContext.setErrorHandler(new MainAppErrorHandler());
         return webAppContext;
     }
 }
