@@ -23,6 +23,7 @@ import org.apache.http.HttpEntity;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicCookieStore;
@@ -70,8 +71,9 @@ public class IssueTicketService {
         var httpclient = HttpClients.createDefault();
         CloseableHttpResponse response = httpclient.execute(httpPost);
         Integer responseCode = response.getStatusLine().getStatusCode();
+
         if (responseCode>=400){
-            return null;
+            throw new HandledException(responseCode.toString(), "Error autenticación jira");
         }
         cookieStore = new BasicCookieStore();
         Header[] headers = response.getAllHeaders();
@@ -147,7 +149,7 @@ public class IssueTicketService {
             var workOrderDetails = issueTicketDao.ListWorkOrderDetails(workOrder.work_order_id);
             if (workOrderDetails != null && workOrderDetails.stream().count()>0) {
                 workOrderDetails = workOrderDetails.stream().filter(w -> !StringUtils.isNullOrEmpty(w.issue_code)).collect(Collectors.toList());
-                updateTicketJira(dto.token, workOrder, workOrderDetails);
+                updateTicketJira(dto, workOrder, workOrderDetails);
                 issueTicketDao.UpdateWorkOrder(workOrder);
             }
         }catch (HandledException ex){
@@ -218,7 +220,7 @@ public class IssueTicketService {
         }
     }
 
-    private void updateTicketJira(String cookie_oauth, WorkOrder workOrder, List<WorkOrderDetail> workOrderDetail)
+    private void updateTicketJira(WorkOrderDtoRequest dto, WorkOrder workOrder, List<WorkOrderDetail> workOrderDetail)
             throws Exception
     {
         httpClient = HttpClient.newHttpClient();
@@ -226,7 +228,7 @@ public class IssueTicketService {
 
         for (Map.Entry<String, IssueDto> issue : issuesRequests.entrySet())
         {
-            PutResponseEditAsync(cookie_oauth, issue.getKey(), issue.getValue());
+            PutResponseEditAsync(dto, issue.getKey(), issue.getValue());
         }
     }
 
@@ -333,7 +335,7 @@ public class IssueTicketService {
         return issueCreated;
     }
 
-    private Object PutResponseEditAsync(String cookie_oauth,String issueTicketCode, IssueDto issueJira)
+    private Object PutResponseEditAsync(WorkOrderDtoRequest objAuth,String issueTicketCode, IssueDto issueJira)
             throws Exception
     {
         Object responseBody = null;
@@ -341,27 +343,29 @@ public class IssueTicketService {
         String jsonString = gson.toJson(issueJira);
 
         String url = URL_API_JIRA + issueTicketCode;
-        String cookie = HEADER_COOKIE_JIRA + cookie_oauth;
+        HttpPut httpPut = new HttpPut(url);
+        StringEntity requestEntity = new StringEntity(jsonString, "UTF-8");
+        httpPut.setEntity(requestEntity);
+        httpPut.setHeader("Content-Type", "application/json");
 
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(url))
-                .header("Content-type", "application/json")
-                .headers("Cookie", cookie)
-                .PUT(HttpRequest.BodyPublishers.ofString(jsonString))
-                .build();
+        Integer responseCode =0;
+        String responseBodyString = "";
+        HttpEntity entity = null;
+        try(CloseableHttpClient session = getBasicSession(objAuth.username, objAuth.token)){
+            httpPut.setHeader("Cookie", createCookieHeader(cookieStore.getCookies()));
+            CloseableHttpResponse response = session.execute(httpPut);
+            responseCode = response.getStatusLine().getStatusCode();
+            entity = response.getEntity();
+        }
 
-        CompletableFuture<HttpResponse<String>> futureResponse = httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString());
-        HttpResponse<String> response = futureResponse.get();
-        Integer responseCode = response.statusCode();
         if (responseCode.equals(302)) {
             throw new HandledException(responseCode.toString(), "Token Expirado");
         }
         if (responseCode>=400 && responseCode<=500) {
             throw new HandledException(responseCode.toString(), "Error al actualizar tickets, revise los datos ingresados");
         }
-        responseBody = response.body();
 
-        return responseBody;
+        return entity;
     }
 
     private static String createCookieHeader(List<Cookie> cookieList) {
