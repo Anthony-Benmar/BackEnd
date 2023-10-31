@@ -323,6 +323,7 @@ public class IssueTicketService {
             responseCode = response.getStatusLine().getStatusCode();
             entity = response.getEntity();
             responseBodyString = EntityUtils.toString(entity);
+            response.close();
         }
 
         if (responseCode.equals(302)) {
@@ -356,7 +357,9 @@ public class IssueTicketService {
             CloseableHttpResponse response = session.execute(httpPut);
             responseCode = response.getStatusLine().getStatusCode();
             entity = response.getEntity();
+            response.close();
         }
+
 
         if (responseCode.equals(302)) {
             throw new HandledException(responseCode.toString(), "Token Expirado");
