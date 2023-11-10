@@ -32,7 +32,8 @@ public class BatchResources {
             @QueryParam("dataproc") String dataproc,
             @QueryParam("orderId") String orderId,
             @QueryParam("projectName") String projectName,
-            @QueryParam("sdatoolId") String sdatoolId
+            @QueryParam("sdatoolId") String sdatoolId,
+            @QueryParam("domain") String domain
     ){
         JobExecutionFilterRequestDTO dto = new JobExecutionFilterRequestDTO();
         Integer recordsAmountFinal = helper.parseIntegerOrDefault(recordsAmount, 10);
@@ -48,6 +49,7 @@ public class BatchResources {
         dto.setOrderId(orderId);
         dto.setProjectName(projectName);
         dto.setSdatoolId(sdatoolId);
+        dto.setDomain(domain);
 
         IDataResult<JobExecutionFilterResponseDTO>  result = batchService.filter(dto);
         return result;

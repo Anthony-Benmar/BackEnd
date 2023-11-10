@@ -37,4 +37,5 @@ public class JobExecutionFilterData {
     private String createdBy;
     private String createdAt;
     private String sdatoolId;
+    private String domain;
 }

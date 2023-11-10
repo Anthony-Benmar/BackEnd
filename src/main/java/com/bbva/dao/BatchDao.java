@@ -38,10 +38,11 @@ public class BatchDao {
                     dto.getStartDate(),
                     dto.getEndDate(),
                     dto.getFolder(),
-                    dto .getDataproc(),
+                    dto.getDataproc(),
                     dto.getOrderId(),
                     dto.getProjectName(),
-                    dto.getSdatoolId()
+                    dto.getSdatoolId(),
+                    dto.getDomain()
             );
         }
         log.info(JSONUtils.convertFromObjectToJson(response.getData()));
