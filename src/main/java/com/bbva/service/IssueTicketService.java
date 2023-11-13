@@ -58,7 +58,7 @@ public class IssueTicketService {
         return dateNowUTC.after(dateTokenUTC);
     }
 
-    public CloseableHttpClient getBasicSession(String username, String password) throws Exception
+    public void getBasicSession(String username, String password, CloseableHttpClient httpclient) throws Exception
     {
         var authJira =  new authJiraDtoRequest(username,password);
         var gson = new GsonBuilder().setPrettyPrinting().create();
@@ -68,30 +68,27 @@ public class IssueTicketService {
         httpPost.setEntity(requestEntity);
         httpPost.setHeader("Content-Type", "application/json");
 
-        var httpclient = HttpClients.createDefault();
-        CloseableHttpResponse response = httpclient.execute(httpPost);
-        Integer responseCode = response.getStatusLine().getStatusCode();
+        try(CloseableHttpResponse response = httpclient.execute(httpPost)) {
+            Integer responseCode = response.getStatusLine().getStatusCode();
 
-        if (responseCode>=400){
-            throw new HandledException(responseCode.toString(), "Error autenticación jira");
-        }
-        cookieStore = new BasicCookieStore();
-        Header[] headers = response.getAllHeaders();
-        for (Header header : headers) {
-            if (header.getName().equalsIgnoreCase("Set-Cookie")) {
-                String cookieValue = header.getValue();
-                String[] cookieParts = cookieValue.split(";")[0].split("=");
-                if (cookieParts.length == 2) {
-                    String cookieName = cookieParts[0].trim();
-                    String cookieValueTrimmed = cookieParts[1].trim();
-                    var cookie = new BasicClientCookie(cookieName, cookieValueTrimmed);
-                    cookieStore.addCookie(cookie);
+            if (responseCode >= 400) {
+                throw new HandledException(responseCode.toString(), "Error autenticación jira");
+            }
+            cookieStore = new BasicCookieStore();
+            Header[] headers = response.getAllHeaders();
+            for (Header header : headers) {
+                if (header.getName().equalsIgnoreCase("Set-Cookie")) {
+                    String cookieValue = header.getValue();
+                    String[] cookieParts = cookieValue.split(";")[0].split("=");
+                    if (cookieParts.length == 2) {
+                        String cookieName = cookieParts[0].trim();
+                        String cookieValueTrimmed = cookieParts[1].trim();
+                        var cookie = new BasicClientCookie(cookieName, cookieValueTrimmed);
+                        cookieStore.addCookie(cookie);
+                    }
                 }
             }
         }
-
-        return httpclient;
-
     }
 
     public IDataResult insert(WorkOrderDtoRequest dto)
@@ -317,9 +314,10 @@ public class IssueTicketService {
         Integer responseCode =0;
         String responseBodyString = "";
         HttpEntity entity = null;
-        try(CloseableHttpClient session = getBasicSession(objAuth.username, objAuth.token)){
+        try(CloseableHttpClient httpclient = HttpClients.createDefault()){
+            getBasicSession(objAuth.username, objAuth.token, httpclient);
             httpPost.setHeader("Cookie", createCookieHeader(cookieStore.getCookies()));
-            CloseableHttpResponse response = session.execute(httpPost);
+            CloseableHttpResponse response = httpclient.execute(httpPost);
             responseCode = response.getStatusLine().getStatusCode();
             entity = response.getEntity();
             responseBodyString = EntityUtils.toString(entity);
@@ -352,14 +350,14 @@ public class IssueTicketService {
         Integer responseCode =0;
         String responseBodyString = "";
         HttpEntity entity = null;
-        try(CloseableHttpClient session = getBasicSession(objAuth.username, objAuth.token)){
+        try(CloseableHttpClient httpclient = HttpClients.createDefault()){
+            getBasicSession(objAuth.username, objAuth.token, httpclient);
             httpPut.setHeader("Cookie", createCookieHeader(cookieStore.getCookies()));
-            CloseableHttpResponse response = session.execute(httpPut);
+            CloseableHttpResponse response = httpclient.execute(httpPut);
             responseCode = response.getStatusLine().getStatusCode();
             entity = response.getEntity();
             response.close();
         }
-
 
         if (responseCode.equals(302)) {
             throw new HandledException(responseCode.toString(), "Token Expirado");
