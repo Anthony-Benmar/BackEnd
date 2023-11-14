@@ -50,7 +50,6 @@ public class BatchResources {
         dto.setProjectName(projectName);
         dto.setSdatoolId(sdatoolId);
         dto.setDomain(domain);
-
         IDataResult<JobExecutionFilterResponseDTO>  result = batchService.filter(dto);
         return result;
     }
