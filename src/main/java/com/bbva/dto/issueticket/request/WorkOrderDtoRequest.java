@@ -17,6 +17,7 @@ public class WorkOrderDtoRequest {
     public String sourceName;
     public int flowType;
     public String registerUserId;
+    public String username;
     public String token;
     public Long expireTokenDate;
     public List<WorkOrderDetailDtoRequest> workOrderDetail;
