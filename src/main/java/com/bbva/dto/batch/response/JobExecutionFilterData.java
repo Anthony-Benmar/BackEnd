@@ -38,4 +38,5 @@ public class JobExecutionFilterData {
     private String createdAt;
     private String sdatoolId;
     private String domain;
+    private Boolean isTypified;
 }
