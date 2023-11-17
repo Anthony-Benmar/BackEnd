@@ -1,9 +1,7 @@
 package com.bbva.database.mappers;
 
 import com.bbva.dto.batch.request.InsertReliabilityIncidenceDTO;
-import com.bbva.dto.batch.request.JobExecutionFilterRequestDTO;
 import com.bbva.dto.batch.response.JobExecutionFilterData;
-import com.bbva.dto.government.request.InsertSourceRequestDTO;
 import com.bbva.entities.InsertEntity;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Result;
@@ -53,7 +51,8 @@ public interface BatchMapper {
             @Result(property = "createdAt", column = "created_at"),
             @Result(property = "sdatoolId", column = "sdatool_id"),
             @Result(property = "domain", column = "service_owner"),
-            @Result(property = "recordsCount", column = "records_count")
+            @Result(property = "recordsCount", column = "records_count"),
+            @Result(property = "isTypified",column = "isTypified")
     })
     List<JobExecutionFilterData> filter(@Param("pageCurrent") int page,
                                         @Param("recordsAmount") int recordsAmount,

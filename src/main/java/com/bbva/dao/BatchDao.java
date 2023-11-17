@@ -42,8 +42,7 @@ public class BatchDao {
                     dto.getOrderId(),
                     dto.getProjectName(),
                     dto.getSdatoolId(),
-                    dto.getDomain()
-            );
+                    dto.getDomain());
         }
         log.info(JSONUtils.convertFromObjectToJson(response.getData()));
         recordsCount = (lista.size() > 0) ? lista.get(0).getRecordsCount() : 0;
