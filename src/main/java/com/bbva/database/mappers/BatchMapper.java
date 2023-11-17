@@ -22,7 +22,8 @@ public interface BatchMapper {
             "#{orderId}," +
             "#{projectName}," +
             "#{sdatoolId}," +
-            "#{domain})")
+            "#{domain}, " +
+            "#{isTypified})")
     @Results({
             @Result(property = "jobName", column = "job_name"),
             @Result(property = "folder", column = "folder"),
@@ -64,7 +65,8 @@ public interface BatchMapper {
                                         @Param("orderId") String orderId,
                                         @Param("projectName") String projectName,
                                         @Param("sdatoolId") String sdatoolId,
-                                        @Param("domain") String domain);
+                                        @Param("domain") String domain,
+                                        @Param("isTypified") Boolean isTypified);
 
     @Select("CALL SP_INSERT_RELIABILITY_INCIDENCE(" +
             "#{jobName}," +

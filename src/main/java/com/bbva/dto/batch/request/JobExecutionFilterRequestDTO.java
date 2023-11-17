@@ -16,4 +16,5 @@ public class JobExecutionFilterRequestDTO extends PaginationMasterDtoRequest {
     private String projectName;
     private String sdatoolId;
     private String domain;
+    private Boolean isTypified;
 }
