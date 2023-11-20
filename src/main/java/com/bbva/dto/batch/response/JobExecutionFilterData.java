@@ -23,11 +23,7 @@ public class JobExecutionFilterData {
     private String projectName;
     private String scrumTeam;
     private String scrumMaster;
-    private Integer solutionType;
-    private String solutionDesc;
     private String solutionDetail;
-    private Integer jobType;
-    private String jobDesc;
     private Integer errorType;
     private String errorDesc;
     private String errorDetails;
