@@ -38,11 +38,7 @@ public interface BatchMapper {
             @Result(property = "projectName", column = "project_name"),
             @Result(property = "scrumTeam", column = "scrum_team"),
             @Result(property = "scrumMaster", column = "scrum_master"),
-            @Result(property = "solutionType", column = "solution_type"),
-            @Result(property = "solutionDesc", column = "solution_desc"),
             @Result(property = "solutionDetail", column = "solution_detail"),
-            @Result(property = "jobType", column = "job_type"),
-            @Result(property = "jobDesc", column = "job_desc"),
             @Result(property = "errorType", column = "error_type"),
             @Result(property = "errorDesc", column = "error_desc"),
             @Result(property = "errorDetails", column = "error_details"),
@@ -72,10 +68,8 @@ public interface BatchMapper {
             "#{jobName}," +
             "#{orderDate}," +
             "#{orderId}," +
-            "#{jobType}," +
             "#{errorType}," +
             "#{errorDetails}," +
-            "#{solutionType}," +
             "#{solutionDetail}," +
             "#{employeeId})")
     @Results({
