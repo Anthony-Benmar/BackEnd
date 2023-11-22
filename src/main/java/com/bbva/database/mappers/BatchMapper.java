@@ -49,7 +49,9 @@ public interface BatchMapper {
             @Result(property = "sdatoolId", column = "sdatool_id"),
             @Result(property = "domain", column = "service_owner"),
             @Result(property = "recordsCount", column = "records_count"),
-            @Result(property = "isTypified",column = "isTypified")
+            @Result(property = "isTypified", column = "isTypified"),
+            @Result(property = "typified", column = "typified"),
+            @Result(property = "withoutTypified", column = "withoutTypified")
     })
     List<JobExecutionFilterData> filter(@Param("pageCurrent") int page,
                                         @Param("recordsAmount") int recordsAmount,
