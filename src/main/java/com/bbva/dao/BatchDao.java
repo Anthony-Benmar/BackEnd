@@ -51,8 +51,8 @@ public class BatchDao {
         recordsCount = (lista.size() > 0) ? lista.get(0).getRecordsCount() : 0;
         pagesAmount = dto.getRecords_amount() > 0 ? (int) Math.ceil(recordsCount.floatValue() / dto.getRecords_amount().floatValue()) : 1;
 
-        Integer notTypified = lista.stream().filter(job -> job.getIsTypified() == Boolean.FALSE).collect(Collectors.toList()).size();
-        Integer typified = lista.stream().filter(job -> job.getIsTypified() == Boolean.TRUE).collect(Collectors.toList()).size();
+        Integer notTypified = (lista.size() > 0) ? lista.get(0).getWithoutTypified() : 0;
+        Integer typified = (lista.size() > 0) ? lista.get(0).getTypified() : 0;
 
         StatisticsData statistics = new StatisticsData();
         statistics.setNotTypified(notTypified);

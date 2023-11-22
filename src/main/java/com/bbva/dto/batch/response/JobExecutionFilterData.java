@@ -2,8 +2,6 @@ package com.bbva.dto.batch.response;
 
 import lombok.*;
 
-import java.util.Date;
-
 @AllArgsConstructor
 @NoArgsConstructor
 @Setter
@@ -35,4 +33,6 @@ public class JobExecutionFilterData {
     private String sdatoolId;
     private String domain;
     private Boolean isTypified;
+    private Integer typified;
+    private Integer withoutTypified;
 }
