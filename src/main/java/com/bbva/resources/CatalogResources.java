@@ -2,6 +2,7 @@ package com.bbva.resources;
 
 import com.bbva.core.abstracts.IDataResult;
 import com.bbva.dto.catalog.request.ListByCatalogIdDtoRequest;
+import com.bbva.dto.catalog.response.CatalogResponseDto;
 import com.bbva.dto.catalog.response.ListByCatalogIdDtoResponse;
 import com.bbva.entities.common.PeriodEntity;
 import com.bbva.entities.spp.Period;
@@ -15,6 +16,17 @@ import java.io.IOException;
 @Produces(MediaType.APPLICATION_JSON)
 public class CatalogResources {
     private CatalogService catalogService = new CatalogService();
+
+    @GET
+    @Path("/{catalogId}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<CatalogResponseDto> getCatalog(
+            @QueryParam("parentCatalogId") Integer parentCatalogId,
+            @QueryParam("parentElementId") Integer parentElementId,
+            @PathParam("catalogId") Integer catalogId) {
+        return catalogService.getCatalog(catalogId, parentCatalogId, parentElementId);
+    }
 
     @POST
     @Path("list")
