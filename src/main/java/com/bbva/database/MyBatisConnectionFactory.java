@@ -49,17 +49,12 @@ public class MyBatisConnectionFactory {
                     Integer.parseInt(properties.getProperty("database.minimum_idle"))
             );
             config.setConnectionTestQuery("SELECT 1");
-            MainApp.ROOT_LOOGER.log(Level.INFO,"CONFIG DATABASE JDS_URL: " + config.getJdbcUrl());
-            MainApp.ROOT_LOOGER.log(Level.INFO,"CONFIG DATABASE USER: " + config.getUsername());
-            MainApp.ROOT_LOOGER.log(Level.INFO,"CONFIG DATABASE DATA SOURCE PROPERTIES: " + config.getDataSourceProperties());
             HikariDataSource dataSource = new HikariDataSource(config);
             TransactionFactory transactionFactory = new JdbcTransactionFactory();
             Environment environment = new Environment("mysql", transactionFactory, dataSource);
             Configuration configuration = new Configuration(environment);
             configuration.addMappers("com.bbva.database.mappers");
             sqlSessionFactory = new SqlSessionFactoryBuilder().build(configuration);
-            MainApp.ROOT_LOOGER.log(Level.INFO,"CONFIG DATABASE: " + configuration.getObjectFactory());
-
         } catch (Exception e) {
             MainApp.ROOT_LOOGER.log(Level.INFO,"Error connection Database: " + e.getMessage(), e);
             MainApp.ROOT_LOOGER.log(Level.SEVERE,"Error connection Database: " + e.getMessage(), e);
