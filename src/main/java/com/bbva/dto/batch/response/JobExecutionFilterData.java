@@ -24,7 +24,8 @@ public class JobExecutionFilterData {
     private String solutionDetail;
     private Integer errorType;
     private String errorDesc;
-    private String errorDetails;
+    private Integer errorReason;
+    private String errorReasonDesc;
     private Integer recordsCount;
     private String updatedBy;
     private String updatedAt;
@@ -35,4 +36,5 @@ public class JobExecutionFilterData {
     private Boolean isTypified;
     private Integer typified;
     private Integer withoutTypified;
+    private String logArgos;
 }
