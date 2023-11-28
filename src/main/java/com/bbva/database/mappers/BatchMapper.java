@@ -41,7 +41,8 @@ public interface BatchMapper {
             @Result(property = "solutionDetail", column = "solution_detail"),
             @Result(property = "errorType", column = "error_type"),
             @Result(property = "errorDesc", column = "error_desc"),
-            @Result(property = "errorDetails", column = "error_details"),
+            @Result(property = "errorReason", column = "error_reason"),
+            @Result(property = "errorReasonDesc", column = "error_reason_desc"),
             @Result(property = "updatedBy", column = "updated_by"),
             @Result(property = "updatedAt", column = "updated_at"),
             @Result(property = "createdBy", column = "created_by"),
@@ -51,7 +52,8 @@ public interface BatchMapper {
             @Result(property = "recordsCount", column = "records_count"),
             @Result(property = "isTypified", column = "isTypified"),
             @Result(property = "typified", column = "typified"),
-            @Result(property = "withoutTypified", column = "withoutTypified")
+            @Result(property = "withoutTypified", column = "withoutTypified"),
+            @Result(property = "logArgos", column = "log_argos")
     })
     List<JobExecutionFilterData> filter(@Param("pageCurrent") int page,
                                         @Param("recordsAmount") int recordsAmount,
@@ -71,9 +73,10 @@ public interface BatchMapper {
             "#{orderDate}," +
             "#{orderId}," +
             "#{errorType}," +
-            "#{errorDetails}," +
+            "#{errorReason}," +
             "#{solutionDetail}," +
-            "#{employeeId})")
+            "#{employeeId}," +
+            "#{logArgos})")
     @Results({
             @Result(property = "last_insert_id", column = "last_insert_id"),
             @Result(property = "new_register", column = "new_register")
