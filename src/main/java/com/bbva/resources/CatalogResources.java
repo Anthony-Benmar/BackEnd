@@ -38,6 +38,7 @@ public class CatalogResources {
 
     @GET
     @Path("periods")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<Period> listPeriods() throws IOException, InterruptedException {
         return catalogService.listPeriods();
@@ -45,6 +46,7 @@ public class CatalogResources {
 
     @GET
     @Path("listperiods")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<PeriodEntity> listAllPeriods() {
         return catalogService.listAllPeriods();
