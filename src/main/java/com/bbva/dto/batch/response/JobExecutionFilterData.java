@@ -37,4 +37,5 @@ public class JobExecutionFilterData {
     private Integer typified;
     private Integer withoutTypified;
     private String logArgos;
+    private Integer runCounter;
 }
