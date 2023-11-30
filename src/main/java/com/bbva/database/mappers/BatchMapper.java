@@ -53,7 +53,8 @@ public interface BatchMapper {
             @Result(property = "isTypified", column = "isTypified"),
             @Result(property = "typified", column = "typified"),
             @Result(property = "withoutTypified", column = "withoutTypified"),
-            @Result(property = "logArgos", column = "log_argos")
+            @Result(property = "logArgos", column = "log_argos"),
+            @Result(property = "runCounter", column = "run_counter")
     })
     List<JobExecutionFilterData> filter(@Param("pageCurrent") int page,
                                         @Param("recordsAmount") int recordsAmount,
