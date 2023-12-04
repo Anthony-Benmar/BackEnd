@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.annotation.Nullable;
+import java.util.Date;
 import java.util.List;
 
 @AllArgsConstructor
@@ -19,5 +20,7 @@ public class sourceTicketGroupByDtoResponse {
     @Nullable
     public String boardName;
     public String feature;
+    @Nullable
+    public Date registerDate;
     public List<sourceTicketDetailDtoResponse> sourceTicketDetail;
 }

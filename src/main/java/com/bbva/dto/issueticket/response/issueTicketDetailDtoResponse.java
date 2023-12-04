@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.annotation.Nullable;
+import java.util.Date;
 import java.util.List;
 
 @AllArgsConstructor
@@ -30,5 +31,7 @@ public class issueTicketDetailDtoResponse {
     public String feature;
     public String projectName;
     public int projectId;
-    public int orden;
+    public int orderTemplate;
+    @Nullable
+    public Date register_date;
 }
