@@ -5,14 +5,12 @@ import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.database.MyBatisConnectionFactory;
 import com.bbva.database.mappers.BatchMapper;
+import com.bbva.dto.batch.request.InsertAJIFJobExecutionRequest;
 import com.bbva.dto.batch.request.InsertCSATJobExecutionRequest;
 import com.bbva.dto.batch.request.InsertReliabilityIncidenceDTO;
 import com.bbva.dto.batch.request.JobExecutionFilterRequestDTO;
-import com.bbva.dto.batch.response.InsertCSATJobExecutionResponseDTO;
-import com.bbva.dto.batch.response.JobExecutionFilterData;
-import com.bbva.dto.batch.response.JobExecutionFilterResponseDTO;
+import com.bbva.dto.batch.response.*;
 import com.bbva.entities.InsertEntity;
-import com.bbva.dto.batch.response.StatisticsData;
 import com.bbva.util.JSONUtils;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -91,6 +89,23 @@ public class BatchDao {
                 InsertEntity result = null;
                 for (InsertCSATJobExecutionRequest request : dto) {
                     result = batchMapper.insertCSATJobExecution(request);
+                }
+                session.commit();
+                return new SuccessDataResult(result);
+            }
+        }catch (Exception e) {
+            log.log(Level.SEVERE, e.getMessage(), e);
+            return new ErrorDataResult(null, "500",e.getMessage());
+        }
+    }
+    public DataResult<InsertAJIFJobExecutionResponseDTO>insertAJIFJobExecutionRequest(List<InsertAJIFJobExecutionRequest> dto) {
+        try {
+            SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+            try (SqlSession session = sqlSessionFactory.openSession()) {
+                BatchMapper batchMapper = session.getMapper(BatchMapper.class);
+                InsertEntity result = null;
+                for (InsertAJIFJobExecutionRequest request : dto) {
+                    result = batchMapper.insertAJIFJobExecution(request);
                 }
                 session.commit();
                 return new SuccessDataResult(result);
