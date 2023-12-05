@@ -1,12 +1,10 @@
 package com.bbva.database.mappers;
 
+import com.bbva.dto.batch.request.InsertCSATJobExecutionRequest;
 import com.bbva.dto.batch.request.InsertReliabilityIncidenceDTO;
 import com.bbva.dto.batch.response.JobExecutionFilterData;
 import com.bbva.entities.InsertEntity;
-import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Result;
-import org.apache.ibatis.annotations.Results;
-import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.*;
 
 import java.util.List;
 
@@ -82,4 +80,38 @@ public interface BatchMapper {
     })
     InsertEntity insertReliabilityIncidence(InsertReliabilityIncidenceDTO dto);
 
+    @Select("CALL SP_INSERT_JOB_EXECUTION_CSTAT("+
+            "#{jobId},"+
+            "#{jobName},"+
+            "#{orderId},"+
+            "#{folder},"+
+            "#{application},"+
+            "#{subApplication},"+
+            "#{orderDate},"+
+            "#{startTime},"+
+            "#{endTime},"+
+            "#{host},"+
+            "#{runAs},"+
+            "#{executionStatus},"+
+            "#{sourceOrigin},"+
+            "#{createDate},"+
+            "#{updateDate})")
+    @Results({
+            @Result(property = "jobId", column = "job_id"),
+            @Result(property = "jobName", column = "job_name"),
+            @Result(property = "orderId", column = "order_id"),
+            @Result(property = "folder", column = "folder"),
+            @Result(property = "application", column = "application"),
+            @Result(property = "subApplication", column = "sub_application"),
+            @Result(property = "orderDate", column = "order_date"),
+            @Result(property = "startTime", column = "start_time"),
+            @Result(property = "endTime", column = "end_time"),
+            @Result(property = "host", column = "host"),
+            @Result(property = "runAs", column = "run_as"),
+            @Result(property = "executionStatus", column = "execution_status"),
+            @Result(property = "sourceOrigin", column = "source_origin"),
+            @Result(property = "createDate", column = "create_date"),
+            @Result(property = "updateDate", column = "source_origin"),
+    })
+    InsertEntity insertCSATJobExecution(InsertCSATJobExecutionRequest dto);
 }
