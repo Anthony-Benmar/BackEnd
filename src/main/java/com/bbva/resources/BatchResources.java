@@ -57,7 +57,8 @@ public class BatchResources {
             @QueryParam("orderId") String orderId,
             @QueryParam("projectName") String projectName,
             @QueryParam("sdatoolId") String sdatoolId,
-            @QueryParam("domain") String domain
+            @QueryParam("domain") String domain,
+            @QueryParam("isTypified") Boolean isTypified
     ){
         JobExecutionFilterRequestDTO dto = new JobExecutionFilterRequestDTO();
         Integer recordsAmountFinal = helper.parseIntegerOrDefault(recordsAmount, 10);
@@ -74,6 +75,7 @@ public class BatchResources {
         dto.setProjectName(projectName);
         dto.setSdatoolId(sdatoolId);
         dto.setDomain(domain);
+        dto.setIsTypified(isTypified);
         IDataResult<JobExecutionFilterResponseDTO>  result = batchService.filter(dto);
         return result;
     }

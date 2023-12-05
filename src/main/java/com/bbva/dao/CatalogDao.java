@@ -3,9 +3,11 @@ package com.bbva.dao;
 import com.bbva.database.MyBatisConnectionFactory;
 import com.bbva.database.mappers.CatalogMapper;
 import com.bbva.dto.catalog.request.ListByCatalogIdDtoRequest;
+import com.bbva.dto.catalog.response.CatalogResponseDto;
 import com.bbva.dto.catalog.response.ListByCatalogIdDtoResponse;
 import com.bbva.dto.catalog.response.ListByCatalogIdGroupByCatalogDtoResponse;
 import com.bbva.dto.catalog.response.ListByCatalogIdGroupByCatalogGroupByElementDtoResponse;
+import com.bbva.entities.batch.GetCatalogEntity;
 import com.bbva.entities.common.CatalogEntity;
 import com.bbva.entities.common.PeriodEntity;
 import org.apache.ibatis.session.SqlSession;
@@ -19,6 +21,20 @@ import java.util.stream.Collectors;
 public class CatalogDao {
 
     private static final Logger LOGGER = Logger.getLogger(IssueTicketDao.class.getName());
+
+    public ArrayList<GetCatalogEntity> getCatalog(
+            Integer catalogId,
+            Integer parentCatalogId,
+            Integer parentElementId
+    ) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        ArrayList<GetCatalogEntity> list;
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            CatalogMapper mapper = session.getMapper(CatalogMapper.class);
+            list = mapper.getCatalog(catalogId, parentCatalogId, parentElementId);
+        }
+        return list;
+    }
 
     public ListByCatalogIdDtoResponse getCatalogoByCatalogoId(ListByCatalogIdDtoRequest dto) {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();

@@ -352,12 +352,20 @@ public class IssueTicketDao {
             String typeDesc = catalogTypeFlow != null ? catalogTypeFlow.getElementName() : "";
             return new issueTicketDetailDtoResponse(wo.work_order_id,0,0,"", wo.board_id
                     ,wo.flow_type, typeDesc, board.name, wo.source_id, null, "", wo.folio, wo.source_name,
-                    wo.feature, "",wo.project_id,0);
+                    wo.feature, "",wo.project_id,0,wo.register_date);
         }).collect(Collectors.toList());
 
 
         var groupWorkOrder  = listWorkOrderResult.stream()
-                .collect(Collectors.groupingBy(p -> Arrays.asList(p.folio_code, p.old_source_id, p.source, Integer.toString(p.boardId), p.boardName, p.feature)));
+                .collect(Collectors.groupingBy(register ->
+                                Arrays.asList(register.folio_code,
+                                        register.old_source_id,
+                                        register.source,
+                                        Integer.toString(register.boardId),
+                                        register.boardName,
+                                        register.feature
+                                )
+                ));
 
         var result = groupWorkOrder.entrySet().stream()
                 .map(w -> {
@@ -365,11 +373,18 @@ public class IssueTicketDao {
                     var sourceDetailList = w.getValue().stream()
                             .map(d-> new sourceTicketDetailDtoResponse(d.workOrderId,d.typeId,d.typeDesc))
                             .collect(Collectors.toList());
-                    return new sourceTicketGroupByDtoResponse(keys.get(0), keys.get(1),keys.get(2), Integer.parseInt(keys.get(3)),keys.get(4), keys.get(5), sourceDetailList);
+                    var maxRegisterDate = w.getValue().stream()
+                            .map(issueTicketDetailDtoResponse::getRegister_date)
+                            .max(Comparator.naturalOrder()).stream()
+                            .findFirst().orElse(null);
+                    return new sourceTicketGroupByDtoResponse(keys.get(0), keys.get(1),keys.get(2), Integer.parseInt(keys.get(3)),keys.get(4), keys.get(5), maxRegisterDate, sourceDetailList);
                 }).collect(Collectors.toList());
 
         Integer count =  (int)result.stream().count();
         var pages_amount = dto.getRecords_amount()>0 ? (int)Math.ceil(count.floatValue() / dto.getRecords_amount().floatValue()):1;
+
+        result = result.stream().sorted(Comparator.comparing(sourceTicketGroupByDtoResponse::getRegisterDate).reversed())
+                .collect(Collectors.toList());
 
         if(dto.records_amount>0){
             result = result.stream()
@@ -402,7 +417,7 @@ public class IssueTicketDao {
                 .collect(Collectors.groupingBy(g-> g.template_id));
 
         var result_templates = templates.stream().map( t -> {
-            return new issueTicketDetailDtoResponse(0,0, t.template_id, t.name,0,0, "","","",null,t.label_one,"","","","",0,t.orden);
+            return new issueTicketDetailDtoResponse(0,0, t.template_id, t.name,0,0, "","","",null,t.label_one,"","","","",0,t.orden,null);
         }).collect(Collectors.toList());
 
         Set<Integer> acceptableTemplate_id = templates.stream().map(w->w.template_id)
@@ -420,7 +435,7 @@ public class IssueTicketDao {
                             .map(n-> new issueJiraDtoResponse(n.issue_code,n.issue_status_type))
                             .collect(Collectors.toList());
                     return new issueTicketDetailDtoResponse(finalWorkOrder.work_order_id,wodMax.work_order_detail_id, wodMax.template_id, tmp.name, finalWorkOrder.board_id,0, "","","",
-                            issues,tmp.label_one,"","","","",0, tmp.orden);
+                            issues,tmp.label_one,"","","","",0, tmp.orden,null);
                 }).collect(Collectors.toList());
 
         Set<Integer> noacceptableTemplate_id = result.stream().map(w->w.templateId)
@@ -435,7 +450,7 @@ public class IssueTicketDao {
         Long count = result.stream().count();
         var pages_amount = dto.getRecords_amount()>0? (int)Math.ceil(count.floatValue() / dto.getRecords_amount().floatValue()) : 1;
 
-        result = result.stream().sorted(Comparator.comparing(issueTicketDetailDtoResponse::getOrden))
+        result = result.stream().sorted(Comparator.comparing(issueTicketDetailDtoResponse::getOrderTemplate))
                 .collect(Collectors.toList());
 
 

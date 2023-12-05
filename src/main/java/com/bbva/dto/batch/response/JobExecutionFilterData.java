@@ -2,8 +2,6 @@ package com.bbva.dto.batch.response;
 
 import lombok.*;
 
-import java.util.Date;
-
 @AllArgsConstructor
 @NoArgsConstructor
 @Setter
@@ -23,14 +21,11 @@ public class JobExecutionFilterData {
     private String projectName;
     private String scrumTeam;
     private String scrumMaster;
-    private Integer solutionType;
-    private String solutionDesc;
     private String solutionDetail;
-    private Integer jobType;
-    private String jobDesc;
     private Integer errorType;
     private String errorDesc;
-    private String errorDetails;
+    private Integer errorReason;
+    private String errorReasonDesc;
     private Integer recordsCount;
     private String updatedBy;
     private String updatedAt;
@@ -39,4 +34,8 @@ public class JobExecutionFilterData {
     private String sdatoolId;
     private String domain;
     private Boolean isTypified;
+    private Integer typified;
+    private Integer withoutTypified;
+    private String logArgos;
+    private Integer runCounter;
 }

@@ -1,9 +1,12 @@
 package com.bbva.database.mappers;
 
+import com.bbva.entities.batch.GetCatalogEntity;
 import com.bbva.entities.common.CatalogEntity;
 import com.bbva.entities.common.PeriodEntity;
 import com.bbva.entities.common.ProjectEntity;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Result;
+import org.apache.ibatis.annotations.Results;
 import org.apache.ibatis.annotations.Select;
 
 import java.util.ArrayList;
@@ -22,4 +25,24 @@ public interface CatalogMapper {
             "ORDER BY period_order DESC" +
             "</script>"})
     List<PeriodEntity> listAllPeriods();
+
+    @Select("CALL SP_LIST_CATALOG(" +
+            "#{catalogId}," +
+            "#{pageCurrent}," +
+            "#{parentElementId})"
+    )
+    @Results({
+            @Result(property = "catalogId", column = "catalog_id"),
+            @Result(property = "elementId", column = "element_id"),
+            @Result(property = "elementName", column = "element_name"),
+            @Result(property = "elementDescription", column = "element_desc"),
+            @Result(property = "statusType", column = "status_type"),
+            @Result(property = "parentCatalogId", column = "parent_catalog_id"),
+            @Result(property = "parentElementId", column = "parent_element_id")
+    })
+    ArrayList<GetCatalogEntity> getCatalog(
+            @Param("catalogId") Integer catalogId,
+            @Param("pageCurrent") Integer parentCatalogId,
+            @Param("parentElementId") Integer parentElementId
+    );
 }

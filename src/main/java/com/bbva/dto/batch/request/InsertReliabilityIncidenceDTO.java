@@ -9,10 +9,9 @@ public class InsertReliabilityIncidenceDTO {
     private String jobName;
     private String orderDate;
     private String orderId;
-    private Integer jobType;
     private Integer errorType;
-    private String errorDetails;
-    private Integer solutionType;
+    private Integer errorReason;
     private String solutionDetail;
     private String employeeId;
+    private String logArgos;
 }

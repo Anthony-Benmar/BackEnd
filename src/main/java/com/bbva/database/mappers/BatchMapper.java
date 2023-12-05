@@ -20,7 +20,8 @@ public interface BatchMapper {
             "#{orderId}," +
             "#{projectName}," +
             "#{sdatoolId}," +
-            "#{domain})")
+            "#{domain}, " +
+            "#{isTypified})")
     @Results({
             @Result(property = "jobName", column = "job_name"),
             @Result(property = "folder", column = "folder"),
@@ -35,14 +36,11 @@ public interface BatchMapper {
             @Result(property = "projectName", column = "project_name"),
             @Result(property = "scrumTeam", column = "scrum_team"),
             @Result(property = "scrumMaster", column = "scrum_master"),
-            @Result(property = "solutionType", column = "solution_type"),
-            @Result(property = "solutionDesc", column = "solution_desc"),
             @Result(property = "solutionDetail", column = "solution_detail"),
-            @Result(property = "jobType", column = "job_type"),
-            @Result(property = "jobDesc", column = "job_desc"),
             @Result(property = "errorType", column = "error_type"),
             @Result(property = "errorDesc", column = "error_desc"),
-            @Result(property = "errorDetails", column = "error_details"),
+            @Result(property = "errorReason", column = "error_reason"),
+            @Result(property = "errorReasonDesc", column = "error_reason_desc"),
             @Result(property = "updatedBy", column = "updated_by"),
             @Result(property = "updatedAt", column = "updated_at"),
             @Result(property = "createdBy", column = "created_by"),
@@ -50,7 +48,11 @@ public interface BatchMapper {
             @Result(property = "sdatoolId", column = "sdatool_id"),
             @Result(property = "domain", column = "service_owner"),
             @Result(property = "recordsCount", column = "records_count"),
-            @Result(property = "isTypified",column = "isTypified")
+            @Result(property = "isTypified", column = "isTypified"),
+            @Result(property = "typified", column = "typified"),
+            @Result(property = "withoutTypified", column = "withoutTypified"),
+            @Result(property = "logArgos", column = "log_argos"),
+            @Result(property = "runCounter", column = "run_counter")
     })
     List<JobExecutionFilterData> filter(@Param("pageCurrent") int page,
                                         @Param("recordsAmount") int recordsAmount,
@@ -62,18 +64,18 @@ public interface BatchMapper {
                                         @Param("orderId") String orderId,
                                         @Param("projectName") String projectName,
                                         @Param("sdatoolId") String sdatoolId,
-                                        @Param("domain") String domain);
+                                        @Param("domain") String domain,
+                                        @Param("isTypified") Boolean isTypified);
 
     @Select("CALL SP_INSERT_RELIABILITY_INCIDENCE(" +
             "#{jobName}," +
             "#{orderDate}," +
             "#{orderId}," +
-            "#{jobType}," +
             "#{errorType}," +
-            "#{errorDetails}," +
-            "#{solutionType}," +
+            "#{errorReason}," +
             "#{solutionDetail}," +
-            "#{employeeId})")
+            "#{employeeId}," +
+            "#{logArgos})")
     @Results({
             @Result(property = "last_insert_id", column = "last_insert_id"),
             @Result(property = "new_register", column = "new_register")

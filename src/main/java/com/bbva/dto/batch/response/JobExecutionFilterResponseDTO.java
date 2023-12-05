@@ -11,4 +11,5 @@ public class JobExecutionFilterResponseDTO {
     private int count;
     private int pages_amount;
     private List<JobExecutionFilterData> data;
+    private StatisticsData statistics;
 }

@@ -12,6 +12,7 @@ import com.bbva.dto.batch.response.InsertCSATJobExecutionResponseDTO;
 import com.bbva.dto.batch.response.JobExecutionFilterData;
 import com.bbva.dto.batch.response.JobExecutionFilterResponseDTO;
 import com.bbva.entities.InsertEntity;
+import com.bbva.dto.batch.response.StatisticsData;
 import com.bbva.util.JSONUtils;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -19,6 +20,7 @@ import org.apache.ibatis.session.SqlSessionFactory;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public class BatchDao {
 
@@ -45,15 +47,24 @@ public class BatchDao {
                     dto.getOrderId(),
                     dto.getProjectName(),
                     dto.getSdatoolId(),
-                    dto.getDomain());
+                    dto.getDomain(),
+                    dto.getIsTypified());
         }
         log.info(JSONUtils.convertFromObjectToJson(response.getData()));
         recordsCount = (lista.size() > 0) ? lista.get(0).getRecordsCount() : 0;
         pagesAmount = dto.getRecords_amount() > 0 ? (int) Math.ceil(recordsCount.floatValue() / dto.getRecords_amount().floatValue()) : 1;
 
+        Integer notTypified = (lista.size() > 0) ? lista.get(0).getWithoutTypified() : 0;
+        Integer typified = (lista.size() > 0) ? lista.get(0).getTypified() : 0;
+
+        StatisticsData statistics = new StatisticsData();
+        statistics.setNotTypified(notTypified);
+        statistics.setTypified(typified);
+
         response.setCount(recordsCount);
         response.setPages_amount(pagesAmount);
         response.setData(lista);
+        response.setStatistics(statistics);
         return response;
     }
 
