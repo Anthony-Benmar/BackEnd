@@ -6,6 +6,7 @@ import com.bbva.dao.BatchDao;
 import com.bbva.dto.batch.request.InsertCSATJobExecutionRequest;
 import com.bbva.dto.batch.request.InsertReliabilityIncidenceDTO;
 import com.bbva.dto.batch.request.JobExecutionFilterRequestDTO;
+import com.bbva.dto.batch.response.InsertAJIFJobExecutionResponseDTO;
 import com.bbva.dto.batch.response.InsertCSATJobExecutionResponseDTO;
 import com.bbva.dto.batch.response.JobExecutionFilterResponseDTO;
 
@@ -26,6 +27,10 @@ public class BatchService {
     }
     public IDataResult<InsertCSATJobExecutionResponseDTO> insertCSATJobExecution(List dto){
         var result = batchDao.insertCSATJobExecutionRequest(dto);
+        return new SuccessDataResult(result);
+    }
+    public IDataResult<InsertAJIFJobExecutionResponseDTO> insertAJIFJobExecution(List dto){
+        var result = batchDao.insertAJIFJobExecutionRequest(dto);
         return new SuccessDataResult(result);
     }
 }

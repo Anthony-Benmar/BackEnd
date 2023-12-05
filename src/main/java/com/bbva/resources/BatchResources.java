@@ -4,6 +4,7 @@ import com.bbva.core.abstracts.IDataResult;
 import com.bbva.dto.batch.request.InsertCSATJobExecutionRequest;
 import com.bbva.dto.batch.request.InsertReliabilityIncidenceDTO;
 import com.bbva.dto.batch.request.JobExecutionFilterRequestDTO;
+import com.bbva.dto.batch.response.InsertAJIFJobExecutionResponseDTO;
 import com.bbva.dto.batch.response.InsertCSATJobExecutionResponseDTO;
 import com.bbva.dto.batch.response.JobExecutionFilterResponseDTO;
 import com.bbva.service.BatchService;
@@ -28,7 +29,14 @@ public class BatchResources {
         IDataResult<InsertCSATJobExecutionResponseDTO>  result = batchService.insertCSATJobExecution(requests);
         return result;
     }
-
+    @POST
+    @Path("/job_execution_ajif")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<InsertAJIFJobExecutionResponseDTO> createAJIFJobExecution(List<InsertAJIFJobExecutionRequest> requests){
+        IDataResult<InsertAJIFJobExecutionResponseDTO>  result = batchService.insertAJIFJobExecution(requests);
+        return result;
+    }
     @GET
     @Path("/job_execution/filter")
     @Consumes(MediaType.APPLICATION_JSON)
