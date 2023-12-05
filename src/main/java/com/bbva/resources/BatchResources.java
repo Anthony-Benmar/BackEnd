@@ -1,29 +1,17 @@
 package com.bbva.resources;
 
 import com.bbva.core.abstracts.IDataResult;
-import com.bbva.core.results.ErrorDataResult;
-import com.bbva.core.results.SuccessDataResult;
-import com.bbva.dao.BatchDao;
-import com.bbva.database.MyBatisConnectionFactory;
-import com.bbva.database.mappers.BatchMapper;
 import com.bbva.dto.batch.request.InsertCSATJobExecutionRequest;
 import com.bbva.dto.batch.request.InsertReliabilityIncidenceDTO;
 import com.bbva.dto.batch.request.JobExecutionFilterRequestDTO;
 import com.bbva.dto.batch.response.InsertCSATJobExecutionResponseDTO;
 import com.bbva.dto.batch.response.JobExecutionFilterResponseDTO;
-import com.bbva.entities.InsertEntity;
 import com.bbva.service.BatchService;
 import com.bbva.util.Helper;
-import org.apache.ibatis.session.SqlSession;
-import org.apache.ibatis.session.SqlSessionFactory;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Path("/batch")
 @Produces(MediaType.APPLICATION_JSON)
@@ -31,7 +19,6 @@ public class BatchResources {
 
     private BatchService batchService = new BatchService();
     private Helper helper = new Helper();
-    private static final Logger log = Logger.getLogger(BatchResources.class.getName());
 
     @POST
     @Path("/job_execution_cstat")
