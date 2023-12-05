@@ -29,14 +29,7 @@ public class BatchResources {
         IDataResult<InsertCSATJobExecutionResponseDTO>  result = batchService.insertCSATJobExecution(requests);
         return result;
     }
-    @POST
-    @Path("/job_execution_ajif")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public IDataResult<InsertAJIFJobExecutionResponseDTO> createAJIFJobExecution(List<InsertAJIFJobExecutionRequest> requests){
-        IDataResult<InsertAJIFJobExecutionResponseDTO>  result = batchService.insertAJIFJobExecution(requests);
-        return result;
-    }
+
     @GET
     @Path("/job_execution/filter")
     @Consumes(MediaType.APPLICATION_JSON)
