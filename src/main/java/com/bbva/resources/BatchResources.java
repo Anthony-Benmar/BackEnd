@@ -1,14 +1,18 @@
 package com.bbva.resources;
 
 import com.bbva.core.abstracts.IDataResult;
+import com.bbva.dto.batch.request.InsertCSATJobExecutionRequest;
 import com.bbva.dto.batch.request.InsertReliabilityIncidenceDTO;
 import com.bbva.dto.batch.request.JobExecutionFilterRequestDTO;
+import com.bbva.dto.batch.response.InsertAJIFJobExecutionResponseDTO;
+import com.bbva.dto.batch.response.InsertCSATJobExecutionResponseDTO;
 import com.bbva.dto.batch.response.JobExecutionFilterResponseDTO;
 import com.bbva.service.BatchService;
 import com.bbva.util.Helper;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import java.util.List;
 
 @Path("/batch")
 @Produces(MediaType.APPLICATION_JSON)
@@ -17,6 +21,14 @@ public class BatchResources {
     private BatchService batchService = new BatchService();
     private Helper helper = new Helper();
 
+    @POST
+    @Path("/job_execution_cstat")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<InsertCSATJobExecutionResponseDTO> createCSAUTJobExecution(List<InsertCSATJobExecutionRequest> requests){
+        IDataResult<InsertCSATJobExecutionResponseDTO>  result = batchService.insertCSATJobExecution(requests);
+        return result;
+    }
 
     @GET
     @Path("/job_execution/filter")

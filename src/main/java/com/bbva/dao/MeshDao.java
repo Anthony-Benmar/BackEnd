@@ -30,9 +30,9 @@ public class MeshDao {
     }
 
     public List<MeshRelationalDtoResponse> jobsdependencies(MeshDtoRequest dto) {
-        List<MeshRelationalDtoResponse> result = new ArrayList<MeshRelationalDtoResponse>();
-        List<JobExecution> listJobExecutions = null;
-        List<JobExecution> listStatusJobExecutions = null;
+        List<MeshRelationalDtoResponse> result = new ArrayList<>();
+        List<JobExecution> listJobExecutions;
+        List<JobExecution> listStatusJobExecutions;
         try{
             SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
             try (SqlSession session = sqlSessionFactory.openSession()) {
