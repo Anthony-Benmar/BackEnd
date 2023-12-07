@@ -54,7 +54,8 @@ public interface BatchMapper {
             @Result(property = "withoutTypified", column = "withoutTypified"),
             @Result(property = "logArgos", column = "log_argos"),
             @Result(property = "runCounter", column = "run_counter"),
-            @Result(property = "executionType", column = "execution_type")
+            @Result(property = "executionType", column = "execution_type"),
+            @Result(property = "ticketJira", column = "ticket_jira")
     })
     List<JobExecutionFilterData> filter(@Param("pageCurrent") int page,
                                         @Param("recordsAmount") int recordsAmount,
@@ -78,7 +79,8 @@ public interface BatchMapper {
             "#{solutionDetail}," +
             "#{employeeId}," +
             "#{logArgos}," +
-            "#{runCounter})")
+            "#{runCounter}," +
+            "#{ticketJira})")
     @Results({
             @Result(property = "last_insert_id", column = "last_insert_id"),
             @Result(property = "new_register", column = "new_register")

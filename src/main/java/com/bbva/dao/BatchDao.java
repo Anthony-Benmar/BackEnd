@@ -66,18 +66,13 @@ public class BatchDao {
         return response;
     }
 
-    public DataResult<JobExecutionFilterRequestDTO> insertReliabilityIncidence(InsertReliabilityIncidenceDTO dto) {
-        try {
-            SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
-            try (SqlSession session = sqlSessionFactory.openSession()) {
-                BatchMapper batchMapper = session.getMapper(BatchMapper.class);
-                batchMapper.insertReliabilityIncidence(dto);
-                session.commit();
-                return new SuccessDataResult(dto);
-            }
-        } catch (Exception e) {
-            log.log(Level.SEVERE, e.getMessage(), e);
-            return new ErrorDataResult(null, "500",e.getMessage());
+    public InsertReliabilityIncidenceDTO insertReliabilityIncidence(InsertReliabilityIncidenceDTO dto) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            BatchMapper batchMapper = session.getMapper(BatchMapper.class);
+            batchMapper.insertReliabilityIncidence(dto);
+            session.commit();
+            return dto;
         }
     }
 
