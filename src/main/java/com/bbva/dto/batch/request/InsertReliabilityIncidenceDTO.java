@@ -15,4 +15,5 @@ public class InsertReliabilityIncidenceDTO {
     private String employeeId;
     private String logArgos;
     private Integer runCounter;
+    private String ticketJira;
 }
