@@ -7,6 +7,7 @@ import com.bbva.dto.batch.request.JobExecutionFilterRequestDTO;
 import com.bbva.dto.batch.response.InsertAJIFJobExecutionResponseDTO;
 import com.bbva.dto.batch.response.InsertCSATJobExecutionResponseDTO;
 import com.bbva.dto.batch.response.JobExecutionFilterResponseDTO;
+import com.bbva.dto.batch.response.StatusJobExecutionDTO;
 import com.bbva.service.BatchService;
 import com.bbva.util.Helper;
 
@@ -20,6 +21,18 @@ public class BatchResources {
 
     private BatchService batchService = new BatchService();
     private Helper helper = new Helper();
+
+    @GET
+    @Path("/{jobName}/job/{quantity}/executions")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<List<StatusJobExecutionDTO>> getStatusJobExecution(
+            @PathParam("jobName") String jobName,
+            @PathParam("quantity") Integer quantity
+    ){
+        IDataResult<List<StatusJobExecutionDTO>>  result = batchService.getStatusJobExecution(jobName, quantity);
+        return result;
+    }
 
     @POST
     @Path("/job_execution_cstat")

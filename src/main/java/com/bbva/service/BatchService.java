@@ -3,12 +3,12 @@ package com.bbva.service;
 import com.bbva.core.abstracts.IDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dao.BatchDao;
-import com.bbva.dto.batch.request.InsertCSATJobExecutionRequest;
 import com.bbva.dto.batch.request.InsertReliabilityIncidenceDTO;
 import com.bbva.dto.batch.request.JobExecutionFilterRequestDTO;
 import com.bbva.dto.batch.response.InsertAJIFJobExecutionResponseDTO;
 import com.bbva.dto.batch.response.InsertCSATJobExecutionResponseDTO;
 import com.bbva.dto.batch.response.JobExecutionFilterResponseDTO;
+import com.bbva.dto.batch.response.StatusJobExecutionDTO;
 
 import java.util.List;
 
@@ -31,6 +31,13 @@ public class BatchService {
     }
     public IDataResult<InsertAJIFJobExecutionResponseDTO> insertAJIFJobExecution(List dto){
         var result = batchDao.insertAJIFJobExecutionRequest(dto);
+        return new SuccessDataResult(result);
+    }
+
+    public IDataResult<List<StatusJobExecutionDTO>> getStatusJobExecution(
+            String jobName, Integer quantity
+    ){
+        var result = batchDao.getStatusJobExecution(jobName, quantity);
         return new SuccessDataResult(result);
     }
 }
