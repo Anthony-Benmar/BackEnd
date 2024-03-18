@@ -18,7 +18,6 @@ import java.util.List;
 @Path("/batch")
 @Produces(MediaType.APPLICATION_JSON)
 public class BatchResources {
-
     private BatchService batchService = new BatchService();
     private Helper helper = new Helper();
 
