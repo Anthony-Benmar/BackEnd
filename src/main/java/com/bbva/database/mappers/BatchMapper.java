@@ -4,6 +4,7 @@ import com.bbva.dto.batch.request.InsertAJIFJobExecutionRequest;
 import com.bbva.dto.batch.request.InsertCSATJobExecutionRequest;
 import com.bbva.dto.batch.request.InsertReliabilityIncidenceDTO;
 import com.bbva.dto.batch.response.JobExecutionFilterData;
+import com.bbva.dto.batch.response.StatusJobExecutionDTO;
 import com.bbva.entities.InsertEntity;
 import org.apache.ibatis.annotations.*;
 
@@ -156,4 +157,18 @@ public interface BatchMapper {
             @Result(property = "updateDate", column = "source_origin"),
     })
     InsertEntity insertAJIFJobExecution(InsertAJIFJobExecutionRequest dto);
+
+    @Select("CALL SP_GET_STATUS_JOB_EXECUTION(" +
+            "#{jobName}," +
+            "#{quantity})")
+    @Results({
+            @Result(property = "jobName", column = "job_name"),
+            @Result(property = "orderId", column = "order_id"),
+            @Result(property = "orderDate", column = "order_date"),
+            @Result(property = "runCounter", column = "run_counter"),
+            @Result(property = "executionStatus", column = "execution_status")
+    })
+    List<StatusJobExecutionDTO> getStatusJobExecution(@Param("jobName") String jobName,
+                                                      @Param("quantity") Integer quantity);
+
 }

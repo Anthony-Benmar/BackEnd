@@ -110,4 +110,13 @@ public class BatchDao {
             return new ErrorDataResult(null, "500",e.getMessage());
         }
     }
+
+    public List<StatusJobExecutionDTO> getStatusJobExecution(String jobName, Integer quantity) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            BatchMapper batchMapper = session.getMapper(BatchMapper.class);
+            List<StatusJobExecutionDTO> result = batchMapper.getStatusJobExecution(jobName, quantity);
+            return result;
+        }
+    }
 }
