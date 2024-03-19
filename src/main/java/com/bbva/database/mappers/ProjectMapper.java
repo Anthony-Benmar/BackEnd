@@ -1,7 +1,7 @@
 package com.bbva.database.mappers;
 
-import com.bbva.dto.batch.request.InsertReliabilityIncidenceDTO;
 import com.bbva.dto.project.request.InsertProjectDocumentDTO;
+import com.bbva.dto.project.request.InsertProjectParticipantDTO;
 import com.bbva.entities.InsertEntity;
 import com.bbva.entities.common.ProjectByPeriodEntity;
 import com.bbva.entities.common.ProjectEntity;
@@ -123,4 +123,17 @@ public interface ProjectMapper {
             @Result(property = "new_register", column = "new_register")
     })
     InsertEntity insertProjectDocument(InsertProjectDocumentDTO dto);
+
+    @Select("CALL SP_INSERT_PROJECT_PARTICIPANT(" +
+            "#{participantUser}," +
+            "#{participantEmail}," +
+            "#{projectId}," +
+            "#{projectRolType}," +
+            "#{piId}," +
+            "#{createAuditUser})")
+    @Results({
+            @Result(property = "last_insert_id", column = "last_insert_id"),
+            @Result(property = "new_register", column = "new_register")
+    })
+    InsertEntity insertProjectParticipant(InsertProjectParticipantDTO dto);
 }

@@ -8,10 +8,7 @@ import com.bbva.dao.ProjectDao;
 import com.bbva.dao.UseCaseDefinitionDao;
 import com.bbva.dao.UserDao;
 import com.bbva.dto.map_dependency.response.MapDependencyListByProjectResponse;
-import com.bbva.dto.project.request.InsertProjectDocumentDTO;
-import com.bbva.dto.project.request.ProjectFilterByNameOrSdatoolDtoRequest;
-import com.bbva.dto.project.request.ProjectPortafolioDTORequest;
-import com.bbva.dto.project.request.ProjectPortafolioFilterDTORequest;
+import com.bbva.dto.project.request.*;
 import com.bbva.dto.project.response.ProjectListForSelectDtoResponse;
 import com.bbva.dto.project.response.ProjectFilterByNameOrSdatoolDtoResponse;
 import com.bbva.dto.project.response.ProjectPortafolioFilterDtoResponse;
@@ -216,6 +213,11 @@ public class ProjectService {
 
     public IDataResult<InsertProjectDocumentDTO> insertProjectDocument(InsertProjectDocumentDTO dto) {
         var result = projectDao.insertProjectDocument(dto);
+        return new SuccessDataResult(result);
+    }
+
+    public IDataResult<InsertProjectParticipantDTO> insertProjectParticipant(InsertProjectParticipantDTO dto) {
+        var result = projectDao.insertProjectParticipant(dto);
         return new SuccessDataResult(result);
     }
 }

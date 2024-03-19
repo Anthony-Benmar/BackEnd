@@ -2,10 +2,7 @@ package com.bbva.resources;
 
 import com.bbva.core.abstracts.IDataResult;
 import com.bbva.dto.map_dependency.response.MapDependencyListByProjectResponse;
-import com.bbva.dto.project.request.InsertProjectDocumentDTO;
-import com.bbva.dto.project.request.ProjectFilterByNameOrSdatoolDtoRequest;
-import com.bbva.dto.project.request.ProjectPortafolioDTORequest;
-import com.bbva.dto.project.request.ProjectPortafolioFilterDTORequest;
+import com.bbva.dto.project.request.*;
 import com.bbva.dto.project.response.ProjectListForSelectDtoResponse;
 import com.bbva.dto.project.response.ProjectFilterByNameOrSdatoolDtoResponse;
 import com.bbva.dto.project.response.ProjectPortafolioFilterDtoResponse;
@@ -104,7 +101,6 @@ public class ProjectResources {
         return result;
     }
 
-
     @POST
     @Path("/{projectId}/document")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -113,6 +109,17 @@ public class ProjectResources {
             @PathParam("projectId") String projectId, InsertProjectDocumentDTO request){
         request.setProjectId(Integer.parseInt(projectId));
         IDataResult<InsertProjectDocumentDTO>  result = projectService.insertProjectDocument(request);
+        return result;
+    }
+
+    @POST
+    @Path("/{projectId}/participant")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<InsertProjectParticipantDTO> insertProjectDocument(
+            @PathParam("projectId") String projectId, InsertProjectParticipantDTO request){
+        request.setProjectId(Integer.parseInt(projectId));
+        IDataResult<InsertProjectParticipantDTO>  result = projectService.insertProjectParticipant(request);
         return result;
     }
 }
