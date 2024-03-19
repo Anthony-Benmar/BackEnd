@@ -220,4 +220,9 @@ public class ProjectService {
         var result = projectDao.insertProjectParticipant(dto);
         return new SuccessDataResult(result);
     }
+
+    public IDataResult<InsertProjectInfoDTO> insertProjectInfo(InsertProjectInfoDTO dto) {
+        var result = projectDao.insertProjectInfo(dto);
+        return new SuccessDataResult(result);
+    }
 }

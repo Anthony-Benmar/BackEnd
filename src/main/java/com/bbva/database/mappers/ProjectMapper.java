@@ -1,6 +1,7 @@
 package com.bbva.database.mappers;
 
 import com.bbva.dto.project.request.InsertProjectDocumentDTO;
+import com.bbva.dto.project.request.InsertProjectInfoDTO;
 import com.bbva.dto.project.request.InsertProjectParticipantDTO;
 import com.bbva.entities.InsertEntity;
 import com.bbva.entities.common.ProjectByPeriodEntity;
@@ -136,4 +137,27 @@ public interface ProjectMapper {
             @Result(property = "new_register", column = "new_register")
     })
     InsertEntity insertProjectParticipant(InsertProjectParticipantDTO dto);
+
+    @Select("CALL SP_INSERT_PROJECT_INFO(" +
+            "#{sdatoolId}," +
+            "#{projectName}," +
+            "#{projectDesc}," +
+            "#{portafolioCode}," +
+            "#{regulatoryType}," +
+            "#{ttvType}," +
+            "#{domainId}," +
+            "#{domainType}," +
+            "#{projectType}," +
+            "#{categoryType}," +
+            "#{classificationType}," +
+            "#{startPiId}," +
+            "#{endPiId}," +
+            "#{finalStartPiId}," +
+            "#{finalEndPiId}," +
+            "#{createAuditUser})")
+    @Results({
+            @Result(property = "last_insert_id", column = "last_insert_id"),
+            @Result(property = "new_register", column = "new_register")
+    })
+    InsertEntity insertProjectInfo(InsertProjectInfoDTO dto);
 }

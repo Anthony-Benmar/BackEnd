@@ -5,10 +5,7 @@ import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.database.MyBatisConnectionFactory;
 import com.bbva.database.mappers.ProjectMapper;
-import com.bbva.dto.project.request.InsertProjectDocumentDTO;
-import com.bbva.dto.project.request.InsertProjectParticipantDTO;
-import com.bbva.dto.project.request.ProjectFilterByNameOrSdatoolDtoRequest;
-import com.bbva.dto.project.request.ProjectPortafolioFilterDTORequest;
+import com.bbva.dto.project.request.*;
 import com.bbva.dto.project.response.*;
 import com.bbva.entities.InsertEntity;
 import com.bbva.entities.common.PeriodPEntity;
@@ -214,6 +211,17 @@ public class ProjectDao {
             InsertEntity result = projectMapper.insertProjectParticipant(dto);
             session.commit();
             dto.setProjectParticipantId(result.getLast_insert_id());
+            return dto;
+        }
+    }
+
+    public InsertProjectInfoDTO insertProjectInfo(InsertProjectInfoDTO dto) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ProjectMapper projectMapper = session.getMapper(ProjectMapper.class);
+            InsertEntity result = projectMapper.insertProjectInfo(dto);
+            session.commit();
+            dto.setProjectId(result.getLast_insert_id());
             return dto;
         }
     }

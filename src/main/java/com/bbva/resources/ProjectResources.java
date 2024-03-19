@@ -122,4 +122,13 @@ public class ProjectResources {
         IDataResult<InsertProjectParticipantDTO>  result = projectService.insertProjectParticipant(request);
         return result;
     }
+
+    @POST
+    @Path("/info")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<InsertProjectInfoDTO> insertProjectInfo(InsertProjectInfoDTO request){
+        IDataResult<InsertProjectInfoDTO>  result = projectService.insertProjectInfo(request);
+        return result;
+    }
 }
