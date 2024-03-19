@@ -2,6 +2,7 @@ package com.bbva.resources;
 
 import com.bbva.core.abstracts.IDataResult;
 import com.bbva.dto.map_dependency.response.MapDependencyListByProjectResponse;
+import com.bbva.dto.project.request.InsertProjectDocumentDTO;
 import com.bbva.dto.project.request.ProjectFilterByNameOrSdatoolDtoRequest;
 import com.bbva.dto.project.request.ProjectPortafolioDTORequest;
 import com.bbva.dto.project.request.ProjectPortafolioFilterDTORequest;
@@ -103,4 +104,15 @@ public class ProjectResources {
         return result;
     }
 
+
+    @POST
+    @Path("/{projectId}/document")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<InsertProjectDocumentDTO> insertProjectDocument(
+            @PathParam("projectId") String projectId, InsertProjectDocumentDTO request){
+        request.setProjectId(Integer.parseInt(projectId));
+        IDataResult<InsertProjectDocumentDTO>  result = projectService.insertProjectDocument(request);
+        return result;
+    }
 }

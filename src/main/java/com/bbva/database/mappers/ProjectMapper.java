@@ -1,5 +1,8 @@
 package com.bbva.database.mappers;
 
+import com.bbva.dto.batch.request.InsertReliabilityIncidenceDTO;
+import com.bbva.dto.project.request.InsertProjectDocumentDTO;
+import com.bbva.entities.InsertEntity;
 import com.bbva.entities.common.ProjectByPeriodEntity;
 import com.bbva.entities.common.ProjectEntity;
 import com.bbva.entities.project.ProjectPortafolioEntity;
@@ -109,4 +112,15 @@ public interface ProjectMapper {
             @Result(property = "statusType", column = "status_type"),
     })
     ProjectPortafolioEntity getProjectById(@Param("projectId") int projectId);
+
+    @Select("CALL SP_INSERT_PROJECT_DOCUMENT(" +
+            "#{projectId}," +
+            "#{documentType}," +
+            "#{documentUrl}," +
+            "#{createAuditUser})")
+    @Results({
+            @Result(property = "last_insert_id", column = "last_insert_id"),
+            @Result(property = "new_register", column = "new_register")
+    })
+    InsertEntity insertProjectDocument(InsertProjectDocumentDTO dto);
 }
