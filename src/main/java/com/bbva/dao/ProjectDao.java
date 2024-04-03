@@ -5,9 +5,9 @@ import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.database.MyBatisConnectionFactory;
 import com.bbva.database.mappers.ProjectMapper;
-import com.bbva.dto.project.request.ProjectFilterByNameOrSdatoolDtoRequest;
-import com.bbva.dto.project.request.ProjectPortafolioFilterDTORequest;
+import com.bbva.dto.project.request.*;
 import com.bbva.dto.project.response.*;
+import com.bbva.entities.InsertEntity;
 import com.bbva.entities.common.PeriodPEntity;
 import com.bbva.entities.common.ProjectByPeriodEntity;
 import com.bbva.entities.common.ProjectEntity;
@@ -193,5 +193,36 @@ public class ProjectDao {
         }
     }
 
+    public InsertProjectDocumentDTO insertProjectDocument(InsertProjectDocumentDTO dto) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ProjectMapper projectMapper = session.getMapper(ProjectMapper.class);
+            InsertEntity result = projectMapper.insertProjectDocument(dto);
+            session.commit();
+            dto.setDocumentId(result.getLast_insert_id());
+            return dto;
+        }
+    }
 
+    public InsertProjectParticipantDTO insertProjectParticipant(InsertProjectParticipantDTO dto) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ProjectMapper projectMapper = session.getMapper(ProjectMapper.class);
+            InsertEntity result = projectMapper.insertProjectParticipant(dto);
+            session.commit();
+            dto.setProjectParticipantId(result.getLast_insert_id());
+            return dto;
+        }
+    }
+
+    public InsertProjectInfoDTO insertProjectInfo(InsertProjectInfoDTO dto) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ProjectMapper projectMapper = session.getMapper(ProjectMapper.class);
+            InsertEntity result = projectMapper.insertProjectInfo(dto);
+            session.commit();
+            dto.setProjectId(result.getLast_insert_id());
+            return dto;
+        }
+    }
 }
