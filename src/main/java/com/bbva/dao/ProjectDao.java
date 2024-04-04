@@ -1,10 +1,16 @@
 package com.bbva.dao;
 
+import com.bbva.common.HttpStatusCodes;
 import com.bbva.core.results.DataResult;
 import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.database.MyBatisConnectionFactory;
+import com.bbva.database.mappers.BatchMapper;
 import com.bbva.database.mappers.ProjectMapper;
+import com.bbva.dto.batch.request.JobExecutionFilterRequestDTO;
+import com.bbva.dto.batch.response.JobExecutionFilterData;
+import com.bbva.dto.batch.response.JobExecutionFilterResponseDTO;
+import com.bbva.dto.batch.response.StatisticsData;
 import com.bbva.dto.project.request.*;
 import com.bbva.dto.project.response.*;
 import com.bbva.entities.InsertEntity;
@@ -193,6 +199,31 @@ public class ProjectDao {
         }
     }
 
+    public DataResult<ProjectPortafolioEntity> deleteProjectInfo(int projectId) {
+        try {
+            SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+            try (SqlSession session = sqlSessionFactory.openSession()) {
+                ProjectMapper projectMapper = session.getMapper(ProjectMapper.class);
+                projectMapper.deleteProjectInfo(projectId);
+                session.commit();
+                return new SuccessDataResult(projectId);
+            }
+        } catch (Exception e) {
+            log.log(Level.SEVERE, e.getMessage(), e);
+            return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR,e.getMessage());
+        }
+    }
+
+    public boolean updateProjectInfo(InsertProjectInfoDTO dto) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ProjectMapper projectMapper = session.getMapper(ProjectMapper.class);
+            projectMapper.updateProjectInfo(dto);
+            session.commit();
+            return true;
+        }
+    }
+
     public InsertProjectDocumentDTO insertProjectDocument(InsertProjectDocumentDTO dto) {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         try (SqlSession session = sqlSessionFactory.openSession()) {
@@ -224,5 +255,30 @@ public class ProjectDao {
             dto.setProjectId(result.getLast_insert_id());
             return dto;
         }
+    }
+
+    public ProjectInfoFilterResponse projectInfoFilter(ProjectInfoFilterRequest dto) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        List<InsertProjectInfoDTO> lista;
+
+        Integer recordsCount = 0;
+        Integer pagesAmount = 0;
+
+        var response = new ProjectInfoFilterResponse();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ProjectMapper projectMapper = session.getMapper(ProjectMapper.class);
+            lista = projectMapper.projectInfoFilter(dto.page, dto.records_amount, dto.projectId, dto.domainId,
+                    dto.regulatoryType);
+        }
+
+        recordsCount = (lista.size() > 0) ? (int) lista.stream().count() : 0;
+        pagesAmount = dto.getRecords_amount() > 0 ? (int) Math.ceil(recordsCount.floatValue() / dto.getRecords_amount().floatValue()) : 1;
+
+        response.setCount(recordsCount);
+        response.setPages_amount(pagesAmount);
+        response.setData(lista);
+        log.info(JSONUtils.convertFromObjectToJson(response.getData()));
+
+        return response;
     }
 }

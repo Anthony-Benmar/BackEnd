@@ -91,9 +91,21 @@ public interface ProjectMapper {
             "WHERE project_id = #{projectId}")
     boolean updateProject(ProjectPortafolioEntity project);
 
+    @Update("UPDATE project_info SET sdatool_id= #{sdatoolId}, project_name = #{projectName}, project_desc = #{projectDesc}, " +
+            "portafolio_code= #{portafolioCode}, regulatory_type =#{regulatoryType}, ttv_type=#{ttvType}, domain_id=#{domainId}, domain_type=#{domainType}, " +
+            "project_type=#{projectType}, category_type=#{categoryType}, classification_type=#{classificationType}, " +
+            "start_pi_id=#{startPiId}, end_pi_id=#{endPiId}, final_start_pi_id=#{finalStartPiId}, final_end_pi_id=#{finalEndPiId}, " +
+            "update_audit_user=#{createAuditUser}, update_audit_date=CONVERT_TZ(NOW(), 'GMT', 'America/Lima') " +
+            "WHERE project_id = #{projectId}")
+    boolean updateProjectInfo(InsertProjectInfoDTO dto);
+
     @Update("UPDATE data_project SET status_type = 0 " +
             "WHERE project_id = #{projectId}")
     boolean deleteProject(@Param("projectId") int projectId);
+
+    @Update("UPDATE project_info SET status_type = 0 " +
+            "WHERE project_id = #{projectId}")
+    boolean deleteProjectInfo(@Param("projectId") int projectId);
 
     @Select("CALL SP_PROJECT_PORTFOLIO_DETAIL (#{projectId})")
     @Results({
@@ -160,4 +172,34 @@ public interface ProjectMapper {
             @Result(property = "new_register", column = "new_register")
     })
     InsertEntity insertProjectInfo(InsertProjectInfoDTO dto);
+
+    @Select("CALL SP_PROJECT_INFO_PAGED_FILTERED(" +
+            "#{pageCurrent}," +
+            "#{recordsAmount}," +
+            "#{projectId}," +
+            "#{domainId}," +
+            "#{regulatoryType})")
+    @Results({
+            @Result(property = "projectId", column = "project_id"),
+            @Result(property = "sdatoolId", column = "sdatool_id"),
+            @Result(property = "projectName", column = "project_name"),
+            @Result(property = "projectDesc", column = "project_desc"),
+            @Result(property = "portafolioCode", column = "portafolio_code"),
+            @Result(property = "regulatoryType", column = "regulatory_type"),
+            @Result(property = "ttvType", column = "ttv_type"),
+            @Result(property = "domainId", column = "domain_id"),
+            @Result(property = "domainType", column = "domain_type"),
+            @Result(property = "projectType", column = "project_type"),
+            @Result(property = "categoryType", column = "category_type"),
+            @Result(property = "classificationType", column = "classification_type"),
+            @Result(property = "startPiId", column = "start_pi_id"),
+            @Result(property = "endPiId", column = "end_pi_id"),
+            @Result(property = "finalStartPiId", column = "final_start_pi_id"),
+            @Result(property = "finalEndPiId", column = "final_end_pi_id")
+    })
+    List<InsertProjectInfoDTO> projectInfoFilter(@Param("pageCurrent") int page,
+                                                         @Param("recordsAmount") int recordsAmount,
+                                                         @Param("projectId") int projectId,
+                                                         @Param("domainId") String domainId,
+                                                         @Param("regulatoryType") int regulatoryType);
 }

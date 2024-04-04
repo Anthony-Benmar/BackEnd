@@ -1,5 +1,6 @@
 package com.bbva.service;
 
+import com.bbva.common.HttpStatusCodes;
 import com.bbva.core.abstracts.IDataResult;
 import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
@@ -9,10 +10,7 @@ import com.bbva.dao.UseCaseDefinitionDao;
 import com.bbva.dao.UserDao;
 import com.bbva.dto.map_dependency.response.MapDependencyListByProjectResponse;
 import com.bbva.dto.project.request.*;
-import com.bbva.dto.project.response.ProjectListForSelectDtoResponse;
-import com.bbva.dto.project.response.ProjectFilterByNameOrSdatoolDtoResponse;
-import com.bbva.dto.project.response.ProjectPortafolioFilterDtoResponse;
-import com.bbva.dto.project.response.ProjectPortafolioSelectResponse;
+import com.bbva.dto.project.response.*;
 import com.bbva.entities.User;
 import com.bbva.entities.common.PeriodPEntity;
 import com.bbva.entities.map_dependecy.MapDependencyEntity;
@@ -198,6 +196,37 @@ public class ProjectService {
         }
     }
 
+    public IDataResult<ProjectPortafolioFilterDtoResponse> deleteProjectInfo(int projectId)
+            throws ExecutionException, InterruptedException {
+
+        try {
+            var res = projectDao.deleteProjectInfo(projectId);
+            if (!res.success)
+                return new ErrorDataResult(projectId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "No se pudo eliminar proyecto");
+
+        } catch (Exception e) {
+            log.log(Level.SEVERE, e.getMessage(), e);
+            return new ErrorDataResult(projectId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "No se pudo eliminar proyecto");
+        }
+        return new SuccessDataResult(projectId);
+    }
+
+    public IDataResult<InsertProjectInfoDTO> updateProjectInfo(InsertProjectInfoDTO dto)
+            throws ExecutionException, InterruptedException {
+
+        try {
+            if (dto.getProjectId().equals(0))
+                return new ErrorDataResult(null,HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "ProjectId must to be not null");
+
+            projectDao.updateProjectInfo(dto);
+
+        } catch (Exception e) {
+            log.log(Level.SEVERE, e.getMessage(), e);
+            return new ErrorDataResult(null,HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+        return new SuccessDataResult(dto);
+    }
+
     public IDataResult<List<MapDependencyListByProjectResponse>> getProcessByProjectId(int projectId)
             throws ExecutionException, InterruptedException {
 
@@ -223,6 +252,11 @@ public class ProjectService {
 
     public IDataResult<InsertProjectInfoDTO> insertProjectInfo(InsertProjectInfoDTO dto) {
         var result = projectDao.insertProjectInfo(dto);
+        return new SuccessDataResult(result);
+    }
+
+    public IDataResult<ProjectInfoFilterResponse> projectInfoFilter(ProjectInfoFilterRequest dto) {
+        var result = projectDao.projectInfoFilter(dto);
         return new SuccessDataResult(result);
     }
 }

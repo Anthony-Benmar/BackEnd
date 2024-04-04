@@ -3,10 +3,7 @@ package com.bbva.resources;
 import com.bbva.core.abstracts.IDataResult;
 import com.bbva.dto.map_dependency.response.MapDependencyListByProjectResponse;
 import com.bbva.dto.project.request.*;
-import com.bbva.dto.project.response.ProjectListForSelectDtoResponse;
-import com.bbva.dto.project.response.ProjectFilterByNameOrSdatoolDtoResponse;
-import com.bbva.dto.project.response.ProjectPortafolioFilterDtoResponse;
-import com.bbva.dto.project.response.ProjectPortafolioSelectResponse;
+import com.bbva.dto.project.response.*;
 import com.bbva.entities.common.PeriodPEntity;
 import com.bbva.service.ProjectService;
 
@@ -130,5 +127,32 @@ public class ProjectResources {
     public IDataResult<InsertProjectInfoDTO> insertProjectInfo(InsertProjectInfoDTO request){
         IDataResult<InsertProjectInfoDTO>  result = projectService.insertProjectInfo(request);
         return result;
+    }
+
+    @DELETE
+    @Path("/info/{projectId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<ProjectPortafolioFilterDtoResponse> deleteProjectInfo(@Context HttpServletRequest request, @PathParam("projectId") int projectId)
+            throws ExecutionException, InterruptedException
+    {
+        return projectService.deleteProjectInfo(projectId);
+    }
+
+    @PUT
+    @Path("/info/update")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<InsertProjectInfoDTO> updateProjectInfo(InsertProjectInfoDTO dto)
+            throws ExecutionException, InterruptedException
+    {
+        return projectService.updateProjectInfo(dto);
+    }
+
+    @POST
+    @Path("/info/filter")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<ProjectInfoFilterResponse> projectInfoFilter(ProjectInfoFilterRequest dto) {
+        return projectService.projectInfoFilter(dto);
     }
 }
