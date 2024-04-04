@@ -198,4 +198,24 @@ public class ProjectResources {
     {
         return projectService.deleteParticipantProject(projectId, participantId);
     }
+
+    @PUT
+    @Path("/info/participant/update")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<InsertProjectParticipantDTO> updateParticipant(InsertProjectParticipantDTO dto)
+            throws ExecutionException, InterruptedException
+    {
+        return projectService.updateParticipant(dto);
+    }
+
+    @GET
+    @Path("/info/{projectId}/participants")
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<List<InsertProjectParticipantDTO>> getProjectParticipants(@Context HttpServletRequest request,
+                                                                   @PathParam("projectId") int projectId)
+            throws ExecutionException, InterruptedException
+    {
+        return projectService.getProjectParticipants(projectId);
+    }
 }

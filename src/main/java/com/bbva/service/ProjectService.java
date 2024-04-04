@@ -317,4 +317,32 @@ public class ProjectService {
         }
         return new SuccessDataResult(projectId);
     }
+
+    public IDataResult<InsertProjectParticipantDTO> updateParticipant(InsertProjectParticipantDTO dto)
+            throws ExecutionException, InterruptedException {
+
+        try {
+            if (dto.getProjectId().equals(0) | dto.getProjectParticipantId().equals(0))
+                return new ErrorDataResult(null,HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "projectId or projectParticipantId must to be not null or 0");
+
+            projectDao.updateParticipant(dto);
+
+        } catch (Exception e) {
+            log.log(Level.SEVERE, e.getMessage(), e);
+            return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+        return new SuccessDataResult(dto);
+    }
+
+    public IDataResult<List<InsertProjectParticipantDTO>> getProjectParticipants(int projectId)
+            throws ExecutionException, InterruptedException {
+
+        try {
+            var result = projectDao.getProjectParticipants(projectId);
+            return new SuccessDataResult(result);
+        } catch (Exception e) {
+            log.log(Level.SEVERE, e.getMessage(), e);
+            return new ErrorDataResult(projectId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
 }

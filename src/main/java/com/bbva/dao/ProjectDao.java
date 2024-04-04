@@ -337,4 +337,23 @@ public class ProjectDao {
             return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR,e.getMessage());
         }
     }
+
+    public boolean updateParticipant(InsertProjectParticipantDTO dto) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ProjectMapper projectMapper = session.getMapper(ProjectMapper.class);
+            var result = projectMapper.updateParticipant(dto);
+            session.commit();
+            return result;
+        }
+    }
+
+    public List<InsertProjectParticipantDTO> getProjectParticipants(int projectId) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ProjectMapper mapper = session.getMapper(ProjectMapper.class);
+            var  participantsList = mapper.getProjectParticipants(projectId);
+            return participantsList;
+        }
+    }
 }
