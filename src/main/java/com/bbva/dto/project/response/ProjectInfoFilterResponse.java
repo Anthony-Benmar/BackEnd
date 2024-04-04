@@ -10,6 +10,6 @@ import lombok.Setter;
 public class ProjectInfoFilterResponse {
     public int count;
     public int pages_amount;
-    public List<InsertProjectInfoDTO> data;
+    public List<ProjectInfoSelectResponse> data;
 }
 

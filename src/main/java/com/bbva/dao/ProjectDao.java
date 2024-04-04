@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public class ProjectDao {
     private static final Logger log = Logger.getLogger(ProjectDao.class.getName());
@@ -259,7 +260,7 @@ public class ProjectDao {
 
     public ProjectInfoFilterResponse projectInfoFilter(ProjectInfoFilterRequest dto) {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
-        List<InsertProjectInfoDTO> lista;
+        List<ProjectInfoSelectResponse> lista;
 
         Integer recordsCount = 0;
         Integer pagesAmount = 0;
@@ -267,12 +268,18 @@ public class ProjectDao {
         var response = new ProjectInfoFilterResponse();
         try (SqlSession session = sqlSessionFactory.openSession()) {
             ProjectMapper projectMapper = session.getMapper(ProjectMapper.class);
-            lista = projectMapper.projectInfoFilter(dto.page, dto.records_amount, dto.projectId, dto.domainId,
-                    dto.regulatoryType);
+            lista = projectMapper.projectInfoFilter(dto.projectId, dto.sdatoolId, dto.domainId);
         }
 
         recordsCount = (lista.size() > 0) ? (int) lista.stream().count() : 0;
         pagesAmount = dto.getRecords_amount() > 0 ? (int) Math.ceil(recordsCount.floatValue() / dto.getRecords_amount().floatValue()) : 1;
+
+        if(dto.records_amount>0){
+            lista = lista.stream()
+                    .skip(dto.records_amount * (dto.page - 1))
+                    .limit(dto.records_amount)
+                    .collect(Collectors.toList());
+        }
 
         response.setCount(recordsCount);
         response.setPages_amount(pagesAmount);
@@ -280,5 +287,39 @@ public class ProjectDao {
         log.info(JSONUtils.convertFromObjectToJson(response.getData()));
 
         return response;
+    }
+
+    public DataResult<ProjectPortafolioEntity> deleteDocument(int projectId, int documentId) {
+        try {
+            SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+            try (SqlSession session = sqlSessionFactory.openSession()) {
+                ProjectMapper projectMapper = session.getMapper(ProjectMapper.class);
+                projectMapper.deleteDocument(projectId, documentId);
+                session.commit();
+                return new SuccessDataResult(projectId);
+            }
+        } catch (Exception e) {
+            log.log(Level.SEVERE, e.getMessage(), e);
+            return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR,e.getMessage());
+        }
+    }
+
+    public boolean updateDocument(InsertProjectDocumentDTO dto) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ProjectMapper projectMapper = session.getMapper(ProjectMapper.class);
+            projectMapper.updateDocument(dto);
+            session.commit();
+            return true;
+        }
+    }
+
+    public List<InsertProjectDocumentDTO> getDocument(int projectId, int documentId) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ProjectMapper mapper = session.getMapper(ProjectMapper.class);
+            List<InsertProjectDocumentDTO> documentList = mapper.getDocument(projectId, documentId);
+            return documentList;
+        }
     }
 }

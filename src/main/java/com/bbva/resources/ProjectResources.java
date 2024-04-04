@@ -132,7 +132,7 @@ public class ProjectResources {
     @DELETE
     @Path("/info/{projectId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public IDataResult<ProjectPortafolioFilterDtoResponse> deleteProjectInfo(@Context HttpServletRequest request, @PathParam("projectId") int projectId)
+    public IDataResult<Integer> deleteProjectInfo(@Context HttpServletRequest request, @PathParam("projectId") int projectId)
             throws ExecutionException, InterruptedException
     {
         return projectService.deleteProjectInfo(projectId);
@@ -154,5 +154,37 @@ public class ProjectResources {
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<ProjectInfoFilterResponse> projectInfoFilter(ProjectInfoFilterRequest dto) {
         return projectService.projectInfoFilter(dto);
+    }
+
+    @DELETE
+    @Path("/info/{projectId}/document/{documentId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<Integer> deleteDocument(@Context HttpServletRequest request,
+                                               @PathParam("projectId") int projectId,
+                                               @PathParam("documentId") int documentId)
+            throws ExecutionException, InterruptedException
+    {
+        return projectService.deleteDocument(projectId, documentId);
+    }
+
+    @PUT
+    @Path("/info/document/update")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<InsertProjectDocumentDTO> updateDocument(InsertProjectDocumentDTO dto)
+            throws ExecutionException, InterruptedException
+    {
+        return projectService.updateDocument(dto);
+    }
+
+    @GET
+    @Path("/info/{projectId}/document/{documentId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<List<InsertProjectDocumentDTO>> getDocument(@Context HttpServletRequest request,
+                                                                   @PathParam("projectId") int projectId,
+                                                                   @PathParam("documentId") int documentId)
+            throws ExecutionException, InterruptedException
+    {
+        return projectService.getDocument(projectId, documentId);
     }
 }

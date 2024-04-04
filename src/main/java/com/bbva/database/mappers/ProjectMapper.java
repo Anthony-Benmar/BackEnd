@@ -3,6 +3,7 @@ package com.bbva.database.mappers;
 import com.bbva.dto.project.request.InsertProjectDocumentDTO;
 import com.bbva.dto.project.request.InsertProjectInfoDTO;
 import com.bbva.dto.project.request.InsertProjectParticipantDTO;
+import com.bbva.dto.project.response.ProjectInfoSelectResponse;
 import com.bbva.entities.InsertEntity;
 import com.bbva.entities.common.ProjectByPeriodEntity;
 import com.bbva.entities.common.ProjectEntity;
@@ -173,12 +174,10 @@ public interface ProjectMapper {
     })
     InsertEntity insertProjectInfo(InsertProjectInfoDTO dto);
 
-    @Select("CALL SP_PROJECT_INFO_PAGED_FILTERED(" +
-            "#{pageCurrent}," +
-            "#{recordsAmount}," +
+    @Select("CALL SP_LIST_PROJECT(" +
             "#{projectId}," +
-            "#{domainId}," +
-            "#{regulatoryType})")
+            "#{sdatoolId}," +
+            "#{domainId})")
     @Results({
             @Result(property = "projectId", column = "project_id"),
             @Result(property = "sdatoolId", column = "sdatool_id"),
@@ -188,18 +187,38 @@ public interface ProjectMapper {
             @Result(property = "regulatoryType", column = "regulatory_type"),
             @Result(property = "ttvType", column = "ttv_type"),
             @Result(property = "domainId", column = "domain_id"),
-            @Result(property = "domainType", column = "domain_type"),
+            @Result(property = "domainName", column = "domain_name"),
             @Result(property = "projectType", column = "project_type"),
+            @Result(property = "projectTypeDesc", column = "project_type_desc"),
             @Result(property = "categoryType", column = "category_type"),
             @Result(property = "classificationType", column = "classification_type"),
+            @Result(property = "classificationTypeDesc", column = "classification_desc"),
             @Result(property = "startPiId", column = "start_pi_id"),
             @Result(property = "endPiId", column = "end_pi_id"),
             @Result(property = "finalStartPiId", column = "final_start_pi_id"),
-            @Result(property = "finalEndPiId", column = "final_end_pi_id")
+            @Result(property = "finalEndPiId", column = "final_end_pi_id"),
+            @Result(property = "statusType", column = "status_type"),
+            @Result(property = "statusTypeDesc", column = "status_desc")
     })
-    List<InsertProjectInfoDTO> projectInfoFilter(@Param("pageCurrent") int page,
-                                                         @Param("recordsAmount") int recordsAmount,
-                                                         @Param("projectId") int projectId,
-                                                         @Param("domainId") String domainId,
-                                                         @Param("regulatoryType") int regulatoryType);
+    List<ProjectInfoSelectResponse> projectInfoFilter(@Param("projectId") int projectId,
+                                                      @Param("sdatoolId") String sdatoolId,
+                                                      @Param("domainId") int domainId);
+
+    @Update("Delete project_document WHERE project_id = #{projectId} and document_id = #{documentId}")
+    boolean deleteDocument(@Param("projectId") int projectId, @Param("documentId") int documentId);
+
+    @Update("UPDATE project_document SET document_url=#{documentUrl}, document_type=#{documentType}, " +
+            "update_audit_user=#{createAuditUser}, update_audit_date=CONVERT_TZ(NOW(), 'GMT', 'America/Lima') " +
+            "WHERE document_id=#{documentId} and project_id = #{projectId}")
+    boolean updateDocument(InsertProjectDocumentDTO dto);
+
+    @Select("CALL SP_PROJECT_DOCUMENT_FILTERED(#{projectId}, #{documentId})")
+    @Results({
+            @Result(property = "projectId", column = "project_id"),
+            @Result(property = "documentId", column = "document_id"),
+            @Result(property = "documentType", column = "document_type"),
+            @Result(property = "documentUrl", column = "document_url")
+    })
+    List<InsertProjectDocumentDTO> getDocument(@Param("projectId") int projectId,
+                                               @Param("documentId") int documentId);
 }

@@ -196,7 +196,7 @@ public class ProjectService {
         }
     }
 
-    public IDataResult<ProjectPortafolioFilterDtoResponse> deleteProjectInfo(int projectId)
+    public IDataResult<Integer> deleteProjectInfo(int projectId)
             throws ExecutionException, InterruptedException {
 
         try {
@@ -258,5 +258,48 @@ public class ProjectService {
     public IDataResult<ProjectInfoFilterResponse> projectInfoFilter(ProjectInfoFilterRequest dto) {
         var result = projectDao.projectInfoFilter(dto);
         return new SuccessDataResult(result);
+    }
+
+    public IDataResult<Integer> deleteDocument(int projectId, int documentId)
+            throws ExecutionException, InterruptedException {
+
+        try {
+            var res = projectDao.deleteDocument(projectId, documentId);
+            if (!res.success)
+                return new ErrorDataResult(projectId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "No se pudo eliminar proyecto");
+
+        } catch (Exception e) {
+            log.log(Level.SEVERE, e.getMessage(), e);
+            return new ErrorDataResult(projectId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "No se pudo eliminar proyecto");
+        }
+        return new SuccessDataResult(projectId);
+    }
+
+    public IDataResult<InsertProjectDocumentDTO> updateDocument(InsertProjectDocumentDTO dto)
+            throws ExecutionException, InterruptedException {
+
+        try {
+            if (dto.getProjectId().equals(0) | dto.getDocumentId().equals(0))
+                return new ErrorDataResult(null,HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "projectId or documentId must to be not null or 0");
+
+            projectDao.updateDocument(dto);
+
+        } catch (Exception e) {
+            log.log(Level.SEVERE, e.getMessage(), e);
+            return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+        return new SuccessDataResult(dto);
+    }
+
+    public IDataResult<List<InsertProjectDocumentDTO>> getDocument(int projectId, int documentId)
+            throws ExecutionException, InterruptedException {
+
+        try {
+            var result = projectDao.getDocument(projectId, documentId);
+            return new SuccessDataResult(result);
+        } catch (Exception e) {
+            log.log(Level.SEVERE, e.getMessage(), e);
+            return new ErrorDataResult(projectId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
+        }
     }
 }
