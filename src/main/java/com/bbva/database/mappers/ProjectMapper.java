@@ -204,8 +204,8 @@ public interface ProjectMapper {
                                                       @Param("sdatoolId") String sdatoolId,
                                                       @Param("domainId") int domainId);
 
-    @Update("Delete project_document WHERE project_id = #{projectId} and document_id = #{documentId}")
-    boolean deleteDocument(@Param("projectId") int projectId, @Param("documentId") int documentId);
+    @Delete("Delete from project_document WHERE project_id = #{projectId} and document_id = #{documentId}")
+    void deleteDocument(@Param("projectId") int projectId, @Param("documentId") int documentId);
 
     @Update("UPDATE project_document SET document_url=#{documentUrl}, document_type=#{documentType}, " +
             "update_audit_user=#{createAuditUser}, update_audit_date=CONVERT_TZ(NOW(), 'GMT', 'America/Lima') " +
@@ -217,8 +217,12 @@ public interface ProjectMapper {
             @Result(property = "projectId", column = "project_id"),
             @Result(property = "documentId", column = "document_id"),
             @Result(property = "documentType", column = "document_type"),
-            @Result(property = "documentUrl", column = "document_url")
+            @Result(property = "documentUrl", column = "document_url"),
+            @Result(property = "createAuditUser", column = "last_user_modified")
     })
     List<InsertProjectDocumentDTO> getDocument(@Param("projectId") int projectId,
                                                @Param("documentId") int documentId);
+
+    @Delete("Delete from project_participant WHERE project_id = #{projectId} and participant_id = #{participantId}")
+    void deleteParticipantProject(@Param("projectId") int projectId, @Param("participantId") int participantId);
 }

@@ -187,4 +187,15 @@ public class ProjectResources {
     {
         return projectService.getDocument(projectId, documentId);
     }
+
+    @DELETE
+    @Path("/info/{projectId}/participant/{participantId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<Integer> deleteParticipantProject(@Context HttpServletRequest request,
+                                               @PathParam("projectId") int projectId,
+                                               @PathParam("participantId") int participantId)
+            throws ExecutionException, InterruptedException
+    {
+        return projectService.deleteParticipantProject(projectId, participantId);
+    }
 }

@@ -289,7 +289,7 @@ public class ProjectDao {
         return response;
     }
 
-    public DataResult<ProjectPortafolioEntity> deleteDocument(int projectId, int documentId) {
+    public DataResult<Integer> deleteDocument(int projectId, int documentId) {
         try {
             SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
             try (SqlSession session = sqlSessionFactory.openSession()) {
@@ -320,6 +320,21 @@ public class ProjectDao {
             ProjectMapper mapper = session.getMapper(ProjectMapper.class);
             List<InsertProjectDocumentDTO> documentList = mapper.getDocument(projectId, documentId);
             return documentList;
+        }
+    }
+
+    public DataResult<Integer> deleteParticipantProject(int projectId, int participantId) {
+        try {
+            SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+            try (SqlSession session = sqlSessionFactory.openSession()) {
+                ProjectMapper projectMapper = session.getMapper(ProjectMapper.class);
+                projectMapper.deleteParticipantProject(projectId, participantId);
+                session.commit();
+                return new SuccessDataResult(projectId);
+            }
+        } catch (Exception e) {
+            log.log(Level.SEVERE, e.getMessage(), e);
+            return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR,e.getMessage());
         }
     }
 }
