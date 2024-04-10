@@ -1,12 +1,14 @@
 package com.bbva.database.mappers;
 
 import com.bbva.dto.project.request.InsertProjectDocumentDTO;
-import com.bbva.dto.project.request.InsertProjectInfoDTO;
+import com.bbva.dto.project.request.InsertProjectInfoDTORequest;
+import com.bbva.dto.project.request.ProjectInfoDTO;
 import com.bbva.dto.project.request.InsertProjectParticipantDTO;
 import com.bbva.dto.project.response.ProjectInfoSelectResponse;
 import com.bbva.entities.InsertEntity;
 import com.bbva.entities.common.ProjectByPeriodEntity;
 import com.bbva.entities.common.ProjectEntity;
+import com.bbva.entities.issueticket.WorkOrderDetail;
 import com.bbva.entities.project.ProjectPortafolioEntity;
 import com.bbva.entities.project.ProjectFilterEntity;
 import com.bbva.entities.project.ProjectPortafolioFilterEntity;
@@ -98,7 +100,7 @@ public interface ProjectMapper {
             "start_pi_id=#{startPiId}, end_pi_id=#{endPiId}, final_start_pi_id=#{finalStartPiId}, final_end_pi_id=#{finalEndPiId}, " +
             "update_audit_user=#{createAuditUser}, update_audit_date=CONVERT_TZ(NOW(), 'GMT', 'America/Lima') " +
             "WHERE project_id = #{projectId}")
-    boolean updateProjectInfo(InsertProjectInfoDTO dto);
+    boolean updateProjectInfo(ProjectInfoDTO dto);
 
     @Update("UPDATE data_project SET status_type = 0 " +
             "WHERE project_id = #{projectId}")
@@ -138,6 +140,24 @@ public interface ProjectMapper {
     })
     InsertEntity insertProjectDocument(InsertProjectDocumentDTO dto);
 
+    @Insert({
+            "<script>",
+            "INSERT INTO project_document",
+            "(project_id, document_type, document_url, create_audit_date, create_audit_user)",
+            "VALUES" +
+                    "<foreach item='element' collection='listProjectDocuments' open='' separator=',' close=''>" +
+                    "(" +
+                    "#{element.projectId},",
+                    "#{element.documentType},",
+                    "#{element.documentUrl},",
+                    "now(),",
+                    "#{element.createAuditUser}" +
+                    ")" +
+                    "</foreach>",
+            "</script>"})
+    @Options(useGeneratedKeys = true, keyProperty = "documentId", keyColumn = "document_id")
+    void insertProjectDocuments(@Param("listProjectDocuments")  List<InsertProjectDocumentDTO> projectDocumentsList);
+
     @Select("CALL SP_INSERT_PROJECT_PARTICIPANT(" +
             "#{participantUser}," +
             "#{participantEmail}," +
@@ -151,6 +171,26 @@ public interface ProjectMapper {
     })
     InsertEntity insertProjectParticipant(InsertProjectParticipantDTO dto);
 
+    @Insert({
+            "<script>",
+            "INSERT INTO project_participant",
+            "(participant_user, participant_email, project_id, project_rol_type, pi_id, create_audit_date, create_audit_user)",
+            "VALUES" +
+                    "<foreach item='element' collection='listProjectParticipants' open='' separator=',' close=''>" +
+                    "(" +
+                    "#{element.participantUser},",
+                    "#{element.participantEmail},",
+                    "#{element.projectId},",
+                    "#{element.projectRolType},",
+                    "#{element.piId},",
+                    "now(),",
+                    "#{element.createAuditUser}" +
+                    ")" +
+                    "</foreach>",
+            "</script>"})
+    @Options(useGeneratedKeys = true, keyProperty = "projectParticipantId", keyColumn = "participant_id")
+    void insertProjectParticipants(@Param("listProjectParticipants")  List<InsertProjectParticipantDTO> projectParticipantsList);
+
     @Select("CALL SP_INSERT_PROJECT_INFO(" +
             "#{sdatoolId}," +
             "#{projectName}," +
@@ -159,7 +199,6 @@ public interface ProjectMapper {
             "#{regulatoryType}," +
             "#{ttvType}," +
             "#{domainId}," +
-            "#{domainType}," +
             "#{projectType}," +
             "#{categoryType}," +
             "#{classificationType}," +
@@ -167,12 +206,14 @@ public interface ProjectMapper {
             "#{endPiId}," +
             "#{finalStartPiId}," +
             "#{finalEndPiId}," +
+            "#{wowType}," +
+            "#{countryPriorityType}," +
             "#{createAuditUser})")
     @Results({
             @Result(property = "last_insert_id", column = "last_insert_id"),
             @Result(property = "new_register", column = "new_register")
     })
-    InsertEntity insertProjectInfo(InsertProjectInfoDTO dto);
+    InsertEntity insertProjectInfo(InsertProjectInfoDTORequest dto);
 
     @Select("CALL SP_LIST_PROJECT(" +
             "#{projectId}," +

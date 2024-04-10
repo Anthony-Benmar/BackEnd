@@ -124,8 +124,8 @@ public class ProjectResources {
     @Path("/info")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public IDataResult<InsertProjectInfoDTO> insertProjectInfo(InsertProjectInfoDTO request){
-        IDataResult<InsertProjectInfoDTO>  result = projectService.insertProjectInfo(request);
+    public IDataResult<InsertProjectInfoDTORequest> insertProjectInfo(InsertProjectInfoDTORequest request){
+        IDataResult<InsertProjectInfoDTORequest>  result = projectService.insertProjectInfo(request);
         return result;
     }
 
@@ -142,7 +142,7 @@ public class ProjectResources {
     @Path("/info/update")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public IDataResult<InsertProjectInfoDTO> updateProjectInfo(InsertProjectInfoDTO dto)
+    public IDataResult<ProjectInfoDTO> updateProjectInfo(ProjectInfoDTO dto)
             throws ExecutionException, InterruptedException
     {
         return projectService.updateProjectInfo(dto);

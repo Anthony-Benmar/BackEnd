@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class InsertProjectInfoDTO {
+public class ProjectInfoDTO {
     private Integer projectId;
     private String sdatoolId;
     private String projectName;

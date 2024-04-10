@@ -5,12 +5,8 @@ import com.bbva.core.results.DataResult;
 import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.database.MyBatisConnectionFactory;
-import com.bbva.database.mappers.BatchMapper;
+import com.bbva.database.mappers.IssueTicketMapper;
 import com.bbva.database.mappers.ProjectMapper;
-import com.bbva.dto.batch.request.JobExecutionFilterRequestDTO;
-import com.bbva.dto.batch.response.JobExecutionFilterData;
-import com.bbva.dto.batch.response.JobExecutionFilterResponseDTO;
-import com.bbva.dto.batch.response.StatisticsData;
 import com.bbva.dto.project.request.*;
 import com.bbva.dto.project.response.*;
 import com.bbva.entities.InsertEntity;
@@ -215,7 +211,7 @@ public class ProjectDao {
         }
     }
 
-    public boolean updateProjectInfo(InsertProjectInfoDTO dto) {
+    public boolean updateProjectInfo(ProjectInfoDTO dto) {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         try (SqlSession session = sqlSessionFactory.openSession()) {
             ProjectMapper projectMapper = session.getMapper(ProjectMapper.class);
@@ -247,15 +243,33 @@ public class ProjectDao {
         }
     }
 
-    public InsertProjectInfoDTO insertProjectInfo(InsertProjectInfoDTO dto) {
+    public InsertProjectInfoDTORequest insertProjectInfo(InsertProjectInfoDTORequest dto) {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         try (SqlSession session = sqlSessionFactory.openSession()) {
             ProjectMapper projectMapper = session.getMapper(ProjectMapper.class);
-            InsertEntity result = projectMapper.insertProjectInfo(dto);
-            session.commit();
-            dto.setProjectId(result.getLast_insert_id());
-            return dto;
+            try{
+                var result = projectMapper.insertProjectInfo(dto);
+                dto.setProjectId(result.getLast_insert_id());
+                if(dto.participants != null && dto.participants.size() > 0)
+                    dto.participants.stream().forEach(participant -> {
+                        participant.setProjectId(dto.projectId);
+                        participant.setCreateAuditUser(dto.createAuditUser);
+                    });
+                    projectMapper.insertProjectParticipants(dto.participants);
+                if(dto.documents != null && dto.documents.size() > 0)
+                    dto.documents.stream().forEach(document -> {
+                        document.setProjectId(dto.projectId);
+                        document.setCreateAuditUser(dto.createAuditUser);
+                    });
+                    projectMapper.insertProjectDocuments(dto.documents);
+
+                session.commit();
+            }catch (Exception e){
+                session.rollback();
+                log.log(Level.SEVERE, e.getMessage(), e);
+            }
         }
+        return dto;
     }
 
     public ProjectInfoFilterResponse projectInfoFilter(ProjectInfoFilterRequest dto) {

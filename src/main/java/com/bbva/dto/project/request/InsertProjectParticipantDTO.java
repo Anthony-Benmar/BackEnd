@@ -3,14 +3,17 @@ package com.bbva.dto.project.request;
 import lombok.Getter;
 import lombok.Setter;
 
+import javax.annotation.Nullable;
+
 @Getter
 @Setter
 public class InsertProjectParticipantDTO {
-    private Integer projectParticipantId;
-    private String participantUser;
-    private String participantEmail;
-    private Integer projectId;
-    private Integer projectRolType;
-    private Integer piId;
-    private String createAuditUser;
+    public Integer projectParticipantId;
+    public String participantUser;
+    public String participantEmail;
+    public Integer projectId;
+    public Integer projectRolType;
+    public Integer piId;
+    @Nullable
+    public String createAuditUser;
 }
