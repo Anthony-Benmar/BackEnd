@@ -345,4 +345,14 @@ public class ProjectService {
             return new ErrorDataResult(projectId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
+
+    public IDataResult<List<SelectCalendarDTO>> getCalendar() {
+        try {
+            var result = projectDao.getAllCalendar();
+            return new SuccessDataResult(result);
+        } catch (Exception e) {
+            log.log(Level.SEVERE, e.getMessage(), e);
+            return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
 }

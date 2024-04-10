@@ -3,6 +3,7 @@ package com.bbva.database.mappers;
 import com.bbva.dto.project.request.InsertProjectDocumentDTO;
 import com.bbva.dto.project.request.InsertProjectInfoDTO;
 import com.bbva.dto.project.request.InsertProjectParticipantDTO;
+import com.bbva.dto.project.request.SelectCalendarDTO;
 import com.bbva.dto.project.response.ProjectInfoSelectResponse;
 import com.bbva.entities.InsertEntity;
 import com.bbva.entities.common.ProjectByPeriodEntity;
@@ -242,4 +243,20 @@ public interface ProjectMapper {
             @Result(property = "piId", column = "pi_id")
     })
     List<InsertProjectParticipantDTO> getProjectParticipants(@Param("projectId") int projectId);
+
+    @Select("select * from calendar_pi")
+    @Results({
+            @Result(property = "piId", column = "pi_id"),
+            @Result(property = "piShortName", column = "pi_short_name"),
+            @Result(property = "piLargeName", column = "pi_large_name"),
+            @Result(property = "piYearId", column = "pi_year_id"),
+            @Result(property = "piQuarterId", column = "pi_quarter_id"),
+            @Result(property = "startDate", column = "start_date"),
+            @Result(property = "endDate", column = "end_date"),
+            @Result(property = "createAuditDate", column = "create_audit_date"),
+            @Result(property = "createAuditUser", column = "create_audit_user"),
+            @Result(property = "updateAuditDate", column = "update_audit_date"),
+            @Result(property = "updateAuditUser", column = "update_audit_user")
+    })
+    List<SelectCalendarDTO> getAllCalendar();
 }

@@ -356,4 +356,12 @@ public class ProjectDao {
             return participantsList;
         }
     }
+
+    public List<SelectCalendarDTO> getAllCalendar() {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ProjectMapper mapper = session.getMapper(ProjectMapper.class);
+            return mapper.getAllCalendar();
+        }
+    }
 }

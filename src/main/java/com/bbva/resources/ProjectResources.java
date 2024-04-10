@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -217,5 +218,14 @@ public class ProjectResources {
             throws ExecutionException, InterruptedException
     {
         return projectService.getProjectParticipants(projectId);
+    }
+
+    @GET
+    @Path("/calendar")
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<List<SelectCalendarDTO>> getCalendar()
+            throws ExecutionException, InterruptedException
+    {
+        return projectService.getCalendar();
     }
 }
