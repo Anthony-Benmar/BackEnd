@@ -10,5 +10,9 @@ public class ProjectInfoFilterRequest {
     public Integer records_amount;
     public Integer projectId;
     public String sdatoolId;
+    public String sdatoolIdOrProjectName;
     public Integer domainId;
+    public Integer statusType;
+    public Integer projectType;
+    public Integer wowType;
 }

@@ -240,7 +240,8 @@ public interface ProjectMapper {
             @Result(property = "finalStartPiId", column = "final_start_pi_id"),
             @Result(property = "finalEndPiId", column = "final_end_pi_id"),
             @Result(property = "statusType", column = "status_type"),
-            @Result(property = "statusTypeDesc", column = "status_desc")
+            @Result(property = "statusTypeDesc", column = "status_desc"),
+            @Result(property = "wowType", column = "wow_type")
     })
     List<ProjectInfoSelectResponse> projectInfoFilter(@Param("projectId") int projectId,
                                                       @Param("sdatoolId") String sdatoolId,

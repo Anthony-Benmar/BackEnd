@@ -26,4 +26,5 @@ public class ProjectInfoSelectResponse {
     public Integer finalEndPiId;
     public Integer statusType;
     public String statusTypeDesc;
+    private Integer wowType;
 }
