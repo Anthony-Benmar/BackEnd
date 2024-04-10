@@ -1,6 +1,5 @@
 package com.bbva.dto.project.response;
 
-import com.bbva.dto.project.request.InsertProjectInfoDTO;
 import java.util.List;
 import lombok.Getter;
 import lombok.Setter;

@@ -211,7 +211,7 @@ public class ProjectService {
         return new SuccessDataResult(projectId);
     }
 
-    public IDataResult<InsertProjectInfoDTO> updateProjectInfo(InsertProjectInfoDTO dto)
+    public IDataResult<ProjectInfoDTO> updateProjectInfo(ProjectInfoDTO dto)
             throws ExecutionException, InterruptedException {
 
         try {
@@ -250,7 +250,7 @@ public class ProjectService {
         return new SuccessDataResult(result);
     }
 
-    public IDataResult<InsertProjectInfoDTO> insertProjectInfo(InsertProjectInfoDTO dto) {
+    public IDataResult<InsertProjectInfoDTORequest> insertProjectInfo(InsertProjectInfoDTORequest dto) {
         var result = projectDao.insertProjectInfo(dto);
         return new SuccessDataResult(result);
     }
