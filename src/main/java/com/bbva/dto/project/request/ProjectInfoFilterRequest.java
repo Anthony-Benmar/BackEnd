@@ -9,7 +9,6 @@ public class ProjectInfoFilterRequest {
     public Integer page;
     public Integer records_amount;
     public Integer projectId;
-    public String sdatoolId;
     public String sdatoolIdOrProjectName;
     public Integer domainId;
     public Integer statusType;

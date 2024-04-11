@@ -218,7 +218,7 @@ public interface ProjectMapper {
 
     @Select("CALL SP_LIST_PROJECT(" +
             "#{projectId}," +
-            "#{sdatoolId}," +
+            "#{sdatoolIdOrProjectName}," +
             "#{domainId})")
     @Results({
             @Result(property = "projectId", column = "project_id"),
@@ -244,7 +244,7 @@ public interface ProjectMapper {
             @Result(property = "wowType", column = "wow_type")
     })
     List<ProjectInfoSelectResponse> projectInfoFilter(@Param("projectId") int projectId,
-                                                      @Param("sdatoolId") String sdatoolId,
+                                                      @Param("sdatoolIdOrProjectName") String sdatoolId,
                                                       @Param("domainId") int domainId);
 
     @Delete("Delete from project_document WHERE project_id = #{projectId} and document_id = #{documentId}")
