@@ -90,15 +90,11 @@ public class UserDao {
 
     public List<User> listByEmail(String email) {
         List<User> userList = null;
-        // try {
-            SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
-            try (SqlSession session = sqlSessionFactory.openSession()) {
-                UserMapper mapper = session.getMapper(UserMapper.class);
-                userList = mapper.listByEmail(email);
-            }
-       // } catch (Exception e) {
-       //     LOGGER.log(Level.SEVERE, e.getMessage(), e);
-       // }
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            UserMapper mapper = session.getMapper(UserMapper.class);
+            userList = mapper.listByEmail(email);
+        }
         return userList;
     }
 
