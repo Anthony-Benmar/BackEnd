@@ -293,7 +293,7 @@ public interface ProjectMapper {
     })
     List<InsertProjectParticipantDTO> getProjectParticipants(@Param("projectId") int projectId);
 
-    @Select("select * from calendar_pi")
+    @Select("select * from calendar_pi order by pi_large_name desc")
     @Results({
             @Result(property = "piId", column = "pi_id"),
             @Result(property = "piShortName", column = "pi_short_name"),
