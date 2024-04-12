@@ -209,7 +209,8 @@ public interface ProjectMapper {
             "#{finalEndPiId}," +
             "#{wowType}," +
             "#{countryPriorityType}," +
-            "#{createAuditUser})")
+            "#{createAuditUser}," +
+            "#{statusType})")
     @Results({
             @Result(property = "last_insert_id", column = "last_insert_id"),
             @Result(property = "new_register", column = "new_register")

@@ -32,4 +32,5 @@ public class InsertProjectInfoDTORequest {
     public String createAuditUser;
     public List<InsertProjectParticipantDTO> participants;
     public List<InsertProjectDocumentDTO> documents;
+    public Integer statusType;
 }
