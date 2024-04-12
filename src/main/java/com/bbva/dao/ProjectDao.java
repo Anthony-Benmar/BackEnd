@@ -282,7 +282,7 @@ public class ProjectDao {
         var response = new ProjectInfoFilterResponse();
         try (SqlSession session = sqlSessionFactory.openSession()) {
             ProjectMapper projectMapper = session.getMapper(ProjectMapper.class);
-            lista = projectMapper.projectInfoFilter(dto.projectId, dto.sdatoolIdOrProjectName, dto.domainId);
+            lista = projectMapper.projectInfoFilter(dto.projectId, dto.sdatoolIdOrProjectName, dto.domainId, dto.statusType, dto.projectType, dto.wowType);
         }
 
         recordsCount = (lista.size() > 0) ? (int) lista.stream().count() : 0;
