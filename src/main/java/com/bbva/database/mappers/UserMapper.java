@@ -30,10 +30,7 @@ public interface UserMapper {
                                 "operation_date AS operationDate " +
                                 "FROM secu_user";
 
-    String SQL_QUERY_USERS_BY_EMAIL = "SELECT user_id AS userId, employee_id AS employeeId, " +
-                                        "google_id AS googleId, email, " +
-                                        "full_name AS fullName " +
-                                        "FROM secu_user WHERE email = #{email}";
+    String SQL_QUERY_USERS_BY_EMAIL = "CALL SP_FILTER_USER (#{email})";
 
     String SQL_QUERY_INSERT_USER="INSERT INTO secu_user ( google_id, full_name, email, status_type, operation_user, operation_date, employee_id) " +
             "VALUES (#{googleId},#{fullName},#{email}, #{statusType}, #{operationUser}, now(), #{employeeId})";
