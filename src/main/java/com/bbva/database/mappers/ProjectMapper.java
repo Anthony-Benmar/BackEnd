@@ -9,7 +9,6 @@ import com.bbva.dto.project.response.ProjectInfoSelectResponse;
 import com.bbva.entities.InsertEntity;
 import com.bbva.entities.common.ProjectByPeriodEntity;
 import com.bbva.entities.common.ProjectEntity;
-import com.bbva.entities.issueticket.WorkOrderDetail;
 import com.bbva.entities.project.ProjectPortafolioEntity;
 import com.bbva.entities.project.ProjectFilterEntity;
 import com.bbva.entities.project.ProjectPortafolioFilterEntity;
@@ -107,9 +106,14 @@ public interface ProjectMapper {
             "WHERE project_id = #{projectId}")
     boolean deleteProject(@Param("projectId") int projectId);
 
-    @Update("UPDATE project_info SET status_type = 0 " +
+    /*@Update("UPDATE project_info SET status_type = 0 " +
             "WHERE project_id = #{projectId}")
+    boolean deleteProjectInfo(@Param("projectId") int projectId);*/
+
+    @Delete("Delete from project_info" +
+            " WHERE project_id = #{projectId}")
     boolean deleteProjectInfo(@Param("projectId") int projectId);
+
 
     @Select("CALL SP_PROJECT_PORTFOLIO_DETAIL (#{projectId})")
     @Results({
