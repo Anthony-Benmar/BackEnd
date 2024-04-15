@@ -22,5 +22,8 @@ public class ProjectInfoDTO {
     private Integer endPiId;
     private Integer finalStartPiId;
     private Integer finalEndPiId;
+    private Integer wowType;
+    private Integer countryPriorityType;
     private String createAuditUser;
+    private Integer statusType;
 }

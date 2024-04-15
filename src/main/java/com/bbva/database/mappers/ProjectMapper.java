@@ -98,6 +98,7 @@ public interface ProjectMapper {
             "portafolio_code= #{portafolioCode}, regulatory_type =#{regulatoryType}, ttv_type=#{ttvType}, domain_id=#{domainId}, domain_type=#{domainType}, " +
             "project_type=#{projectType}, category_type=#{categoryType}, classification_type=#{classificationType}, " +
             "start_pi_id=#{startPiId}, end_pi_id=#{endPiId}, final_start_pi_id=#{finalStartPiId}, final_end_pi_id=#{finalEndPiId}, " +
+            "wow_type=#{wowType}, country_priority_type=#{countryPriorityType}, status_type=#{statusType}, " +
             "update_audit_user=#{createAuditUser}, update_audit_date=CONVERT_TZ(NOW(), 'GMT', 'America/Lima') " +
             "WHERE project_id = #{projectId}")
     boolean updateProjectInfo(ProjectInfoDTO dto);
