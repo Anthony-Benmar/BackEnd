@@ -102,17 +102,19 @@ public interface ProjectMapper {
             "WHERE project_id = #{projectId}")
     boolean updateProjectInfo(ProjectInfoDTO dto);
 
-    @Update("UPDATE data_project SET status_type = 0 " +
+    /*@Update("UPDATE data_project SET status_type = 0 " +
             "WHERE project_id = #{projectId}")
     boolean deleteProject(@Param("projectId") int projectId);
 
-    /*@Update("UPDATE project_info SET status_type = 0 " +
+    @Update("UPDATE project_info SET status_type = 0 " +
             "WHERE project_id = #{projectId}")
     boolean deleteProjectInfo(@Param("projectId") int projectId);*/
 
-    @Delete("Delete from project_info" +
-            " WHERE project_id = #{projectId}")
-    boolean deleteProjectInfo(@Param("projectId") int projectId);
+    @Delete("Delete from data_project WHERE project_id = #{projectId}")
+    void deleteProject(@Param("projectId") int projectId);
+
+    @Delete("DELETE FROM project_info WHERE project_id = #{projectId}")
+    void deleteProjectInfo(@Param("projectId") int projectId);
 
 
     @Select("CALL SP_PROJECT_PORTFOLIO_DETAIL (#{projectId})")
