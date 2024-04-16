@@ -15,7 +15,6 @@ public class InsertProjectInfoDTORequest {
     public String projectDesc;
     public String portafolioCode;
     public String domainId;
-    public Integer leaderDataEng;
     public Integer ttvType;
     public Integer regulatoryType;
     public Integer projectType;
