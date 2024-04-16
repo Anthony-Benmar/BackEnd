@@ -9,6 +9,7 @@ import javax.annotation.Nullable;
 @Setter
 public class InsertProjectParticipantDTO {
     public Integer projectParticipantId;
+    public String participantName;
     public String participantUser;
     public String participantEmail;
     public Integer projectId;
