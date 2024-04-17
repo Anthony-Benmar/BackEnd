@@ -29,6 +29,7 @@ public class ProjectInfoSelectResponse {
     public Integer statusType;
     public String statusTypeDesc;
     private Integer wowType;
+    private Integer countryPriorityType;
     private Date createAuditDate;
     private String createAuditUser;
     private Date updateAuditDate;

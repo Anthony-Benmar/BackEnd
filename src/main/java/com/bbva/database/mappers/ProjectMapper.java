@@ -254,6 +254,7 @@ public interface ProjectMapper {
             @Result(property = "statusType", column = "status_type"),
             @Result(property = "statusTypeDesc", column = "status_desc"),
             @Result(property = "wowType", column = "wow_type"),
+            @Result(property = "countryPriorityType", column = "country_priority_type"),
             @Result(property = "createAuditDate", column = "create_audit_date"),
             @Result(property = "createAuditUser", column = "create_audit_user"),
             @Result(property = "updateAuditDate", column = "update_audit_date"),
