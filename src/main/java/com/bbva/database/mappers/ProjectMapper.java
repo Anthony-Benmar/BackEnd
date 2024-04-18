@@ -303,7 +303,11 @@ public interface ProjectMapper {
             @Result(property = "participantEmail", column = "participant_email"),
             @Result(property = "projectId", column = "project_id"),
             @Result(property = "projectRolType", column = "project_rol_type"),
-            @Result(property = "piId", column = "pi_id")
+            @Result(property = "piId", column = "pi_id"),
+            @Result(property = "createAuditDate", column = "create_audit_date"),
+            @Result(property = "createAuditUser", column = "create_audit_user"),
+            @Result(property = "updateAuditDate", column = "update_audit_date"),
+            @Result(property = "updateAuditUser", column = "update_audit_user")
     })
     List<InsertProjectParticipantDTO> getProjectParticipants(@Param("projectId") int projectId);
 
