@@ -14,7 +14,6 @@ public class ProjectInfoDTO {
     private Integer regulatoryType;
     private Integer ttvType;
     private String domainId;
-    private Integer domainType;
     private Integer projectType;
     private Integer categoryType;
     private Integer classificationType;
