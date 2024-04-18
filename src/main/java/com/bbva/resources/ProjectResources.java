@@ -180,7 +180,7 @@ public class ProjectResources {
     @GET
     @Path("/info/{projectId}/document/{documentId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public IDataResult<List<InsertProjectDocumentDTO>> getDocument(@Context HttpServletRequest request,
+    public IDataResult<List<InsertProjectDocumentDTO>> getDocument(@Context  HttpServletRequest request,
                                                                    @PathParam("projectId") int projectId,
                                                                    @PathParam("documentId") int documentId)
             throws ExecutionException, InterruptedException
