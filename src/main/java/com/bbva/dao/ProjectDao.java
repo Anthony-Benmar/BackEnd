@@ -5,7 +5,6 @@ import com.bbva.core.results.DataResult;
 import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.database.MyBatisConnectionFactory;
-import com.bbva.database.mappers.IssueTicketMapper;
 import com.bbva.database.mappers.ProjectMapper;
 import com.bbva.dto.project.request.*;
 import com.bbva.dto.project.response.*;

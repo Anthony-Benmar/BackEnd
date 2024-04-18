@@ -273,12 +273,9 @@ public interface ProjectMapper {
             "WHERE project_id = #{projectId};")
     void deleteDocument(@Param("projectId") int projectId, @Param("documentId") int documentId);
 
-    /*@Update("UPDATE project_document SET document_url=#{documentUrl}, document_type=#{documentType}, " +
-            "update_audit_user=#{createAuditUser}, update_audit_date=CONVERT_TZ(NOW(), 'GMT', 'America/Lima') " +
-            "WHERE document_id=#{documentId} and project_id = #{projectId};" +
-            "UPDATE project_info SET update_audit_user=#{createAuditUser}, update_audit_date=CONVERT_TZ(NOW(), 'GMT', 'America/Lima') " +
-            "WHERE project_id = #{projectId};")
-    boolean updateDocument(InsertProjectDocumentDTO dto);*/
+    /*@Delete("CALL SP_DELETE_DOCUMENT(#{projectId}, #{documentId}, #{createAuditUser})")
+    void deleteDocument(@Param("projectId") int projectId,
+                        @Param("documentId") int documentId);*/
 
     @Update("CALL SP_UPDATE_DOCUMENT(#{documentId}, #{projectId}, #{documentType}, #{documentUrl}, #{createAuditUser})")
     boolean updateDocument(InsertProjectDocumentDTO dto);
