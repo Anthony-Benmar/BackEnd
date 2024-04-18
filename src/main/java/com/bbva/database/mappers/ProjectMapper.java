@@ -95,7 +95,7 @@ public interface ProjectMapper {
     boolean updateProject(ProjectPortafolioEntity project);
 
     @Update("UPDATE project_info SET sdatool_id= #{sdatoolId}, project_name = #{projectName}, project_desc = #{projectDesc}, " +
-            "portafolio_code= #{portafolioCode}, regulatory_type =#{regulatoryType}, ttv_type=#{ttvType}, domain_id=#{domainId}, domain_type=#{domainType}, " +
+            "portafolio_code= #{portafolioCode}, regulatory_type =#{regulatoryType}, ttv_type=#{ttvType}, domain_id=#{domainId}, " +
             "project_type=#{projectType}, category_type=#{categoryType}, classification_type=#{classificationType}, " +
             "start_pi_id=#{startPiId}, end_pi_id=#{endPiId}, final_start_pi_id=#{finalStartPiId}, final_end_pi_id=#{finalEndPiId}, " +
             "wow_type=#{wowType}, country_priority_type=#{countryPriorityType}, status_type=#{statusType}, " +
@@ -267,12 +267,19 @@ public interface ProjectMapper {
                                                       @Param("projectType") int projectType,
                                                       @Param("wowType") int wowType);
 
-    @Delete("Delete from project_document WHERE project_id = #{projectId} and document_id = #{documentId}")
+    @Delete("Delete from project_document WHERE project_id = #{projectId} and document_id = #{documentId}; " +
+            "UPDATE project_info SET update_audit_user=#{createAuditUser}, update_audit_date=CONVERT_TZ(NOW(), 'GMT', 'America/Lima') " +
+            "WHERE project_id = #{projectId};")
     void deleteDocument(@Param("projectId") int projectId, @Param("documentId") int documentId);
 
-    @Update("UPDATE project_document SET document_url=#{documentUrl}, document_type=#{documentType}, " +
+    /*@Update("UPDATE project_document SET document_url=#{documentUrl}, document_type=#{documentType}, " +
             "update_audit_user=#{createAuditUser}, update_audit_date=CONVERT_TZ(NOW(), 'GMT', 'America/Lima') " +
-            "WHERE document_id=#{documentId} and project_id = #{projectId}")
+            "WHERE document_id=#{documentId} and project_id = #{projectId};" +
+            "UPDATE project_info SET update_audit_user=#{createAuditUser}, update_audit_date=CONVERT_TZ(NOW(), 'GMT', 'America/Lima') " +
+            "WHERE project_id = #{projectId};")
+    boolean updateDocument(InsertProjectDocumentDTO dto);*/
+
+    @Update("CALL SP_UPDATE_DOCUMENT(#{documentId}, #{projectId}, #{documentType}, #{documentUrl}, #{createAuditUser})")
     boolean updateDocument(InsertProjectDocumentDTO dto);
 
     @Select("CALL SP_PROJECT_DOCUMENT_FILTERED(#{projectId}, #{documentId})")
@@ -303,7 +310,11 @@ public interface ProjectMapper {
             @Result(property = "participantEmail", column = "participant_email"),
             @Result(property = "projectId", column = "project_id"),
             @Result(property = "projectRolType", column = "project_rol_type"),
-            @Result(property = "piId", column = "pi_id")
+            @Result(property = "piId", column = "pi_id"),
+            @Result(property = "createAuditDate", column = "create_audit_date"),
+            @Result(property = "createAuditUser", column = "create_audit_user"),
+            @Result(property = "updateAuditDate", column = "update_audit_date"),
+            @Result(property = "updateAuditUser", column = "update_audit_user")
     })
     List<InsertProjectParticipantDTO> getProjectParticipants(@Param("projectId") int projectId);
 
