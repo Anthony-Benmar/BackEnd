@@ -268,9 +268,7 @@ public interface ProjectMapper {
                                                       @Param("projectType") int projectType,
                                                       @Param("wowType") int wowType);
 
-    @Delete("Delete from project_document WHERE project_id = #{projectId} and document_id = #{documentId}; " +
-            "UPDATE project_info SET update_audit_user=#{createAuditUser}, update_audit_date=CONVERT_TZ(NOW(), 'GMT', 'America/Lima') " +
-            "WHERE project_id = #{projectId};")
+    @Delete("Delete from project_document WHERE project_id = #{projectId} and document_id = #{documentId}; ")
     void deleteDocument(@Param("projectId") int projectId, @Param("documentId") int documentId);
 
     /*@Delete("CALL SP_DELETE_DOCUMENT(#{projectId}, #{documentId}, #{createAuditUser})")
