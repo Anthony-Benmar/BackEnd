@@ -168,6 +168,7 @@ public interface ProjectMapper {
 
     @Select("CALL SP_INSERT_PROJECT_PARTICIPANT(" +
             "#{participantUser}," +
+            "#{participantName}," +
             "#{participantEmail}," +
             "#{projectId}," +
             "#{projectRolType}," +
