@@ -292,10 +292,19 @@ public interface ProjectMapper {
     @Delete("Delete from project_participant WHERE project_id = #{projectId} and participant_id = #{participantId}")
     void deleteParticipantProject(@Param("projectId") int projectId, @Param("participantId") int participantId);
 
-    @Update("UPDATE project_participant SET participant_user=#{participantUser}, participant_name=#{participantName}, participant_email=#{participantEmail}, " +
+    /*@Update("UPDATE project_participant SET participant_user=#{participantUser}, participant_name=#{participantName}, participant_email=#{participantEmail}, " +
             "project_rol_type=#{projectRolType}, pi_id=#{piId}, " +
             "update_audit_user=#{createAuditUser}, update_audit_date=CONVERT_TZ(NOW(), 'GMT', 'America/Lima') " +
-            "WHERE participant_id=#{projectParticipantId} and project_id = #{projectId}")
+            "WHERE participant_id=#{projectParticipantId} and project_id = #{projectId}")*/
+    @Update("CALL SP_UPDATE_PROJECT_PARTICIPANT(" +
+            "#{participantUser}," +
+            "#{participantName}," +
+            "#{participantEmail}," +
+            "#{projectId}," +
+            "#{projectRolType}," +
+            "#{piId}," +
+            "#{createAuditUser}," +
+            "#{projectParticipantId})")
     boolean updateParticipant(InsertProjectParticipantDTO dto);
 
     @Select("CALL SP_PROJECT_PARTICIPANTS(#{projectId})")
