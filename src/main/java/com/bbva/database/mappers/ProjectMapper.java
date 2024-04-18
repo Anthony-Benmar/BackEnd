@@ -182,11 +182,12 @@ public interface ProjectMapper {
     @Insert({
             "<script>",
             "INSERT INTO project_participant",
-            "(participant_user, participant_email, project_id, project_rol_type, pi_id, create_audit_date, create_audit_user)",
+            "(participant_user,participant_name, participant_email, project_id, project_rol_type, pi_id, create_audit_date, create_audit_user)",
             "VALUES" +
                     "<foreach item='element' collection='listProjectParticipants' open='' separator=',' close=''>" +
                     "(" +
                     "#{element.participantUser},",
+                    "#{element.participantName},",
                     "#{element.participantEmail},",
                     "#{element.projectId},",
                     "#{element.projectRolType},",
@@ -252,7 +253,12 @@ public interface ProjectMapper {
             @Result(property = "finalEndPiId", column = "final_end_pi_id"),
             @Result(property = "statusType", column = "status_type"),
             @Result(property = "statusTypeDesc", column = "status_desc"),
-            @Result(property = "wowType", column = "wow_type")
+            @Result(property = "wowType", column = "wow_type"),
+            @Result(property = "countryPriorityType", column = "country_priority_type"),
+            @Result(property = "createAuditDate", column = "create_audit_date"),
+            @Result(property = "createAuditUser", column = "create_audit_user"),
+            @Result(property = "updateAuditDate", column = "update_audit_date"),
+            @Result(property = "updateAuditUser", column = "update_audit_user")
     })
     List<ProjectInfoSelectResponse> projectInfoFilter(@Param("projectId") int projectId,
                                                       @Param("sdatoolIdOrProjectName") String sdatoolId,
@@ -283,7 +289,7 @@ public interface ProjectMapper {
     @Delete("Delete from project_participant WHERE project_id = #{projectId} and participant_id = #{participantId}")
     void deleteParticipantProject(@Param("projectId") int projectId, @Param("participantId") int participantId);
 
-    @Update("UPDATE project_participant SET participant_user=#{participantUser}, participant_email=#{participantEmail}, " +
+    @Update("UPDATE project_participant SET participant_user=#{participantUser}, participant_name=#{participantName}, participant_email=#{participantEmail}, " +
             "project_rol_type=#{projectRolType}, pi_id=#{piId}, " +
             "update_audit_user=#{createAuditUser}, update_audit_date=CONVERT_TZ(NOW(), 'GMT', 'America/Lima') " +
             "WHERE participant_id=#{projectParticipantId} and project_id = #{projectId}")
@@ -292,6 +298,7 @@ public interface ProjectMapper {
     @Select("CALL SP_PROJECT_PARTICIPANTS(#{projectId})")
     @Results({
             @Result(property = "projectParticipantId", column = "participant_id"),
+            @Result(property = "participantName", column = "participant_name"),
             @Result(property = "participantUser", column = "participant_user"),
             @Result(property = "participantEmail", column = "participant_email"),
             @Result(property = "projectId", column = "project_id"),
