@@ -3,6 +3,7 @@ package com.bbva.entities.mesh;
 
 import lombok.*;
 
+import java.sql.Timestamp;
 import java.util.Date;
 
 @AllArgsConstructor

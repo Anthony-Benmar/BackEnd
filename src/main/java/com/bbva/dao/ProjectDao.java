@@ -25,6 +25,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import static com.bbva.util.types.FechaUtil.convertDateToString;
+
 public class ProjectDao {
     private static final Logger log = Logger.getLogger(ProjectDao.class.getName());
 
@@ -331,6 +333,16 @@ public class ProjectDao {
                     .skip(dto.records_amount * (dto.page - 1))
                     .limit(dto.records_amount)
                     .collect(Collectors.toList());
+        }
+
+        for(ProjectInfoSelectResponse item : lista) {
+            if(item.getCreateAuditDate() != null) {
+                item.setCreateAuditDate_S(convertDateToString(item.getCreateAuditDate(),"dd/MM/yyyy HH:mm:ss"));
+            }
+            if(item.getUpdateAuditDate() != null) {
+                item.setUpdateAuditDate_S(convertDateToString(item.getUpdateAuditDate(),"dd/MM/yyyy HH:mm:ss"));
+            }
+
         }
 
         response.setCount(recordsCount);

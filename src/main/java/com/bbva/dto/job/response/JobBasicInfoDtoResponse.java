@@ -3,6 +3,7 @@ package com.bbva.dto.job.response;
 import lombok.Getter;
 import lombok.Setter;
 
+
 import java.util.Date;
 
 @Getter
