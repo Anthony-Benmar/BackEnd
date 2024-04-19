@@ -197,16 +197,16 @@ public class ProjectResources {
     }
 
     @DELETE
-    @Path("/info/{projectId}/participant/{participantId}")
+    @Path("/info/{projectId}/participant/{participantId}/{updateAuditUser}")
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<Integer> deleteParticipantProject(@Context HttpServletRequest request,
                                                @PathParam("projectId") int projectId,
-                                               @PathParam("participantId") int participantId)
+                                               @PathParam("participantId") int participantId,
+                                               @PathParam("updateAuditUser") String updateAuditUser)
             throws ExecutionException, InterruptedException
     {
-        return projectService.deleteParticipantProject(projectId, participantId);
+        return projectService.deleteParticipantProject(projectId, participantId, updateAuditUser);
     }
-
     @PUT
     @Path("/info/participant/update")
     @Consumes(MediaType.APPLICATION_JSON)

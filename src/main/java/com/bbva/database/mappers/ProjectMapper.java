@@ -276,8 +276,8 @@ public interface ProjectMapper {
     List<InsertProjectDocumentDTO> getDocument(@Param("projectId") int projectId,
                                                @Param("documentId") int documentId);
 
-    @Delete("Delete from project_participant WHERE project_id = #{projectId} and participant_id = #{participantId}")
-    void deleteParticipantProject(@Param("projectId") int projectId, @Param("participantId") int participantId);
+    @Delete("CALL SP_DELETE_PROJECT_PARTICIPANT(#{projectId}, #{participantId}, #{updateAuditUser})")
+    void deleteParticipantProject(@Param("projectId") int projectId, @Param("participantId") int participantId, @Param("updateAuditUser") String updateAuditUser);
 
     /*@Update("UPDATE project_participant SET participant_user=#{participantUser}, participant_name=#{participantName}, participant_email=#{participantEmail}, " +
             "project_rol_type=#{projectRolType}, pi_id=#{piId}, " +

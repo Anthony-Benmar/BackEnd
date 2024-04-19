@@ -303,11 +303,11 @@ public class ProjectService {
         }
     }
 
-    public IDataResult<Integer> deleteParticipantProject(int projectId, int participantId)
+    public IDataResult<Integer> deleteParticipantProject(int projectId, int participantId, String updateAuditUser)
             throws ExecutionException, InterruptedException {
 
         try {
-            var res = projectDao.deleteParticipantProject(projectId, participantId);
+            var res = projectDao.deleteParticipantProject(projectId, participantId, updateAuditUser);
             if (!res.success)
                 return new ErrorDataResult(projectId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "No se pudo eliminar proyecto");
 
