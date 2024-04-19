@@ -260,11 +260,11 @@ public class ProjectService {
         return new SuccessDataResult(result);
     }
 
-    public IDataResult<Integer> deleteDocument(int projectId, int documentId)
+    public IDataResult<Integer> deleteDocument(int projectId, int documentId, String createAuditUser)
             throws ExecutionException, InterruptedException {
 
         try {
-            var res = projectDao.deleteDocument(projectId, documentId);
+            var res = projectDao.deleteDocument(projectId, documentId, createAuditUser);
             if (!res.success)
                 return new ErrorDataResult(projectId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "No se pudo eliminar proyecto");
 

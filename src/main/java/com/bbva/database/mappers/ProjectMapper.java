@@ -259,8 +259,8 @@ public interface ProjectMapper {
                                                       @Param("projectType") int projectType,
                                                       @Param("wowType") int wowType);
 
-    @Delete("Delete from project_document WHERE project_id = #{projectId} and document_id = #{documentId}; ")
-    void deleteDocument(@Param("projectId") int projectId, @Param("documentId") int documentId);
+    @Delete("CALL SP_DELETE_DOCUMENT(#{projectId}, #{documentId}, #{createAuditUser})")
+    void deleteDocument(@Param("projectId") int projectId, @Param("documentId") int documentId, @Param("createAuditUser") String createAuditUser);
 
     /*@Delete("CALL SP_DELETE_DOCUMENT(#{projectId}, #{documentId}, #{createAuditUser})")
     void deleteDocument(@Param("projectId") int projectId,

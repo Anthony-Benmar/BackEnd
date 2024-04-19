@@ -353,12 +353,12 @@ public class ProjectDao {
         return response;
     }
 
-    public DataResult<Integer> deleteDocument(int projectId, int documentId) {
+    public DataResult<Integer> deleteDocument(int projectId, int documentId, String createAuditUser) {
         try {
             SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
             try (SqlSession session = sqlSessionFactory.openSession()) {
                 ProjectMapper projectMapper = session.getMapper(ProjectMapper.class);
-                projectMapper.deleteDocument(projectId, documentId);
+                projectMapper.deleteDocument(projectId, documentId, createAuditUser);
                 session.commit();
                 return new SuccessDataResult(projectId);
             }

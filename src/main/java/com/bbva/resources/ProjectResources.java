@@ -164,14 +164,15 @@ public class ProjectResources {
     }
 
     @DELETE
-    @Path("/info/{projectId}/document/{documentId}")
+    @Path("/info/{projectId}/document/{documentId}/{createAuditUser}")
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<Integer> deleteDocument(@Context HttpServletRequest request,
                                                @PathParam("projectId") int projectId,
-                                               @PathParam("documentId") int documentId)
+                                               @PathParam("documentId") int documentId,
+                                               @PathParam("createAuditUser") String createAuditUser)
             throws ExecutionException, InterruptedException
     {
-        return projectService.deleteDocument(projectId, documentId);
+        return projectService.deleteDocument(projectId, documentId, createAuditUser);
     }
 
     @PUT
