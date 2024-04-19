@@ -253,35 +253,6 @@ public class ProjectDao {
         }
     }
 
-    /*public InsertProjectInfoDTORequest insertProjectInfo(InsertProjectInfoDTORequest dto) {
-        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
-        try (SqlSession session = sqlSessionFactory.openSession()) {
-            ProjectMapper projectMapper = session.getMapper(ProjectMapper.class);
-            try{
-                var result = projectMapper.insertProjectInfo(dto);
-                dto.setProjectId(result.getLast_insert_id());
-                if(dto.participants != null && dto.participants.size() > 0)
-                    dto.participants.stream().forEach(participant -> {
-                        participant.setProjectId(dto.projectId);
-                        participant.setCreateAuditUser(dto.createAuditUser);
-                    });
-                    projectMapper.insertProjectParticipants(dto.participants);
-                if(dto.documents != null && dto.documents.size() > 0)
-                    dto.documents.stream().forEach(document -> {
-                        document.setProjectId(dto.projectId);
-                        document.setCreateAuditUser(dto.createAuditUser);
-                    });
-                    projectMapper.insertProjectDocuments(dto.documents);
-
-                session.commit();
-            }catch (Exception e){
-                session.rollback();
-                log.log(Level.SEVERE, e.getMessage(), e);
-            }
-        }
-        return dto;
-    }*/
-
     public InsertProjectInfoDTORequest insertProjectInfo(InsertProjectInfoDTORequest dto) {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         try (SqlSession session = sqlSessionFactory.openSession()) {
@@ -353,12 +324,12 @@ public class ProjectDao {
         return response;
     }
 
-    public DataResult<Integer> deleteDocument(int projectId, int documentId, String createAuditUser) {
+    public DataResult<Integer> deleteDocument(int projectId, int documentId, String updateAuditUser) {
         try {
             SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
             try (SqlSession session = sqlSessionFactory.openSession()) {
                 ProjectMapper projectMapper = session.getMapper(ProjectMapper.class);
-                projectMapper.deleteDocument(projectId, documentId, createAuditUser);
+                projectMapper.deleteDocument(projectId, documentId, updateAuditUser);
                 session.commit();
                 return new SuccessDataResult(projectId);
             }

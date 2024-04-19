@@ -259,12 +259,8 @@ public interface ProjectMapper {
                                                       @Param("projectType") int projectType,
                                                       @Param("wowType") int wowType);
 
-    @Delete("CALL SP_DELETE_DOCUMENT(#{projectId}, #{documentId}, #{createAuditUser})")
-    void deleteDocument(@Param("projectId") int projectId, @Param("documentId") int documentId, @Param("createAuditUser") String createAuditUser);
-
-    /*@Delete("CALL SP_DELETE_DOCUMENT(#{projectId}, #{documentId}, #{createAuditUser})")
-    void deleteDocument(@Param("projectId") int projectId,
-                        @Param("documentId") int documentId);*/
+    @Delete("CALL SP_DELETE_DOCUMENT(#{projectId}, #{documentId}, #{updateAuditUser})")
+    void deleteDocument(@Param("projectId") int projectId, @Param("documentId") int documentId, @Param("updateAuditUser") String updateAuditUser);
 
     @Update("CALL SP_UPDATE_DOCUMENT(#{documentId}, #{projectId}, #{documentType}, #{documentUrl}, #{createAuditUser})")
     boolean updateDocument(InsertProjectDocumentDTO dto);

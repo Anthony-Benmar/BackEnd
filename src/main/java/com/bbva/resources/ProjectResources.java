@@ -127,7 +127,7 @@ public class ProjectResources {
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<InsertProjectInfoDTORequest> insertProjectInfo(InsertProjectInfoDTORequest request){
         if (projectService.sdatoolIdExists(request.getSdatoolId())) {
-            return new ErrorDataResult("SDATOOLID EXISTS");
+            return new ErrorDataResult("El proyecto que desea registrar ya existe, verifique el código SDATOOL");
         }
         IDataResult<InsertProjectInfoDTORequest>  result = projectService.insertProjectInfo(request);
         return result;
@@ -150,7 +150,7 @@ public class ProjectResources {
             throws ExecutionException, InterruptedException
     {
         if(projectService.sdatoolIdExists(dto.getSdatoolId())) {
-            return new ErrorDataResult<>("SDATOOLID EXISTS");
+            return new ErrorDataResult<>("El proyecto que desea registrar ya existe, verifique el código SDATOOL");
         }
         return projectService.updateProjectInfo(dto);
     }
@@ -164,15 +164,15 @@ public class ProjectResources {
     }
 
     @DELETE
-    @Path("/info/{projectId}/document/{documentId}/{createAuditUser}")
+    @Path("/info/{projectId}/document/{documentId}/{updateAuditUser}")
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<Integer> deleteDocument(@Context HttpServletRequest request,
                                                @PathParam("projectId") int projectId,
                                                @PathParam("documentId") int documentId,
-                                               @PathParam("createAuditUser") String createAuditUser)
+                                               @PathParam("updateAuditUser") String updateAuditUser)
             throws ExecutionException, InterruptedException
     {
-        return projectService.deleteDocument(projectId, documentId, createAuditUser);
+        return projectService.deleteDocument(projectId, documentId, updateAuditUser);
     }
 
     @PUT
