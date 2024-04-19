@@ -130,6 +130,8 @@ public class ProjectResources {
             return new ErrorDataResult("El proyecto que desea registrar ya existe, verifique el código SDATOOL");
         }
         IDataResult<InsertProjectInfoDTORequest>  result = projectService.insertProjectInfo(request);
+        result.setMessage("Proyecto creado con éxito");
+
         return result;
     }
 
