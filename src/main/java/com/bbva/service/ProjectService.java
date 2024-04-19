@@ -355,4 +355,8 @@ public class ProjectService {
             return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
+
+    public boolean sdatoolIdExists(String sdatoolId) {
+        return projectDao.sdatoolIdExists(sdatoolId);
+    }
 }

@@ -231,6 +231,15 @@ public class ProjectDao {
         }
     }
 
+    public boolean sdatoolIdExists(String sdatoolId) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ProjectMapper mapper = session.getMapper(ProjectMapper.class);
+            int count = mapper.countBySdatoolId(sdatoolId);
+            return count > 0;
+        }
+    }
+
     public InsertProjectParticipantDTO insertProjectParticipant(InsertProjectParticipantDTO dto) {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         try (SqlSession session = sqlSessionFactory.openSession()) {

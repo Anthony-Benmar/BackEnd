@@ -1,6 +1,7 @@
 package com.bbva.resources;
 
 import com.bbva.core.abstracts.IDataResult;
+import com.bbva.core.results.ErrorDataResult;
 import com.bbva.dto.map_dependency.response.MapDependencyListByProjectResponse;
 import com.bbva.dto.project.request.*;
 import com.bbva.dto.project.response.*;
@@ -125,6 +126,9 @@ public class ProjectResources {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<InsertProjectInfoDTORequest> insertProjectInfo(InsertProjectInfoDTORequest request){
+        if (projectService.sdatoolIdExists(request.getSdatoolId())) {
+            return new ErrorDataResult("SDATOOLID EXISTS");
+        }
         IDataResult<InsertProjectInfoDTORequest>  result = projectService.insertProjectInfo(request);
         return result;
     }
@@ -145,6 +149,9 @@ public class ProjectResources {
     public IDataResult<ProjectInfoDTO> updateProjectInfo(ProjectInfoDTO dto)
             throws ExecutionException, InterruptedException
     {
+        if(projectService.sdatoolIdExists(dto.getSdatoolId())) {
+            return new ErrorDataResult<>("SDATOOLID EXISTS");
+        }
         return projectService.updateProjectInfo(dto);
     }
 
