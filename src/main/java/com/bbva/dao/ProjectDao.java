@@ -1,13 +1,14 @@
 package com.bbva.dao;
 
+import com.bbva.common.HttpStatusCodes;
 import com.bbva.core.results.DataResult;
 import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.database.MyBatisConnectionFactory;
 import com.bbva.database.mappers.ProjectMapper;
-import com.bbva.dto.project.request.ProjectFilterByNameOrSdatoolDtoRequest;
-import com.bbva.dto.project.request.ProjectPortafolioFilterDTORequest;
+import com.bbva.dto.project.request.*;
 import com.bbva.dto.project.response.*;
+import com.bbva.entities.InsertEntity;
 import com.bbva.entities.common.PeriodPEntity;
 import com.bbva.entities.common.ProjectByPeriodEntity;
 import com.bbva.entities.common.ProjectEntity;
@@ -22,6 +23,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+
+import static com.bbva.util.types.FechaUtil.convertDateToString;
 
 public class ProjectDao {
     private static final Logger log = Logger.getLogger(ProjectDao.class.getName());
@@ -193,5 +197,206 @@ public class ProjectDao {
         }
     }
 
+    public DataResult<ProjectPortafolioEntity> deleteProjectInfo(int projectId) {
+        try {
+            SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+            try (SqlSession session = sqlSessionFactory.openSession()) {
+                ProjectMapper projectMapper = session.getMapper(ProjectMapper.class);
+                projectMapper.deleteProjectInfo(projectId);
+                session.commit();
+                return new SuccessDataResult(projectId);
+            }
+        } catch (Exception e) {
+            log.log(Level.SEVERE, e.getMessage(), e);
+            return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR,e.getMessage());
+        }
+    }
 
+    public boolean updateProjectInfo(ProjectInfoDTO dto) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ProjectMapper projectMapper = session.getMapper(ProjectMapper.class);
+            projectMapper.updateProjectInfo(dto);
+            session.commit();
+            return true;
+        }
+    }
+
+    public InsertProjectDocumentDTO insertProjectDocument(InsertProjectDocumentDTO dto) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ProjectMapper projectMapper = session.getMapper(ProjectMapper.class);
+            InsertEntity result = projectMapper.insertProjectDocument(dto);
+            session.commit();
+            dto.setDocumentId(result.getLast_insert_id());
+            return dto;
+        }
+    }
+
+    public boolean sdatoolIdExists(String sdatoolId) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ProjectMapper mapper = session.getMapper(ProjectMapper.class);
+            int count = mapper.countBySdatoolId(sdatoolId);
+            return count > 0;
+        }
+    }
+
+    public InsertProjectParticipantDTO insertProjectParticipant(InsertProjectParticipantDTO dto) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ProjectMapper projectMapper = session.getMapper(ProjectMapper.class);
+            InsertEntity result = projectMapper.insertProjectParticipant(dto);
+            session.commit();
+            dto.setProjectParticipantId(result.getLast_insert_id());
+            return dto;
+        }
+    }
+
+    public InsertProjectInfoDTORequest insertProjectInfo(InsertProjectInfoDTORequest dto) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ProjectMapper projectMapper = session.getMapper(ProjectMapper.class);
+            try{
+                var result = projectMapper.insertProjectInfo(dto);
+                dto.setProjectId(result.getLast_insert_id());
+                if(dto.participants != null && dto.participants.size() > 0) {
+                    dto.participants.stream().forEach(participant -> {
+                        participant.setProjectId(dto.projectId);
+                        participant.setCreateAuditUser(dto.createAuditUser);
+                    });
+                    projectMapper.insertProjectParticipants(dto.participants);
+                }
+                if(dto.documents != null && dto.documents.size() > 0) {
+                    dto.documents.stream().forEach(document -> {
+                        document.setProjectId(dto.projectId);
+                        document.setCreateAuditUser(dto.createAuditUser);
+                    });
+                    projectMapper.insertProjectDocuments(dto.documents);
+                }
+                session.commit();
+            }catch (Exception e){
+                session.rollback();
+                log.log(Level.SEVERE, e.getMessage(), e);
+            }
+        }
+        return dto;
+    }
+
+    public ProjectInfoFilterResponse projectInfoFilter(ProjectInfoFilterRequest dto) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        List<ProjectInfoSelectResponse> lista;
+
+        Integer recordsCount = 0;
+        Integer pagesAmount = 0;
+
+        var response = new ProjectInfoFilterResponse();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ProjectMapper projectMapper = session.getMapper(ProjectMapper.class);
+            lista = projectMapper.projectInfoFilter(dto.projectId, dto.sdatoolIdOrProjectName, dto.domainId, dto.statusType, dto.projectType, dto.wowType);
+        }
+
+        recordsCount = (lista.size() > 0) ? (int) lista.stream().count() : 0;
+        pagesAmount = dto.getRecords_amount() > 0 ? (int) Math.ceil(recordsCount.floatValue() / dto.getRecords_amount().floatValue()) : 1;
+
+        if(dto.records_amount>0){
+            lista = lista.stream()
+                    .skip(dto.records_amount * (dto.page - 1))
+                    .limit(dto.records_amount)
+                    .collect(Collectors.toList());
+        }
+
+        for(ProjectInfoSelectResponse item : lista) {
+            if(item.getCreateAuditDate() != null) {
+                item.setCreateAuditDate_S(convertDateToString(item.getCreateAuditDate(),"dd/MM/yyyy HH:mm:ss"));
+            }
+            if(item.getUpdateAuditDate() != null) {
+                item.setUpdateAuditDate_S(convertDateToString(item.getUpdateAuditDate(),"dd/MM/yyyy HH:mm:ss"));
+            }
+
+        }
+
+        response.setCount(recordsCount);
+        response.setPages_amount(pagesAmount);
+        response.setData(lista);
+        log.info(JSONUtils.convertFromObjectToJson(response.getData()));
+
+        return response;
+    }
+
+    public DataResult<Integer> deleteDocument(int projectId, int documentId, String updateAuditUser) {
+        try {
+            SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+            try (SqlSession session = sqlSessionFactory.openSession()) {
+                ProjectMapper projectMapper = session.getMapper(ProjectMapper.class);
+                projectMapper.deleteDocument(projectId, documentId, updateAuditUser);
+                session.commit();
+                return new SuccessDataResult(projectId);
+            }
+        } catch (Exception e) {
+            log.log(Level.SEVERE, e.getMessage(), e);
+            return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR,e.getMessage());
+        }
+    }
+
+    public boolean updateDocument(InsertProjectDocumentDTO dto) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ProjectMapper projectMapper = session.getMapper(ProjectMapper.class);
+            projectMapper.updateDocument(dto);
+            session.commit();
+            return true;
+        }
+    }
+
+    public List<InsertProjectDocumentDTO> getDocument(int projectId, int documentId) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ProjectMapper mapper = session.getMapper(ProjectMapper.class);
+            List<InsertProjectDocumentDTO> documentList = mapper.getDocument(projectId, documentId);
+            return documentList;
+        }
+    }
+
+    public DataResult<Integer> deleteParticipantProject(int projectId, int participantId, String updateAuditUser) {
+        try {
+            SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+            try (SqlSession session = sqlSessionFactory.openSession()) {
+                ProjectMapper projectMapper = session.getMapper(ProjectMapper.class);
+                projectMapper.deleteParticipantProject(projectId, participantId, updateAuditUser);
+                session.commit();
+                return new SuccessDataResult(projectId);
+            }
+        } catch (Exception e) {
+            log.log(Level.SEVERE, e.getMessage(), e);
+            return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR,e.getMessage());
+        }
+    }
+
+    public boolean updateParticipant(InsertProjectParticipantDTO dto) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ProjectMapper projectMapper = session.getMapper(ProjectMapper.class);
+            var result = projectMapper.updateParticipant(dto);
+            session.commit();
+            return result;
+        }
+    }
+
+    public List<InsertProjectParticipantDTO> getProjectParticipants(int projectId) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ProjectMapper mapper = session.getMapper(ProjectMapper.class);
+            var  participantsList = mapper.getProjectParticipants(projectId);
+            return participantsList;
+        }
+    }
+
+    public List<SelectCalendarDTO> getAllCalendar() {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ProjectMapper mapper = session.getMapper(ProjectMapper.class);
+            return mapper.getAllCalendar();
+        }
+    }
 }

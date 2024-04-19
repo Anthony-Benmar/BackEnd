@@ -1,5 +1,12 @@
 package com.bbva.database.mappers;
 
+import com.bbva.dto.project.request.InsertProjectDocumentDTO;
+import com.bbva.dto.project.request.InsertProjectInfoDTORequest;
+import com.bbva.dto.project.request.ProjectInfoDTO;
+import com.bbva.dto.project.request.InsertProjectParticipantDTO;
+import com.bbva.dto.project.request.SelectCalendarDTO;
+import com.bbva.dto.project.response.ProjectInfoSelectResponse;
+import com.bbva.entities.InsertEntity;
 import com.bbva.entities.common.ProjectByPeriodEntity;
 import com.bbva.entities.common.ProjectEntity;
 import com.bbva.entities.project.ProjectPortafolioEntity;
@@ -87,9 +94,20 @@ public interface ProjectMapper {
             "WHERE project_id = #{projectId}")
     boolean updateProject(ProjectPortafolioEntity project);
 
-    @Update("UPDATE data_project SET status_type = 0 " +
+    @Update("UPDATE project_info SET sdatool_id= #{sdatoolId}, project_name = #{projectName}, project_desc = #{projectDesc}, " +
+            "portafolio_code= #{portafolioCode}, regulatory_type =#{regulatoryType}, ttv_type=#{ttvType}, domain_id=#{domainId}, " +
+            "project_type=#{projectType}, category_type=#{categoryType}, classification_type=#{classificationType}, " +
+            "start_pi_id=#{startPiId}, end_pi_id=#{endPiId}, final_start_pi_id=#{finalStartPiId}, final_end_pi_id=#{finalEndPiId}, " +
+            "wow_type=#{wowType}, country_priority_type=#{countryPriorityType}, status_type=#{statusType}, " +
+            "update_audit_user=#{createAuditUser}, update_audit_date=CONVERT_TZ(NOW(), 'GMT', 'America/Lima') " +
             "WHERE project_id = #{projectId}")
-    boolean deleteProject(@Param("projectId") int projectId);
+    boolean updateProjectInfo(ProjectInfoDTO dto);
+
+    @Delete("Delete from data_project WHERE project_id = #{projectId}")
+    void deleteProject(@Param("projectId") int projectId);
+
+    @Delete("DELETE FROM project_info WHERE project_id = #{projectId}")
+    void deleteProjectInfo(@Param("projectId") int projectId);
 
     @Select("CALL SP_PROJECT_PORTFOLIO_DETAIL (#{projectId})")
     @Results({
@@ -109,4 +127,205 @@ public interface ProjectMapper {
             @Result(property = "statusType", column = "status_type"),
     })
     ProjectPortafolioEntity getProjectById(@Param("projectId") int projectId);
+
+    @Select("CALL SP_INSERT_PROJECT_DOCUMENT(" +
+            "#{projectId}," +
+            "#{documentType}," +
+            "#{documentUrl}," +
+            "#{createAuditUser})")
+    @Results({
+            @Result(property = "last_insert_id", column = "last_insert_id"),
+            @Result(property = "new_register", column = "new_register")
+    })
+    InsertEntity insertProjectDocument(InsertProjectDocumentDTO dto);
+
+    @Insert({
+            "<script>",
+            "INSERT INTO project_document",
+            "(project_id, document_type, document_url, create_audit_date, create_audit_user)",
+            "VALUES" +
+                    "<foreach item='element' collection='listProjectDocuments' open='' separator=',' close=''>" +
+                    "(" +
+                    "#{element.projectId},",
+                    "#{element.documentType},",
+                    "#{element.documentUrl},",
+                    "now(),",
+                    "#{element.createAuditUser}" +
+                    ")" +
+                    "</foreach>",
+            "</script>"})
+    @Options(useGeneratedKeys = true, keyProperty = "documentId", keyColumn = "document_id")
+    void insertProjectDocuments(@Param("listProjectDocuments")  List<InsertProjectDocumentDTO> projectDocumentsList);
+
+    @Select("CALL SP_INSERT_PROJECT_PARTICIPANT(" +
+            "#{participantUser}," +
+            "#{participantName}," +
+            "#{participantEmail}," +
+            "#{projectId}," +
+            "#{projectRolType}," +
+            "#{piId}," +
+            "#{createAuditUser})")
+    @Results({
+            @Result(property = "last_insert_id", column = "last_insert_id"),
+            @Result(property = "new_register", column = "new_register")
+    })
+    InsertEntity insertProjectParticipant(InsertProjectParticipantDTO dto);
+
+    @Insert({
+            "<script>",
+            "INSERT INTO project_participant",
+            "(participant_user,participant_name, participant_email, project_id, project_rol_type, pi_id, create_audit_date, create_audit_user)",
+            "VALUES" +
+                    "<foreach item='element' collection='listProjectParticipants' open='' separator=',' close=''>" +
+                    "(" +
+                    "#{element.participantUser},",
+                    "#{element.participantName},",
+                    "#{element.participantEmail},",
+                    "#{element.projectId},",
+                    "#{element.projectRolType},",
+                    "#{element.piId},",
+                    "now(),",
+                    "#{element.createAuditUser}" +
+                    ")" +
+                    "</foreach>",
+            "</script>"})
+    @Options(useGeneratedKeys = true, keyProperty = "projectParticipantId", keyColumn = "participant_id")
+    void insertProjectParticipants(@Param("listProjectParticipants")  List<InsertProjectParticipantDTO> projectParticipantsList);
+
+    @Select("CALL SP_INSERT_PROJECT_INFO(" +
+            "#{sdatoolId}," +
+            "#{projectName}," +
+            "#{projectDesc}," +
+            "#{portafolioCode}," +
+            "#{regulatoryType}," +
+            "#{ttvType}," +
+            "#{domainId}," +
+            "#{projectType}," +
+            "#{categoryType}," +
+            "#{classificationType}," +
+            "#{startPiId}," +
+            "#{endPiId}," +
+            "#{finalStartPiId}," +
+            "#{finalEndPiId}," +
+            "#{wowType}," +
+            "#{countryPriorityType}," +
+            "#{createAuditUser}," +
+            "#{statusType})")
+    @Results({
+            @Result(property = "last_insert_id", column = "last_insert_id"),
+            @Result(property = "new_register", column = "new_register")
+    })
+    InsertEntity insertProjectInfo(InsertProjectInfoDTORequest dto);
+
+    @Select("CALL SP_LIST_PROJECT(" +
+            "#{projectId}," +
+            "#{sdatoolIdOrProjectName}," +
+            "#{domainId}," +
+            "#{statusType}," +
+            "#{projectType}," +
+            "#{wowType})")
+    @Results({
+            @Result(property = "projectId", column = "project_id"),
+            @Result(property = "sdatoolId", column = "sdatool_id"),
+            @Result(property = "projectName", column = "project_name"),
+            @Result(property = "projectDesc", column = "project_desc"),
+            @Result(property = "portafolioCode", column = "portafolio_code"),
+            @Result(property = "regulatoryType", column = "regulatory_type"),
+            @Result(property = "ttvType", column = "ttv_type"),
+            @Result(property = "domainId", column = "domain_id"),
+            @Result(property = "domainName", column = "domain_name"),
+            @Result(property = "projectType", column = "project_type"),
+            @Result(property = "projectTypeDesc", column = "project_type_desc"),
+            @Result(property = "categoryType", column = "category_type"),
+            @Result(property = "classificationType", column = "classification_type"),
+            @Result(property = "classificationTypeDesc", column = "classification_desc"),
+            @Result(property = "startPiId", column = "start_pi_id"),
+            @Result(property = "endPiId", column = "end_pi_id"),
+            @Result(property = "finalStartPiId", column = "final_start_pi_id"),
+            @Result(property = "finalEndPiId", column = "final_end_pi_id"),
+            @Result(property = "statusType", column = "status_type"),
+            @Result(property = "statusTypeDesc", column = "status_desc"),
+            @Result(property = "wowType", column = "wow_type"),
+            @Result(property = "countryPriorityType", column = "country_priority_type"),
+            @Result(property = "createAuditDate", column = "create_audit_date"),
+            @Result(property = "createAuditUser", column = "create_audit_user"),
+            @Result(property = "updateAuditDate", column = "update_audit_date"),
+            @Result(property = "updateAuditUser", column = "update_audit_user")
+    })
+    List<ProjectInfoSelectResponse> projectInfoFilter(@Param("projectId") int projectId,
+                                                      @Param("sdatoolIdOrProjectName") String sdatoolId,
+                                                      @Param("domainId") int domainId,
+                                                      @Param("statusType") int statusType,
+                                                      @Param("projectType") int projectType,
+                                                      @Param("wowType") int wowType);
+
+    @Delete("CALL SP_DELETE_DOCUMENT(#{projectId}, #{documentId}, #{updateAuditUser})")
+    void deleteDocument(@Param("projectId") int projectId, @Param("documentId") int documentId, @Param("updateAuditUser") String updateAuditUser);
+
+    @Update("CALL SP_UPDATE_DOCUMENT(#{documentId}, #{projectId}, #{documentType}, #{documentUrl}, #{createAuditUser})")
+    boolean updateDocument(InsertProjectDocumentDTO dto);
+
+    @Select("CALL SP_PROJECT_DOCUMENT_FILTERED(#{projectId}, #{documentId})")
+    @Results({
+            @Result(property = "projectId", column = "project_id"),
+            @Result(property = "documentId", column = "document_id"),
+            @Result(property = "documentType", column = "document_type"),
+            @Result(property = "documentUrl", column = "document_url"),
+            @Result(property = "createAuditUser", column = "last_user_modified")
+    })
+    List<InsertProjectDocumentDTO> getDocument(@Param("projectId") int projectId,
+                                               @Param("documentId") int documentId);
+
+    @Delete("CALL SP_DELETE_PROJECT_PARTICIPANT(#{projectId}, #{participantId}, #{updateAuditUser})")
+    void deleteParticipantProject(@Param("projectId") int projectId, @Param("participantId") int participantId, @Param("updateAuditUser") String updateAuditUser);
+
+    /*@Update("UPDATE project_participant SET participant_user=#{participantUser}, participant_name=#{participantName}, participant_email=#{participantEmail}, " +
+            "project_rol_type=#{projectRolType}, pi_id=#{piId}, " +
+            "update_audit_user=#{createAuditUser}, update_audit_date=CONVERT_TZ(NOW(), 'GMT', 'America/Lima') " +
+            "WHERE participant_id=#{projectParticipantId} and project_id = #{projectId}")*/
+    @Update("CALL SP_UPDATE_PROJECT_PARTICIPANT(" +
+            "#{participantUser}," +
+            "#{participantName}," +
+            "#{participantEmail}," +
+            "#{projectId}," +
+            "#{projectRolType}," +
+            "#{piId}," +
+            "#{createAuditUser}," +
+            "#{projectParticipantId})")
+    boolean updateParticipant(InsertProjectParticipantDTO dto);
+
+    @Select("CALL SP_PROJECT_PARTICIPANTS(#{projectId})")
+    @Results({
+            @Result(property = "projectParticipantId", column = "participant_id"),
+            @Result(property = "participantName", column = "participant_name"),
+            @Result(property = "participantUser", column = "participant_user"),
+            @Result(property = "participantEmail", column = "participant_email"),
+            @Result(property = "projectId", column = "project_id"),
+            @Result(property = "projectRolType", column = "project_rol_type"),
+            @Result(property = "piId", column = "pi_id"),
+            @Result(property = "createAuditDate", column = "create_audit_date"),
+            @Result(property = "createAuditUser", column = "create_audit_user"),
+            @Result(property = "updateAuditDate", column = "update_audit_date"),
+            @Result(property = "updateAuditUser", column = "update_audit_user")
+    })
+    List<InsertProjectParticipantDTO> getProjectParticipants(@Param("projectId") int projectId);
+
+    @Select("select * from calendar_pi order by pi_large_name desc")
+    @Results({
+            @Result(property = "piId", column = "pi_id"),
+            @Result(property = "piShortName", column = "pi_short_name"),
+            @Result(property = "piLargeName", column = "pi_large_name"),
+            @Result(property = "piYearId", column = "pi_year_id"),
+            @Result(property = "piQuarterId", column = "pi_quarter_id"),
+            @Result(property = "startDate", column = "start_date"),
+            @Result(property = "endDate", column = "end_date"),
+            @Result(property = "createAuditDate", column = "create_audit_date"),
+            @Result(property = "createAuditUser", column = "create_audit_user"),
+            @Result(property = "updateAuditDate", column = "update_audit_date"),
+            @Result(property = "updateAuditUser", column = "update_audit_user")
+    })
+    List<SelectCalendarDTO> getAllCalendar();
+
+    @Select("SELECT COUNT(*) FROM project_info WHERE sdatool_id = #{sdatoolId}")
+    int countBySdatoolId(String sdatoolId);
 }

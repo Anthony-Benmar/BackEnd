@@ -1,5 +1,6 @@
 package com.bbva.service;
 
+import com.bbva.common.HttpStatusCodes;
 import com.bbva.core.abstracts.IDataResult;
 import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
@@ -8,13 +9,8 @@ import com.bbva.dao.ProjectDao;
 import com.bbva.dao.UseCaseDefinitionDao;
 import com.bbva.dao.UserDao;
 import com.bbva.dto.map_dependency.response.MapDependencyListByProjectResponse;
-import com.bbva.dto.project.request.ProjectFilterByNameOrSdatoolDtoRequest;
-import com.bbva.dto.project.request.ProjectPortafolioDTORequest;
-import com.bbva.dto.project.request.ProjectPortafolioFilterDTORequest;
-import com.bbva.dto.project.response.ProjectListForSelectDtoResponse;
-import com.bbva.dto.project.response.ProjectFilterByNameOrSdatoolDtoResponse;
-import com.bbva.dto.project.response.ProjectPortafolioFilterDtoResponse;
-import com.bbva.dto.project.response.ProjectPortafolioSelectResponse;
+import com.bbva.dto.project.request.*;
+import com.bbva.dto.project.response.*;
 import com.bbva.entities.User;
 import com.bbva.entities.common.PeriodPEntity;
 import com.bbva.entities.map_dependecy.MapDependencyEntity;
@@ -200,6 +196,37 @@ public class ProjectService {
         }
     }
 
+    public IDataResult<Integer> deleteProjectInfo(int projectId)
+            throws ExecutionException, InterruptedException {
+
+        try {
+            var res = projectDao.deleteProjectInfo(projectId);
+            if (!res.success)
+                return new ErrorDataResult(projectId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "No se pudo eliminar proyecto");
+
+        } catch (Exception e) {
+            log.log(Level.SEVERE, e.getMessage(), e);
+            return new ErrorDataResult(projectId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "No se pudo eliminar proyecto");
+        }
+        return new SuccessDataResult(projectId);
+    }
+
+    public IDataResult<ProjectInfoDTO> updateProjectInfo(ProjectInfoDTO dto)
+            throws ExecutionException, InterruptedException {
+
+        try {
+            if (dto.getProjectId().equals(0))
+                return new ErrorDataResult(null,HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "ProjectId must to be not null");
+
+            projectDao.updateProjectInfo(dto);
+
+        } catch (Exception e) {
+            log.log(Level.SEVERE, e.getMessage(), e);
+            return new ErrorDataResult(null,HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+        return new SuccessDataResult(dto);
+    }
+
     public IDataResult<List<MapDependencyListByProjectResponse>> getProcessByProjectId(int projectId)
             throws ExecutionException, InterruptedException {
 
@@ -213,4 +240,123 @@ public class ProjectService {
         }
     }
 
+    public IDataResult<InsertProjectDocumentDTO> insertProjectDocument(InsertProjectDocumentDTO dto) {
+        var result = projectDao.insertProjectDocument(dto);
+        return new SuccessDataResult(result);
+    }
+
+    public IDataResult<InsertProjectParticipantDTO> insertProjectParticipant(InsertProjectParticipantDTO dto) {
+        var result = projectDao.insertProjectParticipant(dto);
+        return new SuccessDataResult(result);
+    }
+
+    public IDataResult<InsertProjectInfoDTORequest> insertProjectInfo(InsertProjectInfoDTORequest dto) {
+        var result = projectDao.insertProjectInfo(dto);
+        return new SuccessDataResult(result);
+    }
+
+    public IDataResult<ProjectInfoFilterResponse> projectInfoFilter(ProjectInfoFilterRequest dto) {
+        var result = projectDao.projectInfoFilter(dto);
+        return new SuccessDataResult(result);
+    }
+
+    public IDataResult<Integer> deleteDocument(int projectId, int documentId, String updateAuditUser)
+            throws ExecutionException, InterruptedException {
+
+        try {
+            var res = projectDao.deleteDocument(projectId, documentId, updateAuditUser);
+            if (!res.success)
+                return new ErrorDataResult(projectId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "No se pudo eliminar proyecto");
+
+        } catch (Exception e) {
+            log.log(Level.SEVERE, e.getMessage(), e);
+            return new ErrorDataResult(projectId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "No se pudo eliminar proyecto");
+        }
+        return new SuccessDataResult(projectId);
+    }
+
+    public IDataResult<InsertProjectDocumentDTO> updateDocument(InsertProjectDocumentDTO dto)
+            throws ExecutionException, InterruptedException {
+
+        try {
+            if (dto.getProjectId().equals(0) | dto.getDocumentId().equals(0))
+                return new ErrorDataResult(null,HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "projectId or documentId must to be not null or 0");
+
+            projectDao.updateDocument(dto);
+
+        } catch (Exception e) {
+            log.log(Level.SEVERE, e.getMessage(), e);
+            return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+        return new SuccessDataResult(dto);
+    }
+
+    public IDataResult<List<InsertProjectDocumentDTO>> getDocument(int projectId, int documentId)
+            throws ExecutionException, InterruptedException {
+
+        try {
+            var result = projectDao.getDocument(projectId, documentId);
+            return new SuccessDataResult(result);
+        } catch (Exception e) {
+            log.log(Level.SEVERE, e.getMessage(), e);
+            return new ErrorDataResult(projectId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
+
+    public IDataResult<Integer> deleteParticipantProject(int projectId, int participantId, String updateAuditUser)
+            throws ExecutionException, InterruptedException {
+
+        try {
+            var res = projectDao.deleteParticipantProject(projectId, participantId, updateAuditUser);
+            if (!res.success)
+                return new ErrorDataResult(projectId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "No se pudo eliminar proyecto");
+
+        } catch (Exception e) {
+            log.log(Level.SEVERE, e.getMessage(), e);
+            return new ErrorDataResult(projectId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "No se pudo eliminar proyecto");
+        }
+        return new SuccessDataResult(projectId);
+    }
+
+    public IDataResult<InsertProjectParticipantDTO> updateParticipant(InsertProjectParticipantDTO dto)
+            throws ExecutionException, InterruptedException {
+
+        try {
+            if (dto.getProjectId().equals(0) | dto.getProjectParticipantId().equals(0))
+                return new ErrorDataResult(null,HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "projectId or projectParticipantId must to be not null or 0");
+
+            projectDao.updateParticipant(dto);
+
+        } catch (Exception e) {
+            log.log(Level.SEVERE, e.getMessage(), e);
+            return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+        return new SuccessDataResult(dto);
+    }
+
+    public IDataResult<List<InsertProjectParticipantDTO>> getProjectParticipants(int projectId)
+            throws ExecutionException, InterruptedException {
+
+        try {
+            var result = projectDao.getProjectParticipants(projectId);
+            return new SuccessDataResult(result);
+        } catch (Exception e) {
+            log.log(Level.SEVERE, e.getMessage(), e);
+            return new ErrorDataResult(projectId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
+
+    public IDataResult<List<SelectCalendarDTO>> getCalendar() {
+        try {
+            var result = projectDao.getAllCalendar();
+            return new SuccessDataResult(result);
+        } catch (Exception e) {
+            log.log(Level.SEVERE, e.getMessage(), e);
+            return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
+
+    public boolean sdatoolIdExists(String sdatoolId) {
+        return projectDao.sdatoolIdExists(sdatoolId);
+    }
 }
