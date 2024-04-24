@@ -209,6 +209,7 @@ public class ProjectResources {
     {
         return projectService.deleteParticipantProject(projectId, participantId, updateAuditUser);
     }
+
     @PUT
     @Path("/info/participant/update")
     @Consumes(MediaType.APPLICATION_JSON)
