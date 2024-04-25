@@ -5,6 +5,7 @@ import com.bbva.dto.project.request.InsertProjectInfoDTORequest;
 import com.bbva.dto.project.request.ProjectInfoDTO;
 import com.bbva.dto.project.request.InsertProjectParticipantDTO;
 import com.bbva.dto.project.request.SelectCalendarDTO;
+import com.bbva.dto.project.response.ProjectInfoSelectByDomainDtoResponse;
 import com.bbva.dto.project.response.ProjectInfoSelectResponse;
 import com.bbva.entities.InsertEntity;
 import com.bbva.entities.common.ProjectByPeriodEntity;
@@ -258,6 +259,17 @@ public interface ProjectMapper {
                                                       @Param("statusType") int statusType,
                                                       @Param("projectType") int projectType,
                                                       @Param("wowType") int wowType);
+    @Select("CALL SP_LIST_PROJECT_BY_DOMAIN(" +
+            "#{projectId}," +
+            "#{domainId})")
+
+    @Results({
+            @Result(property = "projectId", column = "project_id"),
+            @Result(property = "projectName", column = "project_name"),
+            @Result(property = "domainId", column = "domain_id")
+    })
+    List<ProjectInfoSelectByDomainDtoResponse> projectInfoFilterByDomain(@Param("projectId") int projectId,
+                                                                         @Param("domainId") int domainId);
 
     @Delete("CALL SP_DELETE_DOCUMENT(#{projectId}, #{documentId}, #{updateAuditUser})")
     void deleteDocument(@Param("projectId") int projectId, @Param("documentId") int documentId, @Param("updateAuditUser") String updateAuditUser);
@@ -328,4 +340,13 @@ public interface ProjectMapper {
 
     @Select("SELECT COUNT(*) FROM project_info WHERE sdatool_id = #{sdatoolId}")
     int countBySdatoolId(String sdatoolId);
+
+    @Select("SELECT COUNT(*) FROM project_info WHERE sdatool_id = #{sdatoolId} AND project_id != #{projectId}")
+    int countBySdatoolIdUpdate(String sdatoolId, int projectId);
+
+
+    @Select("SELECT project_id, sdatool_id, project_name FROM project_info WHERE domain_id = #{domain_id}")
+    List<ProjectInfoSelectResponse> listProjectsByDomain(@Param("domain_id") int domain_id);
+
+
 }
