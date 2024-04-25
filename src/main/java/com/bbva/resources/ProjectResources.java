@@ -151,7 +151,7 @@ public class ProjectResources {
     public IDataResult<ProjectInfoDTO> updateProjectInfo(ProjectInfoDTO dto)
             throws ExecutionException, InterruptedException
     {
-        if(projectService.sdatoolIdExists(dto.getSdatoolId())) {
+        if(projectService.sdatoolIdExistsUpdate(dto.getSdatoolId(), dto.getProjectId())) {
             return new ErrorDataResult<>("El proyecto que desea registrar ya existe, verifique el código SDATOOL");
         }
         return projectService.updateProjectInfo(dto);

@@ -359,4 +359,8 @@ public class ProjectService {
     public boolean sdatoolIdExists(String sdatoolId) {
         return projectDao.sdatoolIdExists(sdatoolId);
     }
+
+    public boolean sdatoolIdExistsUpdate(String sdatoolId, int projectId) {
+        return projectDao.sdatoolIdExistsUpdate(sdatoolId, projectId);
+    }
 }

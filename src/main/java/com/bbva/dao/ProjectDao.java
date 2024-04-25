@@ -399,4 +399,13 @@ public class ProjectDao {
             return mapper.getAllCalendar();
         }
     }
+
+    public boolean sdatoolIdExistsUpdate(String sdatoolId, int projectId) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ProjectMapper mapper = session.getMapper(ProjectMapper.class);
+            int count = mapper.countBySdatoolIdUpdate(sdatoolId, projectId);
+            return count > 0;
+        }
+    }
 }

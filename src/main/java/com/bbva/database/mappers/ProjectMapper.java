@@ -328,4 +328,7 @@ public interface ProjectMapper {
 
     @Select("SELECT COUNT(*) FROM project_info WHERE sdatool_id = #{sdatoolId}")
     int countBySdatoolId(String sdatoolId);
+
+    @Select("SELECT COUNT(*) FROM project_info WHERE sdatool_id = #{sdatoolId} AND project_id != #{projectId}")
+    int countBySdatoolIdUpdate(String sdatoolId, int projectId);
 }
