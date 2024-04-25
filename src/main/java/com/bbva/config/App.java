@@ -33,6 +33,7 @@ public class App extends Application {
         classes.add(BatchResources.class);
         classes.add(DictionaryGenerationResources.class);
         classes.add(UseCaseTrackingResources.class);
+        classes.add(JobResources.class);
     }
 
     @Override

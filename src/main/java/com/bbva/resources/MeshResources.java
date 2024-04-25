@@ -36,14 +36,4 @@ public class MeshResources {
             throws ExecutionException, InterruptedException {
         return jobBasicInfoService.listAllJobs();
     }
-
-    @POST
-    @Path("/job-basic-info/filter")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public IDataResult<JobBasicInfoFilterDtoResponse> jobBasicInfoFilter(JobBasicInfoFilterDtoRequest dto)
-            throws ExecutionException, InterruptedException {
-        return jobBasicInfoService.jobBasicInfoFilter(dto);
-    }
-
 }
