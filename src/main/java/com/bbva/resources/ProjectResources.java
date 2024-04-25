@@ -255,4 +255,14 @@ public class ProjectResources {
     {
         return projectService.getCalendar();
     }
+
+    @GET
+    @Path("/domain/{domainId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<List<ProjectByDomainIdDTO>> getProjectsByDomainId(@Context HttpServletRequest request,
+                                                                        @PathParam("domainId") int domainId)
+            throws ExecutionException, InterruptedException
+    {
+        return projectService.getProjectsByDomainId(domainId);
+    }
 }

@@ -372,4 +372,14 @@ public class ProjectService {
     public boolean sdatoolIdExistsUpdate(String sdatoolId, int projectId) {
         return projectDao.sdatoolIdExistsUpdate(sdatoolId, projectId);
     }
+
+    public IDataResult<List<ProjectByDomainIdDTO>> getProjectsByDomainId(int domainId) {
+        try {
+            var result = projectDao.getProjectsByDomainId(domainId);
+            return new SuccessDataResult(result);
+        } catch (Exception e) {
+            log.log(Level.SEVERE, e.getMessage(), e);
+            return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
 }

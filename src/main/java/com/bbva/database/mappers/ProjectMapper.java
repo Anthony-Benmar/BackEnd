@@ -1,10 +1,6 @@
 package com.bbva.database.mappers;
 
-import com.bbva.dto.project.request.InsertProjectDocumentDTO;
-import com.bbva.dto.project.request.InsertProjectInfoDTORequest;
-import com.bbva.dto.project.request.ProjectInfoDTO;
-import com.bbva.dto.project.request.InsertProjectParticipantDTO;
-import com.bbva.dto.project.request.SelectCalendarDTO;
+import com.bbva.dto.project.request.*;
 import com.bbva.dto.project.response.ProjectInfoSelectAllByDomainDtoResponse;
 import com.bbva.dto.project.response.ProjectInfoSelectByDomainDtoResponse;
 import com.bbva.dto.project.response.ProjectInfoSelectResponse;
@@ -16,7 +12,6 @@ import com.bbva.entities.project.ProjectFilterEntity;
 import com.bbva.entities.project.ProjectPortafolioFilterEntity;
 import org.apache.ibatis.annotations.*;
 
-import java.util.Date;
 import java.util.List;
 
 public interface ProjectMapper {
@@ -375,5 +370,11 @@ public interface ProjectMapper {
     @Select("SELECT project_id, sdatool_id, project_name FROM project_info WHERE domain_id = #{domain_id}")
     List<ProjectInfoSelectResponse> listProjectsByDomain(@Param("domain_id") int domain_id);
 
-
+    @Select("SELECT project_id, project_name, domain_id FROM project_info WHERE domain_id = #{domainId}")
+    @Results({
+            @Result(property = "projectId", column = "project_id"),
+            @Result(property = "projectName", column = "project_name"),
+            @Result(property = "domainId", column = "domain_id")
+    })
+    List<ProjectByDomainIdDTO> getProjectsByDomainId(@Param("domainId") int domainId);
 }
