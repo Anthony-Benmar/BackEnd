@@ -5,7 +5,12 @@ import com.bbva.core.abstracts.IDataResult;
 import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dao.JobBasicInfoDao;
+import com.bbva.dto.job.request.JobBasicInfoFilterDtoRequest;
 import com.bbva.dto.job.response.JobBasicInfoDtoResponse;
+import com.bbva.dto.job.response.JobBasicInfoFilterDtoResponse;
+import com.bbva.dto.job.response.JobBasicInfoSelectDtoResponse;
+import com.bbva.dto.project.request.ProjectInfoFilterByDomainDtoRequest;
+import com.bbva.dto.project.response.ProjectInfoFilterAllByDomainDtoResponse;
 
 import java.util.List;
 import java.util.logging.Level;
@@ -23,4 +28,11 @@ public class JobBasicInfoService {
             return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
+
+    public IDataResult<JobBasicInfoFilterDtoResponse> jobBasicInfoFilter(JobBasicInfoFilterDtoRequest dto) {
+        var result = jobBasicInfoDao.jobBasicInfoFilter(dto);
+        return new SuccessDataResult(result);
+    }
+
+
 }
