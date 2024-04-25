@@ -11,6 +11,5 @@ import java.util.List;
 public class ProjectPortafolioFilterDtoResponse {
     private int count;
     private int pages_amount;
-//    private List<ProjectPortafolioFilterListDtoResponse> data;
     private List<ProjectPortafolioFilterEntity> data;
 }

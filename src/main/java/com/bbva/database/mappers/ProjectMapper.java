@@ -1,10 +1,6 @@
 package com.bbva.database.mappers;
 
-import com.bbva.dto.project.request.InsertProjectDocumentDTO;
-import com.bbva.dto.project.request.InsertProjectInfoDTORequest;
-import com.bbva.dto.project.request.ProjectInfoDTO;
-import com.bbva.dto.project.request.InsertProjectParticipantDTO;
-import com.bbva.dto.project.request.SelectCalendarDTO;
+import com.bbva.dto.project.request.*;
 import com.bbva.dto.project.response.ProjectInfoSelectAllByDomainDtoResponse;
 import com.bbva.dto.project.response.ProjectInfoSelectByDomainDtoResponse;
 import com.bbva.dto.project.response.ProjectInfoSelectResponse;
@@ -321,10 +317,6 @@ public interface ProjectMapper {
     @Delete("CALL SP_DELETE_PROJECT_PARTICIPANT(#{projectId}, #{participantId}, #{updateAuditUser})")
     void deleteParticipantProject(@Param("projectId") int projectId, @Param("participantId") int participantId, @Param("updateAuditUser") String updateAuditUser);
 
-    /*@Update("UPDATE project_participant SET participant_user=#{participantUser}, participant_name=#{participantName}, participant_email=#{participantEmail}, " +
-            "project_rol_type=#{projectRolType}, pi_id=#{piId}, " +
-            "update_audit_user=#{createAuditUser}, update_audit_date=CONVERT_TZ(NOW(), 'GMT', 'America/Lima') " +
-            "WHERE participant_id=#{projectParticipantId} and project_id = #{projectId}")*/
     @Update("CALL SP_UPDATE_PROJECT_PARTICIPANT(" +
             "#{participantUser}," +
             "#{participantName}," +
@@ -378,5 +370,12 @@ public interface ProjectMapper {
     @Select("SELECT project_id, sdatool_id, project_name FROM project_info WHERE domain_id = #{domain_id}")
     List<ProjectInfoSelectResponse> listProjectsByDomain(@Param("domain_id") int domain_id);
 
-
+    @Select("CALL SP_LIST_PROJECT_BY_DOMAIN(#{domainId})")
+    @Results({
+            @Result(property = "projectId", column = "project_id"),
+            @Result(property = "sdatoolId", column = "sdatool_id"),
+            @Result(property = "projectName", column = "project_name"),
+            @Result(property = "domainId", column = "domain_id")
+    })
+    List<ProjectByDomainIdDTO> getProjectsByDomainId(@Param("domainId") int domainId);
 }
