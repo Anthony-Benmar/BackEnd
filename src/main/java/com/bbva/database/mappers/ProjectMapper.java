@@ -5,6 +5,8 @@ import com.bbva.dto.project.request.InsertProjectInfoDTORequest;
 import com.bbva.dto.project.request.ProjectInfoDTO;
 import com.bbva.dto.project.request.InsertProjectParticipantDTO;
 import com.bbva.dto.project.request.SelectCalendarDTO;
+import com.bbva.dto.project.response.ProjectInfoSelectAllByDomainDtoResponse;
+import com.bbva.dto.project.response.ProjectInfoSelectByDomainDtoResponse;
 import com.bbva.dto.project.response.ProjectInfoSelectResponse;
 import com.bbva.entities.InsertEntity;
 import com.bbva.entities.common.ProjectByPeriodEntity;
@@ -14,6 +16,7 @@ import com.bbva.entities.project.ProjectFilterEntity;
 import com.bbva.entities.project.ProjectPortafolioFilterEntity;
 import org.apache.ibatis.annotations.*;
 
+import java.util.Date;
 import java.util.List;
 
 public interface ProjectMapper {
@@ -258,6 +261,46 @@ public interface ProjectMapper {
                                                       @Param("statusType") int statusType,
                                                       @Param("projectType") int projectType,
                                                       @Param("wowType") int wowType);
+    @Select("CALL SP_LIST_ALL_PROJECT_BY_DOMAIN(" +
+            "#{projectId}," +
+            "#{domainId})")
+
+    @Results({ @Result(property = "projectId", column = "project_id"),
+            @Result(property = "sdatoolId", column = "sdatool_id"),
+            @Result(property = "projectName", column = "project_name"),
+            @Result(property = "projectDesc", column = "project_desc"),
+            @Result(property = "portafolioCode", column = "portafolio_code"),
+            @Result(property = "regulatoryType", column = "regulatory_type"),
+            @Result(property = "ttvType", column = "ttv_type"),
+            @Result(property = "domainId", column = "domain_id"),
+            @Result(property = "projectType", column = "project_type"),
+            @Result(property = "categoryType", column = "category_type"),
+            @Result(property = "classificationType", column = "classification_type"),
+            @Result(property = "startPiId", column = "start_pi_id"),
+            @Result(property = "endPiId", column = "end_pi_id"),
+            @Result(property = "finalStartPiId", column = "final_start_pi_id"),
+            @Result(property = "finalEndPiId", column = "final_end_pi_id"),
+            @Result(property = "statusType", column = "status_type"),
+            @Result(property = "wowType", column = "wow_type"),
+            @Result(property = "countryPriorityType", column = "country_priority_type"),
+            @Result(property = "createAuditDate", column = "create_audit_date"),
+            @Result(property = "createAuditUser", column = "create_audit_user"),
+            @Result(property = "updateAuditDate", column = "update_audit_date"),
+            @Result(property = "updateAuditUser", column = "update_audit_user") })
+
+    List<ProjectInfoSelectAllByDomainDtoResponse> projectInfoFilterAllByDomain(@Param("projectId") int projectId,
+                                                                         @Param("domainId") int domainId);
+@Select("CALL SP_LIST_PROJECT_BY_DOMAIN(" +
+            "#{projectId}," +
+            "#{domainId})")
+
+    @Results({
+            @Result(property = "projectId", column = "project_id"),
+            @Result(property = "projectName", column = "project_name"),
+            @Result(property = "domainId", column = "domain_id")
+    })
+    List<ProjectInfoSelectByDomainDtoResponse> projectInfoFilterByDomain(@Param("projectId") int projectId,
+                                                                               @Param("domainId") int domainId);
 
     @Delete("CALL SP_DELETE_DOCUMENT(#{projectId}, #{documentId}, #{updateAuditUser})")
     void deleteDocument(@Param("projectId") int projectId, @Param("documentId") int documentId, @Param("updateAuditUser") String updateAuditUser);
@@ -279,10 +322,6 @@ public interface ProjectMapper {
     @Delete("CALL SP_DELETE_PROJECT_PARTICIPANT(#{projectId}, #{participantId}, #{updateAuditUser})")
     void deleteParticipantProject(@Param("projectId") int projectId, @Param("participantId") int participantId, @Param("updateAuditUser") String updateAuditUser);
 
-    /*@Update("UPDATE project_participant SET participant_user=#{participantUser}, participant_name=#{participantName}, participant_email=#{participantEmail}, " +
-            "project_rol_type=#{projectRolType}, pi_id=#{piId}, " +
-            "update_audit_user=#{createAuditUser}, update_audit_date=CONVERT_TZ(NOW(), 'GMT', 'America/Lima') " +
-            "WHERE participant_id=#{projectParticipantId} and project_id = #{projectId}")*/
     @Update("CALL SP_UPDATE_PROJECT_PARTICIPANT(" +
             "#{participantUser}," +
             "#{participantName}," +
@@ -328,4 +367,13 @@ public interface ProjectMapper {
 
     @Select("SELECT COUNT(*) FROM project_info WHERE sdatool_id = #{sdatoolId}")
     int countBySdatoolId(String sdatoolId);
+
+    @Select("SELECT COUNT(*) FROM project_info WHERE sdatool_id = #{sdatoolId} AND project_id != #{projectId}")
+    int countBySdatoolIdUpdate(String sdatoolId, int projectId);
+
+
+    @Select("SELECT project_id, sdatool_id, project_name FROM project_info WHERE domain_id = #{domain_id}")
+    List<ProjectInfoSelectResponse> listProjectsByDomain(@Param("domain_id") int domain_id);
+
+
 }

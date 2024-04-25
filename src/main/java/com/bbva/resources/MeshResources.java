@@ -6,18 +6,14 @@ import com.bbva.dto.mesh.request.MeshDtoRequest;
 import com.bbva.dto.mesh.response.MeshRelationalDtoResponse;
 import com.bbva.service.JobBasicInfoService;
 import com.bbva.service.MeshService;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 @Path("/mesh")
 public class MeshResources {
-    private MeshService meshService = new MeshService();
+    private final MeshService meshService = new MeshService();
 
     @POST
     @Path("/jobs-dependencies")
@@ -28,8 +24,7 @@ public class MeshResources {
         return meshService.jobsdependencies(dto);
     }
 
-    //SERVICIO
-    private JobBasicInfoService jobBasicInfoService = new JobBasicInfoService();
+    private final JobBasicInfoService jobBasicInfoService = new JobBasicInfoService();
 
     @POST
     @Path("/job-basic-info/listAll")

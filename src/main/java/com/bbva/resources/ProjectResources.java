@@ -114,7 +114,7 @@ public class ProjectResources {
     @Path("/{projectId}/participant")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public IDataResult<InsertProjectParticipantDTO> insertProjectDocument(
+    public IDataResult<InsertProjectParticipantDTO> insertProjectParticipant(
             @PathParam("projectId") String projectId, InsertProjectParticipantDTO request){
         request.setProjectId(Integer.parseInt(projectId));
         IDataResult<InsertProjectParticipantDTO>  result = projectService.insertProjectParticipant(request);
@@ -151,7 +151,7 @@ public class ProjectResources {
     public IDataResult<ProjectInfoDTO> updateProjectInfo(ProjectInfoDTO dto)
             throws ExecutionException, InterruptedException
     {
-        if(projectService.sdatoolIdExists(dto.getSdatoolId())) {
+        if(projectService.sdatoolIdExistsUpdate(dto.getSdatoolId(), dto.getProjectId())) {
             return new ErrorDataResult<>("El proyecto que desea registrar ya existe, verifique el código SDATOOL");
         }
         return projectService.updateProjectInfo(dto);
@@ -164,6 +164,23 @@ public class ProjectResources {
     public IDataResult<ProjectInfoFilterResponse> projectInfoFilter(ProjectInfoFilterRequest dto) {
         return projectService.projectInfoFilter(dto);
     }
+
+    @POST
+    @Path("/info/filter/domain")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<ProjectInfoFilterByDomainDtoResponse> projectInfoFilterByDomain( ProjectInfoFilterByDomainDtoRequest dto) {
+        return projectService.projectInfoFilterByDomain(dto);
+    }
+    @POST
+    @Path("/info/filterAll/domain")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<ProjectInfoFilterAllByDomainDtoResponse> projectInfoFilterAllByDomain( ProjectInfoFilterByDomainDtoRequest dto) {
+        return projectService.projectInfoFilterAllByDomain(dto);
+    }
+
+
 
     @DELETE
     @Path("/info/{projectId}/document/{documentId}/{updateAuditUser}")
@@ -209,6 +226,7 @@ public class ProjectResources {
     {
         return projectService.deleteParticipantProject(projectId, participantId, updateAuditUser);
     }
+
     @PUT
     @Path("/info/participant/update")
     @Consumes(MediaType.APPLICATION_JSON)

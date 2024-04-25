@@ -259,6 +259,15 @@ public class ProjectService {
         var result = projectDao.projectInfoFilter(dto);
         return new SuccessDataResult(result);
     }
+    public IDataResult<ProjectInfoFilterByDomainDtoResponse> projectInfoFilterByDomain(ProjectInfoFilterByDomainDtoRequest dto) {
+        var result = projectDao.projectInfoFilterByDomain(dto);
+        return new SuccessDataResult(result);
+    }
+
+    public IDataResult<ProjectInfoFilterAllByDomainDtoResponse> projectInfoFilterAllByDomain(ProjectInfoFilterByDomainDtoRequest dto) {
+        var result = projectDao.projectInfoFilterAllByDomain(dto);
+        return new SuccessDataResult(result);
+    }
 
     public IDataResult<Integer> deleteDocument(int projectId, int documentId, String updateAuditUser)
             throws ExecutionException, InterruptedException {
@@ -358,5 +367,9 @@ public class ProjectService {
 
     public boolean sdatoolIdExists(String sdatoolId) {
         return projectDao.sdatoolIdExists(sdatoolId);
+    }
+
+    public boolean sdatoolIdExistsUpdate(String sdatoolId, int projectId) {
+        return projectDao.sdatoolIdExistsUpdate(sdatoolId, projectId);
     }
 }
