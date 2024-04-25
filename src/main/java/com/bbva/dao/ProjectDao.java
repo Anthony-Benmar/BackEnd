@@ -355,16 +355,45 @@ public class ProjectDao {
                     .limit(dto.records_amount)
                     .collect(Collectors.toList());
         }
+        response.setCount(recordsCount);
+        response.setPages_amount(pagesAmount);
+        response.setData(lista);
+        log.info(JSONUtils.convertFromObjectToJson(response.getData()));
 
-//        for(ProjectInfoSelectByDomainDtoResponse item : lista) {
-//            if(item.getCreateAuditDate() != null) {
-//                item.setCreateAuditDate_S(convertDateToString(item.getCreateAuditDate(),"dd/MM/yyyy HH:mm:ss"));
-//            }
-//            if(item.getUpdateAuditDate() != null) {
-//                item.setUpdateAuditDate_S(convertDateToString(item.getUpdateAuditDate(),"dd/MM/yyyy HH:mm:ss"));
-//            }
-//
-//        }
+        return response;
+    }
+    public ProjectInfoFilterAllByDomainDtoResponse projectInfoFilterAllByDomain(ProjectInfoFilterByDomainDtoRequest dto) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        List<ProjectInfoSelectAllByDomainDtoResponse> lista;
+
+        Integer recordsCount = 0;
+        Integer pagesAmount = 0;
+
+        var response = new ProjectInfoFilterAllByDomainDtoResponse();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ProjectMapper projectMapper = session.getMapper(ProjectMapper.class);
+            lista = projectMapper.projectInfoFilterAllByDomain(dto.projectId, dto.domainId);
+        }
+
+        recordsCount = (lista.size() > 0) ? (int) lista.stream().count() : 0;
+        pagesAmount = dto.getRecords_amount() > 0 ? (int) Math.ceil(recordsCount.floatValue() / dto.getRecords_amount().floatValue()) : 1;
+
+        if(dto.records_amount>0){
+            lista = lista.stream()
+                    .skip(dto.records_amount * (dto.page - 1))
+                    .limit(dto.records_amount)
+                    .collect(Collectors.toList());
+        }
+
+        for(ProjectInfoSelectAllByDomainDtoResponse item : lista) {
+            if(item.getCreateAuditDate() != null) {
+                item.setCreateAuditDate_S(convertDateToString(item.getCreateAuditDate(),"dd/MM/yyyy HH:mm:ss"));
+            }
+            if(item.getUpdateAuditDate() != null) {
+                item.setUpdateAuditDate_S(convertDateToString(item.getUpdateAuditDate(),"dd/MM/yyyy HH:mm:ss"));
+            }
+
+        }
 
         response.setCount(recordsCount);
         response.setPages_amount(pagesAmount);

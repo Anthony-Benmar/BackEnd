@@ -264,6 +264,11 @@ public class ProjectService {
         return new SuccessDataResult(result);
     }
 
+    public IDataResult<ProjectInfoFilterAllByDomainDtoResponse> projectInfoFilterAllByDomain(ProjectInfoFilterByDomainDtoRequest dto) {
+        var result = projectDao.projectInfoFilterAllByDomain(dto);
+        return new SuccessDataResult(result);
+    }
+
     public IDataResult<Integer> deleteDocument(int projectId, int documentId, String updateAuditUser)
             throws ExecutionException, InterruptedException {
 

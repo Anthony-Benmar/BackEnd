@@ -4,10 +4,9 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.Date;
-
 @Getter
 @Setter
-public class ProjectInfoSelectResponse {
+public class ProjectInfoSelectAllByDomainDtoResponse {
     public Integer projectId;
     public String sdatoolId;
     public String projectName;
@@ -32,12 +31,4 @@ public class ProjectInfoSelectResponse {
     private Date updateAuditDate;
     private String updateAuditDate_S;
     private String updateAuditUser;
-
-
-    public String domainName;
-    public String projectTypeDesc;
-    public String classificationTypeDesc;
-
-
-    public String statusTypeDesc;
 }

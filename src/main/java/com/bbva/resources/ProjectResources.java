@@ -172,6 +172,14 @@ public class ProjectResources {
     public IDataResult<ProjectInfoFilterByDomainDtoResponse> projectInfoFilterByDomain( ProjectInfoFilterByDomainDtoRequest dto) {
         return projectService.projectInfoFilterByDomain(dto);
     }
+    @POST
+    @Path("/info/filterAll/domain")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<ProjectInfoFilterAllByDomainDtoResponse> projectInfoFilterAllByDomain( ProjectInfoFilterByDomainDtoRequest dto) {
+        return projectService.projectInfoFilterAllByDomain(dto);
+    }
+
 
 
     @DELETE
