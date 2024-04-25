@@ -322,10 +322,6 @@ public interface ProjectMapper {
     @Delete("CALL SP_DELETE_PROJECT_PARTICIPANT(#{projectId}, #{participantId}, #{updateAuditUser})")
     void deleteParticipantProject(@Param("projectId") int projectId, @Param("participantId") int participantId, @Param("updateAuditUser") String updateAuditUser);
 
-    /*@Update("UPDATE project_participant SET participant_user=#{participantUser}, participant_name=#{participantName}, participant_email=#{participantEmail}, " +
-            "project_rol_type=#{projectRolType}, pi_id=#{piId}, " +
-            "update_audit_user=#{createAuditUser}, update_audit_date=CONVERT_TZ(NOW(), 'GMT', 'America/Lima') " +
-            "WHERE participant_id=#{projectParticipantId} and project_id = #{projectId}")*/
     @Update("CALL SP_UPDATE_PROJECT_PARTICIPANT(" +
             "#{participantUser}," +
             "#{participantName}," +
