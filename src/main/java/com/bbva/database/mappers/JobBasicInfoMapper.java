@@ -52,7 +52,9 @@ public interface JobBasicInfoMapper {
             @Result(property = "monitoringDomainId", column = "monitoring_domain_id"),
             @Result(property = "monitoringDomainName", column = "monitoring_domain_name"),
             @Result(property = "monitoringProjectId", column = "monitoring_project_id"),
-            @Result(property = "monitoringProjectName", column = "monitoring_project_name")
+            @Result(property = "monitoringProjectName", column = "monitoring_project_name"),
+            @Result(property = "monitoringDevEmail", column = "monitoring_dev_email"),
+            @Result(property = "subApplicationName", column = "sub_application_name")
     })
 
     List<JobBasicInfoSelectDtoResponse> jobBasicInfoFilter(@Param("domainId") int domainId,

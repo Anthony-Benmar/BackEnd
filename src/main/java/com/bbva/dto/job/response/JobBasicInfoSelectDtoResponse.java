@@ -21,6 +21,8 @@ public class JobBasicInfoSelectDtoResponse {
     public String monitoringDomainName;
     public int monitoringProjectId;
     public String monitoringProjectName;
+    private String monitoringDevEmail;
+    private String subApplicationName;
 
 /*
     public int maxWaitNumber;
