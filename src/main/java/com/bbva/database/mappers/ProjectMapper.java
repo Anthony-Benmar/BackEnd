@@ -92,15 +92,11 @@ public interface ProjectMapper {
             "WHERE project_id = #{projectId}")
     boolean updateProject(ProjectPortafolioEntity project);
 
-    @Update("UPDATE project_info SET sdatool_id= #{sdatoolId}, project_name = #{projectName}, project_desc = #{projectDesc}, " +
-            "portafolio_code= #{portafolioCode}, regulatory_type =#{regulatoryType}, ttv_type=#{ttvType}, domain_id=#{domainId}, " +
-            "project_type=#{projectType}, category_type=#{categoryType}, classification_type=#{classificationType}, " +
-            "start_pi_id=#{startPiId}, end_pi_id=#{endPiId}, final_start_pi_id=#{finalStartPiId}, final_end_pi_id=#{finalEndPiId}, " +
-            "wow_type=#{wowType}, country_priority_type=#{countryPriorityType}, status_type=#{statusType}, " +
-            "update_audit_user=#{createAuditUser}, update_audit_date=CONVERT_TZ(NOW(), 'GMT', 'America/Lima') " +
-            "WHERE project_id = #{projectId}")
-    boolean updateProjectInfo(ProjectInfoDTO dto);
-
+    @Select("CALL SP_UPDATE_PROJECT_INFO(" +
+             "#{sdatoolId}, #{projectName}, #{projectDesc}, #{portafolioCode}, #{regulatoryType}, #{ttvType}, #{domainId}, " +
+             "#{projectType}, #{categoryType}, #{classificationType}, #{startPiId}, #{endPiId}, #{finalStartPiId}, #{finalEndPiId}, " +
+             "#{wowType}, #{countryPriorityType}, #{statusType}, #{createAuditUser}, #{projectId})")
+     void updateProjectInfo(ProjectInfoDTO dto);
     @Delete("Delete from data_project WHERE project_id = #{projectId}")
     void deleteProject(@Param("projectId") int projectId);
 
