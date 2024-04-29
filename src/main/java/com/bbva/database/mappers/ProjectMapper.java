@@ -1,10 +1,6 @@
 package com.bbva.database.mappers;
 
-import com.bbva.dto.project.request.InsertProjectDocumentDTO;
-import com.bbva.dto.project.request.InsertProjectInfoDTORequest;
-import com.bbva.dto.project.request.ProjectInfoDTO;
-import com.bbva.dto.project.request.InsertProjectParticipantDTO;
-import com.bbva.dto.project.request.SelectCalendarDTO;
+import com.bbva.dto.project.request.*;
 import com.bbva.dto.project.response.ProjectInfoSelectAllByDomainDtoResponse;
 import com.bbva.dto.project.response.ProjectInfoSelectByDomainDtoResponse;
 import com.bbva.dto.project.response.ProjectInfoSelectResponse;
@@ -16,7 +12,6 @@ import com.bbva.entities.project.ProjectFilterEntity;
 import com.bbva.entities.project.ProjectPortafolioFilterEntity;
 import org.apache.ibatis.annotations.*;
 
-import java.util.Date;
 import java.util.List;
 
 public interface ProjectMapper {
@@ -97,15 +92,11 @@ public interface ProjectMapper {
             "WHERE project_id = #{projectId}")
     boolean updateProject(ProjectPortafolioEntity project);
 
-    @Update("UPDATE project_info SET sdatool_id= #{sdatoolId}, project_name = #{projectName}, project_desc = #{projectDesc}, " +
-            "portafolio_code= #{portafolioCode}, regulatory_type =#{regulatoryType}, ttv_type=#{ttvType}, domain_id=#{domainId}, " +
-            "project_type=#{projectType}, category_type=#{categoryType}, classification_type=#{classificationType}, " +
-            "start_pi_id=#{startPiId}, end_pi_id=#{endPiId}, final_start_pi_id=#{finalStartPiId}, final_end_pi_id=#{finalEndPiId}, " +
-            "wow_type=#{wowType}, country_priority_type=#{countryPriorityType}, status_type=#{statusType}, " +
-            "update_audit_user=#{createAuditUser}, update_audit_date=CONVERT_TZ(NOW(), 'GMT', 'America/Lima') " +
-            "WHERE project_id = #{projectId}")
-    boolean updateProjectInfo(ProjectInfoDTO dto);
-
+    @Select("CALL SP_UPDATE_PROJECT_INFO(" +
+             "#{sdatoolId}, #{projectName}, #{projectDesc}, #{portafolioCode}, #{regulatoryType}, #{ttvType}, #{domainId}, " +
+             "#{projectType}, #{categoryType}, #{classificationType}, #{startPiId}, #{endPiId}, #{finalStartPiId}, #{finalEndPiId}, " +
+             "#{wowType}, #{countryPriorityType}, #{statusType}, #{createAuditUser}, #{projectId})")
+     void updateProjectInfo(ProjectInfoDTO dto);
     @Delete("Delete from data_project WHERE project_id = #{projectId}")
     void deleteProject(@Param("projectId") int projectId);
 
@@ -375,5 +366,12 @@ public interface ProjectMapper {
     @Select("SELECT project_id, sdatool_id, project_name FROM project_info WHERE domain_id = #{domain_id}")
     List<ProjectInfoSelectResponse> listProjectsByDomain(@Param("domain_id") int domain_id);
 
-
+    @Select("CALL SP_LIST_PROJECT_BY_DOMAIN(#{domainId})")
+    @Results({
+            @Result(property = "projectId", column = "project_id"),
+            @Result(property = "sdatoolId", column = "sdatool_id"),
+            @Result(property = "projectName", column = "project_name"),
+            @Result(property = "domainId", column = "domain_id")
+    })
+    List<ProjectByDomainIdDTO> getProjectsByDomainId(@Param("domainId") int domainId);
 }

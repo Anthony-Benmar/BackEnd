@@ -151,9 +151,18 @@ public class ProjectResources {
     public IDataResult<ProjectInfoDTO> updateProjectInfo(ProjectInfoDTO dto)
             throws ExecutionException, InterruptedException
     {
-        if(projectService.sdatoolIdExistsUpdate(dto.getSdatoolId(), dto.getProjectId())) {
-            return new ErrorDataResult<>("El proyecto que desea registrar ya existe, verifique el código SDATOOL");
+
+        try{
+            if(projectService.sdatoolIdExistsUpdate(dto.getSdatoolId(), dto.getProjectId())) {
+                return new ErrorDataResult<>("El proyecto que desea registrar ya existe, verifique el código SDATOOL");
+            }
+        } catch (Exception e) {
+            return new ErrorDataResult<>("Error en el servicio de actualización de proyecto");
         }
+        /*if(projectService.sdatoolIdExistsUpdate(dto.getSdatoolId(), dto.getProjectId())) {
+            return new ErrorDataResult<>("El proyecto que desea registrar ya existe, verifique el código SDATOOL");
+        }*/
+
         return projectService.updateProjectInfo(dto);
     }
 
@@ -254,5 +263,15 @@ public class ProjectResources {
             throws ExecutionException, InterruptedException
     {
         return projectService.getCalendar();
+    }
+
+    @GET
+    @Path("/domain/{domainId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<List<ProjectByDomainIdDTO>> getProjectsByDomainId(@Context HttpServletRequest request,
+                                                                        @PathParam("domainId") int domainId)
+            throws ExecutionException, InterruptedException
+    {
+        return projectService.getProjectsByDomainId(domainId);
     }
 }

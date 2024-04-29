@@ -80,7 +80,7 @@ public class ProjectDao {
                 projectList.add(objectProject);
             });
             return projectList;
-        }catch (Exception e) {
+        } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
             return null;
         }
@@ -102,7 +102,7 @@ public class ProjectDao {
             return projectList;
         }
     }
-    
+
     public ProjectPortafolioFilterDtoResponse portafolioFilter(ProjectPortafolioFilterDTORequest dto) {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         List<ProjectPortafolioFilterEntity> lista;
@@ -163,7 +163,7 @@ public class ProjectDao {
             }
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
-            return new ErrorDataResult(null, "500",e.getMessage());
+            return new ErrorDataResult(null, "500", e.getMessage());
         }
     }
 
@@ -178,7 +178,7 @@ public class ProjectDao {
             }
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
-            return new ErrorDataResult(null, "500",e.getMessage());
+            return new ErrorDataResult(null, "500", e.getMessage());
         }
     }
 
@@ -193,7 +193,7 @@ public class ProjectDao {
             }
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
-            return new ErrorDataResult(null, "500",e.getMessage());
+            return new ErrorDataResult(null, "500", e.getMessage());
         }
     }
 
@@ -208,7 +208,7 @@ public class ProjectDao {
             }
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
-            return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR,e.getMessage());
+            return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
 
@@ -267,17 +267,17 @@ public class ProjectDao {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         try (SqlSession session = sqlSessionFactory.openSession()) {
             ProjectMapper projectMapper = session.getMapper(ProjectMapper.class);
-            try{
+            try {
                 var result = projectMapper.insertProjectInfo(dto);
                 dto.setProjectId(result.getLast_insert_id());
-                if(dto.participants != null && dto.participants.size() > 0) {
+                if (dto.participants != null && dto.participants.size() > 0) {
                     dto.participants.stream().forEach(participant -> {
                         participant.setProjectId(dto.projectId);
                         participant.setCreateAuditUser(dto.createAuditUser);
                     });
                     projectMapper.insertProjectParticipants(dto.participants);
                 }
-                if(dto.documents != null && dto.documents.size() > 0) {
+                if (dto.documents != null && dto.documents.size() > 0) {
                     dto.documents.stream().forEach(document -> {
                         document.setProjectId(dto.projectId);
                         document.setCreateAuditUser(dto.createAuditUser);
@@ -285,7 +285,7 @@ public class ProjectDao {
                     projectMapper.insertProjectDocuments(dto.documents);
                 }
                 session.commit();
-            }catch (Exception e){
+            } catch (Exception e) {
                 session.rollback();
                 log.log(Level.SEVERE, e.getMessage(), e);
             }
@@ -309,19 +309,19 @@ public class ProjectDao {
         recordsCount = (lista.size() > 0) ? (int) lista.stream().count() : 0;
         pagesAmount = dto.getRecords_amount() > 0 ? (int) Math.ceil(recordsCount.floatValue() / dto.getRecords_amount().floatValue()) : 1;
 
-        if(dto.records_amount>0){
+        if (dto.records_amount > 0) {
             lista = lista.stream()
                     .skip(dto.records_amount * (dto.page - 1))
                     .limit(dto.records_amount)
                     .collect(Collectors.toList());
         }
 
-        for(ProjectInfoSelectResponse item : lista) {
-            if(item.getCreateAuditDate() != null) {
-                item.setCreateAuditDate_S(convertDateToString(item.getCreateAuditDate(),"dd/MM/yyyy HH:mm:ss"));
+        for (ProjectInfoSelectResponse item : lista) {
+            if (item.getCreateAuditDate() != null) {
+                item.setCreateAuditDate_S(convertDateToString(item.getCreateAuditDate(), "dd/MM/yyyy HH:mm:ss"));
             }
-            if(item.getUpdateAuditDate() != null) {
-                item.setUpdateAuditDate_S(convertDateToString(item.getUpdateAuditDate(),"dd/MM/yyyy HH:mm:ss"));
+            if (item.getUpdateAuditDate() != null) {
+                item.setUpdateAuditDate_S(convertDateToString(item.getUpdateAuditDate(), "dd/MM/yyyy HH:mm:ss"));
             }
 
         }
@@ -333,6 +333,7 @@ public class ProjectDao {
 
         return response;
     }
+
     public ProjectInfoFilterByDomainDtoResponse projectInfoFilterByDomain(ProjectInfoFilterByDomainDtoRequest dto) {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         List<ProjectInfoSelectByDomainDtoResponse> lista;
@@ -349,7 +350,7 @@ public class ProjectDao {
         recordsCount = (lista.size() > 0) ? (int) lista.stream().count() : 0;
         pagesAmount = dto.getRecords_amount() > 0 ? (int) Math.ceil(recordsCount.floatValue() / dto.getRecords_amount().floatValue()) : 1;
 
-        if(dto.records_amount>0){
+        if (dto.records_amount > 0) {
             lista = lista.stream()
                     .skip(dto.records_amount * (dto.page - 1))
                     .limit(dto.records_amount)
@@ -362,6 +363,7 @@ public class ProjectDao {
 
         return response;
     }
+
     public ProjectInfoFilterAllByDomainDtoResponse projectInfoFilterAllByDomain(ProjectInfoFilterByDomainDtoRequest dto) {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         List<ProjectInfoSelectAllByDomainDtoResponse> lista;
@@ -378,19 +380,19 @@ public class ProjectDao {
         recordsCount = (lista.size() > 0) ? (int) lista.stream().count() : 0;
         pagesAmount = dto.getRecords_amount() > 0 ? (int) Math.ceil(recordsCount.floatValue() / dto.getRecords_amount().floatValue()) : 1;
 
-        if(dto.records_amount>0){
+        if (dto.records_amount > 0) {
             lista = lista.stream()
                     .skip(dto.records_amount * (dto.page - 1))
                     .limit(dto.records_amount)
                     .collect(Collectors.toList());
         }
 
-        for(ProjectInfoSelectAllByDomainDtoResponse item : lista) {
-            if(item.getCreateAuditDate() != null) {
-                item.setCreateAuditDate_S(convertDateToString(item.getCreateAuditDate(),"dd/MM/yyyy HH:mm:ss"));
+        for (ProjectInfoSelectAllByDomainDtoResponse item : lista) {
+            if (item.getCreateAuditDate() != null) {
+                item.setCreateAuditDate_S(convertDateToString(item.getCreateAuditDate(), "dd/MM/yyyy HH:mm:ss"));
             }
-            if(item.getUpdateAuditDate() != null) {
-                item.setUpdateAuditDate_S(convertDateToString(item.getUpdateAuditDate(),"dd/MM/yyyy HH:mm:ss"));
+            if (item.getUpdateAuditDate() != null) {
+                item.setUpdateAuditDate_S(convertDateToString(item.getUpdateAuditDate(), "dd/MM/yyyy HH:mm:ss"));
             }
 
         }
@@ -414,7 +416,7 @@ public class ProjectDao {
             }
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
-            return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR,e.getMessage());
+            return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
 
@@ -448,7 +450,7 @@ public class ProjectDao {
             }
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
-            return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR,e.getMessage());
+            return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
 
@@ -466,7 +468,7 @@ public class ProjectDao {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         try (SqlSession session = sqlSessionFactory.openSession()) {
             ProjectMapper mapper = session.getMapper(ProjectMapper.class);
-            var  participantsList = mapper.getProjectParticipants(projectId);
+            var participantsList = mapper.getProjectParticipants(projectId);
             return participantsList;
         }
     }
@@ -476,6 +478,14 @@ public class ProjectDao {
         try (SqlSession session = sqlSessionFactory.openSession()) {
             ProjectMapper mapper = session.getMapper(ProjectMapper.class);
             return mapper.getAllCalendar();
+        }
+    }
+
+    public List<ProjectByDomainIdDTO> getProjectsByDomainId(int domainId) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ProjectMapper mapper = session.getMapper(ProjectMapper.class);
+            return mapper.getProjectsByDomainId(domainId);
         }
     }
 }
