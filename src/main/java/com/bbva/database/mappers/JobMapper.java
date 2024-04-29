@@ -12,6 +12,7 @@ import org.apache.ibatis.annotations.Results;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.*;
 
+import javax.ws.rs.PUT;
 import java.util.List;
 
 public interface JobMapper {
@@ -142,18 +143,29 @@ public interface JobMapper {
     JobAdditionalDtoResponse getAdditional (@Param("jobId") Integer jobId);
 
 
-    @Update("CALL SP_UPDATE_JOB_ADDITIONAL(" +
+    @Select("CALL SP_INSERT_OR_UPDATE_JOB_ADDITIONAL(" +
             "#{jobId}," +
-            " #{reclassificationType}" +
-            "#{criticalRouteType}" +
-            "#{jobFunctionalDesc}" +
-            "#{createAuditUser}")
+            "#{createdProjectId}," +
+            "#{createdDevEmail}," +
+            "#{monitoringProjectId}," +
+            "#{monitoringDevEmail}," +
+            "#{reclassificationType}," +
+            "#{criticalRouteType}," +
+            "#{jobFunctionalDesc}," +
+            "#{createAuditUser})")
     @Results({
             @Result(property = "jobId", column = "job_id"),
+            @Result(property = "createdProjectId", column = "created_project_id"),
+            @Result(property = "createdDevEmail", column = "created_dev_email"),
+            @Result(property = "monitoringProjectId", column = "monitoring_project_id"),
+            @Result(property = "monitoringDevEmail", column = "monitoring_dev_email"),
             @Result(property = "reclassificationType", column = "reclassification_type"),
             @Result(property = "criticalRouteType", column = "critical_route_type"),
             @Result(property = "jobFunctionalDesc", column = "job_functional_desc"),
-            @Result(property = "createAuditUser", column = "create_audit_user")
+            @Result(property = "createAuditUser", column = "create_audit_user"),
+            @Result(property = "createAuditDate", column = "create_audit_date"),
+            @Result(property = "updateAuditDate", column = "update_audit_date"),
+            @Result(property = "updateAuditUser", column = "update_audit_user")
     })
     JobAdditionalDtoResponse updateAdditional (JobAdditionalDtoRequest dto);
 

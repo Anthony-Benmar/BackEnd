@@ -5,16 +5,13 @@ import com.bbva.core.abstracts.IDataResult;
 import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dao.JobDao;
-import com.bbva.dao.JobBasicInfoDao;
 import com.bbva.dto.job.request.JobAdditionalDtoRequest;
 import com.bbva.dto.job.request.JobBasicInfoFilterDtoRequest;
 import com.bbva.dto.job.request.JobDTO;
 import com.bbva.dto.job.response.JobBasicInfoDtoResponse;
 import com.bbva.dto.job.response.JobBasicInfoFilterDtoResponse;
-import io.opencensus.common.ServerStatsFieldEnums;
 import com.bbva.dto.job.response.*;
-import com.bbva.dto.project.request.ProjectInfoFilterByDomainDtoRequest;
-import com.bbva.dto.project.response.ProjectInfoFilterAllByDomainDtoResponse;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,8 +45,17 @@ public class JobService {
         return new SuccessDataResult(result);
     }
     public IDataResult<JobAdditionalDtoResponse> updateAdditional(JobAdditionalDtoRequest dto) {
-        var result = jobDao.updateAdditional(dto);
-        return new SuccessDataResult(result);
+        try {
+            if (dto.getJobId().equals(0))
+                return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "JonId must to be not null");
+
+            jobDao.updateAdditional(dto);
+
+        } catch (Exception e) {
+            log.log(Level.SEVERE, e.getMessage(), e);
+            return new ErrorDataResult(null,HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+        return new SuccessDataResult(dto);
     }
 
 

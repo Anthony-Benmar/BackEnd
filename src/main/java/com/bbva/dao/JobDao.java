@@ -128,5 +128,6 @@ public class JobDao {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
             return new ErrorDataResult(null, "500", e.getMessage());
         }
+
     }
 }

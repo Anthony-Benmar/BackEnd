@@ -34,26 +34,9 @@ public class JobResources {
     public IDataResult<List<JobDTO>> getJobById(@PathParam("jobId") int jobId) {
         return jobService.getJobById(jobId);
     }
-    @GET
-    @Path("/job-basic-info/{jobId}")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public IDataResult<JobBasicInfoByIdDtoResponse> jobBasicDetail(@PathParam("jobId") Integer jobId)
-            throws ExecutionException, InterruptedException {
-        return jobService.jobBasicDetail(jobId);
-    }
-
-    @GET
-    @Path("/job-basic-info/additional/{jobId}")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public IDataResult<JobAdditionalDtoResponse> getAdditional(@PathParam("jobId") Integer jobId)
-            throws ExecutionException, InterruptedException {
-        return jobService.getAdditional(jobId);
-    }
 
     @PUT
-    @Path("/job-basic-info/additional/update")
+    @Path("/additional/update")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<JobAdditionalDtoResponse> updateAdditional(JobAdditionalDtoRequest dto)
