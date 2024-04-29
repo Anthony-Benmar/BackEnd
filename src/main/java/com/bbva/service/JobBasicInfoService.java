@@ -5,10 +5,9 @@ import com.bbva.core.abstracts.IDataResult;
 import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dao.JobBasicInfoDao;
+import com.bbva.dto.job.request.JobAdditionalDtoRequest;
 import com.bbva.dto.job.request.JobBasicInfoFilterDtoRequest;
-import com.bbva.dto.job.response.JobBasicInfoDtoResponse;
-import com.bbva.dto.job.response.JobBasicInfoFilterDtoResponse;
-import com.bbva.dto.job.response.JobBasicInfoSelectDtoResponse;
+import com.bbva.dto.job.response.*;
 import com.bbva.dto.project.request.ProjectInfoFilterByDomainDtoRequest;
 import com.bbva.dto.project.response.ProjectInfoFilterAllByDomainDtoResponse;
 
@@ -33,6 +32,20 @@ public class JobBasicInfoService {
         var result = jobBasicInfoDao.jobBasicInfoFilter(dto);
         return new SuccessDataResult(result);
     }
+
+    public IDataResult<JobBasicInfoByIdDtoResponse> jobBasicDetail(Integer jobId) {
+        var result = jobBasicInfoDao.jobBasicDetail(jobId);
+        return new SuccessDataResult(result);
+    }
+    public IDataResult<JobAdditionalDtoResponse> getAdditional(Integer jobId) {
+        var result = jobBasicInfoDao.getAdditional(jobId);
+        return new SuccessDataResult(result);
+    }
+    public IDataResult<JobAdditionalDtoResponse> updateAdditional(JobAdditionalDtoRequest dto) {
+        var result = jobBasicInfoDao.updateAdditional(dto);
+        return new SuccessDataResult(result);
+    }
+
 
 
 }

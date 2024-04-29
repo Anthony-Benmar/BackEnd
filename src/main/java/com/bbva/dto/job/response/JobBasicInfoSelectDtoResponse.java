@@ -8,29 +8,19 @@ import java.util.Date;
 @Getter
 @Setter
 public class JobBasicInfoSelectDtoResponse {
-    public int jobId;
+    public Integer jobId;
     public String jobName;
     public String folderName;
     public String applicationName;
     public String dataprocJobName;
     public String runAsName;
-    public int classificationType;
+    public Integer classificationType;
     public String classificationName; //element_name
     public String invetoriedType;
-    public int monitoringDomainId;
+    public Integer monitoringDomainId;
     public String monitoringDomainName;
-    public int monitoringProjectId;
+    public Integer monitoringProjectId;
     public String monitoringProjectName;
     private String monitoringDevEmail;
     private String subApplicationName;
-
-/*
-    public int maxWaitNumber;
-    public String cmdLine;
-    public Date createAuditDate;
-    public String createAuditDate_S;
-    public String createAuditUser;
-    public Date updateAuditDate;
-    public String updateAuditDate_S;
-    public String updateAuditUser;*/
 }

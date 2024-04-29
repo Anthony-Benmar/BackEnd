@@ -1,12 +1,15 @@
 package com.bbva.dao;
 
+import com.bbva.common.HttpStatusCodes;
+import com.bbva.core.results.DataResult;
+import com.bbva.core.results.ErrorDataResult;
+import com.bbva.core.results.SuccessDataResult;
 import com.bbva.database.MyBatisConnectionFactory;
 import com.bbva.database.mappers.JobBasicInfoMapper;
 import com.bbva.database.mappers.ProjectMapper;
+import com.bbva.dto.job.request.JobAdditionalDtoRequest;
 import com.bbva.dto.job.request.JobBasicInfoFilterDtoRequest;
-import com.bbva.dto.job.response.JobBasicInfoDtoResponse;
-import com.bbva.dto.job.response.JobBasicInfoFilterDtoResponse;
-import com.bbva.dto.job.response.JobBasicInfoSelectDtoResponse;
+import com.bbva.dto.job.response.*;
 import com.bbva.dto.project.request.ProjectInfoFilterRequest;
 import com.bbva.dto.project.response.ProjectInfoFilterResponse;
 import com.bbva.dto.project.response.ProjectInfoSelectResponse;
@@ -88,5 +91,50 @@ public class JobBasicInfoDao {
         LOGGER.info(JSONUtils.convertFromObjectToJson(response.getData()));
 
         return response;
+    }
+
+    public JobBasicInfoByIdDtoResponse jobBasicDetail(Integer jobId) {
+        JobBasicInfoByIdDtoResponse jobBasicInfo = null;
+        try{
+            LOGGER.info("Obtener JobBasicInfo por jobId en Mapper");
+            SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+            try (SqlSession session = sqlSessionFactory.openSession()) {
+                JobBasicInfoMapper mapper = session.getMapper(JobBasicInfoMapper.class);
+                jobBasicInfo = mapper.jobBasicDetail(jobId);
+            }
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+        }
+        return jobBasicInfo;
+    }
+    public JobAdditionalDtoResponse getAdditional(Integer jobId) {
+        JobAdditionalDtoResponse jobAdditional = null;
+        try{
+            SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+            try (SqlSession session = sqlSessionFactory.openSession()) {
+                JobBasicInfoMapper mapper = session.getMapper(JobBasicInfoMapper.class);
+                jobAdditional = mapper.getAdditional(jobId);
+
+            }
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+        }
+        return jobAdditional;
+    }
+
+    public DataResult<JobAdditionalDtoResponse> updateAdditional(JobAdditionalDtoRequest dto) {
+
+        try {
+            SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+            try (SqlSession session = sqlSessionFactory.openSession()) {
+                JobBasicInfoMapper mapper = session.getMapper(JobBasicInfoMapper.class);
+                mapper.updateAdditional(dto);
+                session.commit();
+                return new SuccessDataResult(dto);
+            }
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            return new ErrorDataResult(null, "500", e.getMessage());
+        }
     }
 }
