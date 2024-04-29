@@ -3,19 +3,21 @@ package com.bbva.resources;
 import com.bbva.core.abstracts.IDataResult;
 import com.bbva.dto.job.request.JobAdditionalDtoRequest;
 import com.bbva.dto.job.request.JobBasicInfoFilterDtoRequest;
+import com.bbva.dto.job.request.JobDTO;
 import com.bbva.dto.job.response.JobAdditionalDtoResponse;
 import com.bbva.dto.job.response.JobBasicInfoByIdDtoResponse;
 import com.bbva.dto.job.response.JobBasicInfoFilterDtoResponse;
-import com.bbva.service.JobBasicInfoService;
+import com.bbva.service.JobService;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 @Path("/job")
 @Produces(MediaType.APPLICATION_JSON)
 public class JobResources {
-    private final JobBasicInfoService jobBasicInfoService = new JobBasicInfoService();
+    private final JobService jobService = new JobService();
 
     @POST
     @Path("/job-basic-info/filter")
@@ -23,7 +25,14 @@ public class JobResources {
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<JobBasicInfoFilterDtoResponse> jobBasicInfoFilter(JobBasicInfoFilterDtoRequest dto)
             throws ExecutionException, InterruptedException {
-        return jobBasicInfoService.jobBasicInfoFilter(dto);
+        return jobService.jobBasicInfoFilter(dto);
+    }
+
+    @GET
+    @Path("/{jobId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<List<JobDTO>> getJobById(@PathParam("jobId") int jobId) {
+        return jobService.getJobById(jobId);
     }
     @GET
     @Path("/job-basic-info/{jobId}")
@@ -31,7 +40,7 @@ public class JobResources {
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<JobBasicInfoByIdDtoResponse> jobBasicDetail(@PathParam("jobId") Integer jobId)
             throws ExecutionException, InterruptedException {
-        return jobBasicInfoService.jobBasicDetail(jobId);
+        return jobService.jobBasicDetail(jobId);
     }
 
     @GET
@@ -40,7 +49,7 @@ public class JobResources {
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<JobAdditionalDtoResponse> getAdditional(@PathParam("jobId") Integer jobId)
             throws ExecutionException, InterruptedException {
-        return jobBasicInfoService.getAdditional(jobId);
+        return jobService.getAdditional(jobId);
     }
 
     @PUT
@@ -50,7 +59,7 @@ public class JobResources {
     public IDataResult<JobAdditionalDtoResponse> updateAdditional(JobAdditionalDtoRequest dto)
             throws ExecutionException, InterruptedException
     {
-        return jobBasicInfoService.updateAdditional(dto);
+        return jobService.updateAdditional(dto);
     }
 
 }

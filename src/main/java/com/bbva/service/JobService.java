@@ -4,23 +4,29 @@ import com.bbva.common.HttpStatusCodes;
 import com.bbva.core.abstracts.IDataResult;
 import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
+import com.bbva.dao.JobDao;
 import com.bbva.dao.JobBasicInfoDao;
 import com.bbva.dto.job.request.JobAdditionalDtoRequest;
 import com.bbva.dto.job.request.JobBasicInfoFilterDtoRequest;
+import com.bbva.dto.job.request.JobDTO;
+import com.bbva.dto.job.response.JobBasicInfoDtoResponse;
+import com.bbva.dto.job.response.JobBasicInfoFilterDtoResponse;
+import io.opencensus.common.ServerStatsFieldEnums;
 import com.bbva.dto.job.response.*;
 import com.bbva.dto.project.request.ProjectInfoFilterByDomainDtoRequest;
 import com.bbva.dto.project.response.ProjectInfoFilterAllByDomainDtoResponse;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class JobBasicInfoService {
-    private final JobBasicInfoDao jobBasicInfoDao = new JobBasicInfoDao();
-    private static final Logger log= Logger.getLogger(JobBasicInfoService.class.getName());
+public class JobService {
+    private final JobDao jobDao = new JobDao();
+    private static final Logger log= Logger.getLogger(JobService.class.getName());
     public IDataResult<List<JobBasicInfoDtoResponse>> listAllJobs() {
         try {
-            var result = jobBasicInfoDao.listAll();
+            var result = jobDao.listAll();
             return new SuccessDataResult(result);
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
@@ -29,23 +35,34 @@ public class JobBasicInfoService {
     }
 
     public IDataResult<JobBasicInfoFilterDtoResponse> jobBasicInfoFilter(JobBasicInfoFilterDtoRequest dto) {
-        var result = jobBasicInfoDao.jobBasicInfoFilter(dto);
+        var result = jobDao.jobBasicInfoFilter(dto);
         return new SuccessDataResult(result);
     }
 
     public IDataResult<JobBasicInfoByIdDtoResponse> jobBasicDetail(Integer jobId) {
-        var result = jobBasicInfoDao.jobBasicDetail(jobId);
+        var result = jobDao.jobBasicDetail(jobId);
         return new SuccessDataResult(result);
     }
     public IDataResult<JobAdditionalDtoResponse> getAdditional(Integer jobId) {
-        var result = jobBasicInfoDao.getAdditional(jobId);
+        var result = jobDao.getAdditional(jobId);
         return new SuccessDataResult(result);
     }
     public IDataResult<JobAdditionalDtoResponse> updateAdditional(JobAdditionalDtoRequest dto) {
-        var result = jobBasicInfoDao.updateAdditional(dto);
+        var result = jobDao.updateAdditional(dto);
         return new SuccessDataResult(result);
     }
 
 
+    public IDataResult<List<JobDTO>> getJobById(int jobId) {
+        List<JobDTO> JobList = new ArrayList<>();
+        try {
+            JobDTO job = jobDao.getJobById(jobId);
+            JobList.add(job);
+            return new SuccessDataResult(JobList);
+        } catch (Exception e) {
+            log.log(Level.SEVERE, e.getMessage(), e);
+            return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
 
 }
