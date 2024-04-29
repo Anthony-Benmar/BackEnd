@@ -1,15 +1,12 @@
 package com.bbva.dao;
 
 import com.bbva.database.MyBatisConnectionFactory;
-import com.bbva.database.mappers.JobBasicInfoMapper;
-import com.bbva.database.mappers.ProjectMapper;
+import com.bbva.database.mappers.JobMapper;
 import com.bbva.dto.job.request.JobBasicInfoFilterDtoRequest;
+import com.bbva.dto.job.request.JobDTO;
 import com.bbva.dto.job.response.JobBasicInfoDtoResponse;
 import com.bbva.dto.job.response.JobBasicInfoFilterDtoResponse;
 import com.bbva.dto.job.response.JobBasicInfoSelectDtoResponse;
-import com.bbva.dto.project.request.ProjectInfoFilterRequest;
-import com.bbva.dto.project.response.ProjectInfoFilterResponse;
-import com.bbva.dto.project.response.ProjectInfoSelectResponse;
 import com.bbva.util.JSONUtils;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -20,16 +17,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import static com.bbva.util.types.FechaUtil.convertDateToString;
+public class JobDao {
 
-public class JobBasicInfoDao {
+    private static final Logger LOGGER = Logger.getLogger(JobDao.class.getName());
+    private static JobDao instance = null;
 
-    private static final Logger LOGGER = Logger.getLogger(JobBasicInfoDao.class.getName());
-    private static JobBasicInfoDao instance = null;
-
-    public static synchronized JobBasicInfoDao getInstance() {
+    public static synchronized JobDao getInstance() {
         if (Objects.isNull(instance)) {
-            instance = new JobBasicInfoDao();
+            instance = new JobDao();
         }
         return instance;
     }
@@ -40,7 +35,7 @@ public class JobBasicInfoDao {
             LOGGER.info("Listar JobBasicInfo en Mapper");
             SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
             try (SqlSession session = sqlSessionFactory.openSession()) {
-                JobBasicInfoMapper mapper = session.getMapper(JobBasicInfoMapper.class);
+                JobMapper mapper = session.getMapper(JobMapper.class);
                 jobBasicInfoList = mapper.listAll();
             }
         } catch (Exception e) {
@@ -57,7 +52,7 @@ public class JobBasicInfoDao {
 
         var response = new JobBasicInfoFilterDtoResponse();
         try (SqlSession session = sqlSessionFactory.openSession()) {
-            JobBasicInfoMapper mapper = session.getMapper(JobBasicInfoMapper.class);
+            JobMapper mapper = session.getMapper(JobMapper.class);
             lista = mapper.jobBasicInfoFilter(dto.domainId, dto.projectId, dto.jobDataprocFolderName
                                     , dto.classificationType, dto.invetoriedType);
         }
@@ -88,5 +83,12 @@ public class JobBasicInfoDao {
         LOGGER.info(JSONUtils.convertFromObjectToJson(response.getData()));
 
         return response;
+    }
+    public JobDTO getJobById(int jobId) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            JobMapper mapper = session.getMapper(JobMapper.class);
+            return mapper.getJobById(jobId);
+        }
     }
 }
