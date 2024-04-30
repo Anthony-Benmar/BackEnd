@@ -1,6 +1,5 @@
 package com.bbva.dao;
 
-import com.bbva.common.HttpStatusCodes;
 import com.bbva.core.results.DataResult;
 import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
@@ -14,6 +13,8 @@ import com.bbva.util.JSONUtils;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.logging.Level;
@@ -77,11 +78,19 @@ public class JobDao {
 
         return response;
     }
+
     public JobDTO getJobById(int jobId) {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         try (SqlSession session = sqlSessionFactory.openSession()) {
             JobMapper mapper = session.getMapper(JobMapper.class);
-            return mapper.getJobById(jobId);
+            JobDTO job = mapper.getJobById(jobId);
+            if (job != null && job.getCreateAuditDate() != null) {
+            job.setCreateAuditDate_S(convertMillisToDate(job.getCreateAuditDate().getTime()));
+            }
+            if (job != null && job.getUpdateAuditDate() != null) {
+                job.setUpdateAuditDate_S(convertMillisToDate(job.getUpdateAuditDate().getTime()));
+            }
+            return job;
         }
     }
 
@@ -99,6 +108,7 @@ public class JobDao {
         }
         return jobBasicInfo;
     }
+
     public JobAdditionalDtoResponse getAdditional(Integer jobId) {
         JobAdditionalDtoResponse jobAdditional = null;
         try{
@@ -128,6 +138,11 @@ public class JobDao {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
             return new ErrorDataResult(null, "500", e.getMessage());
         }
+    }
 
+    public String convertMillisToDate(Long millis) {
+        Date date = new Date(millis);
+        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+        return formatter.format(date);
     }
 }
