@@ -7,6 +7,7 @@ import com.bbva.dto.job.request.JobDTO;
 import com.bbva.dto.job.response.JobAdditionalDtoResponse;
 import com.bbva.dto.job.response.JobBasicInfoByIdDtoResponse;
 import com.bbva.dto.job.response.JobBasicInfoFilterDtoResponse;
+import com.bbva.dto.job.response.JobTotalsDtoResponse;
 import com.bbva.service.JobService;
 
 import javax.ws.rs.*;
@@ -45,4 +46,10 @@ public class JobResources {
         return jobService.updateAdditional(dto);
     }
 
+    @GET
+    @Path("/totals")
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<JobTotalsDtoResponse> getJobTotals() {
+        return jobService.getJobTotals();
+    }
 }

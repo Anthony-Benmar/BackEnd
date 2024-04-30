@@ -72,4 +72,14 @@ public class JobService {
             return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
+
+    public IDataResult<JobTotalsDtoResponse> getJobTotals() {
+        try {
+            JobTotalsDtoResponse result = jobDao.getJobTotals();
+            return new SuccessDataResult(result);
+        } catch (Exception e) {
+            log.log(Level.SEVERE, e.getMessage(), e);
+            return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
 }

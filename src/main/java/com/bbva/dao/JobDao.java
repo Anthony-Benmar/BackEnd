@@ -145,4 +145,11 @@ public class JobDao {
         SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
         return formatter.format(date);
     }
+
+    public JobTotalsDtoResponse getJobTotals() {
+        try (SqlSession session = MyBatisConnectionFactory.getInstance().openSession()) {
+            JobMapper mapper = session.getMapper(JobMapper.class);
+            return mapper.getJobTotals();
+        }
+    }
 }

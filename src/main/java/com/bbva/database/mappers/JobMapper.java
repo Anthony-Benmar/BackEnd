@@ -2,10 +2,7 @@ package com.bbva.database.mappers;
 
 import com.bbva.dto.job.request.JobDTO;
 import com.bbva.dto.job.request.JobAdditionalDtoRequest;
-import com.bbva.dto.job.response.JobAdditionalDtoResponse;
-import com.bbva.dto.job.response.JobBasicInfoByIdDtoResponse;
-import com.bbva.dto.job.response.JobBasicInfoDtoResponse;
-import com.bbva.dto.job.response.JobBasicInfoSelectDtoResponse;
+import com.bbva.dto.job.response.*;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Result;
 import org.apache.ibatis.annotations.Results;
@@ -171,4 +168,11 @@ public interface JobMapper {
     })
     JobAdditionalDtoResponse updateAdditional (JobAdditionalDtoRequest dto);
 
+    @Select("CALL SP_GET_JOB_TOTALS()")
+    @Results({
+            @Result(property = "totalJobs", column = "total_jobs"),
+            @Result(property = "inventoriedJobs", column = "inventoried_jobs"),
+            @Result(property = "criticalRouteJobs", column = "critical_route_jobs")
+    })
+    JobTotalsDtoResponse getJobTotals();
 }
