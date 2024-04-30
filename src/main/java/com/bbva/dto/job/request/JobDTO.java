@@ -30,6 +30,7 @@ public class JobDTO {
     private Integer createdProjectId;
     private String createdProjectName;
     private Integer criticalRouteType;
+    private String jobFunctionalDesc;
     private String createdDevEmail;
     private Date createAuditDate;
     private String createAuditDate_S;

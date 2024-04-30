@@ -94,6 +94,7 @@ public interface JobMapper {
             @Result(property = "createdProjectName", column = "created_project_name"),
             @Result(property = "createdDevEmail", column = "created_dev_email"),
             @Result(property = "criticalRouteType", column = "critical_route_type"),
+            @Result(property = "jobFunctionalDesc", column = "job_functional_desc"),
             @Result(property = "createAuditDate", column = "create_audit_date"),
             @Result(property = "createAuditUser", column = "create_audit_user"),
             @Result(property = "updateAuditDate", column = "update_audit_date"),
