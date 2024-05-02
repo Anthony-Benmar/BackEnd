@@ -2,10 +2,7 @@ package com.bbva.database.mappers;
 
 import com.bbva.dto.job.request.JobDTO;
 import com.bbva.dto.job.request.JobAdditionalDtoRequest;
-import com.bbva.dto.job.response.JobAdditionalDtoResponse;
-import com.bbva.dto.job.response.JobBasicInfoByIdDtoResponse;
-import com.bbva.dto.job.response.JobBasicInfoDtoResponse;
-import com.bbva.dto.job.response.JobBasicInfoSelectDtoResponse;
+import com.bbva.dto.job.response.*;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Result;
 import org.apache.ibatis.annotations.Results;
@@ -138,7 +135,7 @@ public interface JobMapper {
             "#{jobId})")
     @Results({
             @Result(property = "jobId", column = "job_id"),
-            @Result(property = "reclassificationType", column = "reclassification_type"),
+            @Result(property = "classificationType", column = "reclassification_type"),
             @Result(property = "criticalRouteType", column = "critical_route_type"),
             @Result(property = "jobFunctionalDesc", column = "job_functional_desc"),
     })
@@ -151,7 +148,7 @@ public interface JobMapper {
             "#{createdDevEmail}," +
             "#{monitoringProjectId}," +
             "#{monitoringDevEmail}," +
-            "#{reclassificationType}," +
+            "#{classificationType}," +
             "#{criticalRouteType}," +
             "#{jobFunctionalDesc}," +
             "#{createAuditUser})")
@@ -161,7 +158,7 @@ public interface JobMapper {
             @Result(property = "createdDevEmail", column = "created_dev_email"),
             @Result(property = "monitoringProjectId", column = "monitoring_project_id"),
             @Result(property = "monitoringDevEmail", column = "monitoring_dev_email"),
-            @Result(property = "reclassificationType", column = "reclassification_type"),
+            @Result(property = "classificationType", column = "reclassification_type"),
             @Result(property = "criticalRouteType", column = "critical_route_type"),
             @Result(property = "jobFunctionalDesc", column = "job_functional_desc"),
             @Result(property = "createAuditUser", column = "create_audit_user"),
@@ -171,4 +168,5 @@ public interface JobMapper {
     })
     JobAdditionalDtoResponse updateAdditional (JobAdditionalDtoRequest dto);
 
+    List<JobMonitoringDtoResponse> getAllMonitoringRequest();
 }

@@ -17,7 +17,7 @@ public class JobOwnEntity {
     private Integer monitoringProjectId;
     private String monitoringDevEmail;
     //Datos Adicionales
-    private Integer reclassificationType;
+    private Integer classificationType;
     private Integer criticalRouteType;
     private String jobFunctionalDesc;
     //Campos de auditoria

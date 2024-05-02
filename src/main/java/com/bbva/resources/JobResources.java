@@ -4,9 +4,11 @@ import com.bbva.core.abstracts.IDataResult;
 import com.bbva.dto.job.request.JobAdditionalDtoRequest;
 import com.bbva.dto.job.request.JobBasicInfoFilterDtoRequest;
 import com.bbva.dto.job.request.JobDTO;
+import com.bbva.dto.job.request.JobMonitoringDtoRequest;
 import com.bbva.dto.job.response.JobAdditionalDtoResponse;
 import com.bbva.dto.job.response.JobBasicInfoByIdDtoResponse;
 import com.bbva.dto.job.response.JobBasicInfoFilterDtoResponse;
+import com.bbva.dto.job.response.JobMonitoringDtoResponse;
 import com.bbva.service.JobService;
 
 import javax.ws.rs.*;
@@ -43,6 +45,39 @@ public class JobResources {
             throws ExecutionException, InterruptedException
     {
         return jobService.updateAdditional(dto);
+    }
+
+    @GET
+    @Path("/monitoring/request")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<List<JobMonitoringDtoResponse>> getAllMonitoringRequest() {
+        return jobService.getAllMonitoringRequest();
+    }
+
+    @POST
+    @Path("/monitoring/request/insert")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<JobMonitoringDtoResponse> insertMonitoringRequest(JobMonitoringDtoRequest dto)
+            throws ExecutionException, InterruptedException {
+        return jobService.insertMonitoringRequest(dto);
+    }
+    @PUT
+    @Path("/monitoring/request/update")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<JobMonitoringDtoResponse> updateMonitoringRequest(JobMonitoringDtoRequest dto)
+            throws ExecutionException, InterruptedException {
+        return jobService.updateMonitoringRequest(dto);
+    }
+    @DELETE
+    @Path("/monitoring/request/delete/{monitoringRequestId}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<JobMonitoringDtoResponse> deleteMonitoringRequest(@PathParam("monitoringRequestId") Integer monitoringRequestId)
+            throws ExecutionException, InterruptedException {
+        return jobService.deleteMonitoringRequest(monitoringRequestId);
     }
 
 }

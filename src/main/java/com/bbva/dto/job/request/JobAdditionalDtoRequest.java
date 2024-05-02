@@ -13,10 +13,8 @@ public class JobAdditionalDtoRequest {
     private String createdDevEmail;
     private Integer monitoringProjectId;
     private String monitoringDevEmail;
-    private Integer reclassificationType;
+    private Integer classificationType;//reclassificationType;
     private Integer criticalRouteType;
     private String jobFunctionalDesc;
     private String createAuditUser;
-    @Nullable
-    private String updateAuditUser;
 }

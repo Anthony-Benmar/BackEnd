@@ -8,6 +8,7 @@ import com.bbva.database.mappers.JobMapper;
 import com.bbva.dto.job.request.JobAdditionalDtoRequest;
 import com.bbva.dto.job.request.JobBasicInfoFilterDtoRequest;
 import com.bbva.dto.job.request.JobDTO;
+import com.bbva.dto.job.request.JobMonitoringDtoRequest;
 import com.bbva.dto.job.response.*;
 import com.bbva.util.JSONUtils;
 import org.apache.ibatis.session.SqlSession;
@@ -145,4 +146,29 @@ public class JobDao {
         SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
         return formatter.format(date);
     }
+
+    public List<JobMonitoringDtoResponse> getAllMonitoringRequest() {
+        List<JobMonitoringDtoResponse> jobMonitoringList = null;
+        try{
+            LOGGER.info("Listar JobMonitoring en Mapper");
+            SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+            try (SqlSession session = sqlSessionFactory.openSession()) {
+                JobMapper mapper = session.getMapper(JobMapper.class);
+                jobMonitoringList = mapper.getAllMonitoringRequest();
+            }
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+        }
+        return jobMonitoringList;
+    }
+
+    public void insertMonitoringRequest(JobMonitoringDtoRequest dto) {
+    }
+    public void updateMonitoringRequest(JobMonitoringDtoRequest dto) {
+    }
+
+    public void deleteMonitoringRequest(Integer monitoringRequestId) {
+    }
+
+
 }

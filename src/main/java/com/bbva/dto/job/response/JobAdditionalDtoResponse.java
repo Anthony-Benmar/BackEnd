@@ -14,11 +14,9 @@ public class JobAdditionalDtoResponse {
     private String createdDevEmail;
     private Integer monitoringProjectId;
     private String monitoringDevEmail;
-    private Integer reclassificationType;
+    private Integer classificationType;
     private Integer criticalRouteType;
     private String jobFunctionalDesc;
     private String createAuditUser;
     private Timestamp createAuditDate;
-    @Nullable
-    private Timestamp updateAuditDate;
 }

@@ -189,8 +189,6 @@ public class ProjectResources {
         return projectService.projectInfoFilterAllByDomain(dto);
     }
 
-
-
     @DELETE
     @Path("/info/{projectId}/document/{documentId}/{updateAuditUser}")
     @Produces(MediaType.APPLICATION_JSON)
