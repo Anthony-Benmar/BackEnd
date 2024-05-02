@@ -65,13 +65,13 @@ public class JobDao {
         recordsCount = (lista.size() > 0) ? (int) lista.stream().count() : 0;
         pagesAmount = dto.getRecords_amount() > 0 ? (int) Math.ceil((float) recordsCount / dto.getRecords_amount().floatValue()) : 1;
 
-        long countConInventario = lista.stream()
+        long countConInventario = (lista.size() > 0) ? (int) lista.stream()
                 .filter(job -> job.getInvetoriedType().equals("1"))
-                .count();
-        long countConJobs = lista.size();
-        long countConRutaCritica = lista.stream()
-                .filter(job -> job.getFlagCriticalRoute().equals(1))
-                .count();
+                .count() : 0;
+        long countConJobs = (lista.size() > 0) ? (int) lista.size() : 0;
+        long countConRutaCritica = (lista.size() > 0) ? (int) lista.stream()
+                .filter(job -> job.getInvetoriedType() != null && job.getInvetoriedType().equals("1"))
+                .count() : 0;
 
         if(dto.records_amount>0){
             lista = lista.stream()
@@ -80,10 +80,6 @@ public class JobDao {
                     .collect(Collectors.toList());
         }
 
-        /*Map<String, Object> totals = mapper.getJobTotals();
-        response.setTotalJobs((Integer) totals.get("total_jobs"));
-        response.setInventoriedJobs((Integer) totals.get("inventoried_jobs"));
-        response.setCriticalRouteJobs((Integer) totals.get("critical_route_jobs"));*/
         response.setTotalJobs((int) countConJobs);
         response.setInventoriedJobs((int) countConInventario);
         response.setCriticalRouteJobs((int) countConRutaCritica);
