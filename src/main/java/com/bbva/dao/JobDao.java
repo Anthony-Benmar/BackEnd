@@ -17,6 +17,7 @@ import org.apache.ibatis.session.SqlSessionFactory;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -52,9 +53,8 @@ public class JobDao {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         List<JobBasicInfoSelectDtoResponse> lista;
 
-        Integer recordsCount = 0;
-        Integer pagesAmount = 0;
-
+        int recordsCount = 0;
+        int pagesAmount = 0;
         var response = new JobBasicInfoFilterDtoResponse();
         try (SqlSession session = sqlSessionFactory.openSession()) {
             JobMapper mapper = session.getMapper(JobMapper.class);
@@ -63,7 +63,15 @@ public class JobDao {
         }
 
         recordsCount = (lista.size() > 0) ? (int) lista.stream().count() : 0;
-        pagesAmount = dto.getRecords_amount() > 0 ? (int) Math.ceil(recordsCount.floatValue() / dto.getRecords_amount().floatValue()) : 1;
+        pagesAmount = dto.getRecords_amount() > 0 ? (int) Math.ceil((float) recordsCount / dto.getRecords_amount().floatValue()) : 1;
+
+        long countConInventario = lista.stream()
+                .filter(job -> job.getInvetoriedType().equals("1"))
+                .count();
+        long countConJobs = lista.size();
+        long countConRutaCritica = lista.stream()
+                .filter(job -> job.getFlagCriticalRoute().equals(1))
+                .count();
 
         if(dto.records_amount>0){
             lista = lista.stream()
@@ -72,6 +80,13 @@ public class JobDao {
                     .collect(Collectors.toList());
         }
 
+        /*Map<String, Object> totals = mapper.getJobTotals();
+        response.setTotalJobs((Integer) totals.get("total_jobs"));
+        response.setInventoriedJobs((Integer) totals.get("inventoried_jobs"));
+        response.setCriticalRouteJobs((Integer) totals.get("critical_route_jobs"));*/
+        response.setTotalJobs((int) countConJobs);
+        response.setInventoriedJobs((int) countConInventario);
+        response.setCriticalRouteJobs((int) countConRutaCritica);
         response.setCount(recordsCount);
         response.setPages_amount(pagesAmount);
         response.setData(lista);

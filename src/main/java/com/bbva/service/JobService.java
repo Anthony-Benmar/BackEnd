@@ -14,9 +14,7 @@ import com.bbva.dto.job.response.JobBasicInfoFilterDtoResponse;
 import com.bbva.dto.job.response.*;
 
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;

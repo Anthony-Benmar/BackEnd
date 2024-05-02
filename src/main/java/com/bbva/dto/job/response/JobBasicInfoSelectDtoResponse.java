@@ -3,8 +3,6 @@ package com.bbva.dto.job.response;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.Date;
-
 @Getter
 @Setter
 public class JobBasicInfoSelectDtoResponse {
@@ -23,4 +21,5 @@ public class JobBasicInfoSelectDtoResponse {
     public String monitoringProjectName;
     private String monitoringDevEmail;
     private String subApplicationName;
+    private Integer flagCriticalRoute;
 }

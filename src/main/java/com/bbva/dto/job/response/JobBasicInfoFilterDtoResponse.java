@@ -11,4 +11,7 @@ public class JobBasicInfoFilterDtoResponse {
     public int count;
     public int pages_amount;
     public List<JobBasicInfoSelectDtoResponse> data;
+    public int totalJobs;
+    public int inventoriedJobs;
+    public int criticalRouteJobs;
 }
