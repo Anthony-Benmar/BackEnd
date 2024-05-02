@@ -56,8 +56,13 @@ public interface JobMapper {
             @Result(property = "monitoringProjectId", column = "monitoring_project_id"),
             @Result(property = "monitoringProjectName", column = "monitoring_project_name"),
             @Result(property = "monitoringDevEmail", column = "monitoring_dev_email"),
-            @Result(property = "subApplicationName", column = "sub_application_name")
+            @Result(property = "subApplicationName", column = "sub_application_name"),
+            @Result(property = "flagCriticalRoute", column = "flag_critical_route"),
+            @Result(property = "totalJobs", column = "total_jobs"),
+            @Result(property = "inventoriedJobs", column = "inventoried_jobs"),
+            @Result(property = "criticalRouteJobs", column = "critical_route_jobs")
     })
+
 
     List<JobBasicInfoSelectDtoResponse> jobBasicInfoFilter(@Param("domainId") int domainId,
                                                            @Param("projectId") int projectId,
@@ -167,12 +172,4 @@ public interface JobMapper {
             @Result(property = "updateAuditUser", column = "update_audit_user")
     })
     JobAdditionalDtoResponse updateAdditional (JobAdditionalDtoRequest dto);
-
-    @Select("CALL SP_GET_JOB_TOTALS()")
-    @Results({
-            @Result(property = "totalJobs", column = "total_jobs"),
-            @Result(property = "inventoriedJobs", column = "inventoried_jobs"),
-            @Result(property = "criticalRouteJobs", column = "critical_route_jobs")
-    })
-    JobTotalsDtoResponse getJobTotals();
 }

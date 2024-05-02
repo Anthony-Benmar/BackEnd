@@ -23,4 +23,8 @@ public class JobBasicInfoSelectDtoResponse {
     public String monitoringProjectName;
     private String monitoringDevEmail;
     private String subApplicationName;
+    private Integer flagCriticalRoute;
+    private Integer totalJobs;
+    private Integer inventoriedJobs;
+    private Integer criticalRouteJobs;
 }
