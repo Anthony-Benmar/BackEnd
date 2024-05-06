@@ -25,6 +25,7 @@ public class ProjectInfoSelectResponse {
     public Integer finalEndPiId;
     public Integer statusType;
     private Integer wowType;
+    private String wowName;
     private Integer countryPriorityType;
     private Date createAuditDate;
     private String createAuditDate_S;

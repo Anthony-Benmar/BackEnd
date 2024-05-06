@@ -13,6 +13,7 @@ import com.bbva.dto.job.response.*;
 import com.bbva.util.JSONUtils;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
+import org.slf4j.LoggerFactory;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
 public class JobDao {
 
     private static final Logger LOGGER = Logger.getLogger(JobDao.class.getName());
+    private static final org.slf4j.Logger log = LoggerFactory.getLogger(JobDao.class);
     private static JobDao instance = null;
 
     public static synchronized JobDao getInstance() {
@@ -176,6 +178,17 @@ public class JobDao {
     public void insertMonitoringRequest(JobMonitoringDtoRequest dto) {
     }
     public void updateMonitoringRequest(JobMonitoringDtoRequest dto) {
+        try {
+            LOGGER.info("Actualizar JobMonitoring en Mapper");
+            SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+            try (SqlSession session = sqlSessionFactory.openSession()) {
+                JobMapper mapper = session.getMapper(JobMapper.class);
+                mapper.updateMonitoringRequest(dto);
+                session.commit();
+            }
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+        }
     }
 
     public void deleteMonitoringRequest(Integer monitoringRequestId) {

@@ -18,8 +18,5 @@ public class JobMonitoringDtoRequest {
     private Date endDate;
     private Integer statusType;
     private String commentRequestDesc;
-    private Date createAuditDate;
-    private String createAuditUser;
-    private Date updateAuditDate;
     private String updateAuditUser;
 }

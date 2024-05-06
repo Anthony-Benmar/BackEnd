@@ -2,6 +2,7 @@ package com.bbva.database.mappers;
 
 import com.bbva.dto.job.request.JobDTO;
 import com.bbva.dto.job.request.JobAdditionalDtoRequest;
+import com.bbva.dto.job.request.JobMonitoringDtoRequest;
 import com.bbva.dto.job.response.*;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Result;
@@ -170,4 +171,31 @@ public interface JobMapper {
     JobAdditionalDtoResponse updateAdditional (JobAdditionalDtoRequest dto);
 
     List<JobMonitoringDtoResponse> getAllMonitoringRequest();
+
+    @Select("CALL SP_UPDATE_MONITORING_REQUEST(" +
+            "#{monitoringRequestId}, " +
+            "#{jobId}, " +
+            "#{fromSdatoolId}, " +
+            "#{fromDevEmail}, " +
+            "#{toSdatoolId}, " +
+            "#{toDevEmail}, " +
+            "#{startDate}, " +
+            "#{endDate}, " +
+            "#{statusType}, " +
+            "#{commentRequestDesc}, " +
+            "#{updateAuditUser})")
+    @Results({
+            @Result(property = "monitoringRequestId", column = "monitoring_request_id"),
+            @Result(property = "jobId", column = "job_id"),
+            @Result(property = "fromSdatoolId", column = "from_sdatool_id"),
+            @Result(property = "fromDevEmail", column = "from_dev_email"),
+            @Result(property = "toSdatoolId", column = "to_sdatool_id"),
+            @Result(property = "toDevEmail", column = "to_dev_email"),
+            @Result(property = "startDate", column = "start_date"),
+            @Result(property = "endDate", column = "end_date"),
+            @Result(property = "statusType", column = "status_type"),
+            @Result(property = "commentRequestDesc", column = "comment_request_desc"),
+            @Result(property = "updateAuditUser", column = "update_audit_user")
+    })
+    void updateMonitoringRequest(JobMonitoringDtoRequest dto);
 }
