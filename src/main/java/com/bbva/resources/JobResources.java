@@ -1,14 +1,12 @@
 package com.bbva.resources;
 
 import com.bbva.core.abstracts.IDataResult;
-import com.bbva.dto.job.request.JobAdditionalDtoRequest;
-import com.bbva.dto.job.request.JobBasicInfoFilterDtoRequest;
-import com.bbva.dto.job.request.JobDTO;
-import com.bbva.dto.job.request.JobMonitoringDtoRequest;
+import com.bbva.dto.job.request.*;
 import com.bbva.dto.job.response.JobAdditionalDtoResponse;
 import com.bbva.dto.job.response.JobBasicInfoByIdDtoResponse;
 import com.bbva.dto.job.response.JobBasicInfoFilterDtoResponse;
 import com.bbva.dto.job.response.JobMonitoringDtoResponse;
+import com.bbva.entities.InsertEntity;
 import com.bbva.service.JobService;
 
 import javax.ws.rs.*;
@@ -59,7 +57,7 @@ public class JobResources {
     @Path("/monitoring/request/insert")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public IDataResult<JobMonitoringDtoResponse> insertMonitoringRequest(JobMonitoringDtoRequest dto)
+    public IDataResult<JobMonitoringDtoResponse> insertMonitoringRequest(JobMonitoringRequestInsertDtoRequest dto)
             throws ExecutionException, InterruptedException {
         return jobService.insertMonitoringRequest(dto);
     }

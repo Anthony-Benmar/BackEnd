@@ -5,13 +5,11 @@ import com.bbva.core.abstracts.IDataResult;
 import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dao.JobDao;
-import com.bbva.dto.job.request.JobAdditionalDtoRequest;
-import com.bbva.dto.job.request.JobBasicInfoFilterDtoRequest;
-import com.bbva.dto.job.request.JobDTO;
-import com.bbva.dto.job.request.JobMonitoringDtoRequest;
+import com.bbva.dto.job.request.*;
 import com.bbva.dto.job.response.JobBasicInfoDtoResponse;
 import com.bbva.dto.job.response.JobBasicInfoFilterDtoResponse;
 import com.bbva.dto.job.response.*;
+import com.bbva.entities.InsertEntity;
 
 
 import java.util.ArrayList;
@@ -76,33 +74,14 @@ public class JobService {
         }
     }
 
-    public IDataResult<JobMonitoringDtoResponse> insertMonitoringRequest(JobMonitoringDtoRequest dto) {
+    public IDataResult<JobMonitoringDtoResponse> insertMonitoringRequest(JobMonitoringRequestInsertDtoRequest dto) {
         try {
-            if (dto.getJobId().equals(0))
-                return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "JobId must to be not null");
-            if (dto.getFromSdatoolId().isEmpty())
-                return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "FromSdatoolId must to be not null");
-            if (dto.getFromDevEmail().isEmpty())
-                return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "FromDevEmail must to be not null");
-            if (dto.getToSdatoolId().isEmpty())
-                return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "ToSdatoolId must to be not null");
-            if (dto.getToDevEmail().isEmpty())
-                return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "ToDevEmail must to be not null");
-            if (dto.getStartDate() == null)
-                return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "StartDate must to be not null");
-            if (dto.getEndDate() == null)
-                return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "EndDate must to be not null");
-            if (dto.getStatusType().equals(0))
-                return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "StatusType must to be not null");
-            if (dto.getCommentRequestDesc().isEmpty())
-                return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "CommentRequestDesc must to be not null");
-
-            jobDao.insertMonitoringRequest(dto);
+            var result = jobDao.insertMonitoringRequest(dto);
+            return new SuccessDataResult(result);
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
             return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
         }
-        return new SuccessDataResult(dto);
     }
 
     public IDataResult<JobMonitoringDtoResponse> updateMonitoringRequest(JobMonitoringDtoRequest dto) {

@@ -3,7 +3,9 @@ package com.bbva.database.mappers;
 import com.bbva.dto.job.request.JobDTO;
 import com.bbva.dto.job.request.JobAdditionalDtoRequest;
 import com.bbva.dto.job.request.JobMonitoringDtoRequest;
+import com.bbva.dto.job.request.JobMonitoringRequestInsertDtoRequest;
 import com.bbva.dto.job.response.*;
+import com.bbva.entities.InsertEntity;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Result;
 import org.apache.ibatis.annotations.Results;
@@ -11,6 +13,8 @@ import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.*;
 
 import javax.ws.rs.PUT;
+import javax.ws.rs.PathParam;
+import java.util.Date;
 import java.util.List;
 
 public interface JobMapper {
@@ -172,6 +176,24 @@ public interface JobMapper {
 
     List<JobMonitoringDtoResponse> getAllMonitoringRequest();
 
+    @Select("CALL SP_INSERT_MONITORING_REQUEST(" +
+            "#{jobId}, " +
+            "#{fromSdatoolId}, " +
+            "#{fromDevEmail}, " +
+            "#{toSdatoolId}, " +
+            "#{toDevEmail}, " +
+            "#{startDate}, " +
+            "#{endDate}, " +
+            "#{statusType}, " +
+            "#{commentRequestDesc}, " +
+            "#{createAuditUser})")
+    @Results({
+            @Result(property = "last_insert_id", column = "last_insert_id"),
+            @Result(property = "new_register", column = "new_register")
+    })
+    InsertEntity insertMonitoringRequest(JobMonitoringRequestInsertDtoRequest dto);
+
+
     @Select("CALL SP_UPDATE_MONITORING_REQUEST(" +
             "#{monitoringRequestId}, " +
             "#{jobId}, " +
@@ -198,4 +220,5 @@ public interface JobMapper {
             @Result(property = "updateAuditUser", column = "update_audit_user")
     })
     void updateMonitoringRequest(JobMonitoringDtoRequest dto);
+
 }

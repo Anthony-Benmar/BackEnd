@@ -5,11 +5,10 @@ import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.database.MyBatisConnectionFactory;
 import com.bbva.database.mappers.JobMapper;
-import com.bbva.dto.job.request.JobAdditionalDtoRequest;
-import com.bbva.dto.job.request.JobBasicInfoFilterDtoRequest;
-import com.bbva.dto.job.request.JobDTO;
-import com.bbva.dto.job.request.JobMonitoringDtoRequest;
+import com.bbva.database.mappers.ProjectMapper;
+import com.bbva.dto.job.request.*;
 import com.bbva.dto.job.response.*;
+import com.bbva.entities.InsertEntity;
 import com.bbva.util.JSONUtils;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -175,7 +174,14 @@ public class JobDao {
         return jobMonitoringList;
     }
 
-    public void insertMonitoringRequest(JobMonitoringDtoRequest dto) {
+    public InsertEntity insertMonitoringRequest(JobMonitoringRequestInsertDtoRequest dto) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            JobMapper mapper = session.getMapper(JobMapper.class);
+            InsertEntity result = mapper.insertMonitoringRequest(dto);
+            session.commit();
+            return result;
+        }
     }
     public void updateMonitoringRequest(JobMonitoringDtoRequest dto) {
         try {
