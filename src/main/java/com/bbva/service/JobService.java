@@ -74,6 +74,16 @@ public class JobService {
         }
     }
 
+    public IDataResult<JobMonitoringRequestFilterDtoResponse> filterMonitoringRequest(JobMonitoringRequestFilterDtoRequest dto) {
+       try {
+           var result = jobDao.filterMonitoringRequest(dto);
+           return new SuccessDataResult(result);
+       } catch (Exception e) {
+           log.log(Level.SEVERE, e.getMessage(), e);
+           return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
+       }
+    }
+
     public IDataResult<JobMonitoringDtoResponse> insertMonitoringRequest(JobMonitoringRequestInsertDtoRequest dto) {
         try {
             var result = jobDao.insertMonitoringRequest(dto);
@@ -137,18 +147,5 @@ public class JobService {
             return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
         }
         return new SuccessDataResult(dto);
-    }
-
-    public IDataResult<JobMonitoringDtoResponse> deleteMonitoringRequest(Integer monitoringRequestId) {
-        try {
-            if (monitoringRequestId.equals(0))
-                return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "MonitoringRequestId must to be not null");
-
-            jobDao.deleteMonitoringRequest(monitoringRequestId);
-        } catch (Exception e) {
-            log.log(Level.SEVERE, e.getMessage(), e);
-            return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
-        }
-        return new SuccessDataResult(null);
     }
 }

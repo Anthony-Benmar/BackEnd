@@ -4,6 +4,7 @@ import com.bbva.dto.job.request.JobDTO;
 import com.bbva.dto.job.request.JobAdditionalDtoRequest;
 import com.bbva.dto.job.request.JobMonitoringDtoRequest;
 import com.bbva.dto.job.request.JobMonitoringRequestInsertDtoRequest;
+import com.bbva.dto.job.request.JobMonitoringRequestFilterDtoRequest;
 import com.bbva.dto.job.response.*;
 import com.bbva.entities.InsertEntity;
 import org.apache.ibatis.annotations.Param;
@@ -175,6 +176,33 @@ public interface JobMapper {
     JobAdditionalDtoResponse updateAdditional (JobAdditionalDtoRequest dto);
 
     List<JobMonitoringDtoResponse> getAllMonitoringRequest();
+
+    @Select("CALL SP_FILTER_MONITORING_REQUEST(" +
+            "#{domainId}," +
+            "#{toSdatoolId}," +
+            "#{jobId}," +
+            "#{statusType})")
+    @Results({
+            @Result(property = "monitoringRequestId", column = "monitoring_request_id"),
+            @Result(property = "jobId", column = "job_id"),
+            @Result(property = "fromSdatoolId", column = "from_sdatool_id"),
+            @Result(property = "fromDevEmail", column = "from_dev_email"),
+            @Result(property = "toSdatoolId", column = "to_sdatool_id"),
+            @Result(property = "toDevEmail", column = "to_dev_email"),
+            @Result(property = "startDate", column = "start_date"),
+            @Result(property = "endDate", column = "end_date"),
+            @Result(property = "statusType", column = "status_type"),
+            @Result(property = "commentRequestDesc", column = "comment_request_desc"),
+            @Result(property = "createAuditDate", column = "create_audit_date"),
+            @Result(property = "createAuditUser", column = "create_audit_user"),
+            @Result(property = "updateAuditDate", column = "update_audit_date"),
+            @Result(property = "updateAuditUser", column = "update_audit_user")
+    })
+    List<JobMonitoringRequestSelectDtoResponse> filterMonitoringRequest(
+            @Param("domainId") Integer domainId,
+            @Param("toSdatoolId") String toSdatoolId,
+            @Param("jobId") Integer jobId,
+            @Param("statusType") Integer statusType);
 
     @Select("CALL SP_INSERT_MONITORING_REQUEST(" +
             "#{jobId}, " +

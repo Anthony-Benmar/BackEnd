@@ -7,6 +7,7 @@ import com.bbva.database.MyBatisConnectionFactory;
 import com.bbva.database.mappers.JobMapper;
 import com.bbva.database.mappers.ProjectMapper;
 import com.bbva.dto.job.request.*;
+import com.bbva.dto.job.request.*;
 import com.bbva.dto.job.response.*;
 import com.bbva.entities.InsertEntity;
 import com.bbva.util.JSONUtils;
@@ -38,7 +39,7 @@ public class JobDao {
 
     public List<JobBasicInfoDtoResponse> listAll() {
         List<JobBasicInfoDtoResponse> jobBasicInfoList = null;
-        try{
+        try {
             LOGGER.info("Listar JobBasicInfo en Mapper");
             SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
             try (SqlSession session = sqlSessionFactory.openSession()) {
@@ -50,6 +51,7 @@ public class JobDao {
         }
         return jobBasicInfoList;
     }
+
     public JobBasicInfoFilterDtoResponse jobBasicInfoFilter(JobBasicInfoFilterDtoRequest dto) {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         List<JobBasicInfoSelectDtoResponse> lista;
@@ -60,7 +62,7 @@ public class JobDao {
         try (SqlSession session = sqlSessionFactory.openSession()) {
             JobMapper mapper = session.getMapper(JobMapper.class);
             lista = mapper.jobBasicInfoFilter(dto.domainId, dto.projectId, dto.jobDataprocFolderName
-                                    , dto.classificationType, dto.invetoriedType);
+                    , dto.classificationType, dto.invetoriedType);
         }
 
         recordsCount = (lista.size() > 0) ? (int) lista.stream().count() : 0;
@@ -74,7 +76,7 @@ public class JobDao {
                 .filter(job -> job.getInvetoriedType() != null && job.getInvetoriedType().equals("1"))
                 .count() : 0;
 
-        if(dto.records_amount>0){
+        if (dto.records_amount > 0) {
             lista = lista.stream()
                     .skip(dto.records_amount * (dto.page - 1))
                     .limit(dto.records_amount)
@@ -98,7 +100,7 @@ public class JobDao {
             JobMapper mapper = session.getMapper(JobMapper.class);
             JobDTO job = mapper.getJobById(jobId);
             if (job != null && job.getCreateAuditDate() != null) {
-            job.setCreateAuditDate_S(convertMillisToDate(job.getCreateAuditDate().getTime()));
+                job.setCreateAuditDate_S(convertMillisToDate(job.getCreateAuditDate().getTime()));
             }
             if (job != null && job.getUpdateAuditDate() != null) {
                 job.setUpdateAuditDate_S(convertMillisToDate(job.getUpdateAuditDate().getTime()));
@@ -109,7 +111,7 @@ public class JobDao {
 
     public JobBasicInfoByIdDtoResponse jobBasicDetail(Integer jobId) {
         JobBasicInfoByIdDtoResponse jobBasicInfo = null;
-        try{
+        try {
             LOGGER.info("Obtener JobBasicInfo por jobId en Mapper");
             SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
             try (SqlSession session = sqlSessionFactory.openSession()) {
@@ -124,7 +126,7 @@ public class JobDao {
 
     public JobAdditionalDtoResponse getAdditional(Integer jobId) {
         JobAdditionalDtoResponse jobAdditional = null;
-        try{
+        try {
             SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
             try (SqlSession session = sqlSessionFactory.openSession()) {
                 JobMapper mapper = session.getMapper(JobMapper.class);
@@ -161,7 +163,7 @@ public class JobDao {
 
     public List<JobMonitoringDtoResponse> getAllMonitoringRequest() {
         List<JobMonitoringDtoResponse> jobMonitoringList = null;
-        try{
+        try {
             LOGGER.info("Listar JobMonitoring en Mapper");
             SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
             try (SqlSession session = sqlSessionFactory.openSession()) {
@@ -183,22 +185,48 @@ public class JobDao {
             return result;
         }
     }
-    public void updateMonitoringRequest(JobMonitoringDtoRequest dto) {
-        try {
-            LOGGER.info("Actualizar JobMonitoring en Mapper");
-            SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
-            try (SqlSession session = sqlSessionFactory.openSession()) {
-                JobMapper mapper = session.getMapper(JobMapper.class);
-                mapper.updateMonitoringRequest(dto);
-                session.commit();
-            }
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+    public JobMonitoringRequestFilterDtoResponse filterMonitoringRequest (JobMonitoringRequestFilterDtoRequest dto){
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        List<JobMonitoringRequestSelectDtoResponse> lista;
+
+        int recordsCount = 0;
+        int pagesAmount = 0;
+        var response = new JobMonitoringRequestFilterDtoResponse();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            JobMapper mapper = session.getMapper(JobMapper.class);
+            lista = mapper.filterMonitoringRequest(dto.getDomainId(), dto.getToSdatoolId(),
+                    dto.getJobId(), dto.getStatusType());
         }
+
+        recordsCount = (lista.size() > 0) ? (int) lista.stream().count() : 0;
+        pagesAmount = dto.getRecords_amount() > 0 ? (int) Math.ceil((float) recordsCount / dto.getRecords_amount().floatValue()) : 1;
+
+        if (dto.getRecords_amount() > 0) {
+            lista = lista.stream()
+                    .skip(dto.getRecords_amount() * (dto.getPage() - 1))
+                    .limit(dto.getRecords_amount())
+                    .collect(Collectors.toList());
+        }
+
+        response.setCount(recordsCount);
+        response.setPages_amount(pagesAmount);
+        response.setData(lista);
+        LOGGER.info(JSONUtils.convertFromObjectToJson(response.getData()));
+
+        return response;
     }
 
-    public void deleteMonitoringRequest(Integer monitoringRequestId) {
-    }
-
-
+        public void updateMonitoringRequest (JobMonitoringDtoRequest dto){
+            try {
+                LOGGER.info("Actualizar JobMonitoring en Mapper");
+                SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+                try (SqlSession session = sqlSessionFactory.openSession()) {
+                    JobMapper mapper = session.getMapper(JobMapper.class);
+                    mapper.updateMonitoringRequest(dto);
+                    session.commit();
+                }
+            } catch (Exception e) {
+                LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            }
+        }
 }

@@ -7,6 +7,8 @@ import com.bbva.dto.job.response.JobBasicInfoByIdDtoResponse;
 import com.bbva.dto.job.response.JobBasicInfoFilterDtoResponse;
 import com.bbva.dto.job.response.JobMonitoringDtoResponse;
 import com.bbva.entities.InsertEntity;
+import com.bbva.dto.job.request.*;
+import com.bbva.dto.job.response.*;
 import com.bbva.service.JobService;
 
 import javax.ws.rs.*;
@@ -51,6 +53,14 @@ public class JobResources {
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<List<JobMonitoringDtoResponse>> getAllMonitoringRequest() {
         return jobService.getAllMonitoringRequest();
+    }
+    @POST
+    @Path("/monitoring/request/filter")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<JobMonitoringRequestFilterDtoResponse> filterMonitoringRequest(JobMonitoringRequestFilterDtoRequest dto)
+            throws ExecutionException, InterruptedException {
+        return jobService.filterMonitoringRequest(dto);
     }
 
     @POST

@@ -3,8 +3,6 @@ package com.bbva.dto.job.request;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.annotation.Nullable;
-
 @Setter
 @Getter
 public class JobAdditionalDtoRequest {
