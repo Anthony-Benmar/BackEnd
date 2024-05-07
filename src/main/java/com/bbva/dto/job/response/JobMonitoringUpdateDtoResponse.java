@@ -7,8 +7,7 @@ import java.util.Date;
 
 @Setter
 @Getter
-public class JobMonitoringDtoResponse {
-    private Integer monitoringRequestId;
+public class JobMonitoringUpdateDtoResponse {
     private Integer jobId;
     private String fromSdatoolId;
     private String fromDevEmail;
@@ -18,9 +17,6 @@ public class JobMonitoringDtoResponse {
     private Date endDate;
     private Integer statusType;
     private String commentRequestDesc;
-    private Date createAuditDate;
-    private String createAuditUser;
     private Date updateAuditDate;
     private String updateAuditUser;
 }
-

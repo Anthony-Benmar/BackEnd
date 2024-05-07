@@ -9,7 +9,6 @@ import com.bbva.dto.job.request.*;
 import com.bbva.dto.job.response.JobBasicInfoDtoResponse;
 import com.bbva.dto.job.response.JobBasicInfoFilterDtoResponse;
 import com.bbva.dto.job.response.*;
-import com.bbva.entities.InsertEntity;
 
 
 import java.util.ArrayList;
@@ -83,7 +82,7 @@ public class JobService {
         }
     }
 
-    public IDataResult<List<JobMonitoringDtoResponse>> getAllMonitoringRequest() {
+    public IDataResult<List<JobMonitoringUpdateDtoResponse>> getAllMonitoringRequest() {
         try {
             var result = jobDao.getAllMonitoringRequest();
             return new SuccessDataResult(result);
@@ -103,7 +102,7 @@ public class JobService {
        }
     }
 
-    public IDataResult<JobMonitoringDtoResponse> insertMonitoringRequest(JobMonitoringRequestInsertDtoRequest dto) {
+    public IDataResult<JobMonitoringUpdateDtoResponse> insertMonitoringRequest(JobMonitoringRequestInsertDtoRequest dto) {
         try {
             var result = jobDao.insertMonitoringRequest(dto);
             return new SuccessDataResult(result);
@@ -113,7 +112,7 @@ public class JobService {
         }
     }
 
-    public IDataResult<JobMonitoringDtoResponse> updateMonitoringRequest(JobMonitoringDtoRequest dto) {
+    public IDataResult<JobMonitoringUpdateDtoResponse> updateMonitoringRequest(JobMonitoringUpdateDtoRequest dto) {
         try {
             if (dto.getMonitoringRequestId().equals(0))
                 return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "MonitoringRequestId must to be not null");
@@ -137,30 +136,7 @@ public class JobService {
                 return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "StatusType must be between 0 and 4");
             if (dto.getCommentRequestDesc().isEmpty())
                 return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "CommentRequestDesc must to be not null");
-
-            switch (dto.getStatusType()) {
-                case 0: // solicitado
-                    if (dto.getStatusType() == 1 || dto.getStatusType() == 2) { // aprobado o rechazado
-                        jobDao.updateMonitoringRequest(dto);
-                    } else {
-                        throw new IllegalArgumentException("El estado solo puede ser aprobado o rechazado");
-                    }
-                    break;
-                case 1: // aprobado
-                    if (dto.getStatusType() == 3 || dto.getStatusType() == 4) { // finalizado o finalizado automático
-                        jobDao.updateMonitoringRequest(dto);
-                    } else {
-                        throw new IllegalArgumentException("El estado solo puede ser finalizado o finalizado automático");
-                    }
-                    break;
-                case 2: // rechazado
-                    throw new IllegalArgumentException("La solicitud ha sido rechazada");
-                case 3: // finalizado
-                case 4: // finalizado automático
-                    throw new IllegalArgumentException("La solicitud ya ha sido finalizada de manera automática");
-                default:
-                    throw new IllegalArgumentException("La solicitud ya ha sido finalizada");
-            }
+            jobDao.updateMonitoringRequest(dto);
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
             return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());

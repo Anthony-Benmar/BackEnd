@@ -4,7 +4,7 @@ import com.bbva.core.abstracts.IDataResult;
 import com.bbva.dto.job.request.*;
 import com.bbva.dto.job.response.JobAdditionalDtoResponse;
 import com.bbva.dto.job.response.JobBasicInfoFilterDtoResponse;
-import com.bbva.dto.job.response.JobMonitoringDtoResponse;
+import com.bbva.dto.job.response.JobMonitoringUpdateDtoResponse;
 import com.bbva.dto.job.response.*;
 import com.bbva.service.JobService;
 
@@ -48,7 +48,7 @@ public class JobResources {
     @Path("/monitoring/request")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public IDataResult<List<JobMonitoringDtoResponse>> getAllMonitoringRequest() {
+    public IDataResult<List<JobMonitoringUpdateDtoResponse>> getAllMonitoringRequest() {
         return jobService.getAllMonitoringRequest();
     }
     @POST
@@ -64,7 +64,7 @@ public class JobResources {
     @Path("/monitoring/request/insert")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public IDataResult<JobMonitoringDtoResponse> insertMonitoringRequest(JobMonitoringRequestInsertDtoRequest dto)
+    public IDataResult<JobMonitoringUpdateDtoResponse> insertMonitoringRequest(JobMonitoringRequestInsertDtoRequest dto)
             throws ExecutionException, InterruptedException {
         return jobService.insertMonitoringRequest(dto);
     }
@@ -72,8 +72,9 @@ public class JobResources {
     @Path("/monitoring/request/update")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public IDataResult<JobMonitoringDtoResponse> updateMonitoringRequest(JobMonitoringDtoRequest dto)
+    public IDataResult<JobMonitoringUpdateDtoResponse> updateMonitoringRequest(JobMonitoringUpdateDtoRequest dto)
             throws ExecutionException, InterruptedException {
+        System.out.println("updateMonitoringRequest");
         return jobService.updateMonitoringRequest(dto);
     }
 }

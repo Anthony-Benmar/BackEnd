@@ -2,20 +2,15 @@ package com.bbva.database.mappers;
 
 import com.bbva.dto.job.request.JobDTO;
 import com.bbva.dto.job.request.JobAdditionalDtoRequest;
-import com.bbva.dto.job.request.JobMonitoringDtoRequest;
+import com.bbva.dto.job.request.JobMonitoringUpdateDtoRequest;
 import com.bbva.dto.job.request.JobMonitoringRequestInsertDtoRequest;
-import com.bbva.dto.job.request.JobMonitoringRequestFilterDtoRequest;
 import com.bbva.dto.job.response.*;
 import com.bbva.entities.InsertEntity;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Result;
 import org.apache.ibatis.annotations.Results;
 import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.*;
 
-import javax.ws.rs.PUT;
-import javax.ws.rs.PathParam;
-import java.util.Date;
 import java.util.List;
 
 public interface JobMapper {
@@ -175,7 +170,7 @@ public interface JobMapper {
     })
     JobAdditionalDtoResponse updateAdditional (JobAdditionalDtoRequest dto);
 
-    List<JobMonitoringDtoResponse> getAllMonitoringRequest();
+    List<JobMonitoringUpdateDtoResponse> getAllMonitoringRequest();
 
     @Select("CALL SP_FILTER_MONITORING_REQUEST(" +
             "#{domainId}," +
@@ -247,6 +242,6 @@ public interface JobMapper {
             @Result(property = "commentRequestDesc", column = "comment_request_desc"),
             @Result(property = "updateAuditUser", column = "update_audit_user")
     })
-    void updateMonitoringRequest(JobMonitoringDtoRequest dto);
+    void updateMonitoringRequest(JobMonitoringUpdateDtoRequest dto);
 
 }

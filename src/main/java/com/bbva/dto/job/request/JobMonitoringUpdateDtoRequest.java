@@ -7,7 +7,7 @@ import java.util.Date;
 
 @Setter
 @Getter
-public class JobMonitoringDtoRequest {
+public class JobMonitoringUpdateDtoRequest {
     private Integer monitoringRequestId;
     private Integer jobId;
     private String fromSdatoolId;

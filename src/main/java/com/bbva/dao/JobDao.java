@@ -5,8 +5,6 @@ import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.database.MyBatisConnectionFactory;
 import com.bbva.database.mappers.JobMapper;
-import com.bbva.database.mappers.ProjectMapper;
-import com.bbva.dto.job.request.*;
 import com.bbva.dto.job.request.*;
 import com.bbva.dto.job.response.*;
 import com.bbva.entities.InsertEntity;
@@ -18,7 +16,6 @@ import org.slf4j.LoggerFactory;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -68,13 +65,13 @@ public class JobDao {
         recordsCount = (lista.size() > 0) ? (int) lista.stream().count() : 0;
         pagesAmount = dto.getRecords_amount() > 0 ? (int) Math.ceil((float) recordsCount / dto.getRecords_amount().floatValue()) : 1;
 
-        long countConInventario = (lista.size() > 0) ? (int) lista.stream()
+        Integer countConInventario = (lista.size() > 0) ? (int) lista.stream()
                 .filter(job -> job.getInvetoriedType().equals("1"))
                 .count() : 0;
-        long countConJobs = (lista.size() > 0) ? (int) lista.size() : 0;
-        long countConRutaCritica = (lista.size() > 0) ? (int) lista.stream()
-                .filter(job -> job.getInvetoriedType() != null && job.getInvetoriedType().equals("1"))
-                .count() : 0;
+        Integer countConJobs = (lista.size() > 0) ? (int) lista.size() : 0;
+        Integer countConRutaCritica = (lista.size() > 0) ? (int) lista.stream()
+                .filter(job -> job.getFlagCriticalRoute()==1)
+                .count(): 0;
 
         if (dto.records_amount > 0) {
             lista = lista.stream()
@@ -161,8 +158,8 @@ public class JobDao {
         return formatter.format(date);
     }
 
-    public List<JobMonitoringDtoResponse> getAllMonitoringRequest() {
-        List<JobMonitoringDtoResponse> jobMonitoringList = null;
+    public List<JobMonitoringUpdateDtoResponse> getAllMonitoringRequest() {
+        List<JobMonitoringUpdateDtoResponse> jobMonitoringList = null;
         try {
             LOGGER.info("Listar JobMonitoring en Mapper");
             SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
@@ -216,7 +213,7 @@ public class JobDao {
         return response;
     }
 
-        public void updateMonitoringRequest (JobMonitoringDtoRequest dto){
+        public void updateMonitoringRequest (JobMonitoringUpdateDtoRequest dto){
             try {
                 LOGGER.info("Actualizar JobMonitoring en Mapper");
                 SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();

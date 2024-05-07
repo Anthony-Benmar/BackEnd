@@ -69,12 +69,15 @@ public interface ProjectMapper {
             "</script>"})
     List<ProjectEntity> listforselect();
 
-    @Select({"<script>" +
+    /*@Select({"<script>" +
             "SELECT p.project_id,p.sdatool_id,p.project_name,p.status_type, a.period_id " +
             "FROM data_project_period a " +
             "LEFT JOIN data_project p ON p.project_id = a.project_id " +
             "WHERE p.status_type = 1 AND a.period_id = #{period_id}" +
             "</script>"})
+    List<ProjectByPeriodEntity> listProjectsByPeriod(@Param("period_id") String period_id);*/
+
+    @Select("CALL SP_LIST_PROJECTS_BY_PERIOD(#{period_id})")
     List<ProjectByPeriodEntity> listProjectsByPeriod(@Param("period_id") String period_id);
 
     @Insert("INSERT INTO data_project(project_name, project_desc, sdatool_id, status_type, product_owner_id, portafolio_code, " +
@@ -97,6 +100,7 @@ public interface ProjectMapper {
              "#{projectType}, #{categoryType}, #{classificationType}, #{startPiId}, #{endPiId}, #{finalStartPiId}, #{finalEndPiId}, " +
              "#{wowType}, #{countryPriorityType}, #{statusType}, #{createAuditUser}, #{projectId})")
      void updateProjectInfo(ProjectInfoDTO dto);
+
     @Delete("Delete from data_project WHERE project_id = #{projectId}")
     void deleteProject(@Param("projectId") int projectId);
 
