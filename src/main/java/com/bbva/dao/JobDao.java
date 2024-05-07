@@ -106,21 +106,6 @@ public class JobDao {
         }
     }
 
-    public JobBasicInfoByIdDtoResponse jobBasicDetail(Integer jobId) {
-        JobBasicInfoByIdDtoResponse jobBasicInfo = null;
-        try {
-            LOGGER.info("Obtener JobBasicInfo por jobId en Mapper");
-            SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
-            try (SqlSession session = sqlSessionFactory.openSession()) {
-                JobMapper mapper = session.getMapper(JobMapper.class);
-                jobBasicInfo = mapper.jobBasicDetail(jobId);
-            }
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, e.getMessage(), e);
-        }
-        return jobBasicInfo;
-    }
-
     public JobAdditionalDtoResponse getAdditional(Integer jobId) {
         JobAdditionalDtoResponse jobAdditional = null;
         try {
