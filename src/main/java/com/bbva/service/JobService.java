@@ -37,10 +37,29 @@ public class JobService {
 
     public IDataResult<JobAdditionalDtoResponse> updateAdditional(JobAdditionalDtoRequest dto) {
         try {
-            if (dto.getJobId().equals(0))
-                return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "JonId must to be not null");
-            if (dto.getCriticalRouteType() == 1 && dto.getJobFunctionalDesc().isEmpty())
-                return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "JobFunctionalDesc must to be not null if CriticalRouteType is 1");
+            if (dto.getJobId() == null || dto.getJobId().equals(0))
+                return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "JobId must not be null or 0");
+
+            if(dto.getCreatedProjectId() == null || dto.getCreatedProjectId().equals(0))
+                return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "CreatedProjectId must not be null or 0");
+
+            if (dto.getCreatedDevEmail() == null || dto.getCreatedDevEmail().isBlank())
+                return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "CreatedDevEmail must not be null or empty");
+
+            if (dto.getMonitoringProjectId() == null || dto.getMonitoringProjectId().equals(0))
+                return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "MonitoringProjectId must not be null or 0");
+
+            if (dto.getMonitoringDevEmail() == null || dto.getMonitoringDevEmail().isBlank())
+                return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "MonitoringDevEmail must not be null or empty");
+
+            if (dto.getClassificationType() == null || dto.getClassificationType() < 0)
+                return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "ClassificationType must not be null or 0");
+
+            if (dto.getCriticalRouteType() == null || dto.getCriticalRouteType() < 0)
+                return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "CriticalRouteType must not be null or negative");
+
+            if (dto.getCriticalRouteType() == 1 && (dto.getJobFunctionalDesc() == null || dto.getJobFunctionalDesc().isEmpty()))
+                return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "JobFunctionalDesc must not be null or empty if CriticalRouteType is 1");
 
             jobDao.updateAdditional(dto);
 

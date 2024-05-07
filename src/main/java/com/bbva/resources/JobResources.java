@@ -3,11 +3,8 @@ package com.bbva.resources;
 import com.bbva.core.abstracts.IDataResult;
 import com.bbva.dto.job.request.*;
 import com.bbva.dto.job.response.JobAdditionalDtoResponse;
-import com.bbva.dto.job.response.JobBasicInfoByIdDtoResponse;
 import com.bbva.dto.job.response.JobBasicInfoFilterDtoResponse;
 import com.bbva.dto.job.response.JobMonitoringDtoResponse;
-import com.bbva.entities.InsertEntity;
-import com.bbva.dto.job.request.*;
 import com.bbva.dto.job.response.*;
 import com.bbva.service.JobService;
 
@@ -79,13 +76,4 @@ public class JobResources {
             throws ExecutionException, InterruptedException {
         return jobService.updateMonitoringRequest(dto);
     }
-    @DELETE
-    @Path("/monitoring/request/delete/{monitoringRequestId}")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public IDataResult<JobMonitoringDtoResponse> deleteMonitoringRequest(@PathParam("monitoringRequestId") Integer monitoringRequestId)
-            throws ExecutionException, InterruptedException {
-        return jobService.deleteMonitoringRequest(monitoringRequestId);
-    }
-
 }
