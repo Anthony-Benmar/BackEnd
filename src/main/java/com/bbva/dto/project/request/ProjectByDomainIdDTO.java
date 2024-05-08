@@ -6,7 +6,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ProjectByDomainIdDTO {
-    private int projectId;
+    private String projectId;
     private String sdatoolId;
     private String projectName;
     private String domainId;
