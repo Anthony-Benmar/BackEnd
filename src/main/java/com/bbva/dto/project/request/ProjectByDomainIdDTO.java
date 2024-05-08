@@ -9,5 +9,5 @@ public class ProjectByDomainIdDTO {
     private int projectId;
     private String sdatoolId;
     private String projectName;
-    private int domainId;
+    private String domainId;
 }

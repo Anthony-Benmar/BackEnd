@@ -481,7 +481,7 @@ public class ProjectDao {
         }
     }
 
-    public List<ProjectByDomainIdDTO> getProjectsByDomainId(int domainId) {
+    public List<ProjectByDomainIdDTO> getProjectsByDomainId(String domainId) {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         try (SqlSession session = sqlSessionFactory.openSession()) {
             ProjectMapper mapper = session.getMapper(ProjectMapper.class);

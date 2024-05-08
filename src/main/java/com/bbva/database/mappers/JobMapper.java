@@ -175,7 +175,6 @@ public interface JobMapper {
             "#{toDevEmail}, " +
             "#{startDate}, " +
             "#{endDate}, " +
-            "#{statusType}, " +
             "#{commentRequestDesc}, " +
             "#{createAuditUser})")
     @Results({

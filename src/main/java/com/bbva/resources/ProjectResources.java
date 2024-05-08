@@ -267,7 +267,7 @@ public class ProjectResources {
     @Path("/domain/{domainId}")
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<List<ProjectByDomainIdDTO>> getProjectsByDomainId(@Context HttpServletRequest request,
-                                                                        @PathParam("domainId") int domainId)
+                                                                        @PathParam("domainId") String domainId)
             throws ExecutionException, InterruptedException
     {
         return projectService.getProjectsByDomainId(domainId);
