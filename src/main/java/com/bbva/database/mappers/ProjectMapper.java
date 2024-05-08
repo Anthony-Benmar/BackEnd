@@ -253,7 +253,7 @@ public interface ProjectMapper {
     })
     List<ProjectInfoSelectResponse> projectInfoFilter(@Param("projectId") int projectId,
                                                       @Param("sdatoolIdOrProjectName") String sdatoolId,
-                                                      @Param("domainId") int domainId,
+                                                      @Param("domainId") String domainId,
                                                       @Param("statusType") int statusType,
                                                       @Param("projectType") int projectType,
                                                       @Param("wowType") int wowType);
