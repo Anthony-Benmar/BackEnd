@@ -61,7 +61,7 @@ public interface JobMapper {
             @Result(property = "flagCriticalRoute", column = "flag_critical_route")
     })
 
-    List<JobBasicInfoSelectDtoResponse> jobBasicInfoFilter(@Param("domainId") int domainId,
+    List<JobBasicInfoSelectDtoResponse> jobBasicInfoFilter(@Param("domainId") String domainId,
                                                            @Param("projectId") int projectId,
                                                            @Param("jobDataprocFolderName") String jobDataprocFolderName,
                                                            @Param("classificationType") int classificationType,
