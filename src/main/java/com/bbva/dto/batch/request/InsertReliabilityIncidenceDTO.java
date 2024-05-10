@@ -3,6 +3,8 @@ package com.bbva.dto.batch.request;
 import lombok.Getter;
 import lombok.Setter;
 
+import javax.annotation.Nullable;
+
 @Getter
 @Setter
 public class InsertReliabilityIncidenceDTO {
@@ -16,4 +18,6 @@ public class InsertReliabilityIncidenceDTO {
     private String logArgos;
     private Integer runCounter;
     private String ticketJira;
+    @Nullable
+    private InsertBatchIssueActionsDtoRequest dataIssueActions;
 }

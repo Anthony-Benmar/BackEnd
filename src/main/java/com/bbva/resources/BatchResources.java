@@ -88,4 +88,13 @@ public class BatchResources {
         IDataResult<InsertReliabilityIncidenceDTO>  result = batchService.insertReliabilityIncidence(request);
         return result;
     }
+
+    @GET
+    @Path("/Typified_job/{jobId}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<InsertAJIFJobExecutionResponseDTO> createAJIFJobExecution(List<InsertCSATJobExecutionRequest> requests) {
+        IDataResult<InsertAJIFJobExecutionResponseDTO> result = batchService.insertAJIFJobExecution(requests);
+        return result;
+    }
 }
