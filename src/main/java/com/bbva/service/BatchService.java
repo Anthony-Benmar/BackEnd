@@ -5,10 +5,7 @@ import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dao.BatchDao;
 import com.bbva.dto.batch.request.InsertReliabilityIncidenceDTO;
 import com.bbva.dto.batch.request.JobExecutionFilterRequestDTO;
-import com.bbva.dto.batch.response.InsertAJIFJobExecutionResponseDTO;
-import com.bbva.dto.batch.response.InsertCSATJobExecutionResponseDTO;
-import com.bbva.dto.batch.response.JobExecutionFilterResponseDTO;
-import com.bbva.dto.batch.response.StatusJobExecutionDTO;
+import com.bbva.dto.batch.response.*;
 
 import java.util.List;
 
@@ -38,6 +35,11 @@ public class BatchService {
             String jobName, Integer quantity
     ){
         var result = batchDao.getStatusJobExecution(jobName, quantity);
+        return new SuccessDataResult(result);
+    }
+
+    public IDataResult<JobExecutionByIdDTO> getJobExecutionById(String folder, String orderId, String jobName) {
+        var result = batchDao.getJobExecutionById(folder, orderId, jobName);
         return new SuccessDataResult(result);
     }
 }
