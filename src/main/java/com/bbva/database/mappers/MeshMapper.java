@@ -10,7 +10,7 @@ import java.util.List;
 
 public interface MeshMapper {
 
-    @Select("select round(rand() * 1000000000) id,jes.* from job_finder_side_fch jes")
+    @Select("CALL SP_SELECT_JOB_EXECUTIONS_LATER()")
     @Results({
             @Result(property = "id", column = "id"),
             @Result(property = "job_id", column = "job_id"),
@@ -24,7 +24,7 @@ public interface MeshMapper {
     })
     List<JobExecution> ListJobExecutionsLaters();
 
-    @Select("select round(rand() * 1000000000) id,jes.* from job_finder_side_chf jes")
+    @Select("CALL SP_SELECT_JOBS_EXECUTIONS_PREVIOUS()")
     @Results({
             @Result(property = "id", column = "id"),
             @Result(property = "job_id", column = "job_id"),
@@ -37,8 +37,7 @@ public interface MeshMapper {
     })
     List<JobExecution> ListJobExecutionsPrevious();
 
-    @Select("select job_id,job_name,order_date,start_time,host,run_as,execution_status " +
-            "from job_execution je WHERE je.order_date = #{orderDate}")
+    @Select("CALL SP_LIST_STATUS_JOB_EXECUTIONS(#{orderDate})")
     @Results({
             @Result(property = "job_id", column = "job_id"),
             @Result(property = "job_name", column = "job_name"),
