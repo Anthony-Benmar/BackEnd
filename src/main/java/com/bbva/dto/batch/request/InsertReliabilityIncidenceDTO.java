@@ -18,6 +18,5 @@ public class InsertReliabilityIncidenceDTO {
     private String logArgos;
     private Integer runCounter;
     private String ticketJira;
-    @Nullable
     private InsertBatchIssueActionsDtoRequest dataIssueActions;
 }

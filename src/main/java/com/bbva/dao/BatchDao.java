@@ -66,6 +66,35 @@ public class BatchDao {
     public InsertReliabilityIncidenceDTO insertReliabilityIncidence(InsertReliabilityIncidenceDTO dto) {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         InsertBatchIssueActionsDtoRequest request = new InsertBatchIssueActionsDtoRequest();
+        if (dto.getDataIssueActions() == null) {
+            try (SqlSession session = sqlSessionFactory.openSession()) {
+                BatchMapper batchMapper = session.getMapper(BatchMapper.class);
+                batchMapper.insertReliabilityIncidence(
+                        dto.getJobName(),
+                        dto.getOrderDate(),
+                        dto.getOrderId(),
+                        dto.getErrorType(),
+                        dto.getErrorReason(),
+                        dto.getSolutionDetail(),
+                        dto.getEmployeeId(),
+                        dto.getLogArgos(),
+                        dto.getRunCounter(),
+                        dto.getTicketJira(),
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null
+                );
+                session.commit();
+                return dto;
+            }
+        }
         request.setIssueActionsId(dto.getDataIssueActions().getIssueActionsId());
         request.setJobId(dto.getDataIssueActions().getJobId());
         //request.setJobName(dto.getDataIssueActions().getJobName());
