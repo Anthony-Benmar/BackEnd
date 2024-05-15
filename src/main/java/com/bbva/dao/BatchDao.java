@@ -5,10 +5,7 @@ import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.database.MyBatisConnectionFactory;
 import com.bbva.database.mappers.BatchMapper;
-import com.bbva.dto.batch.request.InsertAJIFJobExecutionRequest;
-import com.bbva.dto.batch.request.InsertCSATJobExecutionRequest;
-import com.bbva.dto.batch.request.InsertReliabilityIncidenceDTO;
-import com.bbva.dto.batch.request.JobExecutionFilterRequestDTO;
+import com.bbva.dto.batch.request.*;
 import com.bbva.dto.batch.response.*;
 import com.bbva.entities.InsertEntity;
 import com.bbva.util.JSONUtils;
@@ -68,9 +65,71 @@ public class BatchDao {
 
     public InsertReliabilityIncidenceDTO insertReliabilityIncidence(InsertReliabilityIncidenceDTO dto) {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        InsertBatchIssueActionsDtoRequest request = new InsertBatchIssueActionsDtoRequest();
+        if (dto.getDataIssueActions() == null) {
+            try (SqlSession session = sqlSessionFactory.openSession()) {
+                BatchMapper batchMapper = session.getMapper(BatchMapper.class);
+                batchMapper.insertReliabilityIncidence(
+                        dto.getJobName(),
+                        dto.getOrderDate(),
+                        dto.getOrderId(),
+                        dto.getErrorType(),
+                        dto.getErrorReason(),
+                        dto.getSolutionDetail(),
+                        dto.getEmployeeId(),
+                        dto.getLogArgos(),
+                        dto.getRunCounter(),
+                        dto.getTicketJira(),
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null
+                );
+                session.commit();
+                return dto;
+            }
+        }
+        request.setIssueActionsId(dto.getDataIssueActions().getIssueActionsId());
+        request.setJobId(dto.getDataIssueActions().getJobId());
+        //request.setJobName(dto.getDataIssueActions().getJobName());
+        request.setFolderName(dto.getDataIssueActions().getFolderName());
+        request.setDevEmail(dto.getDataIssueActions().getDevEmail());
+        request.setStartDate(dto.getDataIssueActions().getStartDate());
+        request.setEndDate(dto.getDataIssueActions().getEndDate());
+        request.setStatusType(dto.getDataIssueActions().getStatusType());
+        request.setCommentActionsDesc(dto.getDataIssueActions().getCommentActionsDesc());
+        request.setCreateAuditUser(dto.getDataIssueActions().getCreateAuditUser());
+        request.setUpdateAuditUser(dto.getDataIssueActions().getUpdateAuditUser());
         try (SqlSession session = sqlSessionFactory.openSession()) {
             BatchMapper batchMapper = session.getMapper(BatchMapper.class);
-            batchMapper.insertReliabilityIncidence(dto);
+            batchMapper.insertReliabilityIncidence(
+                    dto.getJobName(),
+                    dto.getOrderDate(),
+                    dto.getOrderId(),
+                    dto.getErrorType(),
+                    dto.getErrorReason(),
+                    dto.getSolutionDetail(),
+                    dto.getEmployeeId(),
+                    dto.getLogArgos(),
+                    dto.getRunCounter(),
+                    dto.getTicketJira(),
+                    request.getIssueActionsId(),
+                    request.getJobId(),
+                    request.getFolderName(),
+                    request.getDevEmail(),
+                    request.getStartDate(),
+                    request.getEndDate(),
+                    request.getStatusType(),
+                    request.getCommentActionsDesc(),
+                    request.getCreateAuditUser(),
+                    request.getUpdateAuditUser()
+            );
             session.commit();
             return dto;
         }
@@ -116,6 +175,15 @@ public class BatchDao {
         try (SqlSession session = sqlSessionFactory.openSession()) {
             BatchMapper batchMapper = session.getMapper(BatchMapper.class);
             List<StatusJobExecutionDTO> result = batchMapper.getStatusJobExecution(jobName, quantity);
+            return result;
+        }
+    }
+
+    public JobExecutionByIdDTO getJobExecutionById(String folder, String orderId, String jobName) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            BatchMapper batchMapper = session.getMapper(BatchMapper.class);
+            JobExecutionByIdDTO result = batchMapper.getJobExecutionById(folder, orderId, jobName);
             return result;
         }
     }

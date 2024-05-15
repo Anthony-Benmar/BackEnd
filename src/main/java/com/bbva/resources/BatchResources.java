@@ -3,11 +3,9 @@ package com.bbva.resources;
 import com.bbva.core.abstracts.IDataResult;
 import com.bbva.dto.batch.request.InsertCSATJobExecutionRequest;
 import com.bbva.dto.batch.request.InsertReliabilityIncidenceDTO;
+import com.bbva.dto.batch.request.JobExecutionByIdRequest;
 import com.bbva.dto.batch.request.JobExecutionFilterRequestDTO;
-import com.bbva.dto.batch.response.InsertAJIFJobExecutionResponseDTO;
-import com.bbva.dto.batch.response.InsertCSATJobExecutionResponseDTO;
-import com.bbva.dto.batch.response.JobExecutionFilterResponseDTO;
-import com.bbva.dto.batch.response.StatusJobExecutionDTO;
+import com.bbva.dto.batch.response.*;
 import com.bbva.service.BatchService;
 import com.bbva.util.Helper;
 
@@ -88,4 +86,34 @@ public class BatchResources {
         IDataResult<InsertReliabilityIncidenceDTO>  result = batchService.insertReliabilityIncidence(request);
         return result;
     }
+
+    @GET
+    @Path("/Typified_job/{jobId}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<InsertAJIFJobExecutionResponseDTO> createAJIFJobExecution(List<InsertCSATJobExecutionRequest> requests) {
+        IDataResult<InsertAJIFJobExecutionResponseDTO> result = batchService.insertAJIFJobExecution(requests);
+        return result;
+    }
+
+    @POST
+    @Path("/job_execution_by_id")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<JobExecutionByIdDTO> getJobExecutionById(JobExecutionByIdRequest request){
+        IDataResult<JobExecutionByIdDTO>  result = batchService.getJobExecutionById(request.getFolder(), request.getOrderId(), request.getJobName());
+        return result;
+    }
+
+//
+//    @POST
+//    @Path("/batch_issue_actions")
+//    @Consumes(MediaType.APPLICATION_JSON)
+//    @Produces(MediaType.APPLICATION_JSON)
+//    public IDataResult<InsertBatchIssueActionsDtoResponse> insertBatchIssueActions(InsertBatchIssueActionsDtoResponse request){
+//        IDataResult<InsertBatchIssueActionsDtoResponse>  result = batchService.insertBatchIssueActions(request);
+//        return result;
+//    }
+
+
 }

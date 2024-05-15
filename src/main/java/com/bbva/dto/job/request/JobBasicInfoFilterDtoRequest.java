@@ -9,7 +9,7 @@ public class JobBasicInfoFilterDtoRequest {
     public Integer page;
     public Integer records_amount;
 
-    public Integer domainId;
+    public String domainId;
     public Integer projectId;
     public String jobDataprocFolderName;
     public Integer classificationType;

@@ -69,12 +69,15 @@ public interface ProjectMapper {
             "</script>"})
     List<ProjectEntity> listforselect();
 
-    @Select({"<script>" +
+    /*@Select({"<script>" +
             "SELECT p.project_id,p.sdatool_id,p.project_name,p.status_type, a.period_id " +
             "FROM data_project_period a " +
             "LEFT JOIN data_project p ON p.project_id = a.project_id " +
             "WHERE p.status_type = 1 AND a.period_id = #{period_id}" +
             "</script>"})
+    List<ProjectByPeriodEntity> listProjectsByPeriod(@Param("period_id") String period_id);*/
+
+    @Select("CALL SP_LIST_PROJECTS_BY_PERIOD(#{period_id})")
     List<ProjectByPeriodEntity> listProjectsByPeriod(@Param("period_id") String period_id);
 
     @Insert("INSERT INTO data_project(project_name, project_desc, sdatool_id, status_type, product_owner_id, portafolio_code, " +
@@ -97,6 +100,7 @@ public interface ProjectMapper {
              "#{projectType}, #{categoryType}, #{classificationType}, #{startPiId}, #{endPiId}, #{finalStartPiId}, #{finalEndPiId}, " +
              "#{wowType}, #{countryPriorityType}, #{statusType}, #{createAuditUser}, #{projectId})")
      void updateProjectInfo(ProjectInfoDTO dto);
+
     @Delete("Delete from data_project WHERE project_id = #{projectId}")
     void deleteProject(@Param("projectId") int projectId);
 
@@ -240,6 +244,7 @@ public interface ProjectMapper {
             @Result(property = "statusType", column = "status_type"),
             @Result(property = "statusTypeDesc", column = "status_desc"),
             @Result(property = "wowType", column = "wow_type"),
+            @Result(property = "wowName", column = "wow_name"),
             @Result(property = "countryPriorityType", column = "country_priority_type"),
             @Result(property = "createAuditDate", column = "create_audit_date"),
             @Result(property = "createAuditUser", column = "create_audit_user"),
@@ -248,7 +253,7 @@ public interface ProjectMapper {
     })
     List<ProjectInfoSelectResponse> projectInfoFilter(@Param("projectId") int projectId,
                                                       @Param("sdatoolIdOrProjectName") String sdatoolId,
-                                                      @Param("domainId") int domainId,
+                                                      @Param("domainId") String domainId,
                                                       @Param("statusType") int statusType,
                                                       @Param("projectType") int projectType,
                                                       @Param("wowType") int wowType);
@@ -366,12 +371,12 @@ public interface ProjectMapper {
     @Select("SELECT project_id, sdatool_id, project_name FROM project_info WHERE domain_id = #{domain_id}")
     List<ProjectInfoSelectResponse> listProjectsByDomain(@Param("domain_id") int domain_id);
 
-    @Select("CALL SP_LIST_PROJECT_BY_DOMAIN(#{domainId})")
+    @Select("CALL SP_LIST_PROJECT_BY_DOMAINS(#{domainId})")
     @Results({
             @Result(property = "projectId", column = "project_id"),
             @Result(property = "sdatoolId", column = "sdatool_id"),
             @Result(property = "projectName", column = "project_name"),
             @Result(property = "domainId", column = "domain_id")
     })
-    List<ProjectByDomainIdDTO> getProjectsByDomainId(@Param("domainId") int domainId);
+    List<ProjectByDomainIdDTO> getProjectsByDomainId(@Param("domainId") String domainId);
 }

@@ -30,9 +30,9 @@ public class MeshDao {
     }
 
     public List<MeshRelationalDtoResponse> jobsdependencies(MeshDtoRequest dto) {
-        List<MeshRelationalDtoResponse> result = new ArrayList<>();
-        List<JobExecution> listJobExecutions;
-        List<JobExecution> listStatusJobExecutions;
+        List<MeshRelationalDtoResponse> result = new ArrayList<MeshRelationalDtoResponse>();
+        List<JobExecution> listJobExecutions = null;
+        List<JobExecution> listStatusJobExecutions = null;
         try{
             SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
             try (SqlSession session = sqlSessionFactory.openSession()) {
@@ -43,7 +43,11 @@ public class MeshDao {
                 }else{
                     listJobExecutions = meshMapper.ListJobExecutionsPrevious();
                 }
-                listStatusJobExecutions = meshMapper.ListStatusJobExecutions(dto.orderDate);
+                if (dto.getOrderDate() != null && !dto.getOrderDate().isEmpty()){
+                    listStatusJobExecutions = meshMapper.ListStatusJobExecutions(dto.getOrderDate(), dto.getJobName());
+                } else {
+                    listStatusJobExecutions = meshMapper.ListStatusJobExecutions(null, dto.getJobName());
+                }
             }
 
             var filters = listJobExecutions.stream()
@@ -66,7 +70,10 @@ public class MeshDao {
                         c.execution_date,c.status);
             }).collect(Collectors.toList());
 
-            var listJobsExecutionResponse = recursiveRelational(filters.job_id.toString(), listJobExecutionDto,null);
+            // DEFINIMOS PROFUNDIDAD DEL ARBOL
+            int profundidad = 5;
+
+            var listJobsExecutionResponse = recursiveRelational(filters.job_id.toString(), listJobExecutionDto,null,profundidad);
             findDetailJobExecution(listStatusJobExecutions,listJobsExecutionResponse);
             result.addAll(listJobsExecutionResponse);
 
@@ -77,7 +84,7 @@ public class MeshDao {
         return result;
     }
 
-    private List<MeshRelationalDtoResponse> recursiveRelational(String jobId, List<MeshRelationalDtoResponse> listjobExecutions, List<MeshRelationalDtoResponse> listAcumulado){
+    private List<MeshRelationalDtoResponse> recursiveRelational(String jobId, List<MeshRelationalDtoResponse> listjobExecutions, List<MeshRelationalDtoResponse> listAcumulado, int profundidad){
         List<MeshRelationalDtoResponse> result = new ArrayList<MeshRelationalDtoResponse>();
         var jobsChild = listjobExecutions.stream()
                 .filter(f->f.parentId.equals(jobId) && !f.id.equals("0"))
@@ -85,10 +92,13 @@ public class MeshDao {
 
         addUniquesJobsId(jobsChild, result, listAcumulado);
 
-        jobsChild.forEach(j->{
-            var newjobschilds = recursiveRelational(j.id, listjobExecutions, result);
-            addUniquesJobsId(newjobschilds, result, result);
-        });
+        int finalProfundidad = profundidad-1;
+        if (finalProfundidad>0){
+            jobsChild.forEach(j->{
+                var newjobschilds = recursiveRelational(j.id, listjobExecutions, result, finalProfundidad);
+                addUniquesJobsId(newjobschilds, result, result);
+            });
+        }
         return  result;
     }
 
@@ -151,5 +161,4 @@ public class MeshDao {
             }
         }
     }
-
 }

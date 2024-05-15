@@ -39,7 +39,7 @@ public class RolDao {
     }
 
     public List<Menu> listIdsMenu(int role_id) {
-        
+
         List<Menu> menuList = null;
 
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
@@ -47,7 +47,7 @@ public class RolDao {
             RolMapper mapper = session.getMapper(RolMapper.class);
             menuList = mapper.listIdsMenu(role_id);
         }
-            
+
         return menuList;
 
     }

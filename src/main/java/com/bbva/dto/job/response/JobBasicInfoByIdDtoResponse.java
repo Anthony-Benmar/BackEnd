@@ -1,14 +1,14 @@
-package com.bbva.dto.job.request;
+package com.bbva.dto.job.response;
 
 import lombok.Getter;
 import lombok.Setter;
 
 import java.util.Date;
 
-@Getter
 @Setter
-public class JobDTO {
-    private int jobId;
+@Getter
+public class JobBasicInfoByIdDtoResponse {
+    private Integer jobId;
     private String jobName;
     private String folderName;
     private String applicationName;
@@ -18,7 +18,7 @@ public class JobDTO {
     private String nodeId;
     private Integer maxWaitNumber;
     private String cmdLineDesc;
-    private String classificationType;
+    private Integer classificationType;
     private String classificationName;
     private Integer monitoringDomainId;
     private String monitoringDomainName;
@@ -29,13 +29,31 @@ public class JobDTO {
     private String createdDomainName;
     private Integer createdProjectId;
     private String createdProjectName;
-    private Integer criticalRouteType;
-    private String jobFunctionalDesc;
     private String createdDevEmail;
     private Date createAuditDate;
-    private String createAuditDate_S;
     private String createAuditUser;
     private Date updateAuditDate;
-    private String updateAuditDate_S;
     private String updateAuditUser;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

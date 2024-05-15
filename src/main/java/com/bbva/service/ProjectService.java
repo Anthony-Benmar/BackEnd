@@ -378,7 +378,7 @@ public class ProjectService {
         }
     }
 
-    public IDataResult<List<ProjectByDomainIdDTO>> getProjectsByDomainId(int domainId) {
+    public IDataResult<List<ProjectByDomainIdDTO>> getProjectsByDomainId(String domainId) {
         try {
             var result = projectDao.getProjectsByDomainId(domainId);
             return new SuccessDataResult(result);
