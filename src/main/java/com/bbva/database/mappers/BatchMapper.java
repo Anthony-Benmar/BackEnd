@@ -207,7 +207,7 @@ public interface BatchMapper {
     List<StatusJobExecutionDTO> getStatusJobExecution(@Param("jobName") String jobName,
                                                       @Param("quantity") Integer quantity);
 
-    @Select("CALL SP_GET_JOB_EXECUTION_BY_ID(" +
+    @Select("CALL SP_GET_JOB_EXECUTION_BY_NAME(" +
             "#{folder}," +
             "#{orderId}," +
             "#{jobName})")
@@ -241,7 +241,20 @@ public interface BatchMapper {
             @Result(property = "runCounter", column = "run_counter"),
             @Result(property = "executionType", column = "execution_type"),
             @Result(property = "ticketJira", column = "ticket_jira"),
-            @Result(property = "domainId", column = "domain_id")})
+            @Result(property = "domainId", column = "domain_id"),
+            @Result(property = "issueActionsId", column = "issue_actions_id"),
+            @Result(property = "jobId", column = "job_id"),
+            @Result(property = "folderName", column = "folder_name"),
+            @Result(property = "devEmail", column = "dev_email"),
+            @Result(property = "startDate", column = "start_date"),
+            @Result(property = "endDate", column = "end_date"),
+            @Result(property = "statusType", column = "status_type"),
+            @Result(property = "commentActionsDesc", column = "comment_actions_desc"),
+            @Result(property = "createAuditDate", column = "create_audit_date"),
+            @Result(property = "createAuditUser", column = "create_audit_user"),
+            @Result(property = "updateAuditDate", column = "update_audit_date"),
+            @Result(property = "updateAuditUser", column = "update_audit_user")
+    })
     JobExecutionByIdDTO getJobExecutionById(@Param("folder") String folder,
                                             @Param("orderId") String orderId,
                                             @Param("jobName") String jobName);
