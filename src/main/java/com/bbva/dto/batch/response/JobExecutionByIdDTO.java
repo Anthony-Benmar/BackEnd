@@ -36,4 +36,17 @@ public class JobExecutionByIdDTO {
     private String executionType;
     private String ticketJira;
     private Integer domainId;
+    private Integer issueActionsId;
+    private Integer jobId;
+    private String folderName;
+    private String devEmail;
+    private String startDate;
+    private String endDate;
+    private String statusType;
+    private String commentActionsDesc;
+    private String createAuditDate;
+    private String createAuditUser;
+    private String updateAuditDate;
+    private String updateAuditUser;
+
 }

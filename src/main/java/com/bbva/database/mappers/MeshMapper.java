@@ -24,7 +24,8 @@ public interface MeshMapper {
     })
     List<JobExecution> ListJobExecutionsLaters();
 
-    @Select("select round(rand() * 1000000000) id,jes.* from job_finder_side_chf jes")
+    //@Select("select round(rand() * 1000000000) id,jes.* from job_finder_side_chf jes")
+    @Select("CALL SP_SELECT_JOBS_EXECUTIONS_PREVIOUS")
     @Results({
             @Result(property = "id", column = "id"),
             @Result(property = "job_id", column = "job_id"),
