@@ -23,15 +23,4 @@ public class MeshResources {
     {
         return meshService.jobsdependencies(dto);
     }
-
-    private final JobService jobBasicInfoService = new JobService();
-
-    @POST
-    @Path("/job-basic-info/listAll")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public IDataResult<List<JobBasicInfoDtoResponse>> listAllJobs()
-            throws ExecutionException, InterruptedException {
-        return jobBasicInfoService.listAllJobs();
-    }
 }
