@@ -93,7 +93,6 @@ public class BatchDao {
                         null,
                         null,
                         null,
-                        null,
                         null
                 );
                 session.commit();
@@ -103,10 +102,8 @@ public class BatchDao {
         }
         request.setIssueActionsId(dto.getDataIssueActions().getIssueActionsId());
         request.setJobId(dto.getDataIssueActions().getJobId());
-        //request.setJobName(dto.getDataIssueActions().getJobName());
         request.setFolderName(dto.getDataIssueActions().getFolderName());
         request.setDevEmail(dto.getDataIssueActions().getDevEmail());
-        request.setStartDate(dto.getDataIssueActions().getStartDate());
         request.setEndDate(dto.getDataIssueActions().getEndDate());
         request.setStatusType(dto.getDataIssueActions().getStatusType());
         request.setCommentActionsDesc(dto.getDataIssueActions().getCommentActionsDesc());
@@ -129,7 +126,6 @@ public class BatchDao {
                     request.getJobId(),
                     request.getFolderName(),
                     request.getDevEmail(),
-                    request.getStartDate(),
                     convertStringToDate(request.getEndDate(), "yyyy-MM-dd"),
                     request.getStatusType(),
                     request.getCommentActionsDesc(),

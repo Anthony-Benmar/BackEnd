@@ -89,10 +89,8 @@ public interface BatchMapper {
 
             "#{issueActionsId}," +
             "#{jobId}," +
-            //"#{jobName}," +
             "#{folderName}," +
             "#{devEmail},"+
-            "#{startDate}," +
             "#{endDate}," +
             "#{statusType}," +
             "#{commentActionsDesc}," +
@@ -117,7 +115,7 @@ public interface BatchMapper {
                                             //@Param("jobName") String jobName,
                                             @Param("folderName") String folderName,
                                             @Param("devEmail") String devEmail,
-                                            @Param("startDate") String startDate,
+                                            //@Param("startDate") String startDate,
                                             @Param("endDate") Date endDate,
                                             @Param("statusType") Integer statusType,
                                             @Param("commentActionsDesc") String commentActionsDesc,
