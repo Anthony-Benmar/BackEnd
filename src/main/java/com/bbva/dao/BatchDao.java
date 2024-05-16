@@ -12,10 +12,14 @@ import com.bbva.util.JSONUtils;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 
+import java.text.ParseException;
+import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+
+import static com.bbva.util.types.FechaUtil.convertStringToDate;
 
 public class BatchDao {
 
@@ -126,7 +130,7 @@ public class BatchDao {
                     request.getFolderName(),
                     request.getDevEmail(),
                     request.getStartDate(),
-                    request.getEndDate(),
+                    convertStringToDate(request.getEndDate(), "yyyy-MM-dd"),
                     request.getStatusType(),
                     request.getCommentActionsDesc(),
                     request.getCreateAuditUser(),
@@ -135,6 +139,8 @@ public class BatchDao {
             session.commit();
             //return dto;
             return result;
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
         }
     }
 

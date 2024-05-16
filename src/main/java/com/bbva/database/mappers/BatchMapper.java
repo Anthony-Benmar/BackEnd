@@ -9,6 +9,8 @@ import com.bbva.dto.batch.response.StatusJobExecutionDTO;
 import com.bbva.entities.InsertEntity;
 import org.apache.ibatis.annotations.*;
 
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
@@ -115,7 +117,7 @@ public interface BatchMapper {
                                             //@Param("jobName") String jobName,
                                             @Param("folderName") String folderName,
                                             @Param("devEmail") String devEmail,
-                                            @Param("startDate") Date startDate,
+                                            @Param("startDate") String startDate,
                                             @Param("endDate") Date endDate,
                                             @Param("statusType") Integer statusType,
                                             @Param("commentActionsDesc") String commentActionsDesc,
