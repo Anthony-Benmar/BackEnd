@@ -73,7 +73,7 @@ public interface BatchMapper {
                                         @Param("domain") String domain,
                                         @Param("isTypified") Boolean isTypified);
 
-    @Select("CALL SP_INSERT_RELIABILITY_INCIDENCE_ACTION(" +
+    @Select("CALL SP_INSERT_RELIABILITY_INCIDENCE_ACTIONS(" +
             "#{jobName}," +
             "#{orderDate}," +
             "#{orderId}," +
@@ -98,9 +98,7 @@ public interface BatchMapper {
             "#{updateAuditUser})")
     @Results({
             @Result(property = "last_insert_id", column = "last_insert_id"),
-            @Result(property = "new_register", column = "new_register"),
-            @Result(property = "last_insert_id_n", column = "last_insert_id_n"),
-            @Result(property = "new_register_n", column = "new_register_n")
+            @Result(property = "new_register", column = "last_insert_2_id")
     })
     InsertEntity insertReliabilityIncidence(@Param("jobName") String jobName,
                                             @Param("orderDate") String orderDate,

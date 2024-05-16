@@ -63,13 +63,14 @@ public class BatchDao {
         return response;
     }
 
-    public InsertReliabilityIncidenceDTO insertReliabilityIncidence(InsertReliabilityIncidenceDTO dto) {
+    //public InsertReliabilityIncidenceDTO insertReliabilityIncidence(InsertReliabilityIncidenceDTO dto) {
+    public InsertEntity insertReliabilityIncidence(InsertReliabilityIncidenceDTO dto) {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         InsertBatchIssueActionsDtoRequest request = new InsertBatchIssueActionsDtoRequest();
         if (dto.getDataIssueActions() == null) {
             try (SqlSession session = sqlSessionFactory.openSession()) {
                 BatchMapper batchMapper = session.getMapper(BatchMapper.class);
-                batchMapper.insertReliabilityIncidence(
+                InsertEntity result = batchMapper.insertReliabilityIncidence(
                         dto.getJobName(),
                         dto.getOrderDate(),
                         dto.getOrderId(),
@@ -92,7 +93,8 @@ public class BatchDao {
                         null
                 );
                 session.commit();
-                return dto;
+                //return dto;
+                return result;
             }
         }
         request.setIssueActionsId(dto.getDataIssueActions().getIssueActionsId());
@@ -108,7 +110,7 @@ public class BatchDao {
         request.setUpdateAuditUser(dto.getDataIssueActions().getUpdateAuditUser());
         try (SqlSession session = sqlSessionFactory.openSession()) {
             BatchMapper batchMapper = session.getMapper(BatchMapper.class);
-            batchMapper.insertReliabilityIncidence(
+            InsertEntity result = batchMapper.insertReliabilityIncidence(
                     dto.getJobName(),
                     dto.getOrderDate(),
                     dto.getOrderId(),
@@ -131,7 +133,8 @@ public class BatchDao {
                     request.getUpdateAuditUser()
             );
             session.commit();
-            return dto;
+            //return dto;
+            return result;
         }
     }
 
