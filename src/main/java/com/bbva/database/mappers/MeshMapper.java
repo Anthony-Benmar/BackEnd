@@ -37,7 +37,7 @@ public interface MeshMapper {
     })
     List<JobExecution> ListJobExecutionsPrevious();
 
-    @Select("CALL SP_JOB_EXECUTION_BY_ODATE(#{orderDate}")
+    @Select("CALL SP_JOB_EXECUTION_BY_ODATE(#{orderDate})")
     @Results({
             @Result(property = "job_id", column = "job_id"),
             @Result(property = "job_name", column = "job_name"),
