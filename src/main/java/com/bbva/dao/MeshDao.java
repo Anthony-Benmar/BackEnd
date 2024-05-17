@@ -57,10 +57,13 @@ public class MeshDao {
             if (filters == null){
                 return result;
             }
+            var firts_job_status = listStatusJobExecutions.stream()
+                    .filter(f->f.job_name.toUpperCase().equals(dto.jobName))
+                    .findFirst().orElse(null);
 
             var meshRelationalDtoResponse = new MeshRelationalDtoResponse(filters.id.toString(),filters.job_id.toString(),"",filters.job_name,
                     filters.json_name, filters.folder,filters.application, dto.orderDate,filters.frequency,filters.job_type,
-                    filters.execution_date,filters.status);
+                    filters.execution_date, firts_job_status.status);
             result.add(meshRelationalDtoResponse);
 
             var listJobExecutionDto = listJobExecutions.stream().map(c->{
