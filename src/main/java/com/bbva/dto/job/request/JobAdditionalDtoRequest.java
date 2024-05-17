@@ -11,7 +11,7 @@ public class JobAdditionalDtoRequest {
     private String createdDevEmail;
     private Integer monitoringProjectId;
     private String monitoringDevEmail;
-    private Integer classificationType;//reclassificationType;
+    private Integer classificationType;
     private Integer criticalRouteType;
     private String jobFunctionalDesc;
     private String createAuditUser;

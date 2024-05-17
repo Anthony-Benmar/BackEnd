@@ -12,10 +12,8 @@ public class InsertBatchIssueActionsDtoRequest {
     @Nullable
     private Integer issueActionsId;
     private Integer jobId;
-    //private String jobName;
     private String folderName;
     private String devEmail;
-    //private String startDate;
     private String endDate;
     @Nullable
     private Integer statusType;

@@ -67,7 +67,6 @@ public class BatchDao {
         return response;
     }
 
-    //public InsertReliabilityIncidenceDTO insertReliabilityIncidence(InsertReliabilityIncidenceDTO dto) {
     public InsertEntity insertReliabilityIncidence(InsertReliabilityIncidenceDTO dto) {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         InsertBatchIssueActionsDtoRequest request = new InsertBatchIssueActionsDtoRequest();

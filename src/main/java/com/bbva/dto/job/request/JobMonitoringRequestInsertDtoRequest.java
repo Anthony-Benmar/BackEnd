@@ -15,7 +15,6 @@ public class JobMonitoringRequestInsertDtoRequest {
     private String toDevEmail;
     private Date startDate;
     private Date endDate;
-    //private Integer statusType;
     private String commentRequestDesc;
     private String createAuditUser;
 }
