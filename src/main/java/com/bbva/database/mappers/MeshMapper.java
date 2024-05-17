@@ -24,7 +24,7 @@ public interface MeshMapper {
     })
     List<JobExecution> ListJobExecutionsLaters();
 
-    @Select("CALL SP_SELECT_JOBS_EXECUTIONS_PREVIOUS()")
+    @Select("CALL SP_SELECT_JOBS_EXECUTION_PREVIOUS()")
     @Results({
             @Result(property = "id", column = "id"),
             @Result(property = "job_id", column = "job_id"),
