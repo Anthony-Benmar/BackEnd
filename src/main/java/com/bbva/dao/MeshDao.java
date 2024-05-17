@@ -44,9 +44,9 @@ public class MeshDao {
                     listJobExecutions = meshMapper.ListJobExecutionsPrevious();
                 }
                 if (dto.getOrderDate() != null && !dto.getOrderDate().isEmpty()){
-                    listStatusJobExecutions = meshMapper.ListStatusJobExecutions(dto.getOrderDate(), dto.getJobName());
+                    listStatusJobExecutions = meshMapper.ListStatusJobExecutions(dto.getOrderDate());
                 } else {
-                    listStatusJobExecutions = meshMapper.ListStatusJobExecutions(null, dto.getJobName());
+                    listStatusJobExecutions = meshMapper.ListStatusJobExecutions(null);
                 }
             }
 
