@@ -4,7 +4,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.annotation.Nullable;
-import java.sql.Date;
 
 @Getter
 @Setter
