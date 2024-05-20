@@ -1,10 +1,7 @@
 package com.bbva.resources;
 
 import com.bbva.core.abstracts.IDataResult;
-import com.bbva.dto.batch.request.InsertCSATJobExecutionRequest;
-import com.bbva.dto.batch.request.InsertReliabilityIncidenceDTO;
-import com.bbva.dto.batch.request.JobExecutionByIdRequest;
-import com.bbva.dto.batch.request.JobExecutionFilterRequestDTO;
+import com.bbva.dto.batch.request.*;
 import com.bbva.dto.batch.response.*;
 import com.bbva.service.BatchService;
 import com.bbva.util.Helper;
@@ -101,7 +98,19 @@ public class BatchResources {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<JobExecutionByIdDTO> getJobExecutionById(JobExecutionByIdRequest request){
-        IDataResult<JobExecutionByIdDTO>  result = batchService.getJobExecutionById(request.getFolder(), request.getOrderId(), request.getJobName());
+        IDataResult<JobExecutionByIdDTO>  result = batchService.getJobExecutionById(request.getFolder(),
+                request.getOrderId(), request.getJobName(), request.getRunCounter());
         return result;
     }
+
+    @GET
+    @Path("/issue_action/filter")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<BatchIssuesActionFilterDtoResponse> filterIssueAction(BatchIssuesActionFilterDtoRequest dto){
+        IDataResult<BatchIssuesActionFilterDtoResponse>  result = batchService.filterIssueAction(dto);
+        return result;
+    }
+
+
 }
