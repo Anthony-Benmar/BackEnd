@@ -8,10 +8,11 @@ import javax.annotation.Nullable;
 @Getter
 @Setter
 public class InsertEntity {
-    private Integer last_insert_id;
+    private Integer last_insert_id; //AND
+    @Nullable
+    private Integer last_insert_2_id; //>0 correcto sino incorrecto
+
     private Integer new_register;
     @Nullable
-    private Integer last_insert_id_n;
-    @Nullable
-    private Integer new_register_n;
+    private Integer new_register_2;
 }

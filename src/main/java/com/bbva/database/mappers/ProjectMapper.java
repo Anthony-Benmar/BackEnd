@@ -69,13 +69,6 @@ public interface ProjectMapper {
             "</script>"})
     List<ProjectEntity> listforselect();
 
-    /*@Select({"<script>" +
-            "SELECT p.project_id,p.sdatool_id,p.project_name,p.status_type, a.period_id " +
-            "FROM data_project_period a " +
-            "LEFT JOIN data_project p ON p.project_id = a.project_id " +
-            "WHERE p.status_type = 1 AND a.period_id = #{period_id}" +
-            "</script>"})
-    List<ProjectByPeriodEntity> listProjectsByPeriod(@Param("period_id") String period_id);*/
 
     @Select("CALL SP_LIST_PROJECTS_BY_PERIOD(#{period_id})")
     List<ProjectByPeriodEntity> listProjectsByPeriod(@Param("period_id") String period_id);

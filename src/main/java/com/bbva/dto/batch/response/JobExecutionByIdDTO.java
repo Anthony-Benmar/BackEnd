@@ -48,5 +48,4 @@ public class JobExecutionByIdDTO {
     private String createAuditUser;
     private String updateAuditDate;
     private String updateAuditUser;
-
 }

@@ -9,6 +9,8 @@ import com.bbva.dto.batch.response.StatusJobExecutionDTO;
 import com.bbva.entities.InsertEntity;
 import org.apache.ibatis.annotations.*;
 
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
@@ -73,7 +75,7 @@ public interface BatchMapper {
                                         @Param("domain") String domain,
                                         @Param("isTypified") Boolean isTypified);
 
-    @Select("CALL SP_INSERT_RELIABILITY_INCIDENCE_ACTION(" +
+    @Select("CALL SP_INSERT_RELIABILITY_INCIDENCE_ACTIONS(" +
             "#{jobName}," +
             "#{orderDate}," +
             "#{orderId}," +
@@ -87,10 +89,8 @@ public interface BatchMapper {
 
             "#{issueActionsId}," +
             "#{jobId}," +
-            //"#{jobName}," +
             "#{folderName}," +
             "#{devEmail},"+
-            "#{startDate}," +
             "#{endDate}," +
             "#{statusType}," +
             "#{commentActionsDesc}," +
@@ -98,9 +98,7 @@ public interface BatchMapper {
             "#{updateAuditUser})")
     @Results({
             @Result(property = "last_insert_id", column = "last_insert_id"),
-            @Result(property = "new_register", column = "new_register"),
-            @Result(property = "last_insert_id_n", column = "last_insert_id_n"),
-            @Result(property = "new_register_n", column = "new_register_n")
+            @Result(property = "new_register", column = "last_insert_2_id")
     })
     InsertEntity insertReliabilityIncidence(@Param("jobName") String jobName,
                                             @Param("orderDate") String orderDate,
@@ -114,10 +112,8 @@ public interface BatchMapper {
                                             @Param("ticketJira") String ticketJira,
                                             @Param("issueActionsId") Integer issueActionsId,
                                             @Param("jobId") Integer jobId,
-                                            //@Param("jobName") String jobName,
                                             @Param("folderName") String folderName,
                                             @Param("devEmail") String devEmail,
-                                            @Param("startDate") Date startDate,
                                             @Param("endDate") Date endDate,
                                             @Param("statusType") Integer statusType,
                                             @Param("commentActionsDesc") String commentActionsDesc,

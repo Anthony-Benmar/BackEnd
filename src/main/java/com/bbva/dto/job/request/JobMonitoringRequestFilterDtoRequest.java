@@ -10,7 +10,7 @@ public class JobMonitoringRequestFilterDtoRequest {
     private Integer records_amount;
 
     private Integer domainId;
-    private String toSdatoolId;//projectId
-    private Integer jobId; //Join con job_basic_info
+    private String toSdatoolId;
+    private Integer jobId;
     private Integer statusType;
 }

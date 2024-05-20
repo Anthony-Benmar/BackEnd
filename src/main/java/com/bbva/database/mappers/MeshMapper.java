@@ -24,7 +24,7 @@ public interface MeshMapper {
     })
     List<JobExecution> ListJobExecutionsLaters();
 
-    @Select("CALL SP_SELECT_JOBS_EXECUTIONS_PREVIOUS()")
+    @Select("CALL SP_SELECT_JOBS_EXECUTION_PREVIOUS()")
     @Results({
             @Result(property = "id", column = "id"),
             @Result(property = "job_id", column = "job_id"),
@@ -37,7 +37,7 @@ public interface MeshMapper {
     })
     List<JobExecution> ListJobExecutionsPrevious();
 
-    @Select("CALL SP_JOB_EXECUTION_BY_ODATE(#{orderDate}, #{jobName})")
+    @Select("CALL SP_JOB_EXECUTION_BY_ODATE(#{orderDate})")
     @Results({
             @Result(property = "job_id", column = "job_id"),
             @Result(property = "job_name", column = "job_name"),
@@ -47,5 +47,5 @@ public interface MeshMapper {
             @Result(property = "run_as", column = "run_as"),
             @Result(property = "status", column = "execution_status")
     })
-    List<JobExecution> ListStatusJobExecutions(@Param("orderDate") String orderDate, @Param("jobName") String jobName);
+    List<JobExecution> ListStatusJobExecutions(@Param("orderDate") String orderDate);
 }

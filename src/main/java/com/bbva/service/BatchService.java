@@ -20,7 +20,7 @@ public class BatchService {
 
     public IDataResult<InsertReliabilityIncidenceDTO> insertReliabilityIncidence(InsertReliabilityIncidenceDTO dto) {
         var result = batchDao.insertReliabilityIncidence(dto);
-        return new SuccessDataResult(result);
+        return new SuccessDataResult(result, "Job guardado correctamente");
     }
     public IDataResult<InsertCSATJobExecutionResponseDTO> insertCSATJobExecution(List dto){
         var result = batchDao.insertCSATJobExecutionRequest(dto);

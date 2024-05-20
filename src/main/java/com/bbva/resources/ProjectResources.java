@@ -159,10 +159,6 @@ public class ProjectResources {
         } catch (Exception e) {
             return new ErrorDataResult<>("Error en el servicio de actualización de proyecto");
         }
-        /*if(projectService.sdatoolIdExistsUpdate(dto.getSdatoolId(), dto.getProjectId())) {
-            return new ErrorDataResult<>("El proyecto que desea registrar ya existe, verifique el código SDATOOL");
-        }*/
-
         return projectService.updateProjectInfo(dto);
     }
 

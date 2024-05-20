@@ -12,10 +12,14 @@ import com.bbva.util.JSONUtils;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 
+import java.text.ParseException;
+import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+
+import static com.bbva.util.types.FechaUtil.convertStringToDate;
 
 public class BatchDao {
 
@@ -63,13 +67,13 @@ public class BatchDao {
         return response;
     }
 
-    public InsertReliabilityIncidenceDTO insertReliabilityIncidence(InsertReliabilityIncidenceDTO dto) {
+    public InsertEntity insertReliabilityIncidence(InsertReliabilityIncidenceDTO dto) {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         InsertBatchIssueActionsDtoRequest request = new InsertBatchIssueActionsDtoRequest();
         if (dto.getDataIssueActions() == null) {
             try (SqlSession session = sqlSessionFactory.openSession()) {
                 BatchMapper batchMapper = session.getMapper(BatchMapper.class);
-                batchMapper.insertReliabilityIncidence(
+                InsertEntity result = batchMapper.insertReliabilityIncidence(
                         dto.getJobName(),
                         dto.getOrderDate(),
                         dto.getOrderId(),
@@ -88,19 +92,17 @@ public class BatchDao {
                         null,
                         null,
                         null,
-                        null,
                         null
                 );
                 session.commit();
-                return dto;
+                //return dto;
+                return result;
             }
         }
         request.setIssueActionsId(dto.getDataIssueActions().getIssueActionsId());
         request.setJobId(dto.getDataIssueActions().getJobId());
-        //request.setJobName(dto.getDataIssueActions().getJobName());
         request.setFolderName(dto.getDataIssueActions().getFolderName());
         request.setDevEmail(dto.getDataIssueActions().getDevEmail());
-        request.setStartDate(dto.getDataIssueActions().getStartDate());
         request.setEndDate(dto.getDataIssueActions().getEndDate());
         request.setStatusType(dto.getDataIssueActions().getStatusType());
         request.setCommentActionsDesc(dto.getDataIssueActions().getCommentActionsDesc());
@@ -108,7 +110,7 @@ public class BatchDao {
         request.setUpdateAuditUser(dto.getDataIssueActions().getUpdateAuditUser());
         try (SqlSession session = sqlSessionFactory.openSession()) {
             BatchMapper batchMapper = session.getMapper(BatchMapper.class);
-            batchMapper.insertReliabilityIncidence(
+            InsertEntity result = batchMapper.insertReliabilityIncidence(
                     dto.getJobName(),
                     dto.getOrderDate(),
                     dto.getOrderId(),
@@ -123,15 +125,17 @@ public class BatchDao {
                     request.getJobId(),
                     request.getFolderName(),
                     request.getDevEmail(),
-                    request.getStartDate(),
-                    request.getEndDate(),
+                    convertStringToDate(request.getEndDate(), "yyyy-MM-dd"),
                     request.getStatusType(),
                     request.getCommentActionsDesc(),
                     request.getCreateAuditUser(),
                     request.getUpdateAuditUser()
             );
             session.commit();
-            return dto;
+            //return dto;
+            return result;
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
         }
     }
 

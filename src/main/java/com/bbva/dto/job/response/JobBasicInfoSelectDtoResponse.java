@@ -13,7 +13,7 @@ public class JobBasicInfoSelectDtoResponse {
     public String dataprocJobName;
     public String runAsName;
     public Integer classificationType;
-    public String classificationName; //element_name
+    public String classificationName;
     public String invetoriedType;
     public Integer monitoringDomainId;
     public String monitoringDomainName;

@@ -104,16 +104,4 @@ public class BatchResources {
         IDataResult<JobExecutionByIdDTO>  result = batchService.getJobExecutionById(request.getFolder(), request.getOrderId(), request.getJobName());
         return result;
     }
-
-//
-//    @POST
-//    @Path("/batch_issue_actions")
-//    @Consumes(MediaType.APPLICATION_JSON)
-//    @Produces(MediaType.APPLICATION_JSON)
-//    public IDataResult<InsertBatchIssueActionsDtoResponse> insertBatchIssueActions(InsertBatchIssueActionsDtoResponse request){
-//        IDataResult<InsertBatchIssueActionsDtoResponse>  result = batchService.insertBatchIssueActions(request);
-//        return result;
-//    }
-
-
 }
