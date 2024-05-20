@@ -5,8 +5,11 @@ import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.database.MyBatisConnectionFactory;
 import com.bbva.database.mappers.BatchMapper;
+import com.bbva.database.mappers.JobMapper;
 import com.bbva.dto.batch.request.*;
 import com.bbva.dto.batch.response.*;
+import com.bbva.dto.job.response.JobBasicInfoFilterDtoResponse;
+import com.bbva.dto.job.response.JobBasicInfoSelectDtoResponse;
 import com.bbva.entities.InsertEntity;
 import com.bbva.util.JSONUtils;
 import org.apache.ibatis.session.SqlSession;
@@ -190,5 +193,38 @@ public class BatchDao {
             JobExecutionByIdDTO result = batchMapper.getJobExecutionById(folder, orderId, jobName);
             return result;
         }
+    }
+
+    public BatchIssuesActionFilterDtoResponse filterIssueAction(BatchIssuesActionFilterDtoRequest dto) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        List<BatchIssuesActionSelectDtoResponse> lista;
+        int recordsCount = 0;
+        int pagesAmount = 0;
+        BatchIssuesActionFilterDtoResponse response = new BatchIssuesActionFilterDtoResponse();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            BatchMapper mapper = session.getMapper(BatchMapper.class);
+            lista = mapper.filterIssueAction(
+                    dto.getDomainId(),
+                    dto.getProjectId(),
+                    dto.getJobName(),
+                    dto.getFolderName(),
+                    dto.getStatusType());
+        }
+
+        recordsCount = (lista.size() > 0) ? (int) lista.stream().count() : 0;
+        pagesAmount = dto.getRecordsAmount() > 0 ? (int) Math.ceil((float) recordsCount / dto.getRecordsAmount().floatValue()) : 1;
+
+        if (dto.getRecordsAmount() > 0) {
+            lista = lista.stream()
+                    .skip(dto.getRecordsAmount() * (dto.getPage() - 1))
+                    .limit(dto.getRecordsAmount())
+                    .collect(Collectors.toList());
+        }
+
+        response.setCount(recordsCount);
+        response.setPages_amount(pagesAmount);
+        response.setData(lista);
+
+        return response;
     }
 }
