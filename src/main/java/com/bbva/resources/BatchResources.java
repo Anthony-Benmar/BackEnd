@@ -98,7 +98,8 @@ public class BatchResources {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<JobExecutionByIdDTO> getJobExecutionById(JobExecutionByIdRequest request){
-        IDataResult<JobExecutionByIdDTO>  result = batchService.getJobExecutionById(request.getFolder(), request.getOrderId(), request.getJobName());
+        IDataResult<JobExecutionByIdDTO>  result = batchService.getJobExecutionById(request.getFolder(),
+                request.getOrderId(), request.getJobName(), request.getRunCounter());
         return result;
     }
 
