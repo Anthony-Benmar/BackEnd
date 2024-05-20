@@ -39,8 +39,8 @@ public class BatchService {
         return new SuccessDataResult(result);
     }
 
-    public IDataResult<JobExecutionByIdDTO> getJobExecutionById(String folder, String orderId, String jobName, Integer runCounter) {
-        var result = batchDao.getJobExecutionById(folder, orderId, jobName,runCounter);
+    public IDataResult<JobExecutionByIdDTO> getJobExecutionById(String folder, String orderId, String jobName) {
+        var result = batchDao.getJobExecutionById(folder, orderId, jobName);
         return new SuccessDataResult(result);
     }
 

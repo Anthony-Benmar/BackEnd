@@ -207,8 +207,7 @@ public interface BatchMapper {
     @Select("CALL SP_GET_JOB_EXECUTION_BY_NAME(" +
             "#{folder}," +
             "#{orderId}," +
-            "#{jobName}," +
-            "#{runCounter})")
+            "#{jobName})")
     @Results({
             @Result(property = "jobName", column = "job_name"),
             @Result(property = "folder", column = "folder"),
@@ -255,8 +254,7 @@ public interface BatchMapper {
     })
     JobExecutionByIdDTO getJobExecutionById(@Param("folder") String folder,
                                             @Param("orderId") String orderId,
-                                            @Param("jobName") String jobName,
-                                            @Param("runCounter") Integer runCounter);
+                                            @Param("jobName") String jobName);
 
 
 

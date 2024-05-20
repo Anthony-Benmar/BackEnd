@@ -9,5 +9,4 @@ public class JobExecutionByIdRequest {
     private String folder;
     private String orderId;
     private String jobName;
-    private Integer runCounter;
 }
