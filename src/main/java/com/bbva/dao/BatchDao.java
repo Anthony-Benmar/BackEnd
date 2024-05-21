@@ -186,11 +186,11 @@ public class BatchDao {
         }
     }
 
-    public JobExecutionByIdDTO getJobExecutionById(String folder, String orderId, String jobName) {
+    public JobExecutionByIdDTO getJobExecutionById(String folder, String orderId, String jobName, Integer runCounter) {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         try (SqlSession session = sqlSessionFactory.openSession()) {
             BatchMapper batchMapper = session.getMapper(BatchMapper.class);
-            JobExecutionByIdDTO result = batchMapper.getJobExecutionById(folder, orderId, jobName);
+            JobExecutionByIdDTO result = batchMapper.getJobExecutionById(folder, orderId, jobName, runCounter);
             return result;
         }
     }
