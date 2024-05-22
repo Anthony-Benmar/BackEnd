@@ -1,8 +1,10 @@
 package com.bbva.service;
 
 import com.bbva.core.abstracts.IDataResult;
+import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dao.BatchDao;
+import com.bbva.dto.batch.request.BatchIssuesActionFilterDtoRequest;
 import com.bbva.dto.batch.request.InsertReliabilityIncidenceDTO;
 import com.bbva.dto.batch.request.JobExecutionFilterRequestDTO;
 import com.bbva.dto.batch.response.*;
@@ -38,8 +40,16 @@ public class BatchService {
         return new SuccessDataResult(result);
     }
 
-    public IDataResult<JobExecutionByIdDTO> getJobExecutionById(String folder, String orderId, String jobName) {
-        var result = batchDao.getJobExecutionById(folder, orderId, jobName);
+    public IDataResult<JobExecutionByIdDTO> getJobExecutionById(String folder, String orderId, String jobName,Integer runCounter) {
+        if  (runCounter == null) {
+            return new ErrorDataResult("El campo runCounter es requerido");
+        }
+        var result = batchDao.getJobExecutionById(folder, orderId, jobName, runCounter);
+        return new SuccessDataResult(result);
+    }
+
+    public IDataResult<BatchIssuesActionFilterDtoResponse> filterIssueAction(BatchIssuesActionFilterDtoRequest dto) {
+        var result = batchDao.filterIssueAction(dto);
         return new SuccessDataResult(result);
     }
 }

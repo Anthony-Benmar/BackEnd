@@ -3,6 +3,7 @@ package com.bbva.database.mappers;
 import com.bbva.dto.batch.request.InsertAJIFJobExecutionRequest;
 import com.bbva.dto.batch.request.InsertCSATJobExecutionRequest;
 import com.bbva.dto.batch.request.InsertReliabilityIncidenceDTO;
+import com.bbva.dto.batch.response.BatchIssuesActionSelectDtoResponse;
 import com.bbva.dto.batch.response.JobExecutionByIdDTO;
 import com.bbva.dto.batch.response.JobExecutionFilterData;
 import com.bbva.dto.batch.response.StatusJobExecutionDTO;
@@ -206,7 +207,8 @@ public interface BatchMapper {
     @Select("CALL SP_GET_JOB_EXECUTION_BY_NAME(" +
             "#{folder}," +
             "#{orderId}," +
-            "#{jobName})")
+            "#{jobName}," +
+            "#{runCounter})")
     @Results({
             @Result(property = "jobName", column = "job_name"),
             @Result(property = "folder", column = "folder"),
@@ -253,5 +255,35 @@ public interface BatchMapper {
     })
     JobExecutionByIdDTO getJobExecutionById(@Param("folder") String folder,
                                             @Param("orderId") String orderId,
-                                            @Param("jobName") String jobName);
+                                            @Param("jobName") String jobName,
+                                            @Param("runCounter") Integer runCounter);
+
+
+
+    @Select("CALL SP_FILTER_ISSUE_ACTION(" +
+            "#{domainId}," +
+            "#{projectId}," +
+            "#{jobName}," +
+            "#{folderName}," +
+            "#{statusType})")
+    @Results({
+            @Result(property = "issueActionsId", column = "issue_actions_id"),
+            @Result(property = "jobId", column = "job_id"),
+            @Result(property = "jobName", column = "job_name"),
+            @Result(property = "folderName", column = "folder_name"),
+            @Result(property = "devEmail", column = "dev_email"),
+            @Result(property = "startDate", column = "start_date"),
+            @Result(property = "endDate", column = "end_date"),
+            @Result(property = "statusType", column = "status_type"),
+            @Result(property = "commentActionsDesc", column = "comment_actions_desc"),
+            @Result(property = "createAuditUser", column = "create_audit_user"),
+            @Result(property = "createAuditDate", column = "create_audit_date"),
+            @Result(property = "updateAuditUser", column = "update_audit_user"),
+            @Result(property = "updateAuditDate", column = "update_audit_date")
+    })
+    List<BatchIssuesActionSelectDtoResponse> filterIssueAction(@Param("domainId") String domainId,
+                                                               @Param("projectId") Integer projectId,
+                                                               @Param("jobName") String jobName,
+                                                               @Param("folderName") String folderName,
+                                                               @Param("statusType") Integer statusType);
 }
