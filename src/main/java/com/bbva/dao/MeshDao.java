@@ -93,6 +93,12 @@ public class MeshDao {
                 .filter(f->f.parentId.equals(jobId) && !f.id.equals("0"))
                 .collect(Collectors.toList());
 
+        //VALIDAR QUE SI EL JOB HIJO ES EL MISMO PADRE ENTONCES QUE LA RAMIFICACIÓN NO CONTINÚE
+        jobsChild.forEach(j->{
+            if (j.parentId.equals(j.id)){
+                j.id = j.rowNumber + "-" + jobId;
+            }
+        });
         addUniquesJobsId(jobsChild, result, listAcumulado);
 
         int finalProfundidad = profundidad-1;
