@@ -34,6 +34,7 @@ public class App extends Application {
         classes.add(DictionaryGenerationResources.class);
         classes.add(UseCaseTrackingResources.class);
         classes.add(JobResources.class);
+        classes.add(JiraValidatorResources.class);
     }
 
     @Override
