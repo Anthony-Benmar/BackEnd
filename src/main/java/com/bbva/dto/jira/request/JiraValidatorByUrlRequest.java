@@ -7,4 +7,7 @@ import lombok.Setter;
 @Setter
 public class JiraValidatorByUrlRequest {
     private String urlJira;
+    private String userName;
+    private String token;
+
 }

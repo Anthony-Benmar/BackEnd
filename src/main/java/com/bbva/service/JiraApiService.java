@@ -41,7 +41,6 @@ public class JiraApiService {
     public JiraApiService(String username, String token) {
         this.username = username;
         this.token = token;
-
         this.jiraHeaders.put("Content-Type", "application/json");
         this.httpClient = HttpClientBuilder.create().build();
         customFields.put("teamId", "customfield_13300");
@@ -61,8 +60,8 @@ public class JiraApiService {
         HttpPost request = new HttpPost(cookieURLPath);
 
         JsonObject payload = new JsonObject();
-        payload.addProperty("username", username);
-        payload.addProperty("password", token);
+        payload.addProperty("username",  this.username);
+        payload.addProperty("password", this.token);
         request.addHeader("Content-Type", "application/json");
         try (CloseableHttpResponse response = httpClient.execute(request)) {
             String responseBody = EntityUtils.toString(response.getEntity());
@@ -106,6 +105,7 @@ public class JiraApiService {
         return fieldsToGet;
     }
 
+    //Este método devuelve una cadena que se agregará al final de la URL de la consulta.
     private String getQuerySuffixURL() {
         int maxResults = 500;
         boolean jsonResult = true;
@@ -226,12 +226,10 @@ public class JiraApiService {
         return cookieHeader.toString();
     }
     public void testConnection() {
-        String testUsername = "your_username";
-        String testPassword = "your_password";
         CloseableHttpClient httpclient = HttpClients.createDefault();
 
         try {
-            getBasicSession(testUsername, testPassword, httpclient);
+            getBasicSession(this.username, this.token, httpclient);
             System.out.println("Connection successful.");
         } catch (Exception e) {
             System.out.println("Connection failed.");
