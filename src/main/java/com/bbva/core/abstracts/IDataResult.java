@@ -8,5 +8,4 @@ public abstract class IDataResult<T> {
     @Setter
     public String message;
     public String status;
-
 }
