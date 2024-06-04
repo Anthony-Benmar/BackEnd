@@ -1,37 +1,22 @@
 package com.bbva.service;
 
-import com.bbva.core.HandledException;
 import com.bbva.core.abstracts.IDataResult;
 import com.bbva.core.results.SuccessDataResult;
-import com.bbva.dto.issueticket.request.authJiraDtoRequest;
 import com.bbva.dto.jira.request.JiraValidatorByUrlRequest;
 import com.bbva.dto.jira.response.JiraResDTO;
 import com.bbva.util.ApiJiraMet.ValidationUrlJira;
 import com.bbva.util.ApiJiraName;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
 import org.apache.http.client.CookieStore;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.cookie.Cookie;
-import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.cookie.BasicClientCookie;
-import org.apache.http.util.EntityUtils;
 
 import java.net.http.HttpClient;
-import java.net.http.HttpResponse;
 import java.util.*;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import java.util.Map;
 
 
@@ -50,176 +35,56 @@ public class JiraValidatorService {
     private HttpClient httpClient;
     private CookieStore cookieStore = new BasicCookieStore();
     Map<String, String> customFields = new HashMap<>();
+    private String query;
+    private List<String> listaprueba;
 
-    private String getQuerySuffixURL() {
-        int maxResults = 500;
-        boolean jsonResult = true;
-        String expand = "changelog";
-        String fields = String.join(",", getTicketsByIdFieldsToGet());
+    private ValidationUrlJira validationUrlJira;
 
-        return String.format("&maxResults=%d&json_result=%b&expand=%s&fields=%s", maxResults, jsonResult, expand,
-                fields);
-    }
-
-    private List<String> getTicketsByIdFieldsToGet() {
-        List<String> fieldsToGet = new ArrayList<>();
-        // Agregar campos predeterminados
-        fieldsToGet.add("key");
-        fieldsToGet.add("summary");
-        fieldsToGet.add("comment");
-        fieldsToGet.add("assignee");
-        fieldsToGet.add("labels");
-        fieldsToGet.add("project");
-        fieldsToGet.add("updated");
-        fieldsToGet.add("due");
-        fieldsToGet.add("status");
-        fieldsToGet.add("subtasks");
-        fieldsToGet.add("description");
-        fieldsToGet.add("created");
-        fieldsToGet.add("issuetype");
-        fieldsToGet.add("issuelinks");
-        fieldsToGet.add("attachment");
-
-        // Agregar campos personalizados
-        fieldsToGet.addAll(customFields.values());
-
-        return fieldsToGet;
-    }
-
-    private static String createCookieHeader(List<Cookie> cookieList) {
-        StringBuilder cookieHeader = new StringBuilder();
-        for (Cookie responseCookie : cookieList) {
-            cookieHeader.append(responseCookie.getName()).append("=").append(responseCookie.getValue()).append("; ");
-        }
-        if (cookieHeader.length() > 0) {
-            cookieHeader.delete(cookieHeader.length() - 2, cookieHeader.length());
-        }
-        return cookieHeader.toString();
-    }
-
-    public void getBasicSession(String username, String password, CloseableHttpClient httpclient) throws Exception
-    {
-        var authJira =  new authJiraDtoRequest(username,password);
-        var gson = new GsonBuilder().setPrettyPrinting().create();
-
-        HttpPost httpPost = new HttpPost(ApiJiraName.URL_API_JIRA_SESSION);
-        StringEntity requestEntity = new StringEntity(gson.toJson(authJira));
-        httpPost.setEntity(requestEntity);
-        httpPost.setHeader("Content-Type", "application/json");
-
-        try(CloseableHttpResponse response = httpclient.execute(httpPost)) {
-            Integer responseCode = response.getStatusLine().getStatusCode();
-
-            if (responseCode >= 400) {
-                throw new HandledException(responseCode.toString(), "Error autenticación jira");
-            }
-            cookieStore = new BasicCookieStore();
-            Header[] headers = response.getAllHeaders();
-            for (Header header : headers) {
-                if (header.getName().equalsIgnoreCase("Set-Cookie")) {
-                    String cookieValue = header.getValue();
-                    String[] cookieParts = cookieValue.split(";")[0].split("=");
-                    if (cookieParts.length == 2) {
-                        String cookieName = cookieParts[0].trim();
-                        String cookieValueTrimmed = cookieParts[1].trim();
-                        var cookie = new BasicClientCookie(cookieName, cookieValueTrimmed);
-                        cookieStore.addCookie(cookie);
-                    }
-                }
-            }
-        }
-    }
-
-    private String GetJiraAsync(String username, String token,String url)
-            throws Exception
-    {
-        Object responseBody = null;
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-
-        //String url = URL_API_JIRA + issueTicketCode;
-        HttpGet httpGet = new HttpGet(url);
-        //StringEntity requestEntity = new StringEntity(jsonString, "UTF-8");
-        //httpPut.setEntity(requestEntity);
-        httpGet.setHeader("Content-Type", "application/json");
-
-        Integer responseCode =0;
-        String responseBodyString = "";
-        HttpEntity entity = null;
-        try(CloseableHttpClient httpclient = HttpClients.createDefault()){
-            getBasicSession(username, token, httpclient);
-            httpGet.setHeader("Cookie", createCookieHeader(cookieStore.getCookies()));
-            CloseableHttpResponse response = httpclient.execute(httpGet);
-            responseCode = response.getStatusLine().getStatusCode();
-            entity = response.getEntity();
-            responseBodyString = EntityUtils.toString(entity);
-            response.close();
-        }
-
-        if (responseCode.equals(302)) {
-            throw new HandledException(responseCode.toString(), "Token Expirado");
-        }
-        if (responseCode>=400 && responseCode<=500) {
-            throw new HandledException(responseCode.toString(), "Error al actualizar tickets, revise los datos ingresados");
-        }
-
-        return responseBodyString;
-    }
-
-
-        //------------------- TODAS LAS REGLAS DE NEGOCIO -------------------
+    //Todas la reglas de negocio
     public IDataResult<JiraResDTO> getValidatorByUrl(JiraValidatorByUrlRequest dto) throws Exception {
+        JiraApiService jiraApiService = new JiraApiService();
+        formato(dto);
+        validationUrlJira = new ValidationUrlJira( jiraCode);
+
+        var result_final = new ArrayList<>();
+        try(CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            //var url = ApiJiraName.URL_API_JIRA_SQL + this.query + jiraApiService.getQuerySuffixURL();
+            //var resultado = jiraApiService.GetJiraAsync(dto.getUserName(), dto.getToken(), url);
+
+            jiraApiService.getBasicSession(dto.getUserName(), dto.getToken(), httpClient);
+            var result_1 = validationUrlJira.getValidationURLJIRA("Validar que sea PAD3 o PAD5", "Ticket");
+            result_final.add(result_1);
+
+        }
+
+//        var url = ApiJiraName.URL_API_JIRA_SQL + this.query + jiraApiService.getQuerySuffixURL();
+//        var resultado = jiraApiService.GetJiraAsync(dto.getUserName(),dto.getToken(),url);
+
+        return new SuccessDataResult(result_final, "AUTENTICACION EXITOSA");
+
+
+    }
+    public void formato(JiraValidatorByUrlRequest dto){
         dto.setUrlJira(dto.getUrlJira().toUpperCase());
         validateJiraURL(dto.getUrlJira());
-        jiraCode = dto.getUrlJira().split("/")[dto.getUrlJira().split("/").length - 1];
+        this.jiraCode = dto.getUrlJira().split("/")[dto.getUrlJira().split("/").length - 1];
 
-        httpClient = HttpClient.newHttpClient();
-        var listaprueba =  List.of("id", "issuetype", "changelog", "teamId", "petitionerTeamId", "receptorTeamId", "labels", "featureLink", "issuelinks", "status", "summary", "acceptanceCriteria", "subtasks", "impactLabel", "itemType", "techStack",
+        this.httpClient = HttpClient.newHttpClient();
+        this.listaprueba =  List.of("id", "issuetype", "changelog", "teamId", "petitionerTeamId", "receptorTeamId", "labels", "featureLink", "issuelinks", "status", "summary", "acceptanceCriteria", "subtasks", "impactLabel", "itemType", "techStack",
                 "fixVersions", "attachment", "prs");
-        var tickets = List.of(jiraCode);
-        String query = "key%20in%20(" + String.join(",", tickets) + ")";
-////////////////////////////////////////////////////////////////////////////////////////
-       var resultItems = "";
-        try (CloseableHttpClient httpclient = HttpClients.createDefault()) {
-            //Autenticacion
-            getBasicSession(dto.getUserName(), dto.getToken(), httpclient);
-
-            var result_1 = ValidationUrlJira.getVallidationURLJIRA(dto.getUrlJira(), dto.getUserName(), dto.getToken(), httpclient);
-            var result_2 = ValidationUrlJira.getVallidationURLJIRA(dto.getUrlJira(), dto.getUserName(), dto.getToken(), httpclient);
-            var result_3 = ValidationUrlJira.getVallidationURLJIRA(dto.getUrlJira(), dto.getUserName(), dto.getToken(), httpclient);
-            var result_4 = ValidationUrlJira.getVallidationURLJIRA(dto.getUrlJira(), dto.getUserName(), dto.getToken(), httpclient);
-        } catch (Exception e) {
-            LOGGER.severe(e.getMessage());
-        }
-
-////////////////////////////////////////////////////////////////////////////////////////////
-//        return new SuccessDataResult(resultado, "CONEXION EXITOSA");
-        var resultVar = "";
-        try ( CloseableHttpClient httpclient = HttpClients.createDefault()) {
-            getBasicSession(dto.getUserName(), dto.getToken(), httpclient);
-
-        } catch (Exception e) {
-            LOGGER.severe(e.getMessage());
-        }
-
-        public void validateJiraURL(String jiraURL) {
-            String regexPattern = "^(?:https://jira.globaldevtools.bbva.com/(?:browse/)?(?:plugins/servlet/mobile#issue/)?)?([a-zA-Z0-9]+-[a-zA-Z0-9]+)$";
-            Pattern pattern = Pattern.compile(regexPattern);
-            Matcher matcher = pattern.matcher(jiraURL.toLowerCase());
-            this.isValidURL = matcher.matches();
-        }
-
+        var tickets = List.of(this.jiraCode);
+        this.query = "key%20in%20(" + String.join(",", tickets) + ")";
     }
 
-    try()
-//--------------------------------------------------------------------------------------------
     public List<Map<String,Object>> getResults() {
         List<Map<String,Object>> res = new ArrayList<>();
         boolean isWithError = false;
+
         try {
             // to prevent invalid urls sent directly to the server
             if (jiraTicketResult != null && isValidURL) {
                 String ticketGroup = "Ticket";
-                Map<String, Object> validationURLJiraResult = getValidationURLJIRA("Validar que sea PAD3 o PAD5", ticketGroup);
+                Map<String, Object> validationURLJiraResult = validationUrlJira.getValidationURLJIRA("Validar que sea PAD3 o PAD5", ticketGroup);
 
                 if (!(Boolean) validationURLJiraResult.get("isValid")) {
                     res.add(validationURLJiraResult);
@@ -245,8 +110,16 @@ public class JiraValidatorService {
         return res;
     }
 
+    public void validateJiraURL(String jiraURL) {
+        String regexPattern = "^(?:https://jira.globaldevtools.bbva.com/(?:browse/)?(?:plugins/servlet/mobile#issue/)?)?([a-zA-Z0-9]+-[a-zA-Z0-9]+)$";
+        Pattern pattern = Pattern.compile(regexPattern);
+        Matcher matcher = pattern.matcher(jiraURL.toLowerCase());
+        this.isValidURL = matcher.matches();
+    }
+
 
     //------------------- REGLA DE NEGOCIO 1-------------------
+
 
     //------------------- REGLA DE NEGOCIO 2-------------------
     public Map<String, Object> getValidatorValidateSummaryHUTType(String helpMessage, String group) {
@@ -322,3 +195,43 @@ public class JiraValidatorService {
         return Map.of("message", message, "isValid", isValid, "isWarning", isWarning, "helpMessage", helpMessage, "group", group);
     }
 }
+
+/*
+        jiraApiService = new JiraApiService(dto.getUserName(), dto.getToken());
+        //jiraApiService.testConnection();
+
+
+
+
+        if (!isValidURL) {
+            System.out.println("CONEXION FALLIDA");
+            return new SuccessDataResult<>(null, "CONEXION FALLIDA");
+        }
+
+        System.out.println("CONEXION EXITOSA");
+        // Querying Jira API
+        List<Map<String, Object>> queryResult = jiraApiService.searchByTicket(List.of(jiraCode),
+                List.of("id", "issuetype", "changelog", "teamId", "petitionerTeamId", "receptorTeamId", "labels", "featureLink", "issuelinks", "status", "summary", "acceptanceCriteria", "subtasks", "impactLabel", "itemType", "techStack",
+                        "fixVersions", "attachment", "prs"));
+
+        System.out.println("QUERY RESULT: " + queryResult);
+        List<Map<String, Object>> results = queryResult;
+        System.out.println("RESULTS: " + results);
+        if (results != null && !results.isEmpty()) {
+            jiraTicketResult = results;
+            System.out.println(jiraTicketResult);
+        }
+
+        List<Map<String, Object>> results2 = getResults();
+        List<JiraResDTO> jiraResDTOList = new ArrayList<>();
+
+        for (Map<String, Object> result : results2) {
+            JiraResDTO jiraResDTO = new JiraResDTO();
+            jiraResDTO.setIsValid((String) result.get("isValid"));
+            jiraResDTO.setIsWarning((String) result.get("isWarning"));
+            jiraResDTO.setHelpMessage((String) result.get("helpMessage"));
+            jiraResDTO.setGroup((String) result.get("group"));
+            jiraResDTOList.add(jiraResDTO);
+        }
+        LOGGER.log(null, "DTORESPONSE: " + jiraResDTOList.toString());
+        */
