@@ -6,6 +6,8 @@ import com.bbva.service.JiraValidatorService;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.concurrent.ExecutionException;
 
 
@@ -19,7 +21,7 @@ public class JiraValidatorResources {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<JiraValidatorByUrlResponse> validatorByUrl(JiraValidatorByUrlRequest dto)
-            throws ExecutionException, InterruptedException {
+            throws Exception {
         return jiraValidatorService.getValidatorByUrl(dto);
     }
 }
