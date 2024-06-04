@@ -6,6 +6,7 @@ import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dto.issueticket.request.authJiraDtoRequest;
 import com.bbva.dto.jira.request.JiraValidatorByUrlRequest;
 import com.bbva.dto.jira.response.JiraResDTO;
+import com.bbva.util.ApiJiraMet.ValidationUrlJira;
 import com.bbva.util.ApiJiraName;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -163,7 +164,9 @@ public class JiraValidatorService {
 
         return responseBodyString;
     }
-    //Todas la reglas de negocio
+
+
+        //------------------- TODAS LAS REGLAS DE NEGOCIO -------------------
     public IDataResult<JiraResDTO> getValidatorByUrl(JiraValidatorByUrlRequest dto) throws Exception {
         dto.setUrlJira(dto.getUrlJira().toUpperCase());
         validateJiraURL(dto.getUrlJira());
@@ -174,59 +177,44 @@ public class JiraValidatorService {
                 "fixVersions", "attachment", "prs");
         var tickets = List.of(jiraCode);
         String query = "key%20in%20(" + String.join(",", tickets) + ")";
+////////////////////////////////////////////////////////////////////////////////////////
+       var resultItems = "";
+        try (CloseableHttpClient httpclient = HttpClients.createDefault()) {
+            //Autenticacion
+            getBasicSession(dto.getUserName(), dto.getToken(), httpclient);
 
-        var url = ApiJiraName.URL_API_JIRA_SQL + query + getQuerySuffixURL();
-        var resultado = GetJiraAsync(dto.getUserName(),dto.getToken(),url);
-
-
-
-/*
-        jiraApiService = new JiraApiService(dto.getUserName(), dto.getToken());
-        //jiraApiService.testConnection();
-
-
-
-
-        if (!isValidURL) {
-            System.out.println("CONEXION FALLIDA");
-            return new SuccessDataResult<>(null, "CONEXION FALLIDA");
+            var result_1 = ValidationUrlJira.getVallidationURLJIRA(dto.getUrlJira(), dto.getUserName(), dto.getToken(), httpclient);
+            var result_2 = ValidationUrlJira.getVallidationURLJIRA(dto.getUrlJira(), dto.getUserName(), dto.getToken(), httpclient);
+            var result_3 = ValidationUrlJira.getVallidationURLJIRA(dto.getUrlJira(), dto.getUserName(), dto.getToken(), httpclient);
+            var result_4 = ValidationUrlJira.getVallidationURLJIRA(dto.getUrlJira(), dto.getUserName(), dto.getToken(), httpclient);
+        } catch (Exception e) {
+            LOGGER.severe(e.getMessage());
         }
 
-        System.out.println("CONEXION EXITOSA");
-        // Querying Jira API
-        List<Map<String, Object>> queryResult = jiraApiService.searchByTicket(List.of(jiraCode),
-                List.of("id", "issuetype", "changelog", "teamId", "petitionerTeamId", "receptorTeamId", "labels", "featureLink", "issuelinks", "status", "summary", "acceptanceCriteria", "subtasks", "impactLabel", "itemType", "techStack",
-                        "fixVersions", "attachment", "prs"));
+////////////////////////////////////////////////////////////////////////////////////////////
+//        return new SuccessDataResult(resultado, "CONEXION EXITOSA");
+        var resultVar = "";
+        try ( CloseableHttpClient httpclient = HttpClients.createDefault()) {
+            getBasicSession(dto.getUserName(), dto.getToken(), httpclient);
 
-        System.out.println("QUERY RESULT: " + queryResult);
-        List<Map<String, Object>> results = queryResult;
-        System.out.println("RESULTS: " + results);
-        if (results != null && !results.isEmpty()) {
-            jiraTicketResult = results;
-            System.out.println(jiraTicketResult);
+        } catch (Exception e) {
+            LOGGER.severe(e.getMessage());
         }
 
-        List<Map<String, Object>> results2 = getResults();
-        List<JiraResDTO> jiraResDTOList = new ArrayList<>();
-
-        for (Map<String, Object> result : results2) {
-            JiraResDTO jiraResDTO = new JiraResDTO();
-            jiraResDTO.setIsValid((String) result.get("isValid"));
-            jiraResDTO.setIsWarning((String) result.get("isWarning"));
-            jiraResDTO.setHelpMessage((String) result.get("helpMessage"));
-            jiraResDTO.setGroup((String) result.get("group"));
-            jiraResDTOList.add(jiraResDTO);
+        public void validateJiraURL(String jiraURL) {
+            String regexPattern = "^(?:https://jira.globaldevtools.bbva.com/(?:browse/)?(?:plugins/servlet/mobile#issue/)?)?([a-zA-Z0-9]+-[a-zA-Z0-9]+)$";
+            Pattern pattern = Pattern.compile(regexPattern);
+            Matcher matcher = pattern.matcher(jiraURL.toLowerCase());
+            this.isValidURL = matcher.matches();
         }
-        LOGGER.log(null, "DTORESPONSE: " + jiraResDTOList.toString());
-        */
-        return new SuccessDataResult(resultado, "CONEXION EXITOSA");
-
 
     }
+
+    try()
+//--------------------------------------------------------------------------------------------
     public List<Map<String,Object>> getResults() {
         List<Map<String,Object>> res = new ArrayList<>();
         boolean isWithError = false;
-
         try {
             // to prevent invalid urls sent directly to the server
             if (jiraTicketResult != null && isValidURL) {
@@ -257,34 +245,8 @@ public class JiraValidatorService {
         return res;
     }
 
-    public void validateJiraURL(String jiraURL) {
-        String regexPattern = "^(?:https://jira.globaldevtools.bbva.com/(?:browse/)?(?:plugins/servlet/mobile#issue/)?)?([a-zA-Z0-9]+-[a-zA-Z0-9]+)$";
-        Pattern pattern = Pattern.compile(regexPattern);
-        Matcher matcher = pattern.matcher(jiraURL.toLowerCase());
-        this.isValidURL = matcher.matches();
-    }
-
 
     //------------------- REGLA DE NEGOCIO 1-------------------
-    public Map<String, Object> getValidationURLJIRA(String helpMessage, String group) {
-        String message;
-        boolean isValid;
-        boolean isWarning = false;
-
-
-        String[] jiraCodeParts = jiraCode.split("-");
-        String jiraPADCode = jiraCodeParts[0].toUpperCase();
-
-        if (validPADList.contains(jiraPADCode.toLowerCase())) {
-            message = "Se encontr&oacute; <div class=\"" + boxClassesBorder + "\">" + jiraPADCode + "</div>";
-            isValid = true;
-        } else {
-            message = "No encontr&oacute;  <div class=\"" + boxClassesBorder + "\">" + String.join(" o ", validPADList) + "</div>";
-            isValid = false;
-        }
-
-        return Map.of("message", message, "isValid", isValid, "isWarning", isWarning, "helpMessage", helpMessage, "group", group);
-    }
 
     //------------------- REGLA DE NEGOCIO 2-------------------
     public Map<String, Object> getValidatorValidateSummaryHUTType(String helpMessage, String group) {
