@@ -126,6 +126,7 @@ public class JiraApiService {
         System.out.println(queryURL);
 
         try {
+
             HttpGet request = new HttpGet(queryURL);
 
             HttpResponse response = httpClient.execute(request);
@@ -240,7 +241,7 @@ public class JiraApiService {
 
     //--------------------- SEARCH BY TICKETS ---------------------------
     public List<Map<String, Object>> searchByTicket(List<String> tickets, List<String> fieldsToGet) {
-        String query = "key in (" + String.join(",", tickets) + ")";
+        String query = "key%20in%20(" + String.join(",", tickets) + ")";
         return searchIssues(query, fieldsToGet);
     }
 
