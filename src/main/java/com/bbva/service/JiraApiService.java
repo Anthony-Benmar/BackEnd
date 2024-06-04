@@ -186,7 +186,7 @@ public class JiraApiService {
 
     public List<Map<String, Object>> searchIssues(String jqlStr, List<String> fieldsToGet) throws Exception {
         List<Map<String, Object>> res = new ArrayList<>();
-        renewJiraCookie();
+        //renewJiraCookie();
 
         String queryURL = URL_API_JIRA_SQL + jqlStr + getQuerySuffixURL();
         System.out.println(queryURL);
