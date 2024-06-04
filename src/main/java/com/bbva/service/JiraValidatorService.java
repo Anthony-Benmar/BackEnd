@@ -5,6 +5,7 @@ import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dto.jira.request.JiraValidatorByUrlRequest;
 import com.bbva.dto.jira.response.JiraResDTO;
 import com.bbva.util.ApiJiraMet.ValidationUrlJira;
+import com.bbva.util.ApiJiraMet.ValidatorValidateSummaryHUTType;
 import com.bbva.util.ApiJiraName;
 import org.apache.http.client.CookieStore;
 import org.apache.http.impl.client.BasicCookieStore;
@@ -24,7 +25,7 @@ public class JiraValidatorService {
     private static final Logger LOGGER = Logger.getLogger(JiraValidatorService.class.getName());
     private JiraApiService jiraApiService;
     private boolean isValidURL;
-    private List<Map<String, Object>> jiraTicketResult;
+    private Map<String, Object> jiraTicketResult;
     private String jiraCode;
     private String jiraPADCode;
     private List<String> validPADList = Arrays.asList("pad3", "pad5");
@@ -39,22 +40,26 @@ public class JiraValidatorService {
     private List<String> listaprueba;
 
     private ValidationUrlJira validationUrlJira;
+    private ValidatorValidateSummaryHUTType validatorValidateSummaryHUTType;
 
     //Todas la reglas de negocio
     public IDataResult<JiraResDTO> getValidatorByUrl(JiraValidatorByUrlRequest dto) throws Exception {
         JiraApiService jiraApiService = new JiraApiService();
         formato(dto);
+
         validationUrlJira = new ValidationUrlJira( jiraCode);
+        validatorValidateSummaryHUTType = new ValidatorValidateSummaryHUTType(jiraTicketResult, boxClassesBorder);
 
         var result_final = new ArrayList<>();
         try(CloseableHttpClient httpClient = HttpClients.createDefault()) {
-            //var url = ApiJiraName.URL_API_JIRA_SQL + this.query + jiraApiService.getQuerySuffixURL();
-            //var resultado = jiraApiService.GetJiraAsync(dto.getUserName(), dto.getToken(), url);
-
             jiraApiService.getBasicSession(dto.getUserName(), dto.getToken(), httpClient);
-            var result_1 = validationUrlJira.getValidationURLJIRA("Validar que sea PAD3 o PAD5", "Ticket");
-            result_final.add(result_1);
 
+            var result_1 = validationUrlJira.getValidationURLJIRA("Validar que sea PAD3 o PAD5", "Ticket");
+            //var result_2 = validatorValidateSummaryHUTType.getValidatorValidateSummaryHUTType("Validar el tipo de desarrollo en el summary", "Ticket");
+
+            result_final.add(result_1);
+            //result_final.add(result_2);
+            httpClient.close();
         }
 
 //        var url = ApiJiraName.URL_API_JIRA_SQL + this.query + jiraApiService.getQuerySuffixURL();
@@ -64,7 +69,7 @@ public class JiraValidatorService {
 
 
     }
-    public void formato(JiraValidatorByUrlRequest dto){
+    public void formato(JiraValidatorByUrlRequest dto) throws Exception {
         dto.setUrlJira(dto.getUrlJira().toUpperCase());
         validateJiraURL(dto.getUrlJira());
         this.jiraCode = dto.getUrlJira().split("/")[dto.getUrlJira().split("/").length - 1];
@@ -74,6 +79,14 @@ public class JiraValidatorService {
                 "fixVersions", "attachment", "prs");
         var tickets = List.of(this.jiraCode);
         this.query = "key%20in%20(" + String.join(",", tickets) + ")";
+
+//        var url = ApiJiraName.URL_API_JIRA_SQL + query + jiraApiService.getQuerySuffixURL();
+//        Map<String,Object> resultado = jiraApiService.GetJiraAsync(dto.getUserName(),dto.getToken(),url);
+//
+//        if (resultado != null && !resultado.isEmpty()) {
+//            this.jiraTicketResult = resultado;
+//            System.out.println(jiraTicketResult);
+//        }
     }
 
     public List<Map<String,Object>> getResults() {
@@ -91,14 +104,14 @@ public class JiraValidatorService {
                 } else {
                     //Map<String, Object> validacionEnvioFormulario = getValidatorValidateSentToTablero05("Validar envio de formulario", ticketGroup); // validar a través de un google sheet o BD???
                     //res.add(validacionEnvioFormulario);
-                    Map<String, Object> validacionSummaryResult = getValidatorValidateSummaryHUTType("Validar el tipo de desarrollo en el summary", ticketGroup);
-                    String tipoDesarrolloSummary = (String) validacionSummaryResult.get("tipoDesarrolloSummary");
+                    //Map<String, Object> validacionSummaryResult = getValidatorValidateSummaryHUTType("Validar el tipo de desarrollo en el summary", ticketGroup);
+                    //String tipoDesarrolloSummary = (String) validacionSummaryResult.get("tipoDesarrolloSummary");
 
-                    Map<String, Object> validacionTipoDesarrolloResult = getValidatorValidateHUTType(
-                            "Detectar el tipo de desarrollo por el prefijo de " + ticketVisibleLabel + " y el summary",
-                            tipoDesarrolloSummary,
-                            ticketGroup
-                    );
+//                    Map<String, Object> validacionTipoDesarrolloResult = getValidatorValidateHUTType(
+//                            "Detectar el tipo de desarrollo por el prefijo de " + ticketVisibleLabel + " y el summary",
+//                            tipoDesarrolloSummary,
+//                            ticketGroup
+//                    );
                 }
             }
         }
@@ -122,57 +135,7 @@ public class JiraValidatorService {
 
 
     //------------------- REGLA DE NEGOCIO 2-------------------
-    public Map<String, Object> getValidatorValidateSummaryHUTType(String helpMessage, String group) {
-        String message;
-        boolean isValid;
-        boolean isWarning = false;
-        String tipoDesarrolloSummary = "";
 
-        Map<String, List<String>> tipoDesarrolloBySummaryObject = new HashMap<>();
-        tipoDesarrolloBySummaryObject.put("Mallas", Arrays.asList("Control M"));
-        tipoDesarrolloBySummaryObject.put("HOST", Arrays.asList("host"));
-        tipoDesarrolloBySummaryObject.put("Hammurabi", Arrays.asList("hammurabi"));
-        tipoDesarrolloBySummaryObject.put("MigrationTool", Arrays.asList("MigrationTool"));
-        tipoDesarrolloBySummaryObject.put("SmartCleaner", Arrays.asList("smartcleaner"));
-        tipoDesarrolloBySummaryObject.put("Ingesta", Arrays.asList("ingesta", "kirby"));
-        tipoDesarrolloBySummaryObject.put("Procesamiento", Arrays.asList("procesamiento"));
-        tipoDesarrolloBySummaryObject.put("Operativizacion", Arrays.asList("operativizacion"));
-        tipoDesarrolloBySummaryObject.put("Productivizacion", Arrays.asList("productivizacion"));
-        tipoDesarrolloBySummaryObject.put("Scaffolder", Arrays.asList("assets"));
-        tipoDesarrolloBySummaryObject.put("SparkCompactor", Arrays.asList("sparkcompactor"));
-        tipoDesarrolloBySummaryObject.put("JSON Global", Arrays.asList("json"));
-        tipoDesarrolloBySummaryObject.put("Teradata", Arrays.asList("Creación de archivo"));
-
-        String summaryComparacion = ((String) jiraTicketResult.get(0).get("summary")).toLowerCase();
-
-        for (Map.Entry<String, List<String>> entry : tipoDesarrolloBySummaryObject.entrySet()) {
-            String tipoDesarrolloKey = entry.getKey();
-            List<String> tipoDesarrolloItem = entry.getValue();
-
-            if (tipoDesarrolloItem.stream().anyMatch(validacionText -> summaryComparacion.contains(validacionText.toLowerCase()))) {
-                tipoDesarrolloSummary = tipoDesarrolloKey;
-                break;
-            }
-        }
-
-        if (!tipoDesarrolloSummary.isEmpty()) {
-            message = "<div><div class=\"" + boxClassesBorder + "\">Summary</div> Con <div class=\"" + boxClassesBorder + "\">Tipo de desarrollo</div> v&aacute;lido";
-            isValid = true;
-        } else {
-            message = "<div class=\"" + boxClassesBorder + "\">Summary</div> sin <div class=\"" + boxClassesBorder + "\">Tipo de desarrollo</div> valido";
-            message += "<div class='" + boxClassesBorder + "'><strong>Atenci&oacute;n</strong>:<br> El summary es: <div class=\"" + boxClassesBorder + " border-dark\">" + jiraTicketResult.get(0).get("summary") + "</div></div>";
-            isValid = false;
-        }
-
-        return Map.of(
-                "message", message,
-                "isValid", isValid,
-                "isWarning", isWarning,
-                "helpMessage", helpMessage,
-                "group", group,
-                "tipoDesarrolloSummary", tipoDesarrolloSummary
-        );
-    }
 
     //------------------- REGLA DE NEGOCIO 3-------------------
     public Map<String, Object> getValidatorValidateHUTType(String helpMessage, String tipoDesarrolloSummary, String group) {

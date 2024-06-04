@@ -33,10 +33,12 @@ public class ValidationUrlJira {
         String jiraPADCode = jiraCodeParts[0].toUpperCase();
 
         if (this.validPADList.contains(jiraPADCode.toLowerCase())) {
-            message = "Se encontr&oacute; <div class=\"" + this.boxClassesBorder + "\">" + jiraPADCode + "</div>";
+            //message = "Se encontr&oacute; <div class=\"" + this.boxClassesBorder + "\">" + jiraPADCode + "</div>";
+            message = "Se encontró " + jiraPADCode.toLowerCase();
             isValid = true;
         } else {
-            message = "No encontr&oacute;  <div class=\"" + this.boxClassesBorder + "\">" + String.join(" o ", this.validPADList) + "</div>";
+            //message = "No encontr&oacute;  <div class=\"" + this.boxClassesBorder + "\">" + String.join(" o ", this.validPADList) + "</div>";
+            message = "No se encontró " + String.join(" o ", this.validPADList);
             isValid = false;
         }
 
