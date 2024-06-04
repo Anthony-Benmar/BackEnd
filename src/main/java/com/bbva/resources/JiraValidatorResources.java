@@ -1,15 +1,11 @@
 package com.bbva.resources;
 import com.bbva.core.abstracts.IDataResult;
 import com.bbva.dto.jira.request.JiraValidatorByUrlRequest;
-import com.bbva.dto.jira.response.JiraValidatorByUrlResponse;
+import com.bbva.dto.jira.response.JiraResDTO;
 import com.bbva.service.JiraValidatorService;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.util.concurrent.ExecutionException;
-
 
 @Path("/jira")
 @Produces(MediaType.APPLICATION_JSON)
@@ -20,7 +16,7 @@ public class JiraValidatorResources {
     @Path("/validator/validate")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public IDataResult<JiraValidatorByUrlResponse> validatorByUrl(JiraValidatorByUrlRequest dto)
+    public IDataResult<JiraResDTO> validatorByUrl(JiraValidatorByUrlRequest dto)
             throws Exception {
         return jiraValidatorService.getValidatorByUrl(dto);
     }

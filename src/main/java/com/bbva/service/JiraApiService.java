@@ -46,7 +46,7 @@ public class JiraApiService {
         this.username = username;
         this.token = token;
         this.jiraHeaders.put("Content-Type", "application/json");
-        this.httpClient = HttpClientBuilder.create().build();
+        this.httpClient = HttpClientBuilder.create().setDefaultCookieStore(cookieStore).build();
         customFields.put("teamId", "customfield_13300");
         customFields.put("petitionerTeamId", "customfield_13301");
         customFields.put("receptorTeamId", "customfield_13302");
@@ -183,103 +183,6 @@ public class JiraApiService {
                 .headers("Content-Type", "application/json")
                 .method(method, HttpRequest.BodyPublishers.noBody());
     }
-
-
-//    public List<Map<String, Object>> searchIssues(String jqlStr, List<String> fieldsToGet) {
-//        List<Map<String, Object>> res = new ArrayList<>();
-//        renewJiraCookie();
-//
-//        String queryURL = URL_API_JIRA_SQL + jqlStr + getQuerySuffixURL();
-//        System.out.println(queryURL);
-//        HttpRequest request = getRequestBuilder(queryURL, "GET").build();
-//        System.out.println("REQUEST: " + request);
-//
-//        //HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-////
-////        try {
-////            HttpGet request = new HttpGet(URI.create(queryURL));
-////            HttpResponse response = httpClient.execute(request);
-////
-////            // Verificar si la respuesta es exitosa (código de estado 200)
-////            if (response.getStatusLine().getStatusCode() == 200) {
-////                String responseBody = EntityUtils.toString(response.getEntity());
-////
-////                // Parsear la respuesta JSON
-////                JsonObject jsonResponse = JsonParser.parseString(responseBody).getAsJsonObject();
-////                JsonArray issuesArray = jsonResponse.getAsJsonArray("issues");
-////
-////                // Iterar sobre cada objeto de problema y extraer los campos requeridos
-////                for (JsonElement issueElement : issuesArray) {
-////                    JsonObject issueObject = issueElement.getAsJsonObject();
-////                    Map<String, Object> issueMap = new HashMap<>();
-////
-////                    // Agregar el campo 'key'
-////                    issueMap.put("key", issueObject.get("key").getAsString());
-////
-////                    // Agregar los campos específicos solicitados
-////                    for (String field : fieldsToGet) {
-////                        if (issueObject.getAsJsonObject("fields").has(field)) {
-////                            issueMap.put(field, issueObject.getAsJsonObject("fields").get(field));
-////                        }
-////                    }
-////
-////                    // Agregar el objeto de problema a la lista de resultados
-////                    res.add(issueMap);
-////                }
-////            } else {
-////                System.err.println("Error en la solicitud: " + response.getStatusLine().getStatusCode());
-////            }
-////        } catch (Exception e) {
-////            e.printStackTrace();
-////        }
-//        return res;
-//    }
-
-//    public List<Map<String, Object>> searchIssues(String jqlStr, List<String> fieldsToGet) {
-//        List<Map<String, Object>> res = new ArrayList<>();
-//        renewJiraCookie();
-//
-//        String queryURL = URL_API_JIRA_SQL + jqlStr + getQuerySuffixURL();
-//        System.out.println(queryURL);
-//
-//        try {
-//            HttpGet request = new HttpGet(URI.create(queryURL));
-//            HttpResponse response = httpClient.execute(request);
-//
-//            // Verificar si la respuesta es exitosa (código de estado 200)
-//            if (response.getStatusLine().getStatusCode() == 200) {
-//                String responseBody = EntityUtils.toString(response.getEntity());
-//
-//                // Parsear la respuesta JSON
-//                JsonObject jsonResponse = JsonParser.parseString(responseBody).getAsJsonObject();
-//                JsonArray issuesArray = jsonResponse.getAsJsonArray("issues");
-//
-//                // Iterar sobre cada objeto de problema y extraer los campos requeridos
-//                for (JsonElement issueElement : issuesArray) {
-//                    JsonObject issueObject = issueElement.getAsJsonObject();
-//                    Map<String, Object> issueMap = new HashMap<>();
-//
-//                    // Agregar el campo 'key'
-//                    issueMap.put("key", issueObject.get("key").getAsString());
-//
-//                    // Agregar los campos específicos solicitados
-//                    for (String field : fieldsToGet) {
-//                        if (issueObject.getAsJsonObject("fields").has(field)) {
-//                            issueMap.put(field, issueObject.getAsJsonObject("fields").get(field));
-//                        }
-//                    }
-//
-//                    // Agregar el objeto de problema a la lista de resultados
-//                    res.add(issueMap);
-//                }
-//            } else {
-//                System.err.println("Error en la solicitud: " + response.getStatusLine().getStatusCode());
-//            }
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//        return res;
-//    }
 
     public List<Map<String, Object>> searchIssues(String jqlStr, List<String> fieldsToGet) throws Exception {
         List<Map<String, Object>> res = new ArrayList<>();
