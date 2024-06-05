@@ -90,13 +90,13 @@ public class JiraValidatorService {
                 }
                 message.setMessage((String) result.get("message"));
                 if ((Boolean) result.get("isWarning")) {
-                    message.setStatus("alert");
+                    message.setStatus("warning");
                     alertCount++;
                 } else if ((Boolean) result.get("isValid")) {
                     message.setStatus("success");
                     successCount++;
                 } else {
-                    message.setStatus("fail");
+                    message.setStatus("error");
                     failCount++;
                 }
                 messages.add(message);
