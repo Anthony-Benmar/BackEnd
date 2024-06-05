@@ -77,7 +77,7 @@ public class JiraApiService {
         return fieldsToGet;
     }
 
-    private static String createCookieHeader(List<Cookie> cookieList) {
+    private String createCookieHeader(List<Cookie> cookieList) {
         StringBuilder cookieHeader = new StringBuilder();
         for (Cookie responseCookie : cookieList) {
             cookieHeader.append(responseCookie.getName()).append("=").append(responseCookie.getValue()).append("; ");

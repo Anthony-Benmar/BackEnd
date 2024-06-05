@@ -25,7 +25,8 @@ public class JiraValidatorService {
     private static final Logger LOGGER = Logger.getLogger(JiraValidatorService.class.getName());
     private JiraApiService jiraApiService;
     private boolean isValidURL;
-    private Map<String, Object> jiraTicketResult;
+    //private Map<String, Object> jiraTicketResult;
+    private String jiraTicketResult;
     private String jiraCode;
     private String jiraPADCode;
     private List<String> validPADList = Arrays.asList("pad3", "pad5");
@@ -44,21 +45,21 @@ public class JiraValidatorService {
 
     //Todas la reglas de negocio
     public IDataResult<JiraResDTO> getValidatorByUrl(JiraValidatorByUrlRequest dto) throws Exception {
-        JiraApiService jiraApiService = new JiraApiService();
+        jiraApiService = new JiraApiService();
         formato(dto);
 
-        validationUrlJira = new ValidationUrlJira( jiraCode);
-        validatorValidateSummaryHUTType = new ValidatorValidateSummaryHUTType(jiraTicketResult, boxClassesBorder);
+        validationUrlJira = new ValidationUrlJira( jiraCode );
+        validatorValidateSummaryHUTType = new ValidatorValidateSummaryHUTType(this.jiraTicketResult, boxClassesBorder);
 
         var result_final = new ArrayList<>();
         try(CloseableHttpClient httpClient = HttpClients.createDefault()) {
             jiraApiService.getBasicSession(dto.getUserName(), dto.getToken(), httpClient);
 
             var result_1 = validationUrlJira.getValidationURLJIRA("Validar que sea PAD3 o PAD5", "Ticket");
-            //var result_2 = validatorValidateSummaryHUTType.getValidatorValidateSummaryHUTType("Validar el tipo de desarrollo en el summary", "Ticket");
+            var result_2 = validatorValidateSummaryHUTType.getValidatorValidateSummaryHUTType("Validar el tipo de desarrollo en el summary", "Ticket");
 
             result_final.add(result_1);
-            //result_final.add(result_2);
+            result_final.add(result_2);
             httpClient.close();
         }
 
@@ -80,13 +81,13 @@ public class JiraValidatorService {
         var tickets = List.of(this.jiraCode);
         this.query = "key%20in%20(" + String.join(",", tickets) + ")";
 
-//        var url = ApiJiraName.URL_API_JIRA_SQL + query + jiraApiService.getQuerySuffixURL();
-//        Map<String,Object> resultado = jiraApiService.GetJiraAsync(dto.getUserName(),dto.getToken(),url);
-//
-//        if (resultado != null && !resultado.isEmpty()) {
-//            this.jiraTicketResult = resultado;
-//            System.out.println(jiraTicketResult);
-//        }
+        var url = ApiJiraName.URL_API_JIRA_SQL + query + this.jiraApiService.getQuerySuffixURL();
+        String resultado = jiraApiService.GetJiraAsync(dto.getUserName(),dto.getToken(),url);
+
+        if (resultado != null && !resultado.isEmpty()) {
+            this.jiraTicketResult = resultado;
+            System.out.println(jiraTicketResult);
+        }
     }
 
     public List<Map<String,Object>> getResults() {

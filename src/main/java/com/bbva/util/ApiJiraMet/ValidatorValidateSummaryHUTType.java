@@ -6,10 +6,10 @@ import java.util.List;
 import java.util.Map;
 
 public class ValidatorValidateSummaryHUTType {
-    private Map<String, Object> jiraTicketResult;
+    private String jiraTicketResult;
     private String boxClassesBorder;
 
-    public ValidatorValidateSummaryHUTType(Map<String, Object> jiraTicketResult, String boxClassesBorder) {
+    public ValidatorValidateSummaryHUTType(String jiraTicketResult, String boxClassesBorder) {
         this.jiraTicketResult = jiraTicketResult;
         this.boxClassesBorder = boxClassesBorder;
     }
@@ -35,7 +35,7 @@ public class ValidatorValidateSummaryHUTType {
         tipoDesarrolloBySummaryObject.put("JSON Global", Arrays.asList("json"));
         tipoDesarrolloBySummaryObject.put("Teradata", Arrays.asList("Creación de archivo"));
 
-        String summaryComparacion = ((String) jiraTicketResult.get("summary")).toLowerCase();
+        String summaryComparacion = jiraTicketResult.toLowerCase();
 
         for (Map.Entry<String, List<String>> entry : tipoDesarrolloBySummaryObject.entrySet()) {
             String tipoDesarrolloKey = entry.getKey();
@@ -48,11 +48,19 @@ public class ValidatorValidateSummaryHUTType {
         }
 
         if (!tipoDesarrolloSummary.isEmpty()) {
-            message = "<div><div class=\"" + boxClassesBorder + "\">Summary</div> Con <div class=\"" + boxClassesBorder + "\">Tipo de desarrollo</div> v&aacute;lido";
+            //message = "<div><div class=\"" + boxClassesBorder + "\">Summary</div> Con <div class=\"" + boxClassesBorder + "\">Tipo de desarrollo</div> v&aacute;lido";
+            message = "Tipo de desarrollo: " + tipoDesarrolloSummary + " valido para el summary";
+
             isValid = true;
         } else {
+//            message = "<div class=\"" + boxClassesBorder + "\">Summary</div> sin <div class=\"" + boxClassesBorder + "\">Tipo de desarrollo</div> valido";
+//            message += "<div class='" + boxClassesBorder + "'><strong>Atenci&oacute;n</strong>:<br> El summary es: <div class=\"" + boxClassesBorder + " border-dark\">" + jiraTicketResult + "</div></div>";
+
             message = "<div class=\"" + boxClassesBorder + "\">Summary</div> sin <div class=\"" + boxClassesBorder + "\">Tipo de desarrollo</div> valido";
-            message += "<div class='" + boxClassesBorder + "'><strong>Atenci&oacute;n</strong>:<br> El summary es: <div class=\"" + boxClassesBorder + " border-dark\">" + jiraTicketResult.get("summary") + "</div></div>";
+            message += "<div class='" + boxClassesBorder + "'><strong>Atenci&oacute;n</strong>:<br> El summary es: <div class=\"" + boxClassesBorder + " border-dark\">" + jiraTicketResult + "</div></div>";
+
+
+
             isValid = false;
         }
 
@@ -66,3 +74,4 @@ public class ValidatorValidateSummaryHUTType {
         );
     }
 }
+
