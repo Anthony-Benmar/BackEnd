@@ -10,6 +10,7 @@ import java.util.List;
 public class JiraResponseDTO {
     private List<JiraMessageResponseDTO> data;
     private int successCount;
-    private int failCount;
-    private int alertCount;
+    private int warningCount;
+    private int errorCount;
+
 }

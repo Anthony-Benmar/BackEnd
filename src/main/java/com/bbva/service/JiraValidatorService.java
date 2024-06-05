@@ -1,7 +1,6 @@
 package com.bbva.service;
 
 import com.bbva.core.abstracts.IDataResult;
-import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dto.jira.request.JiraValidatorByUrlRequest;
 import com.bbva.dto.jira.response.JiraMessageResponseDTO;
@@ -51,8 +50,8 @@ public class JiraValidatorService {
         JiraResponseDTO jiraResponseDTO = new JiraResponseDTO();
         List<JiraMessageResponseDTO> messages = new ArrayList<>();
         int successCount = 0;
-        int failCount = 0;
-        int alertCount = 0;
+        int errorCount = 0;
+        int warningCount = 0;
         JiraResDTO jiraResDTO = new JiraResDTO();
         jiraApiService = new JiraApiService();
         formato(dto);
@@ -91,21 +90,21 @@ public class JiraValidatorService {
                 message.setMessage((String) result.get("message"));
                 if ((Boolean) result.get("isWarning")) {
                     message.setStatus("warning");
-                    alertCount++;
+                    warningCount++;
                 } else if ((Boolean) result.get("isValid")) {
                     message.setStatus("success");
                     successCount++;
                 } else {
                     message.setStatus("error");
-                    failCount++;
+                    errorCount++;
                 }
                 messages.add(message);
             }
 
             jiraResponseDTO.setData(messages);
             jiraResponseDTO.setSuccessCount(successCount);
-            jiraResponseDTO.setFailCount(failCount);
-            jiraResponseDTO.setAlertCount(alertCount);
+            jiraResponseDTO.setErrorCount(errorCount);
+            jiraResponseDTO.setWarningCount(warningCount);
         }
 
 //        var url = ApiJiraName.URL_API_JIRA_SQL + this.query + jiraApiService.getQuerySuffixURL();
