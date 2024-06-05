@@ -57,7 +57,7 @@ public class ValidatorValidateSummaryHUTType {
 //            message += "<div class='" + boxClassesBorder + "'><strong>Atenci&oacute;n</strong>:<br> El summary es: <div class=\"" + boxClassesBorder + " border-dark\">" + jiraTicketResult + "</div></div>";
 
             message = "Summary sin Tipo de desarrollo valido";
-            message += "Atención: El summary es: " + jiraTicketResult;
+            //message += "Atención: El summary es: " + jiraTicketResult;
 
 
 

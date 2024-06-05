@@ -1,9 +1,12 @@
 package com.bbva.service;
 
 import com.bbva.core.abstracts.IDataResult;
+import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dto.jira.request.JiraValidatorByUrlRequest;
+import com.bbva.dto.jira.response.JiraMessageResponseDTO;
 import com.bbva.dto.jira.response.JiraResDTO;
+import com.bbva.dto.jira.response.JiraResponseDTO;
 import com.bbva.util.ApiJiraMet.ValidationUrlJira;
 import com.bbva.util.ApiJiraMet.ValidatorValidateSummaryHUTType;
 import com.bbva.util.ApiJiraName;
@@ -44,7 +47,12 @@ public class JiraValidatorService {
     private ValidatorValidateSummaryHUTType validatorValidateSummaryHUTType;
 
     //Todas la reglas de negocio
-    public IDataResult<JiraResDTO> getValidatorByUrl(JiraValidatorByUrlRequest dto) throws Exception {
+    public IDataResult<JiraResponseDTO> getValidatorByUrl(JiraValidatorByUrlRequest dto) throws Exception {
+        JiraResponseDTO jiraResponseDTO = new JiraResponseDTO();
+        List<JiraMessageResponseDTO> messages = new ArrayList<>();
+        int successCount = 0;
+        int failCount = 0;
+        int alertCount = 0;
         JiraResDTO jiraResDTO = new JiraResDTO();
         jiraApiService = new JiraApiService();
         formato(dto);
@@ -52,7 +60,10 @@ public class JiraValidatorService {
         validationUrlJira = new ValidationUrlJira( jiraCode );
         validatorValidateSummaryHUTType = new ValidatorValidateSummaryHUTType(this.jiraTicketResult, boxClassesBorder);
 
-        var result_final = new ArrayList<>();
+        //var result_final = new ArrayList<>();
+        ArrayList<Map<String, Object>> result_final = new ArrayList<>();
+        int ruleIdCounter = 1;
+
         try(CloseableHttpClient httpClient = HttpClients.createDefault()) {
             jiraApiService.getBasicSession(dto.getUserName(), dto.getToken(), httpClient);
 
@@ -62,15 +73,47 @@ public class JiraValidatorService {
             result_final.add(result_1);
             result_final.add(result_2);
             httpClient.close();
+
+            for (Map<String, Object> result : result_final) {
+                JiraMessageResponseDTO message = new JiraMessageResponseDTO();
+                message.setRuleId(ruleIdCounter++); // Set ruleId and increment counter
+                switch (message.getRuleId()) {
+                    case 1:
+                        message.setRule("ValidationURLJIRA");
+                        break;
+                    case 2:
+                        message.setRule("ValidatorValidateSummaryHUTType");
+                        break;
+                    default:
+                        message.setRule("Unknown");
+                        break;
+                }
+                message.setMessage((String) result.get("message"));
+                if ((Boolean) result.get("isWarning")) {
+                    message.setStatus("alert");
+                    alertCount++;
+                } else if ((Boolean) result.get("isValid")) {
+                    message.setStatus("success");
+                    successCount++;
+                } else {
+                    message.setStatus("fail");
+                    failCount++;
+                }
+                messages.add(message);
+            }
+
+            jiraResponseDTO.setData(messages);
+            jiraResponseDTO.setSuccessCount(successCount);
+            jiraResponseDTO.setFailCount(failCount);
+            jiraResponseDTO.setAlertCount(alertCount);
         }
 
 //        var url = ApiJiraName.URL_API_JIRA_SQL + this.query + jiraApiService.getQuerySuffixURL();
 //        var resultado = jiraApiService.GetJiraAsync(dto.getUserName(),dto.getToken(),url);
 
-        return new SuccessDataResult(result_final, "AUTENTICACION EXITOSA");
-
-
+        return new SuccessDataResult<>(jiraResponseDTO, "Reglas de validacion");
     }
+
     public void formato(JiraValidatorByUrlRequest dto) throws Exception {
         dto.setUrlJira(dto.getUrlJira().toUpperCase());
         validateJiraURL(dto.getUrlJira());
