@@ -1,15 +1,5 @@
 package com.bbva.util.ApiJiraMet;
 
-import com.bbva.core.HandledException;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import org.apache.http.HttpEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
-
 import java.util.Map;
 
 public class ValidationUrlJira {
@@ -44,5 +34,7 @@ public class ValidationUrlJira {
 
         return Map.of("message", message, "isValid", isValid, "isWarning", isWarning, "helpMessage", helpMessage, "group", group);
     }
+
+
 
 }

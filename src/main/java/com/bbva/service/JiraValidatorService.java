@@ -45,6 +45,7 @@ public class JiraValidatorService {
 
     //Todas la reglas de negocio
     public IDataResult<JiraResDTO> getValidatorByUrl(JiraValidatorByUrlRequest dto) throws Exception {
+        JiraResDTO jiraResDTO = new JiraResDTO();
         jiraApiService = new JiraApiService();
         formato(dto);
 
