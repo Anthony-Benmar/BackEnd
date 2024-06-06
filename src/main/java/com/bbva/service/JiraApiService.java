@@ -123,7 +123,7 @@ public class JiraApiService {
             throws Exception
     {
         Object responseBody = null;
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();;
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
         HttpGet httpGet = new HttpGet(url);
         httpGet.setHeader("Content-Type", "application/json");
 

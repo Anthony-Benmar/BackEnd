@@ -50,7 +50,7 @@ public class JiraValidatorService {
         int successCount = 0;
         int errorCount = 0;
         int warningCount = 0;
-        jiraApiService = new JiraApiService();
+        this.jiraApiService = new JiraApiService();
         this.httpClient = HttpClient.newHttpClient();
 
         var isValidUrl = validateJiraFormatURL(dto.getUrlJira());
@@ -58,6 +58,8 @@ public class JiraValidatorService {
         var issuesMetadada = getMetadataIssues(dto);
         var jsonResponse = JsonParser.parseString(issuesMetadada).getAsJsonObject();
         var jiraTicketResult = jsonResponse.getAsJsonArray("issues").get(0).getAsJsonObject();
+        var issueType = jiraTicketResult.getAsJsonObject("fields").getAsJsonObject("issuetype").get("name").getAsString();
+
 
         if (issuesMetadada.isEmpty() && jiraTicketResult !=null){
             throw new HandledException("500", "no existe datos del ticket jira");
@@ -67,15 +69,16 @@ public class JiraValidatorService {
         ArrayList<Map<String, Object>> result_final = new ArrayList<>();
         int ruleIdCounter = 1;
 
-        var instancesRules = new ValidationUrlJira(dto.getUrlJira(), jiraTicketResult);
+        var instancesRules = new ValidationUrlJira(dto.getUrlJira(), jiraTicketResult, issueType);
         var result_1 = instancesRules.getValidProjectPAD("Validar que sea PAD3 o PAD5", "Ticket");
         var result_2 = instancesRules.getValidatorValidateSummaryHUTType("Validar el tipo de desarrollo en el summary", "Ticket");
 
+        var result_4 = instancesRules.getValidatorIssueType("Validar que el Issue type sea Story o Dependency", "Ticket");
         //validacionTipoDesarrolloResult =  self.getValidatorValidateHUTType("Detectar el tipo de desarrollo por el prefijo de l {self.ticketVisibleLabel} y el summary", result_2.get("tipoDesarrolloSummary"), "Ticket")
 
         result_final.add(result_1);
         result_final.add(result_2);
-
+        result_final.add(result_4);
 
 
 
@@ -89,6 +92,9 @@ public class JiraValidatorService {
                     break;
                 case 2:
                     message.setRule("ValidatorValidateSummaryHUTType");
+                    break;
+                case 3:
+                    message.setRule("ValidatorIssueType");
                     break;
                 default:
                     message.setRule("Unknown");
@@ -120,13 +126,14 @@ public class JiraValidatorService {
     }
 
     public String getMetadataIssues(JiraValidatorByUrlRequest dto) throws Exception {
-        var listaprueba =  List.of("id", "issuetype", "changelog", "teamId", "petitionerTeamId", "receptorTeamId", "labels", "featureLink", "issuelinks", "status", "summary", "acceptanceCriteria", "subtasks", "impactLabel", "itemType", "techStack",
-                "fixVersions", "attachment", "prs");
-        var tickets = List.of(dto.getUrlJira());
+
+        String jiraCode = dto.getUrlJira().split("/")[dto.getUrlJira().split("/").length - 1];
+        //var tickets = List.of(dto.getUrlJira());
+        var tickets = List.of(jiraCode);
         var query = "key%20in%20(" + String.join(",", tickets) + ")";
 
         var url = ApiJiraName.URL_API_JIRA_SQL + query + this.jiraApiService.getQuerySuffixURL();
-        String result = jiraApiService.GetJiraAsync(dto.getUserName(), dto.getToken() ,url);
+        String result = this.jiraApiService.GetJiraAsync(dto.getUserName(), dto.getToken() ,url);
         return result;
     }
 
