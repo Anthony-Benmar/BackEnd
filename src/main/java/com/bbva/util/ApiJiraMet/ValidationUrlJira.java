@@ -7,20 +7,16 @@ import java.util.*;
 
 public class ValidationUrlJira {
     private  String jiraCode ;
-    private String jiraPADCode;
-    private  String boxClassesBorder;
     private final String validPADList = "pad3,pad5";
     private final String ticketGroup = "Ticket";
     private JsonObject jiraTicketResult;
-    private String issueType;
 
-    public ValidationUrlJira(String jiraCode, JsonObject jiraTicketResult, String issueType) {
+    public ValidationUrlJira(String jiraCode, JsonObject jiraTicketResult) {
         this.jiraCode = jiraCode;
         this.jiraTicketResult = jiraTicketResult;
-        this.issueType = issueType;
     }
 
-    public  Map<String, Object> getValidProjectPAD(String helpMessage, String group) {
+    public  Map<String, Object> getValidatorProjectPAD(String helpMessage, String group) {
         String message;
         boolean isValid;
         boolean isWarning = false;
@@ -128,23 +124,47 @@ public class ValidationUrlJira {
         dependencyMap.put("field", "receptorTeamId");
 
         Map<String, Map<String, String>> teamFieldLabelByIssueType = new HashMap<>();
-        teamFieldLabelByIssueType.put("Story", storyMap); // problema de valor "Historia" se trae de la api
+        teamFieldLabelByIssueType.put("Historia", storyMap);
+        teamFieldLabelByIssueType.put("Story", storyMap);
         teamFieldLabelByIssueType.put("Dependency", dependencyMap);
 
-        StringBuilder message;
+        var issueType = jiraTicketResult.getAsJsonObject("fields").getAsJsonObject("issuetype").get("name").getAsString();
+
+        String message;
         boolean isValid;
         boolean isWarning = false;
 
         if (teamFieldLabelByIssueType.containsKey(issueType)) {
-            message = new StringBuilder("Issue Type: " + issueType);
+            message = "Issue Type: " + issueType;
             isValid = true;
         } else {
-            message = new StringBuilder("Issue Type inválido: " + issueType);
+            message = "Issue Type inválido: " + issueType;
             String[] issueTypes = {"Story", "Dependency ( Mallas / HOST )"};
-            message.append(" Atención: Solo se aceptan los siguientes Issue Types: " + String.join(", ", issueTypes));
+            message = message + " Atención: Solo se aceptan los siguientes Issue Types: " + String.join(", ", issueTypes);
             isValid = false;
         }
-        return getValidatonResultsDict(message.toString(), isValid, isWarning, helpMessage, group);
+        return getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
+    }
+
+    public Map<String, Object> getValidatorValidateHUTType(String helpMessage, String tipoDesarrolloSummary, String group) {
+        String message = "";
+        boolean isValid = false;
+        boolean isWarning = false;
+        ArrayList<String> projectCodeList = new ArrayList<>(Arrays.asList("PAD3", "PAD5"));
+
+        if (projectCodeList.contains(this.jiraCode) && tipoDesarrolloSummary != ""){
+            var tipoDesarrollo = tipoDesarrolloSummary;
+            //VALIDA REGISTRO EN EL FORMULARIO SCALPY
+            /*if "scaffolder" in self.tipoDesarrolloFormulario.lower() and "despliegue" not in tipoDesarrolloFormulario.lower(){
+                var tipoDesarrollo = "Scaffolder";
+                message ="Tipo de desarrollo" + tipoDesarrollo;
+                isValid = true;
+            }*/
+        }else {
+            message = "No se pudo detectar el tipo de desarrollo";
+            isValid = false;
+        }
+        return getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
     }
 
 //    public Map<String, Object> getValidationValidateJIRAStatus(String helpMessage, String group) {
