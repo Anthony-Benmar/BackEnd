@@ -1,6 +1,6 @@
 package com.bbva.util.ApiJiraMet;
 
-import com.google.gson.JsonArray;
+import com.bbva.common.jiraValidador.JiraValidatorConstantes;
 import com.google.gson.JsonObject;
 
 import java.util.*;
@@ -45,25 +45,9 @@ public class ValidationUrlJira {
         boolean isValid;
         boolean isWarning = false;
         String tipoDesarrolloSummary = "";
-
-        Map<String, List<String>> tipoDesarrolloBySummaryObject = new HashMap<>();
-        tipoDesarrolloBySummaryObject.put("Mallas", Arrays.asList("Control M"));
-        tipoDesarrolloBySummaryObject.put("HOST", Arrays.asList("host"));
-        tipoDesarrolloBySummaryObject.put("Hammurabi", Arrays.asList("hammurabi"));
-        tipoDesarrolloBySummaryObject.put("MigrationTool", Arrays.asList("MigrationTool"));
-        tipoDesarrolloBySummaryObject.put("SmartCleaner", Arrays.asList("smartcleaner"));
-        tipoDesarrolloBySummaryObject.put("Ingesta", Arrays.asList("ingesta", "kirby"));
-        tipoDesarrolloBySummaryObject.put("Procesamiento", Arrays.asList("procesamiento"));
-        tipoDesarrolloBySummaryObject.put("Operativizacion", Arrays.asList("operativizacion"));
-        tipoDesarrolloBySummaryObject.put("Productivizacion", Arrays.asList("productivizacion"));
-        tipoDesarrolloBySummaryObject.put("Scaffolder", Arrays.asList("assets"));
-        tipoDesarrolloBySummaryObject.put("SparkCompactor", Arrays.asList("sparkcompactor"));
-        tipoDesarrolloBySummaryObject.put("JSON Global", Arrays.asList("json"));
-        tipoDesarrolloBySummaryObject.put("Teradata", Arrays.asList("Creación de archivo"));
-
         String summaryComparacion = jiraTicketResult.get("fields").getAsJsonObject().get("summary").toString().toLowerCase();
 
-        for (Map.Entry<String, List<String>> entry : tipoDesarrolloBySummaryObject.entrySet()) {
+        for (Map.Entry<String, List<String>> entry : JiraValidatorConstantes.DEVELOPS_TYPES.entrySet()) {
             String tipoDesarrolloKey = entry.getKey();
             List<String> tipoDesarrolloItem = entry.getValue();
 
@@ -91,29 +75,6 @@ public class ValidationUrlJira {
                 "tipoDesarrolloSummary", tipoDesarrolloSummary
         );
     }
-//    public Map<String, Object> getValidatorValidateHUTType(String helpMessage, String tipoDesarrolloSummary, String group) {
-//        String message = "";
-//        boolean isValid = false;
-//        boolean isWarning = false;
-//
-//        if (jiraPADCode.equals("PAD3") || jiraPADCode.equals("PAD5")) {
-//            if (!tipoDesarrolloSummary.isEmpty()) {
-//                tipoDesarrollo = tipoDesarrolloSummary;
-//                if (tipoDesarrolloFormulario.toLowerCase().contains("scaffolder") && !tipoDesarrolloFormulario.toLowerCase().contains("despliegue")) {
-//                    tipoDesarrollo = "Scaffolder";
-//                }
-//                //message = String.format("<div class=\"%s\">Tipo de desarrollo</div> es <div class=\"%s bg-dark border border-dark\">%s</div>", boxClassesBorder, boxClassesBorder, tipoDesarrollo);
-//                message = "Tipo de desarrollo: " + tipoDesarrollo + " valido para el formulario";
-//                isValid = true;
-//            } else {
-//                message = String.format("No se pudo detectar el <div class=\"%s\">Tipo de desarrollo</div>", boxClassesBorder);
-//            }
-//        } else {
-//            message = String.format("El código JIRA '%s' no es válido para validar el Tipo de desarrollo", jiraPADCode);
-//        }
-//
-//        return getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
-//    }
 
     public Map<String, Object> getValidatorIssueType(String helpMessage, String group) {
         Map<String, String> storyMap = new HashMap<>();
@@ -146,6 +107,38 @@ public class ValidationUrlJira {
         return getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
     }
 
+    public Map<String, Object> getValidatorDocumentAttachByDevType(String tipoDesarrollo) {
+        String message ="";
+        boolean isValid = false;
+        boolean isWarning = false;
+
+        //FALTA VALIDAR SI ES TICKET DE INTEGRACIÓN
+        var result = JiraValidatorConstantes.ATTACHS_BY_DEVELOP_TYPES.get(tipoDesarrollo);
+
+        var attachments = jiraTicketResult.getAsJsonObject("fields").getAsJsonObject().get("attachment").getAsJsonArray();
+
+        attachments.forEach(attachment -> {
+
+        });
+
+        /*
+        * adjuntosWithParts = []
+        for adjunto in self.adjuntos:
+            adjuntoParts = adjunto.split(".")
+            adjuntoSPartsSinEXT = adjuntoParts[0].split("-")
+            adjuntosWithParts.append([part.strip() for part in adjuntoSPartsSinEXT][0].lower())
+
+        isValid = adjuntoObject['label'].lower() in adjuntosWithParts
+        extraLabel = f"({adjuntoObject['extraLabel']})" if "extraLabel" in adjuntoObject else ""
+        message = f"""El documento <div class='{self.boxClassesBorder}'>{adjuntoObject['label']}</div> {''if  isValid else 'no'} existe {extraLabel}"""
+
+        * */
+
+        return getValidatonResultsDict(message, isValid, isWarning, "helpMessage", "group");
+    }
+
+
+
     public Map<String, Object> getValidatorValidateHUTType(String helpMessage, String tipoDesarrolloSummary, String group) {
         String message = "";
         boolean isValid = false;
@@ -154,7 +147,6 @@ public class ValidationUrlJira {
 
         if (projectCodeList.contains(this.jiraCode) && tipoDesarrolloSummary != ""){
             var tipoDesarrollo = tipoDesarrolloSummary;
-            //VALIDA REGISTRO EN EL FORMULARIO SCALPY
             /*if "scaffolder" in self.tipoDesarrolloFormulario.lower() and "despliegue" not in tipoDesarrolloFormulario.lower(){
                 var tipoDesarrollo = "Scaffolder";
                 message ="Tipo de desarrollo" + tipoDesarrollo;
@@ -166,44 +158,6 @@ public class ValidationUrlJira {
         }
         return getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
     }
-
-//    public Map<String, Object> getValidationValidateJIRAStatus(String helpMessage, String group) {
-//        String message = "";
-//        boolean isValid = false;
-//        boolean isWarning = false;
-//
-//        List<String> statusList = new ArrayList<>(statusTableroDQA);
-//
-//        if (tipoDesarrollo.equals("Mallas") || tipoDesarrollo.equals("HOST")) {
-//            statusList.addAll(estadosExtraMallasHost);
-//        }
-//
-//        message = "Con estado <div class='" + boxClassesBorder + "'>" + jiraTicketStatus + "</div>";
-//
-//        if (statusList.contains(jiraTicketStatus)) {
-//            isValid = true;
-//
-//            List<String> listaEstados = new ArrayList<>();
-//            listaEstados.add("Ready");
-//            listaEstados.add("Deployed");
-//            if (tipoDesarrollo.equals("Mallas") || tipoDesarrollo.equals("HOST")) {
-//                listaEstados.addAll(estadosExtraMallasHost);
-//            }
-//
-//            if (!listaEstados.contains(jiraTicketStatus)) {
-//                if (isInTableroDQA && isEnviadoFormulario) {
-//                    isValid = true;
-//                    isWarning = true;
-//                    message += "<div class='" + boxWarningClasses + "'><strong>Atenci&oacute;n</strong>:<br> Es posible que el <div class='" + boxClassesBorder + " border-dark'>" + ticketVisibleLabel + "</div> se encuentre en revisi&oacute;n, recordar que el estado inicial de un <div class='" + boxClassesBorder + " border-dark mt-2'>" + ticketVisibleLabel + "</div> por revisar es <div class='mt-2 " + boxClassesBorder + " border-dark'>Ready</div></div>";
-//                } else {
-//                    isValid = false;
-//                }
-//            }
-//        }
-//
-//        return getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
-//    }
-
 
 
     private Map<String, Object> getValidationResultsDict(String message, boolean isValid, boolean isWarning, String helpMessage, String group) {
@@ -230,12 +184,5 @@ public class ValidationUrlJira {
         newMessage.put("group", result.get("group"));
         return newMessage;
     }
-    public void rule1_documents(){
-    }
-
-    public void rule2_documents(){
-    }
-
-
 
 }

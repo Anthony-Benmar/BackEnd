@@ -72,12 +72,16 @@ public class JiraValidatorService {
         var instancesRules = new ValidationUrlJira(dto.getUrlJira(), jiraTicketResult);
         var result_1 = instancesRules.getValidatorProjectPAD("Validar que sea PAD3 o PAD5", "Ticket");
         var result_2 = instancesRules.getValidatorValidateSummaryHUTType("Validar el tipo de desarrollo en el summary", "Ticket");
-        var result_3 =  instancesRules.getValidatorValidateHUTType("Detectar el tipo de desarrollo por el prefijo y el summary", result_2.get("tipoDesarrolloSummary").toString(), "Ticket")
+        var tipoDesarrollo = result_2.get("tipoDesarrolloSummary").toString();
+        var result_3 = instancesRules.getValidatorValidateHUTType("Detectar el tipo de desarrollo por el prefijo y el summary", result_2.get("tipoDesarrolloSummary").toString(), "Ticket");
         var result_4 = instancesRules.getValidatorIssueType("Validar que el Issue type sea Story o Dependency", "Ticket");
+
+        var result_5 = instancesRules.getValidatorDocumentAttachByDevType(tipoDesarrollo);
 
 
         result_final.add(result_1);
         result_final.add(result_2);
+        result_final.add(result_3);
         result_final.add(result_4);
 
 
