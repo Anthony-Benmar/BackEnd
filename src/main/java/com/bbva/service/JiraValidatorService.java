@@ -1,5 +1,6 @@
 package com.bbva.service;
 
+import com.bbva.core.HandledException;
 import com.bbva.core.abstracts.IDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dto.jira.request.JiraValidatorByUrlRequest;
@@ -9,6 +10,9 @@ import com.bbva.dto.jira.response.JiraResponseDTO;
 import com.bbva.util.ApiJiraMet.ValidationUrlJira;
 import com.bbva.util.ApiJiraMet.ValidatorValidateSummaryHUTType;
 import com.bbva.util.ApiJiraName;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import org.apache.http.client.CookieStore;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -26,10 +30,6 @@ import java.util.Map;
 public class JiraValidatorService {
     private static final Logger LOGGER = Logger.getLogger(JiraValidatorService.class.getName());
     private JiraApiService jiraApiService;
-    private boolean isValidURL;
-    //private Map<String, Object> jiraTicketResult;
-    private String jiraTicketResult;
-    private String jiraCode;
     private String jiraPADCode;
     private List<String> validPADList = Arrays.asList("pad3", "pad5");
     private String boxClassesBorder;
@@ -39,8 +39,6 @@ public class JiraValidatorService {
     private HttpClient httpClient;
     private CookieStore cookieStore = new BasicCookieStore();
     Map<String, String> customFields = new HashMap<>();
-    private String query;
-    private List<String> listaprueba;
 
     private ValidationUrlJira validationUrlJira;
     private ValidatorValidateSummaryHUTType validatorValidateSummaryHUTType;
@@ -52,60 +50,68 @@ public class JiraValidatorService {
         int successCount = 0;
         int errorCount = 0;
         int warningCount = 0;
-        JiraResDTO jiraResDTO = new JiraResDTO();
         jiraApiService = new JiraApiService();
-        formato(dto);
+        this.httpClient = HttpClient.newHttpClient();
 
-        validationUrlJira = new ValidationUrlJira( jiraCode );
-        validatorValidateSummaryHUTType = new ValidatorValidateSummaryHUTType(this.jiraTicketResult, boxClassesBorder);
+        var isValidUrl = validateJiraFormatURL(dto.getUrlJira());
 
-        //var result_final = new ArrayList<>();
+        var issuesMetadada = getMetadataIssues(dto);
+        var jsonResponse = JsonParser.parseString(issuesMetadada).getAsJsonObject();
+        var jiraTicketResult = jsonResponse.getAsJsonArray("issues").get(0).getAsJsonObject();
+
+        if (issuesMetadada.isEmpty() && jiraTicketResult !=null){
+            throw new HandledException("500", "no existe datos del ticket jira");
+        }
+
+
         ArrayList<Map<String, Object>> result_final = new ArrayList<>();
         int ruleIdCounter = 1;
 
-        try(CloseableHttpClient httpClient = HttpClients.createDefault()) {
-            jiraApiService.getBasicSession(dto.getUserName(), dto.getToken(), httpClient);
+        var instancesRules = new ValidationUrlJira(dto.getUrlJira(), jiraTicketResult);
+        var result_1 = instancesRules.getValidProjectPAD("Validar que sea PAD3 o PAD5", "Ticket");
+        var result_2 = instancesRules.getValidatorValidateSummaryHUTType("Validar el tipo de desarrollo en el summary", "Ticket");
 
-            var result_1 = validationUrlJira.getValidationURLJIRA("Validar que sea PAD3 o PAD5", "Ticket");
-            var result_2 = validatorValidateSummaryHUTType.getValidatorValidateSummaryHUTType("Validar el tipo de desarrollo en el summary", "Ticket");
+        //validacionTipoDesarrolloResult =  self.getValidatorValidateHUTType("Detectar el tipo de desarrollo por el prefijo de l {self.ticketVisibleLabel} y el summary", result_2.get("tipoDesarrolloSummary"), "Ticket")
 
-            result_final.add(result_1);
-            result_final.add(result_2);
-            httpClient.close();
+        result_final.add(result_1);
+        result_final.add(result_2);
 
-            for (Map<String, Object> result : result_final) {
-                JiraMessageResponseDTO message = new JiraMessageResponseDTO();
-                message.setRuleId(ruleIdCounter++); // Set ruleId and increment counter
-                switch (message.getRuleId()) {
-                    case 1:
-                        message.setRule("ValidationURLJIRA");
-                        break;
-                    case 2:
-                        message.setRule("ValidatorValidateSummaryHUTType");
-                        break;
-                    default:
-                        message.setRule("Unknown");
-                        break;
-                }
-                message.setMessage((String) result.get("message"));
-                if ((Boolean) result.get("isWarning")) {
-                    message.setStatus("warning");
-                    warningCount++;
-                } else if ((Boolean) result.get("isValid")) {
-                    message.setStatus("success");
-                    successCount++;
-                } else {
-                    message.setStatus("error");
-                    errorCount++;
-                }
-                messages.add(message);
+
+
+
+
+        for (Map<String, Object> result : result_final) {
+            JiraMessageResponseDTO message = new JiraMessageResponseDTO();
+            message.setRuleId(ruleIdCounter++);
+            switch (message.getRuleId()) {
+                case 1:
+                    message.setRule("ValidationURLJIRA");
+                    break;
+                case 2:
+                    message.setRule("ValidatorValidateSummaryHUTType");
+                    break;
+                default:
+                    message.setRule("Unknown");
+                    break;
             }
-
-            jiraResponseDTO.setData(messages);
-            jiraResponseDTO.setSuccessCount(successCount);
-            jiraResponseDTO.setErrorCount(errorCount);
-            jiraResponseDTO.setWarningCount(warningCount);
+            message.setMessage((String) result.get("message"));
+            if ((Boolean) result.get("isWarning")) {
+                message.setStatus("warning");
+                warningCount++;
+            } else if ((Boolean) result.get("isValid")) {
+                message.setStatus("success");
+                successCount++;
+            } else {
+                message.setStatus("error");
+                errorCount++;
+            }
+            messages.add(message);
         }
+
+        jiraResponseDTO.setData(messages);
+        jiraResponseDTO.setSuccessCount(successCount);
+        jiraResponseDTO.setErrorCount(errorCount);
+        jiraResponseDTO.setWarningCount(warningCount);
 
 //        var url = ApiJiraName.URL_API_JIRA_SQL + this.query + jiraApiService.getQuerySuffixURL();
 //        var resultado = jiraApiService.GetJiraAsync(dto.getUserName(),dto.getToken(),url);
@@ -113,27 +119,18 @@ public class JiraValidatorService {
         return new SuccessDataResult<>(jiraResponseDTO, "Reglas de validacion");
     }
 
-    public void formato(JiraValidatorByUrlRequest dto) throws Exception {
-        dto.setUrlJira(dto.getUrlJira().toUpperCase());
-        validateJiraURL(dto.getUrlJira());
-        this.jiraCode = dto.getUrlJira().split("/")[dto.getUrlJira().split("/").length - 1];
-
-        this.httpClient = HttpClient.newHttpClient();
-        this.listaprueba =  List.of("id", "issuetype", "changelog", "teamId", "petitionerTeamId", "receptorTeamId", "labels", "featureLink", "issuelinks", "status", "summary", "acceptanceCriteria", "subtasks", "impactLabel", "itemType", "techStack",
+    public String getMetadataIssues(JiraValidatorByUrlRequest dto) throws Exception {
+        var listaprueba =  List.of("id", "issuetype", "changelog", "teamId", "petitionerTeamId", "receptorTeamId", "labels", "featureLink", "issuelinks", "status", "summary", "acceptanceCriteria", "subtasks", "impactLabel", "itemType", "techStack",
                 "fixVersions", "attachment", "prs");
-        var tickets = List.of(this.jiraCode);
-        this.query = "key%20in%20(" + String.join(",", tickets) + ")";
+        var tickets = List.of(dto.getUrlJira());
+        var query = "key%20in%20(" + String.join(",", tickets) + ")";
 
         var url = ApiJiraName.URL_API_JIRA_SQL + query + this.jiraApiService.getQuerySuffixURL();
-        String resultado = jiraApiService.GetJiraAsync(dto.getUserName(),dto.getToken(),url);
-
-        if (resultado != null && !resultado.isEmpty()) {
-            this.jiraTicketResult = resultado;
-            System.out.println(jiraTicketResult);
-        }
+        String result = jiraApiService.GetJiraAsync(dto.getUserName(), dto.getToken() ,url);
+        return result;
     }
 
-    public List<Map<String,Object>> getResults() {
+    /*public List<Map<String,Object>> getResults() {
         List<Map<String,Object>> res = new ArrayList<>();
         boolean isWithError = false;
 
@@ -165,13 +162,13 @@ public class JiraValidatorService {
             }
         }
         return res;
-    }
+    }*/
 
-    public void validateJiraURL(String jiraURL) {
+    public boolean validateJiraFormatURL(String jiraURL) {
         String regexPattern = "^(?:https://jira.globaldevtools.bbva.com/(?:browse/)?(?:plugins/servlet/mobile#issue/)?)?([a-zA-Z0-9]+-[a-zA-Z0-9]+)$";
         Pattern pattern = Pattern.compile(regexPattern);
         Matcher matcher = pattern.matcher(jiraURL.toLowerCase());
-        this.isValidURL = matcher.matches();
+        return matcher.matches();
     }
 
 
