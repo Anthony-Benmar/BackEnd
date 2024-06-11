@@ -80,23 +80,23 @@ public class JiraValidatorService {
         var result_5 = instancesRules.getValidatorDocumentAttachByDevType(tipoDesarrollo);
 
 
-        var result_10 = instancesRules.getValidationValidateSubTaskStatus("cambio dummy");
-        var result_11 = instancesRules.getValidationValidateSubTaskValidateContractor(dto,"Validar que el email del contractor sea correcto", "Subtarea: ");
-        //var result_12 = instancesRules.getValidationAcceptanceCriteria("Validar el criterio de aceptacion, segun el tipo de desarrollo debe ser similar a la plantilla", acceptanceCriteriaGroup);
-        var result_13 = instancesRules.getValidationTeamAssigned("mallas",true,"Validar que el equipo asignado sea el correcto", "Ticket");
-        var result_14 = instancesRules.getValidationValidateJIRAStatus("ruta critica","Validar el Status de Ticket JIRA","Ticket");
+        var result_10 = instancesRules.getValidationValidateSubTaskStatus(tipoDesarrollo,"Se valida que la subtarea tenga el Status correcto", "Subtarea");
+        var result_11 = instancesRules.getValidationValidateSubTaskValidateContractor(dto,"Se valida la subtarea: El email debe pertenecer a un Usuario de Negocio Interno BBVA", "Subtarea");
+        var result_12 = instancesRules.getValidationAcceptanceCriteria("Validar el criterio de aceptacion, segun el tipo de desarrollo debe ser similar a la plantilla", acceptanceCriteriaGroup);
+        var result_13 = instancesRules.getValidationTeamAssigned(tipoDesarrollo,true,"Validar que el equipo asignado sea el correcto", "Ticket");
+        var result_14 = instancesRules.getValidationValidateJIRAStatus(tipoDesarrollo,"Validar el Status de Ticket JIRA","Ticket");
 
-//        result_final.add(result_1);
-//        result_final.add(result_2);
-//        result_final.add(result_3);
-//        result_final.add(result_4);
+        result_final.add(result_1);
+        result_final.add(result_2);
+        result_final.add(result_3);
+        result_final.add(result_4);
+        result_final.add(result_5);
 
         result_final.add(result_10);
         result_final.add(result_11);
-        //result_final.add(result_12);
+        result_final.add(result_12);
         result_final.add(result_13);
         result_final.add(result_14);
-
 
 
 
@@ -111,7 +111,28 @@ public class JiraValidatorService {
                     message.setRule("ValidatorValidateSummaryHUTType");
                     break;
                 case 3:
+                    message.setRule("getValidatorValidateHUTType");
+                    break;
+                case 4:
                     message.setRule("ValidatorIssueType");
+                    break;
+                case 5:
+                    message.setRule("ValidatorDocumentAttachByDevType");
+                    break;
+                case 6:
+                    message.setRule("ValidationValidateSubTaskStatus");
+                    break;
+                case 7:
+                    message.setRule("ValidationValidateSubTaskValidateContractor");
+                    break;
+                case 8:
+                    message.setRule("ValidationAcceptanceCriteria");
+                    break;
+                case 9:
+                    message.setRule("ValidationTeamAssigned");
+                    break;
+                case 10:
+                    message.setRule("ValidationValidateJIRAStatus");
                     break;
                 default:
                     message.setRule("Unknown");

@@ -207,8 +207,6 @@ public class ValidationUrlJira {
         return text;
     }
 
-
-
 //    public List<String> getSubtareasPorTipoDesarrollo(String tipoDesarrollo,boolean isIntegrationTicket
 //            ,boolean isIntegrationTicketWithSubtaskPO) {
 //        Map<String, List<String>> subtareasPorTipoDesarrollo = SUBTASKS_BY_DEVELOP_TYPES;
@@ -378,11 +376,11 @@ public class ValidationUrlJira {
     }
 //-----------------------------------------------------------------------------------------------
 
-    public Map<String, Object> getValidationValidateSubTaskStatus(String tipoDesarrollo) {
+    public Map<String, Object> getValidationValidateSubTaskStatus(String tipoDesarrollo,String helpMessage, String group) {
         String message = "";
         AtomicBoolean isValid = new AtomicBoolean(true);
         boolean isWarning = false;
-        var results = VOBO_BY_DEVELOP_TYPES.get("cambio dummy");
+        var results = VOBO_BY_DEVELOP_TYPES.get(tipoDesarrollo);
 
         JsonArray subTasks = jiraTicketResult
                 .getAsJsonObject("fields")
@@ -415,8 +413,7 @@ public class ValidationUrlJira {
                 }
             });
         }
-
-        return getValidationResultsDict(message, isValid.get(), isWarning, "Validar que el email del contractor sea correcto", "group");
+        return getValidationResultsDict(message, isValid.get(), isWarning, helpMessage, group);
 
 
 
@@ -445,6 +442,7 @@ public class ValidationUrlJira {
 //        return getValidationResultsDict(message, isValid, isWarning, helpMessage, group);
     }
 
+    //Ruler OK
     public Map<String, Object> getValidationValidateSubTaskValidateContractor(JiraValidatorByUrlRequest dto, String helpMessage, String group) {
         AtomicReference<String> message = new AtomicReference<>("");
         AtomicBoolean isValid = new AtomicBoolean(false);
@@ -501,6 +499,7 @@ public class ValidationUrlJira {
         return getValidatonResultsDict(message.get(), isValid.get(), isWarning, helpMessage, group);
     }
 
+    //FALTA
         public Map<String, Object> getValidationAcceptanceCriteria(String helpMessage, String group) {
         String message = "";
         boolean isValid = false;
@@ -559,12 +558,16 @@ public class ValidationUrlJira {
         return getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
     }
 
+    //REGLA QUE NECESITA LA VALIDACION DEL ENVIO DE FORMULARIO
     public Map<String, Object> getValidationTeamAssigned(String tipoDesarrollo, boolean validacionEnvioFormulario, String helpMessage, String group) {
         String message = "";
         boolean isValid = false;
         boolean isWarning = false;
 
-        String jiraTicketStatus = jiraTicketResult.getAsJsonObject("status").get("name").getAsString();
+        String jiraTicketStatus = jiraTicketResult
+                .getAsJsonObject("fields")
+                .getAsJsonObject("status")
+                .get("name").getAsString();
         String teamIdDQA = "2461905";
         //boolean isInTableroDQA = false; //debería ser variable global
         //String tipoDesarrollo = "";
@@ -585,9 +588,16 @@ public class ValidationUrlJira {
         String currentTeamFieldField = (teamFieldLabelByIssueType.containsKey(issueType)) ? teamFieldLabelByIssueType.get(issueType).get("field") : "";
 
         List<String> estadosExtraMallasHost = Arrays.asList("Ready", "Test", "Ready To Verify");
-        List<String> statusTableroDQA = Arrays.asList("Ready", "In Progress", "Test", "Ready To Verify", "Ready To Deploy", "Deployed", "Accepted"); //puede ser variable global
-
-
+        List<String> statusTableroDQA = new ArrayList<>();
+        statusTableroDQA.add("Ready");
+        statusTableroDQA.add("In Progress");
+        statusTableroDQA.add("Test");
+        statusTableroDQA.add("Ready To Verify");
+        statusTableroDQA.add("Ready To Deploy");
+        statusTableroDQA.add("Deployed");
+        statusTableroDQA.add("Accepted");
+        //convertir todos los elementos del statusTableroDQA a minúsculas
+        statusTableroDQA.replaceAll(String::toLowerCase);
 
         Object currentTeam = null;
         if (!currentTeamFieldField.equals("")) {
@@ -600,8 +610,9 @@ public class ValidationUrlJira {
             isValid = true;
         } else {
             message = "No está en el Tablero de DQA";
+            statusTableroDQA.replaceAll(String::toLowerCase);
             List<String> statusTableroDQANew = statusTableroDQA;
-            if (statusTableroDQANew.contains(jiraTicketStatus)) {
+            if (statusTableroDQANew.contains( jiraTicketStatus.trim().toLowerCase())) {
                 if (validacionEnvioFormulario) {
                     message += "Atención: No olvidar que para regresar el ticket a DQA, se debe cambiar el estado del ticket y la Subtarea DQA";
 
@@ -618,6 +629,7 @@ public class ValidationUrlJira {
         return getValidationResultsDict(message, isValid, isWarning, helpMessage, group);
     }
 
+    // REGLA OK
     public Map<String, Object> getValidationValidateJIRAStatus(String tipoDesarrollo, String helpMessage, String group) {
         String message = "";
         boolean isValid = false;
@@ -656,7 +668,7 @@ public class ValidationUrlJira {
                 listaEstados.addAll(estadosExtraMallasHost);
             }
 
-            if (!listaEstados.contains(jiraTicketStatus)) { //isInTableroDQA debe ser enviado para
+            if (!listaEstados.contains(jiraTicketStatus)) {
                 if (this.isInTableroDQA && this.isEnviadoFormulario) {
                     isValid = true;
                     isWarning = true;
