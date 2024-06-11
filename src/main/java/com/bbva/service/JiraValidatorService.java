@@ -38,7 +38,7 @@ public class JiraValidatorService {
     private final String ticketVisibleLabel = "Ticket";
     private HttpClient httpClient;
     private CookieStore cookieStore = new BasicCookieStore();
-    Map<String, String> customFields = new HashMap<>();
+    //Map<String, String> customFields = new HashMap<>();
 
     private ValidationUrlJira validationUrlJira;
     private ValidatorValidateSummaryHUTType validatorValidateSummaryHUTType;
@@ -52,6 +52,7 @@ public class JiraValidatorService {
         int warningCount = 0;
         this.jiraApiService = new JiraApiService();
         this.httpClient = HttpClient.newHttpClient();
+        String acceptanceCriteriaGroup = "Criterio de Aceptacion";
 
         var isValidUrl = validateJiraFormatURL(dto.getUrlJira());
 
@@ -72,16 +73,29 @@ public class JiraValidatorService {
         var instancesRules = new ValidationUrlJira(dto.getUrlJira(), jiraTicketResult);
         var result_1 = instancesRules.getValidatorProjectPAD("Validar que sea PAD3 o PAD5", "Ticket");
         var result_2 = instancesRules.getValidatorValidateSummaryHUTType("Validar el tipo de desarrollo en el summary", "Ticket");
-        var result_3 =  instancesRules.getValidatorValidateHUTType("Detectar el tipo de desarrollo por el prefijo y el summary", result_2.get("tipoDesarrolloSummary").toString(), "Ticket");
+        var tipoDesarrollo = result_2.get("tipoDesarrolloSummary").toString();
+        var result_3 = instancesRules.getValidatorValidateHUTType("Detectar el tipo de desarrollo por el prefijo y el summary", result_2.get("tipoDesarrolloSummary").toString(), "Ticket");
         var result_4 = instancesRules.getValidatorIssueType("Validar que el Issue type sea Story o Dependency", "Ticket");
 
+        var result_5 = instancesRules.getValidatorDocumentAttachByDevType(tipoDesarrollo);
 
 
-        var result_11 = instancesRules.getValidationTeamAssigned(true,"Validar que el equipo asignado sea el correcto", "Ticket");
-        result_final.add(result_1);
-        result_final.add(result_2);
-        result_final.add(result_4);
+        var result_10 = instancesRules.getValidationValidateSubTaskStatus("cambio dummy");
+        var result_11 = instancesRules.getValidationValidateSubTaskValidateContractor(dto,"Validar que el email del contractor sea correcto", "Subtarea: ");
+        //var result_12 = instancesRules.getValidationAcceptanceCriteria("Validar el criterio de aceptacion, segun el tipo de desarrollo debe ser similar a la plantilla", acceptanceCriteriaGroup);
+        var result_13 = instancesRules.getValidationTeamAssigned("mallas",true,"Validar que el equipo asignado sea el correcto", "Ticket");
+        var result_14 = instancesRules.getValidationValidateJIRAStatus("ruta critica","Validar el Status de Ticket JIRA","Ticket");
+
+//        result_final.add(result_1);
+//        result_final.add(result_2);
+//        result_final.add(result_3);
+//        result_final.add(result_4);
+
+        result_final.add(result_10);
         result_final.add(result_11);
+        //result_final.add(result_12);
+        result_final.add(result_13);
+        result_final.add(result_14);
 
 
 
@@ -130,9 +144,10 @@ public class JiraValidatorService {
 
     public String getMetadataIssues(JiraValidatorByUrlRequest dto) throws Exception {
 
-        String jiraCode = dto.getUrlJira().split("/")[dto.getUrlJira().split("/").length - 1];
-        //var tickets = List.of(dto.getUrlJira());
-        var tickets = List.of(jiraCode);
+        //String jiraCode = dto.getUrlJira().split("/")[dto.getUrlJira().split("/").length - 1];
+        //var tickets = List.of(jiraCode);
+        var tickets = List.of(dto.getUrlJira());
+
         var query = "key%20in%20(" + String.join(",", tickets) + ")";
 
         var url = ApiJiraName.URL_API_JIRA_SQL + query + this.jiraApiService.getQuerySuffixURL();

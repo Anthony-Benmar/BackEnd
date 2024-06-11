@@ -41,7 +41,16 @@ public class JiraApiService {
     Map<String, String> customFields = new HashMap<>();
 
     public JiraApiService(){
-
+        customFields.put("teamId", "customfield_13300");
+        customFields.put("petitionerTeamId", "customfield_13301");
+        customFields.put("receptorTeamId", "customfield_13302");
+        customFields.put("featureLink", "customfield_10004");
+        customFields.put("sprintEstimate", "customfield_10272");
+        customFields.put("programIncrement", "customfield_10264");
+        customFields.put("acceptanceCriteria", "customfield_10260");
+        customFields.put("impactLabel", "customfield_10267");
+        customFields.put("itemType", "customfield_10270");
+        customFields.put("techStack", "customfield_18001");
     }
     public String getQuerySuffixURL() {
         int maxResults = 500;
@@ -55,10 +64,13 @@ public class JiraApiService {
     private List<String> getTicketsByIdFieldsToGet() {
         List<String> fieldsToGet = new ArrayList<>();
         // Agregar campos predeterminados
+
+        fieldsToGet.add("id");
         fieldsToGet.add("key");
         fieldsToGet.add("summary");
         fieldsToGet.add("comment");
         fieldsToGet.add("assignee");
+        fieldsToGet.add("reporter");
         fieldsToGet.add("labels");
         fieldsToGet.add("project");
         fieldsToGet.add("updated");
@@ -70,10 +82,9 @@ public class JiraApiService {
         fieldsToGet.add("issuetype");
         fieldsToGet.add("issuelinks");
         fieldsToGet.add("attachment");
-
-        // Agregar campos personalizados
+        fieldsToGet.add("fixVersions");
+        fieldsToGet.add("prs");
         fieldsToGet.addAll(customFields.values());
-
         return fieldsToGet;
     }
 
