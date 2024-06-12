@@ -11,6 +11,8 @@ public class JiraValidatorConstantes {
 
     public static final Map<String, Map<String, Object>> CRITERIA_BY_DEVELOP_TYPES;
 
+    public static final Map<String, Map<String, Object>> SUBTASKS_TYPE_OWNER;
+
     static {
         Map<String, List<String>> mapDevTypes = new HashMap<>();
         mapDevTypes.put("mallas", new ArrayList<>(List.of("Control M")));
@@ -62,6 +64,64 @@ public class JiraValidatorConstantes {
         mapSubtasksByDevTypes.put("prs", new ArrayList<>(List.of("[C204][PO]", "[C204][QA]")));
         mapSubtasksByDevTypes.put("productivizacion", new ArrayList<>(List.of("[VB][PO]", "[VB][QA]")));
         SUBTASKS_BY_DEVELOP_TYPES = Collections.unmodifiableMap(mapSubtasksByDevTypes);
+
+
+        Map<String, Map<String, Object>> mapSubtasksTipoOwner = new HashMap<>();
+        mapSubtasksTipoOwner.put("sm", new HashMap<>(Map.of(
+                "label", "SM",
+                "validateEmailFromLideres", true,
+                "validateEmailContractor", true,
+                "advertenciaReadyToVerify", true,
+                "advertenciaEstadoInicial", false,
+                "status", new ArrayList<>(List.of("Accepted", "Ready To Verify")),
+                "items", new ArrayList<>(List.of("[P110][AT]","[VB][AT]","[C204][AT]"))
+                )));
+        mapSubtasksTipoOwner.put("po", new HashMap<>(Map.of(
+                "label", "PO",
+                "validateEmailFromLideres", true,
+                "validateEmailContractor", true,
+                "advertenciaReadyToVerify", true,
+                "advertenciaEstadoInicial", false,
+                "status", new ArrayList<>(List.of("Accepted", "Ready To Verify")),
+                "items", new ArrayList<>(List.of("[C204][PO]","[VB][PO]"))
+                )));
+        mapSubtasksTipoOwner.put("so", new HashMap<>(Map.of(
+                "label", "SO",
+                "validateEmailFromLideres", true,
+                "validateEmailContractor", true,
+                "advertenciaReadyToVerify", true,
+                "advertenciaEstadoInicial", false,
+                "status", new ArrayList<>(List.of("Accepted", "Ready To Verify")),
+                "items", new ArrayList<>(List.of("[VB][SO]"))
+                )));
+        mapSubtasksTipoOwner.put("km", new HashMap<>(Map.of(
+                "label", "KM",
+                "validateEmailFromLideres", true,
+                "validateEmailContractor", true,
+                "advertenciaReadyToVerify", true,
+                "advertenciaEstadoInicial", false,
+                "status", new ArrayList<>(List.of("Accepted", "Ready To Verify")),
+                "items", new ArrayList<>(List.of("[VB][KM]"))
+                )));
+        mapSubtasksTipoOwner.put("gc", new HashMap<>(Map.of(
+                "label", "GC",
+                "validateEmailFromLideres", false,
+                "validateEmailContractor", true,
+                "advertenciaReadyToVerify", false,
+                "advertenciaEstadoInicial", true,
+                "status", new ArrayList<>(List.of("Accepted", "Ready To Verify")),
+                "items", new ArrayList<>(List.of("[P110][GC]"))
+                )));
+        mapSubtasksTipoOwner.put("qa", new HashMap<>(Map.of(
+                "label", "QA",
+                "validateEmailFromLideres", false,
+                "validateEmailContractor", false,
+                "advertenciaReadyToVerify", false,
+                "advertenciaEstadoInicial", true,
+                "status", new ArrayList<>(List.of("Ready")),
+                "items", new ArrayList<>(List.of("[C204][QA]", "[VB][QA]"))
+                )));
+    SUBTASKS_TYPE_OWNER = Collections.unmodifiableMap(mapSubtasksTipoOwner);
     }
 }
 
