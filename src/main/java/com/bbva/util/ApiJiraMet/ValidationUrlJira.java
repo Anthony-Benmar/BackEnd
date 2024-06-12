@@ -695,7 +695,7 @@ public class ValidationUrlJira {
         }
         return getValidationResultsDict(message, isValid, isWarning, helpMessage, group);
     }
-
+//OK
     public Map<String, Object> getValidationFeatureLink(String helpMessage, String group) {
         Map<String, Object> result = new HashMap<>();
         String message;
@@ -718,7 +718,7 @@ public class ValidationUrlJira {
 
         return getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
     }
-
+//OK
     public Map<String, Object> getValidationFeatureLinkPAD3(String helpMessage, String group) {
         Map<String, Object> result = new HashMap<>();
         String message = "";
@@ -751,7 +751,7 @@ public class ValidationUrlJira {
         return getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
 
     }
-
+//OK
     public Map<String, Object> getValidationFeatureLinkStatus(JiraValidatorByUrlRequest dto, String helpMessage, String group) {
         String message = "";
         boolean isValid = false;
@@ -759,16 +759,22 @@ public class ValidationUrlJira {
 
         List<String> validStatuses = Arrays.asList("In Progress", "Test", "Ready To Verify", "Ready To Deploy", "Deployed");
 
-        var url = ApiJiraName.URL_API_BROWSE + featureLink;
+        var query = "key%20in%20(" + String.join(",", featureLink) + ")";
         JsonObject metaData = null;
         try {
+            var url = ApiJiraName.URL_API_JIRA_SQL + query + new JiraApiService().getQuerySuffixURL();
             var response = new JiraApiService().GetJiraAsync(dto.getUserName(),dto.getToken(),url);
             metaData = JsonParser.parseString(response).getAsJsonObject();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
-        String featureLinkStatus = metaData.getAsJsonObject("fields").getAsJsonObject("status").get("name").getAsString();
+        String featureLinkStatus = metaData
+                .getAsJsonArray("issues")
+                .get(0).getAsJsonObject()
+                .getAsJsonObject("fields")
+                .getAsJsonObject("status")
+                .get("name").getAsString();
 
         if (validStatuses.contains(featureLinkStatus)) {
             message = "Con estado " + featureLinkStatus;
@@ -788,26 +794,42 @@ public class ValidationUrlJira {
 
         return this.getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
     }
-
+//OK
     public Map<String, Object> getValidationFeatureLinkProgramIncrement(JiraValidatorByUrlRequest dto, String helpMessage, String group){
         String message = "";
         boolean isValid = false;
         boolean isWarning = false;
 
-        var url = ApiJiraName.URL_API_BROWSE + featureLink;
+        var query = "key%20in%20(" + String.join(",", featureLink) + ")";
         JsonObject metaData = null;
         try {
+            var url = ApiJiraName.URL_API_JIRA_SQL + query + new JiraApiService().getQuerySuffixURL();
             var response = new JiraApiService().GetJiraAsync(dto.getUserName(),dto.getToken(),url);
             metaData = JsonParser.parseString(response).getAsJsonObject();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
-        var programIncrement = metaData.getAsJsonObject("fields").getAsJsonObject("customfield_10264");
-        var jiraTicketStatus = jiraTicketResult.get("fields").getAsJsonObject().get("status").getAsJsonObject().get("name").getAsString();
+        JsonArray programIncrement = metaData
+                .getAsJsonArray("issues")
+                .get(0).getAsJsonObject()
+                .getAsJsonObject("fields")
+                .get("customfield_10264")
+                .getAsJsonArray();
+                //metaData.getAsJsonObject("fields").getAsJsonObject("customfield_10264");
+
+        String jiraTicketStatus = jiraTicketResult.get("fields").getAsJsonObject().get("status").getAsJsonObject().get("name").getAsString();
 //        if (programIncrement != null) {
 //            featureProgramIncrement = programIncrement;
 //        }
+
+        boolean containsCurrentQ = false;
+        for (JsonElement element : programIncrement) {
+            if (element.getAsString().equals(currentQ)) {
+                containsCurrentQ = true;
+                break;
+            }
+        }
 
         if (programIncrement == null) {
             message = "Sin Program Increment";
@@ -819,11 +841,11 @@ public class ValidationUrlJira {
                 isWarning = true;
             }
         } else {
-            message = "Con Program Increment " + programIncrement;
+            message = "Con Program Increment " + programIncrement.toString();
             isValid = true;
 
             if (!jiraTicketStatus.equals("Deployed")) {
-                if (programIncrement.equals(currentQ)) {
+                if (!containsCurrentQ) {
                     message += " Atención: El Program Increment debe contener al Q actual (En este caso " + currentQ + ") cuando el ticket este en revisión, " + coordinationMessage;
                     isValid = false;
                 }
@@ -832,7 +854,7 @@ public class ValidationUrlJira {
 
         return getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
     }
-
+//Pendiente
 //    public Map<String, Object> getValidationValidateSubTask(Map<String, Object> subtaskObject, String helpMessage, String group) {
 //        String message = "";
 //        boolean isValid = false;
@@ -898,7 +920,7 @@ public class ValidationUrlJira {
 //
 //        return getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
 //    }
-
+//Por revisar
     public Map<String, Object> getValidationValidateImpactLabel(String helpMessage, String group, String tipoDesarrollo) {
         String message = "";
         boolean isValid = false;
@@ -936,7 +958,7 @@ public class ValidationUrlJira {
 
         return getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
     }
-
+//Por revisar
     public Map<String, Object> getValidationFixVersion(String helpMessage, String group) {
         String message = "";
         boolean isValid;
