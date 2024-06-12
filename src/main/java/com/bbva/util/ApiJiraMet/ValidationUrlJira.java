@@ -390,39 +390,44 @@ public class ValidationUrlJira {
         String message = "";
         AtomicBoolean isValid = new AtomicBoolean(true);
         boolean isWarning = false;
-        var results = VOBO_BY_DEVELOP_TYPES.get(tipoDesarrollo);
+        var results = JiraValidatorConstantes.VOBO_BY_DEVELOP_TYPES.get(tipoDesarrollo) == null ? new ArrayList<>() : VOBO_BY_DEVELOP_TYPES.get(tipoDesarrollo);
 
-        JsonArray subTasks = jiraTicketResult
-                .getAsJsonObject("fields")
-                .getAsJsonArray("subtasks");
-
-        //Obtener las subtareas por tipo de desarrollo o tipo de Ticket (cambio dummy, incidencias)
-        List<JsonObject> subTaskCollection = new ArrayList<>();
-        subTasks.forEach(subtask -> {
-            String statusSubTask =subtask.getAsJsonObject()
-                    .getAsJsonObject("fields")
-                    .get("summary").getAsString();
-
-            results.forEach(result -> {
-                if (statusSubTask.contains(result)){
-                    subTaskCollection.add(subtask.getAsJsonObject());
-                    System.out.println(subTaskCollection);
-                }
-            });
-        });
-        if (subTaskCollection.isEmpty()){
+        if (results.isEmpty()){
             isValid.set(false);
         }else {
             message = "Subtareas encontradas";
-            subTaskCollection.forEach(subTask -> {
-                if (!subTask.getAsJsonObject()
+            JsonArray subTasks = jiraTicketResult
+                    .getAsJsonObject("fields")
+                    .getAsJsonArray("subtasks");
+            List<JsonObject> subTaskCollection = new ArrayList<>();
+            subTasks.forEach(subtask -> {
+                String statusSubTask =subtask.getAsJsonObject()
                         .getAsJsonObject("fields")
-                        .getAsJsonObject("status")
-                        .get("name").getAsString().equals("Accepted")){
-                    isValid.set(false);
+                        .get("summary").getAsString();
+                if (!results.isEmpty()){
+                    results.forEach(result -> {
+                        if (statusSubTask.contains(result.toString())){
+                            subTaskCollection.add(subtask.getAsJsonObject());
+                            System.out.println(subTaskCollection);
+                        }
+                    });
                 }
             });
+            if (subTaskCollection.isEmpty()){
+                isValid.set(false);
+            }else {
+                message = "Subtareas encontradas";
+                subTaskCollection.forEach(subTask -> {
+                    if (!subTask.getAsJsonObject()
+                            .getAsJsonObject("fields")
+                            .getAsJsonObject("status")
+                            .get("name").getAsString().equals("Accepted")){
+                        isValid.set(false);
+                    }
+                });
+            }
         }
+
         return getValidationResultsDict(message, isValid.get(), isWarning, helpMessage, group);
 
 
