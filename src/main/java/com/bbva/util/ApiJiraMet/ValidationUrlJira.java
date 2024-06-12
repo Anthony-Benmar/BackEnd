@@ -18,7 +18,6 @@ import static com.bbva.common.jiraValidador.JiraValidatorConstantes.*;
 public class ValidationUrlJira {
     private  String jiraCode ;
     private final List<String> validPAD = Arrays.asList("pad3", "pad5");
-    private final String ticketGroup = "Ticket";
     private JsonObject jiraTicketResult;
     private boolean isInTableroDQA;
     private boolean isEnviadoFormulario;
