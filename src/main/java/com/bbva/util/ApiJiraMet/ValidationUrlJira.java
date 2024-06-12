@@ -5,6 +5,7 @@ import com.bbva.dto.jira.request.JiraValidatorByUrlRequest;
 import com.bbva.service.JiraApiService;
 import com.bbva.util.ApiJiraName;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -16,17 +17,25 @@ import static com.bbva.common.jiraValidador.JiraValidatorConstantes.*;
 
 public class ValidationUrlJira {
     private  String jiraCode ;
-    private final String validPADList = "pad3,pad5";
+    private final List<String> validPAD = Arrays.asList("pad3", "pad5");
     private final String ticketGroup = "Ticket";
     private JsonObject jiraTicketResult;
     private boolean isInTableroDQA;
     private boolean isEnviadoFormulario;
+    private String featureLink;
+    private String impactLabel;
+    private String coordinationMessage = "de ser necesario coordinar con el <strong>SM / QE</strong>";
+    private String currentQ = "2024-Q2";
 
     public ValidationUrlJira(String jiraCode, JsonObject jiraTicketResult) {
         this.jiraCode = jiraCode;
         this.jiraTicketResult = jiraTicketResult;
         this.isInTableroDQA = false;
         this.isEnviadoFormulario = false;
+        JsonElement featureLinkElement = this.jiraTicketResult.get("fields").getAsJsonObject().get("customfield_10004");
+        this.featureLink = featureLinkElement.isJsonNull() ? null : featureLinkElement.getAsString();
+        JsonElement impactLabelElement = this.jiraTicketResult.get("fields").getAsJsonObject().get("customfield_10267");
+        this.impactLabel = impactLabelElement.isJsonNull() ? null : impactLabelElement.getAsString();
 
     }
 
@@ -37,12 +46,13 @@ public class ValidationUrlJira {
 
         String[] jiraCodeParts = this.jiraCode.split("-");
         String jiraPADCode = jiraCodeParts[0].toUpperCase();
-
-        if (this.validPADList.contains(jiraPADCode.toLowerCase())) {
-            message = "Se encontró " + jiraPADCode.toLowerCase();
+        jiraPADCode = jiraPADCode.toLowerCase();
+        System.out.println(jiraPADCode);
+        if (jiraPADCode.contains(this.validPAD.get(0)) || jiraPADCode.contains(this.validPAD.get(1))) {
+            message = "Se encontró " + jiraPADCode;
             isValid = true;
         } else {
-            message = "No se encontró " + String.join(" o ", this.validPADList);
+            message = "No se encontró " + String.join(" o ", this.validPAD);
             isValid = false;
         }
 
@@ -681,5 +691,311 @@ public class ValidationUrlJira {
         return getValidationResultsDict(message, isValid, isWarning, helpMessage, group);
     }
 
+    public Map<String, Object> getValidationFeatureLink(String helpMessage, String group) {
+        Map<String, Object> result = new HashMap<>();
+        String message;
+        boolean isValid;
+        boolean isWarning = false;
 
+
+        if (featureLink == null || featureLink.isBlank()) {
+            message = "Sin Feature Link asociado";
+            isValid = false;
+        } else {
+            message = ApiJiraName.URL_API_BROWSE + featureLink + " asociado correctamente";
+            isValid = true;
+        }
+        result.put("message", message);
+        result.put("isValid", isValid);
+        result.put("isWarning", isWarning);
+        result.put("helpMessage", helpMessage);
+        result.put("group", group);
+
+        return getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
+    }
+
+    public Map<String, Object> getValidationFeatureLinkPAD3(String helpMessage, String group) {
+        Map<String, Object> result = new HashMap<>();
+        String message = "";
+        boolean isValid = false;
+        boolean isWarning = false;
+
+
+        if (featureLink == null || featureLink.isBlank()) {
+            message = "Sin Feature Link asociado";
+            isValid = false;
+        } else {
+
+
+            // Verificamos si featureLink comienza con "PAD3-"
+            if (featureLink.startsWith("PAD3-")) {
+                message = "Feature Link asociado correctamente: " + featureLink;
+                isValid = true;
+            } else {
+                message = "Feature Link no comienza con 'PAD3-': " + featureLink;
+                isValid = false;
+            }
+        }
+
+        result.put("message", message);
+        result.put("isValid", isValid);
+        result.put("isWarning", isWarning);
+        result.put("helpMessage", helpMessage);
+        result.put("group", group);
+
+        return getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
+
+    }
+
+    public Map<String, Object> getValidationFeatureLinkStatus(JiraValidatorByUrlRequest dto, String helpMessage, String group) {
+        String message = "";
+        boolean isValid = false;
+        boolean isWarning = false;
+
+        List<String> validStatuses = Arrays.asList("In Progress", "Test", "Ready To Verify", "Ready To Deploy", "Deployed");
+
+        var url = ApiJiraName.URL_API_BROWSE + featureLink;
+        JsonObject metaData = null;
+        try {
+            var response = new JiraApiService().GetJiraAsync(dto.getUserName(),dto.getToken(),url);
+            metaData = JsonParser.parseString(response).getAsJsonObject();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        String featureLinkStatus = metaData.getAsJsonObject("fields").getAsJsonObject("status").get("name").getAsString();
+
+        if (validStatuses.contains(featureLinkStatus)) {
+            message = "Con estado " + featureLinkStatus;
+            isValid = true;
+
+            var jiraTicketStatus = jiraTicketResult.get("fields").getAsJsonObject().get("status").getAsJsonObject().get("name").getAsString();
+
+            if (!jiraTicketStatus.equals("Deployed")){
+                if (Arrays.asList("Ready To Verify", "Ready To Deploy", "Deployed").contains(featureLinkStatus)) {
+                    message += "Atención: Revisar estado del Feature Link, debe estar en In Progress cuando se encuentre en revisión de DQA, " + coordinationMessage;
+                    isWarning = true;
+                }
+            }
+        } else {
+            message = "Con estado " + featureLinkStatus;
+        }
+
+        return this.getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
+    }
+
+    public Map<String, Object> getValidationFeatureLinkProgramIncrement(JiraValidatorByUrlRequest dto, String helpMessage, String group){
+        String message = "";
+        boolean isValid = false;
+        boolean isWarning = false;
+
+        var url = ApiJiraName.URL_API_BROWSE + featureLink;
+        JsonObject metaData = null;
+        try {
+            var response = new JiraApiService().GetJiraAsync(dto.getUserName(),dto.getToken(),url);
+            metaData = JsonParser.parseString(response).getAsJsonObject();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        var programIncrement = metaData.getAsJsonObject("fields").getAsJsonObject("customfield_10264");
+        var jiraTicketStatus = jiraTicketResult.get("fields").getAsJsonObject().get("status").getAsJsonObject().get("name").getAsString();
+//        if (programIncrement != null) {
+//            featureProgramIncrement = programIncrement;
+//        }
+
+        if (programIncrement == null) {
+            message = "Sin Program Increment";
+
+            String tipoIncidencia = this.jiraTicketResult.get("fields").getAsJsonObject().get("issuetype").getAsJsonObject().get("name").getAsString();
+            isValid = !tipoIncidencia.isEmpty();
+            if (isValid) {
+                message = "Sin Program Increment, pero con tipo de incidencia: " + tipoIncidencia;
+                isWarning = true;
+            }
+        } else {
+            message = "Con Program Increment " + programIncrement;
+            isValid = true;
+
+            if (!jiraTicketStatus.equals("Deployed")) {
+                if (programIncrement.equals(currentQ)) {
+                    message += " Atención: El Program Increment debe contener al Q actual (En este caso " + currentQ + ") cuando el ticket este en revisión, " + coordinationMessage;
+                    isValid = false;
+                }
+            }
+        }
+
+        return getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
+    }
+
+//    public Map<String, Object> getValidationValidateSubTask(Map<String, Object> subtaskObject, String helpMessage, String group) {
+//        String message = "";
+//        boolean isValid = false;
+//        boolean isWarning = false;
+//        Map<String, Object> subTask = null;
+//
+//        boolean wasFound = false;
+//        for (Map.Entry<String, Map<String, Object>> entry : this.subTasksBySummary.entrySet()) {
+//            String subTaskLabel = entry.getKey();
+//            Map<String, Object> subTaskItem = entry.getValue();
+//            if (subTaskLabel.equals(subtaskObject.get("label"))) {
+//                subTask = new HashMap<>();
+//                subTask.put("key", subTaskItem.get("key"));
+//                subTask.put("label", subTaskLabel);
+//                subTask.put("item", subTaskItem);
+//                subTask.put("subtaskObject", subtaskObject);
+//                subTask.put("status", subTaskItem.get("status"));
+//
+//                for (Map.Entry<String, Map<String, Object>> ownerEntry : this.subtareasTipoOwner.entrySet()) {
+//                    String keySubtaskOwner = ownerEntry.getKey();
+//                    Map<String, Object> itemSubtaskOwner = ownerEntry.getValue();
+//                    if (((List<String>) itemSubtaskOwner.get("items")).contains(subTaskLabel)) {
+//                        Map<String, Object> owner = new HashMap<>();
+//                        owner.put("key", keySubtaskOwner);
+//                        owner.put("object", itemSubtaskOwner);
+//                        subTask.put("owner", owner);
+//                    }
+//                }
+//
+//                String subtareaURL = this.jiraBasePrefix + "/" + subTask.get("key");
+//                message = "Subtarea " + subtareaURL + " encontrada ";
+//                isValid = true;
+//                wasFound = true;
+//                break;
+//            }
+//        }
+//
+//        if (!wasFound) {
+//            String similarSubtask = "";
+//            List<String> subTaskLabelParts = Arrays.asList(subtaskObject.get("label").toString().replace("[", "").split("]"));
+//            for (Map.Entry<String, Map<String, Object>> entry : this.subTasksBySummary.entrySet()) {
+//                String subtaskKey = entry.getKey();
+//                int foundItems = 0;
+//                for (String part : subTaskLabelParts) {
+//                    if (subtaskKey.contains(part)) {
+//                        foundItems++;
+//                    }
+//                }
+//                if (foundItems == subTaskLabelParts.size()) {
+//                    similarSubtask = subtaskKey;
+//                }
+//            }
+//
+//            message = "No encontrada";
+//            if (!similarSubtask.isEmpty()) {
+//                message += ", se encontró " + similarSubtask;
+//            }
+//            if (subtaskObject.containsKey("messagePrefix")) {
+//                message = subtaskObject.get("messagePrefix") + " " + message;
+//            }
+//            isValid = false;
+//        }
+//
+//        return getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
+//    }
+
+    public Map<String, Object> getValidationValidateImpactLabel(String helpMessage, String group, String tipoDesarrollo) {
+        String message = "";
+        boolean isValid = false;
+        boolean isWarning = false;
+
+        List<String> validImpactLabel = Arrays.asList("AppsInternos", "Datio");
+        List<String> validImpactLabelListHost = Arrays.asList("DataHub", "Host", "Plataforma_InformacionalP11");
+
+        List<String> validImpactLabelFinalList = tipoDesarrollo.equals("HOST") ? validImpactLabelListHost : validImpactLabel;
+
+        List<String> impactLabelNotExistsList = new ArrayList<>();
+
+
+        List<String> jiraTicketImpactLabelList = impactLabel == null ? new ArrayList<>() : Collections.singletonList(impactLabel);
+
+
+        for (String impactLabel : validImpactLabelFinalList) {
+            if (!jiraTicketImpactLabelList.contains(impactLabel)) {
+                impactLabelNotExistsList.add(impactLabel);
+            }
+        }
+
+        if (impactLabelNotExistsList.isEmpty()) {
+            message = "Impact Label " + ", " + validImpactLabelFinalList;
+            isValid = true;
+        } else {
+            message = "Falta Impact Label: " + ", " + impactLabelNotExistsList;
+            if (!jiraTicketImpactLabelList.isEmpty()) {
+                message += " Se tiene: " + ", " + jiraTicketImpactLabelList;
+            } else {
+                message += " No se tiene Impact Label definidos";
+            }
+            isValid = false;
+        }
+
+        return getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
+    }
+
+    public Map<String, Object> getValidationFixVersion(String helpMessage, String group) {
+        String message = "";
+        boolean isValid;
+        boolean isWarning = false;
+
+        String[] jiraCodeParts = this.jiraCode.split("-");
+        String jiraPADCode = jiraCodeParts[0].toUpperCase();
+
+        JsonArray fixVersions = this.jiraTicketResult.getAsJsonObject("fields").getAsJsonArray("fixVersions");
+
+        if (!fixVersions.isEmpty()) {
+            String fixVersionURLPrefix = ApiJiraName.URL_API_BASE + "/issues?jql=project=" + jiraPADCode + " AND fixVersion=";
+
+            List<String> fixVersionsUrlLinkList = new ArrayList<>();
+            for (JsonElement fixVersion : fixVersions) {
+                String fixVersionName = fixVersion.getAsJsonObject().get("name").getAsString();
+                String fixVersionUrl = fixVersionURLPrefix + fixVersionName;
+                fixVersionsUrlLinkList.add(fixVersionUrl + fixVersionName);
+            }
+
+            message = "Con Fix Version " + fixVersionsUrlLinkList;
+            isValid = true;
+        } else {
+            message = "Sin Fix Version asignado";
+            isValid = false;
+        }
+
+        return getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
+    }
+
+    //    public Map<String, Object> getValidationValidateJIRAStatus(String helpMessage, String group) {
+//        String message = "";
+//        boolean isValid = false;
+//        boolean isWarning = false;
+//
+//        List<String> statusList = new ArrayList<>(statusTableroDQA);
+//
+//        if (tipoDesarrollo.equals("Mallas") || tipoDesarrollo.equals("HOST")) {
+//            statusList.addAll(estadosExtraMallasHost);
+//        }
+//
+//        message = "Con estado <div class='" + boxClassesBorder + "'>" + jiraTicketStatus + "</div>";
+//
+//        if (statusList.contains(jiraTicketStatus)) {
+//            isValid = true;
+//
+//            List<String> listaEstados = new ArrayList<>();
+//            listaEstados.add("Ready");
+//            listaEstados.add("Deployed");
+//            if (tipoDesarrollo.equals("Mallas") || tipoDesarrollo.equals("HOST")) {
+//                listaEstados.addAll(estadosExtraMallasHost);
+//            }
+//
+//            if (!listaEstados.contains(jiraTicketStatus)) {
+//                if (isInTableroDQA && isEnviadoFormulario) {
+//                    isValid = true;
+//                    isWarning = true;
+//                    message += "<div class='" + boxWarningClasses + "'><strong>Atenci&oacute;n</strong>:<br> Es posible que el <div class='" + boxClassesBorder + " border-dark'>" + ticketVisibleLabel + "</div> se encuentre en revisi&oacute;n, recordar que el estado inicial de un <div class='" + boxClassesBorder + " border-dark mt-2'>" + ticketVisibleLabel + "</div> por revisar es <div class='mt-2 " + boxClassesBorder + " border-dark'>Ready</div></div>";
+//                } else {
+//                    isValid = false;
+//                }
+//            }
+//        }
+//
+//        return getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
+//    }
 }
