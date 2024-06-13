@@ -386,15 +386,16 @@ public class ValidationUrlJira {
 //-----------------------------------------------------------------------------------------------
 
     public Map<String, Object> getValidationValidateSubTaskStatus(String tipoDesarrollo,String helpMessage, String group) {
-        String message = "";
+        AtomicReference<String> message = new AtomicReference<>("");
         AtomicBoolean isValid = new AtomicBoolean(true);
         boolean isWarning = false;
         var results = JiraValidatorConstantes.VOBO_BY_DEVELOP_TYPES.get(tipoDesarrollo) == null ? new ArrayList<>() : VOBO_BY_DEVELOP_TYPES.get(tipoDesarrollo);
 
         if (results.isEmpty()){
             isValid.set(false);
+            message.set("No se encontraron subtareas");
         }else {
-            message = "Subtareas encontradas";
+            message.set("Subtareas encontradas");
             JsonArray subTasks = jiraTicketResult
                     .getAsJsonObject("fields")
                     .getAsJsonArray("subtasks");
@@ -415,19 +416,26 @@ public class ValidationUrlJira {
             if (subTaskCollection.isEmpty()){
                 isValid.set(false);
             }else {
-                message = "Subtareas encontradas";
-                subTaskCollection.forEach(subTask -> {
-                    if (!subTask.getAsJsonObject()
-                            .getAsJsonObject("fields")
-                            .getAsJsonObject("status")
-                            .get("name").getAsString().equals("Accepted")){
-                        isValid.set(false);
-                    }
-                });
+                message.set("Subtareas encontradas");
+                try {
+                    subTaskCollection.forEach(subTask -> {
+                        message.set("Todas las subtareas tienen el estado Aceptado");
+                        if (!subTask.getAsJsonObject()
+                                .getAsJsonObject("fields")
+                                .getAsJsonObject("status")
+                                .get("name").getAsString().equals("Accepted")){
+                            isValid.set(false);
+                            message.set("Subtarea no aceptada: " + subTask.getAsJsonObject().get("key").getAsString());
+                            throw new RuntimeException("Break");
+                        }
+                    });
+                } catch (RuntimeException e) {
+                    if (!e.getMessage().equals("Break")) throw e;
+                }
             }
         }
 
-        return getValidationResultsDict(message, isValid.get(), isWarning, helpMessage, group);
+        return getValidationResultsDict(message.get(), isValid.get(), isWarning, helpMessage, group);
 
 
 
