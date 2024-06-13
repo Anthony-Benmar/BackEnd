@@ -6,7 +6,7 @@ public class JiraValidatorConstantes {
     public static final Map<String, List<String>> DEVELOPS_TYPES;
     public static final Map<String, List<String>> ATTACHS_BY_DEVELOP_TYPES;
     public static final Map<String, List<String>> VOBO_BY_DEVELOP_TYPES;
-    //public static final Map<String, List<String>> SUBTASKS_SPECIALS;
+    public static final Map<String, List<String>> SUBTASKS_SPECIALS;
     public static final Map<String, List<String>> SUBTASKS_BY_DEVELOP_TYPES;
 
     public static final Map<String, Map<String, Object>> CRITERIA_BY_DEVELOP_TYPES;
@@ -41,11 +41,7 @@ public class JiraValidatorConstantes {
         Map<String, List<String>> mapVoBoByDevTypes = new HashMap<>();
         mapVoBoByDevTypes.put("mallas", new ArrayList<>(List.of("PO","AT","DEV")));
         mapVoBoByDevTypes.put("scaffolder", new ArrayList<>(List.of("PO")));
-        mapVoBoByDevTypes.put("cambio dummy", new ArrayList<>(List.of("[AT]","[QA]"))); //VB = VoBo [VB]
-        mapVoBoByDevTypes.put("ruta critica", new ArrayList<>(List.of("[KM]"))); //VB = VoBo [VB]
-        mapVoBoByDevTypes.put("ticket integracion", new ArrayList<>(List.of("[AT]", "[QA]"))); //VB = VoBo [VB]
         VOBO_BY_DEVELOP_TYPES = Collections.unmodifiableMap(mapVoBoByDevTypes);
-
 
         Map<String, Map<String, Object>> mapCriteriaByDevTypes = new HashMap<>();
         mapCriteriaByDevTypes.put("mallas",Map.of(
@@ -63,8 +59,25 @@ public class JiraValidatorConstantes {
         mapSubtasksByDevTypes.put("mallas", new ArrayList<>(List.of("[P110][AT]", "[C204][PO]", "[C204][QA]")));
         mapSubtasksByDevTypes.put("prs", new ArrayList<>(List.of("[C204][PO]", "[C204][QA]")));
         mapSubtasksByDevTypes.put("productivizacion", new ArrayList<>(List.of("[VB][PO]", "[VB][QA]")));
+        mapSubtasksByDevTypes.put("host", new ArrayList<>(List.of("[P110][AT]", "[C204][PO]", "[C204][QA]","[P110][GC]")));
+        mapSubtasksByDevTypes.put("hammurabi", new ArrayList<>(List.of("[C204][PO]", "[C204][QA]")));
+        mapSubtasksByDevTypes.put("migrationtool", new ArrayList<>(List.of("[C204][PO]", "[C204][QA]")));
+        mapSubtasksByDevTypes.put("smartcleaner", new ArrayList<>(List.of("[C204][PO]", "[C204][QA]")));
+        mapSubtasksByDevTypes.put("ingesta", new ArrayList<>(List.of("[C204][PO]", "[C204][QA]")));
+        mapSubtasksByDevTypes.put("procesamiento", new ArrayList<>(List.of("[C204][PO]", "[C204][QA]")));
+        mapSubtasksByDevTypes.put("operativizacion", new ArrayList<>(List.of("[C204][PO]", "[C204][QA]")));
+        mapSubtasksByDevTypes.put("scaffolder", new ArrayList<>(List.of("[C204][PO]", "[C204][QA]")));
+        mapSubtasksByDevTypes.put("sparkcompactor", new ArrayList<>(List.of("[C204][PO]", "[C204][QA]")));
+        mapSubtasksByDevTypes.put("json global", new ArrayList<>(List.of("[C204][PO]", "[C204][QA]")));
+        mapSubtasksByDevTypes.put("teradata", new ArrayList<>(List.of("[C204][PO]", "[C204][QA]")));
         SUBTASKS_BY_DEVELOP_TYPES = Collections.unmodifiableMap(mapSubtasksByDevTypes);
 
+
+        Map<String, List<String>> mapSubtasksSpecials = new HashMap<>();
+        mapSubtasksSpecials.put("cambio dummy", new ArrayList<>(List.of("[AT]","[QA]"))); //VB = VoBo [VB]
+        mapSubtasksSpecials.put("ruta critica", new ArrayList<>(List.of("[KM]"))); //VB = VoBo [VB]
+        mapSubtasksSpecials.put("ticket integracion", new ArrayList<>(List.of("[AT]", "[QA]"))); //VB = VoBo [VB]
+        SUBTASKS_SPECIALS = Collections.unmodifiableMap(mapSubtasksSpecials);
 
         Map<String, Map<String, Object>> mapSubtasksTipoOwner = new HashMap<>();
         mapSubtasksTipoOwner.put("sm", new HashMap<>(Map.of(
