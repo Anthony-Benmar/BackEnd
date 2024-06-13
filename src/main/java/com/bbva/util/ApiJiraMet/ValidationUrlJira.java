@@ -862,7 +862,7 @@ public class ValidationUrlJira {
         return getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
     }
 //Pendiente
-//    public Map<String, Object> getValidationValidateSubTask(Map<String, Object> subtaskObject, String helpMessage, String group) {
+//    public Map<String, Object> getValidationValidateSubTask(String tipoDesarrollo, String helpMessage, String group) {
 //        String message = "";
 //        boolean isValid = false;
 //        boolean isWarning = false;
@@ -927,6 +927,47 @@ public class ValidationUrlJira {
 //
 //        return getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
 //    }
+
+    public Map<String, Object> getValidationValidateSubTask(String tipoDesarrollo, String helpMessage, String group) {
+        String message = "";
+        boolean isValid = false;
+        boolean isWarning = false;
+
+        // Obtener las subtareas requeridas para el tipo de desarrollo dado
+        List<String> requiredSubTasks = JiraValidatorConstantes.SUBTASKS_BY_DEVELOP_TYPES.get(tipoDesarrollo);
+
+        // Obtener todas las subtareas del ticket de Jira actual
+        JsonArray subTasks = jiraTicketResult
+                .getAsJsonObject("fields")
+                .getAsJsonArray("subtasks");
+
+        // Crear una lista para almacenar las subtareas que se encuentran
+        List<String> foundSubTasks = new ArrayList<>();
+
+        // Verificar cada subtarea
+        for (JsonElement subTask : subTasks) {
+            String subTaskLabel = subTask.getAsJsonObject().get("fields").getAsJsonObject().get("summary").getAsString();
+
+            // Si la subtarea es requerida, añadirla a la lista de subtareas encontradas
+            if (requiredSubTasks.contains(subTaskLabel)) {
+                foundSubTasks.add(subTaskLabel);
+            }
+        }
+
+        // Verificar si todas las subtareas requeridas se encontraron
+        if (foundSubTasks.containsAll(requiredSubTasks)) {
+            message = "Todas las subtareas requeridas fueron encontradas.";
+            isValid = true;
+        } else {
+            // Encontrar las subtareas que faltan
+            List<String> missingSubTasks = new ArrayList<>(requiredSubTasks);
+            missingSubTasks.removeAll(foundSubTasks);
+
+            message = "Faltan las siguientes subtareas: " + String.join(", ", missingSubTasks);
+        }
+
+        return getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
+    }
 //Por revisar
     public Map<String, Object> getValidationValidateImpactLabel(String helpMessage, String group, String tipoDesarrollo) {
         String message = "";
