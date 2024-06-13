@@ -73,6 +73,7 @@ public class ValidationUrlJira {
         for (Map.Entry<String, List<String>> entry : JiraValidatorConstantes.DEVELOPS_TYPES.entrySet()) {
             String tipoDesarrolloKey = entry.getKey();
             List<String> tipoDesarrolloItem = entry.getValue();
+            //List<String> tipoDesarrolloItem = entry.getValue();
 
             if (tipoDesarrolloItem.stream().anyMatch(validacionText -> summaryComparacion.contains(validacionText.toLowerCase()))) {
                 tipoDesarrolloSummary = tipoDesarrolloKey;
@@ -389,34 +390,31 @@ public class ValidationUrlJira {
         AtomicReference<String> message = new AtomicReference<>("");
         AtomicBoolean isValid = new AtomicBoolean(true);
         boolean isWarning = false;
-        var results = JiraValidatorConstantes.VOBO_BY_DEVELOP_TYPES.get(tipoDesarrollo) == null ? new ArrayList<>() : VOBO_BY_DEVELOP_TYPES.get(tipoDesarrollo);
+        var results = SUBTASKS_BY_DEVELOP_TYPES.get(tipoDesarrollo) == null ? new ArrayList<>() : SUBTASKS_BY_DEVELOP_TYPES.get(tipoDesarrollo);
+        List<JsonObject> subTaskCollection = new ArrayList<>();
 
         if (results.isEmpty()){
             isValid.set(false);
-            message.set("No se encontraron subtareas");
+            message.set("Sin tipo de desarrollo asignado");
         }else {
-            message.set("Subtareas encontradas");
             JsonArray subTasks = jiraTicketResult
                     .getAsJsonObject("fields")
                     .getAsJsonArray("subtasks");
-            List<JsonObject> subTaskCollection = new ArrayList<>();
+
             subTasks.forEach(subtask -> {
                 String statusSubTask =subtask.getAsJsonObject()
                         .getAsJsonObject("fields")
                         .get("summary").getAsString();
-                if (!results.isEmpty()){
-                    results.forEach(result -> {
-                        if (statusSubTask.contains(result.toString())){
-                            subTaskCollection.add(subtask.getAsJsonObject());
-                            System.out.println(subTaskCollection);
-                        }
-                    });
-                }
+
+                results.forEach(result -> {
+                    if (statusSubTask.contains(result.toString())){
+                        subTaskCollection.add(subtask.getAsJsonObject());
+                    }
+                });
             });
             if (subTaskCollection.isEmpty()){
                 isValid.set(false);
             }else {
-                message.set("Subtareas encontradas");
                 try {
                     subTaskCollection.forEach(subTask -> {
                         message.set("Todas las subtareas tienen el estado Aceptado");

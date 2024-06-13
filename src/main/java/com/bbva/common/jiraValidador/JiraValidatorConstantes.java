@@ -22,8 +22,8 @@ public class JiraValidatorConstantes {
         mapDevTypes.put("smartcleaner", new ArrayList<>(List.of("smartcleaner")));
         mapDevTypes.put("ingesta", new ArrayList<>(List.of("ingesta", "kirby")));
         mapDevTypes.put("procesamiento", new ArrayList<>(List.of("procesamiento")));
-        mapDevTypes.put("operativizacion", new ArrayList<>(List.of("operativizacion")));
-        mapDevTypes.put("productivizacion", new ArrayList<>());
+        mapDevTypes.put("operativizacion", new ArrayList<>(List.of("operativizaci")));
+        mapDevTypes.put("productivizacion", new ArrayList<>(List.of("productivizaci")));
         mapDevTypes.put("scaffolder", new ArrayList<>(List.of("assets")));
         mapDevTypes.put("sparkcompactor", new ArrayList<>(List.of("sparkcompactor")));
         mapDevTypes.put("json global", new ArrayList<>(List.of("json")));
