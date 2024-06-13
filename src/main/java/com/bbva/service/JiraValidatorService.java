@@ -5,19 +5,13 @@ import com.bbva.core.abstracts.IDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dto.jira.request.JiraValidatorByUrlRequest;
 import com.bbva.dto.jira.response.JiraMessageResponseDTO;
-import com.bbva.dto.jira.response.JiraResDTO;
 import com.bbva.dto.jira.response.JiraResponseDTO;
 import com.bbva.util.ApiJiraMet.ValidationUrlJira;
 import com.bbva.util.ApiJiraMet.ValidatorValidateSummaryHUTType;
 import com.bbva.util.ApiJiraName;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.apache.http.client.CookieStore;
 import org.apache.http.impl.client.BasicCookieStore;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-
 import java.net.http.HttpClient;
 import java.util.*;
 import java.util.List;
@@ -76,15 +70,20 @@ public class JiraValidatorService {
         var tipoDesarrollo = result_2.get("tipoDesarrolloSummary").toString();
         var result_3 = instancesRules.getValidatorValidateHUTType("Detectar el tipo de desarrollo por el prefijo y el summary", result_2.get("tipoDesarrolloSummary").toString(), "Ticket");
         var result_4 = instancesRules.getValidatorIssueType("Validar que el Issue type sea Story o Dependency", "Ticket");
-
         var result_5 = instancesRules.getValidatorDocumentAttachByDevType(tipoDesarrollo);
 
+        var result_6 = instancesRules.getValidationFeatureLink("Se valida el tenga un Feature Link asignado", "Feature Link");
+        var result_7 = instancesRules.getValidationFeatureLinkPAD3("Validar que el Feature Link, se recomienda que sea PAD3", "Feature Link");
+        var result_8 = instancesRules.getValidationFeatureLinkStatus(dto, "Validar el estado Jira del Feature Link", "Feature Link");
+        var result_9 = instancesRules.getValidationFeatureLinkProgramIncrement(dto, "Validar que el Feature Link tenga el Program Increment asignado y correcto (Q Actual)", "Feature Link");
+        var result_10 = instancesRules.getValidationValidateImpactLabel("Validar que se tengan los Impact Label correctos (Solo Mallas/HOST)","Ticket", tipoDesarrollo);
+        var result_11 = instancesRules.getValidationFixVersion("Validar que se tenga Fix Version (Solo Mallas/HOST)","Ticket");
 
-        var result_10 = instancesRules.getValidationValidateSubTaskStatus(tipoDesarrollo,"Se valida que la subtarea tenga el Status correcto", "Subtarea");
-        var result_11 = instancesRules.getValidationValidateSubTaskValidateContractor(dto,"Se valida la subtarea: El email debe pertenecer a un Usuario de Negocio Interno BBVA", "Subtarea");
-        var result_12 = instancesRules.getValidationAcceptanceCriteria("Validar el criterio de aceptacion, segun el tipo de desarrollo debe ser similar a la plantilla", acceptanceCriteriaGroup);
-        var result_13 = instancesRules.getValidationTeamAssigned(tipoDesarrollo,true,"Validar que el equipo asignado sea el correcto", "Ticket");
-        var result_14 = instancesRules.getValidationValidateJIRAStatus(tipoDesarrollo,"Validar el Status de Ticket JIRA","Ticket");
+        var result_12 = instancesRules.getValidationValidateSubTaskStatus(tipoDesarrollo,"Se valida que la subtarea tenga el Status correcto", "Subtarea");
+        var result_13 = instancesRules.getValidationValidateSubTaskValidateContractor(dto,"Se valida la subtarea: El email debe pertenecer a un Usuario de Negocio Interno BBVA", "Subtarea");
+        var result_14 = instancesRules.getValidationAcceptanceCriteria("Validar el criterio de aceptacion, segun el tipo de desarrollo debe ser similar a la plantilla", acceptanceCriteriaGroup);
+        var result_15 = instancesRules.getValidationTeamAssigned(tipoDesarrollo,true,"Validar que el equipo asignado sea el correcto", "Ticket");
+        var result_16 = instancesRules.getValidationValidateJIRAStatus(tipoDesarrollo,"Validar el Status de Ticket JIRA","Ticket");
 
         result_final.add(result_1);
         result_final.add(result_2);
@@ -92,13 +91,20 @@ public class JiraValidatorService {
         result_final.add(result_4);
         result_final.add(result_5);
 
+        //Validaciones Gianfranco
+        result_final.add(result_6);
+        result_final.add(result_7);
+        result_final.add(result_8);
+        result_final.add(result_9);
         result_final.add(result_10);
         result_final.add(result_11);
+
+        //Validaciones Juan
         result_final.add(result_12);
         result_final.add(result_13);
         result_final.add(result_14);
-
-
+        result_final.add(result_15);
+        result_final.add(result_16);
 
         for (Map<String, Object> result : result_final) {
             JiraMessageResponseDTO message = new JiraMessageResponseDTO();
@@ -111,7 +117,7 @@ public class JiraValidatorService {
                     message.setRule("ValidatorValidateSummaryHUTType");
                     break;
                 case 3:
-                    message.setRule("getValidatorValidateHUTType");
+                    message.setRule("ValidatorValidateHUTType");
                     break;
                 case 4:
                     message.setRule("ValidatorIssueType");
@@ -120,18 +126,36 @@ public class JiraValidatorService {
                     message.setRule("ValidatorDocumentAttachByDevType");
                     break;
                 case 6:
-                    message.setRule("ValidationValidateSubTaskStatus");
+                    message.setRule("ValidationFeatureLink");
                     break;
                 case 7:
-                    message.setRule("ValidationValidateSubTaskValidateContractor");
+                    message.setRule("ValidationFeatureLinkPAD3");
                     break;
                 case 8:
-                    message.setRule("ValidationAcceptanceCriteria");
+                    message.setRule("ValidationFeatureLinkStatus");
                     break;
                 case 9:
-                    message.setRule("ValidationTeamAssigned");
+                    message.setRule("ValidationFeatureLinkProgramIncrement");
                     break;
                 case 10:
+                    message.setRule("ValidationValidateImpactLabel");
+                    break;
+                case 11:
+                    message.setRule("ValidationFixVersion");
+                    break;
+                case 12:
+                    message.setRule("ValidationValidateSubTaskStatus");
+                    break;
+                case 13:
+                    message.setRule("ValidationValidateSubTaskValidateContractor");
+                    break;
+                case 14:
+                    message.setRule("ValidationAcceptanceCriteria");
+                    break;
+                case 15:
+                    message.setRule("ValidationTeamAssigned");
+                    break;
+                case 16:
                     message.setRule("ValidationValidateJIRAStatus");
                     break;
                 default:
