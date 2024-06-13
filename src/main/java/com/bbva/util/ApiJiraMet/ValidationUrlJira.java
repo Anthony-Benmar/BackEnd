@@ -750,7 +750,7 @@ public class ValidationUrlJira {
         return getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
 
     }
-//OK
+//OK - modificar debe dar alerta no fallar
     public Map<String, Object> getValidationFeatureLinkStatus(JiraValidatorByUrlRequest dto, String helpMessage, String group) {
         String message = "";
         boolean isValid = false;
@@ -793,7 +793,7 @@ public class ValidationUrlJira {
 
         return this.getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
     }
-//OK
+//OK - el mensaje debe tomar solo la cadena no el arreglo
     public Map<String, Object> getValidationFeatureLinkProgramIncrement(JiraValidatorByUrlRequest dto, String helpMessage, String group){
         String message = "";
         boolean isValid = false;
