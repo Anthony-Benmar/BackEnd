@@ -831,7 +831,7 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
         return getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
 
     }
-//OK
+//OK - modificar debe dar alerta no fallar
     public Map<String, Object> getValidationFeatureLinkStatus(JiraValidatorByUrlRequest dto, String helpMessage, String group) {
         String message = "";
         boolean isValid = false;
@@ -874,7 +874,7 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
 
         return this.getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
     }
-//OK
+//OK - el mensaje debe tomar solo la cadena no el arreglo
     public Map<String, Object> getValidationFeatureLinkProgramIncrement(JiraValidatorByUrlRequest dto, String helpMessage, String group){
         String message = "";
         boolean isValid = false;
@@ -935,7 +935,7 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
         return getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
     }
 //Pendiente
-//    public Map<String, Object> getValidationValidateSubTask(Map<String, Object> subtaskObject, String helpMessage, String group) {
+//    public Map<String, Object> getValidationValidateSubTask(String tipoDesarrollo, String helpMessage, String group) {
 //        String message = "";
 //        boolean isValid = false;
 //        boolean isWarning = false;
@@ -1000,6 +1000,40 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
 //
 //        return getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
 //    }
+
+    public Map<String, Object> getValidationValidateSubTask(String tipoDesarrollo, String helpMessage, String group) {
+        String message = "";
+        boolean isValid = false;
+        boolean isWarning = false;
+
+        List<String> requiredSubTasks = JiraValidatorConstantes.SUBTASKS_BY_DEVELOP_TYPES.get(tipoDesarrollo);
+
+        JsonArray subTasks = jiraTicketResult
+                .getAsJsonObject("fields")
+                .getAsJsonArray("subtasks");
+
+        List<String> foundSubTasks = new ArrayList<>();
+
+        for (JsonElement subTask : subTasks) {
+            String subTaskLabel = subTask.getAsJsonObject().get("fields").getAsJsonObject().get("summary").getAsString();
+            if (requiredSubTasks.contains(subTaskLabel)) {
+                foundSubTasks.add(subTaskLabel);
+            }
+        }
+
+        if (foundSubTasks.containsAll(requiredSubTasks)) {
+            message = "Todas las subtareas requeridas fueron encontradas.";
+            isValid = true;
+        } else {
+            // Encontrar las subtareas que faltan
+            List<String> missingSubTasks = new ArrayList<>(requiredSubTasks);
+            missingSubTasks.removeAll(foundSubTasks);
+
+            message = "Faltan las siguientes subtareas: " + String.join(", ", missingSubTasks);
+        }
+
+        return getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
+    }
 //Por revisar
     public Map<String, Object> getValidationValidateImpactLabel(String helpMessage, String group, String tipoDesarrollo) {
         String message = "";
@@ -1068,6 +1102,47 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
 
         return getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
     }
+
+    public Map<String, Object> getValidationValidateAttachment(String tipoDesarrollo, String helpMessage, String group) {
+        List<String> requiredAttachments = JiraValidatorConstantes.ATTACHS_BY_DEVELOP_TYPES.get(tipoDesarrollo);
+        JsonArray attachments = jiraTicketResult
+                .getAsJsonObject("fields")
+                .getAsJsonArray("attachment");
+
+        List<String> foundAttachments = new ArrayList<>();
+
+        for (JsonElement attachment : attachments) {
+            String filename = attachment.getAsJsonObject().get("filename").getAsString();
+            String attachmentLabel = filename.split("\\s+")[0];
+            if (requiredAttachments.contains(attachmentLabel)) {
+                foundAttachments.add(attachmentLabel);
+            }
+        }
+
+        if (foundAttachments.containsAll(requiredAttachments)) {
+            return getValidationResultsDict("Todos los adjuntos requeridos fueron encontrados.", true, false, helpMessage, group);
+        } else {
+            List<String> missingAttachments = new ArrayList<>(requiredAttachments);
+            missingAttachments.removeAll(foundAttachments);
+            return getValidationResultsDict("Faltan los siguientes adjuntos: " + String.join(", ", missingAttachments), false, false, helpMessage, group);
+        }
+   }
+//        List<String> adjuntosWithParts = new ArrayList<>();
+//        for (String adjunto : this.adjuntos) {
+//            String[] adjuntoParts = adjunto.split("\\.");
+//            String[] adjuntoSPartsSinEXT = adjuntoParts[0].split("-");
+//            adjuntosWithParts.add(adjuntoSPartsSinEXT[0].trim().toLowerCase());
+//        }
+//
+//        String message = "";
+//        boolean isValid = false;
+//        boolean isWarning = false;
+//        isValid = adjuntosWithParts.contains(adjuntoObject.get("label").toLowerCase());
+//        String extraLabel = adjuntoObject.containsKey("extraLabel") ? "(" + adjuntoObject.get("extraLabel") + ")" : "";
+//        message = "El documento <div class='" + this.boxClassesBorder + "'>" + adjuntoObject.get("label") + "</div> " + (isValid ? "" : "no") + " existe " + extraLabel;
+//
+//        return getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
+//    }
 
     //    public Map<String, Object> getValidationValidateJIRAStatus(String helpMessage, String group) {
 //        String message = "";

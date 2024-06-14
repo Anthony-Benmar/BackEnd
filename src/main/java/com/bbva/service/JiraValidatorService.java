@@ -87,6 +87,9 @@ public class JiraValidatorService {
         var result_15 = instancesRules.getValidationTeamAssigned(tipoDesarrollo,true,"Validar que el equipo asignado sea el correcto", "Ticket");
         var result_16 = instancesRules.getValidationValidateJIRAStatus(tipoDesarrollo,"Validar el Status de Ticket JIRA","Ticket");
 
+        var result_18 = instancesRules.getValidationValidateSubTask(tipoDesarrollo,"Validar la existencia de las subtareas", "Subtask");
+        var result_19 = instancesRules.getValidationValidateAttachment(tipoDesarrollo,"Validar la existencia de los adjuntos", "Attachment");
+
         var result_17 = instancesRules.getValidationPR(tipoDesarrollo, "Validar que se tenga una PR asociada", prGroup);
         var result_18 = instancesRules.getValidationPRBranch("Validar que este asociado a la rama correcta", prGroup);
 
@@ -103,6 +106,8 @@ public class JiraValidatorService {
         result_final.add(result_9);
         result_final.add(result_10);
         result_final.add(result_11);
+        result_final.add(result_18);
+        result_final.add(result_19);
 
         //Validaciones Juan
         result_final.add(result_12);
@@ -112,6 +117,8 @@ public class JiraValidatorService {
         result_final.add(result_16);
         result_final.add(result_17);
         result_final.add(result_18);
+
+
 
         for (Map<String, Object> result : result_final) {
             JiraMessageResponseDTO message = new JiraMessageResponseDTO();
@@ -127,43 +134,49 @@ public class JiraValidatorService {
                     message.setRule("ValidatorValidateHUTType");
                     break;
                 case 4:
-                    message.setRule("ValidatorIssueType");
+                    message.setRule("Validar que el Issue type sea Story o Dependency");//("ValidatorIssueType");
                     break;
                 case 5:
-                    message.setRule("ValidatorDocumentAttachByDevType");
+                    message.setRule("ValidatorDocumentAttachByDevType"); //Falta descripción
                     break;
                 case 6:
-                    message.setRule("ValidationFeatureLink");
+                    message.setRule("Validacion Feature Link: Se valida que se cuente con un Feature Link Asociado");//("ValidationFeatureLink");
                     break;
                 case 7:
-                    message.setRule("ValidationFeatureLinkPAD3");
+                    message.setRule("Validacion Feature Link PAD3: Se valida que el ticket jira del feature link sea PAD3 (Como advertencia)");//("ValidationFeatureLinkPAD3");
                     break;
                 case 8:
-                    message.setRule("ValidationFeatureLinkStatus");
+                    message.setRule("Validacion Feature Link Status: Se valida el status del ticket jira del feature link, para evitar que un feature link en estado new o ready sea enviado (debe estar en in progress)");//("ValidationFeatureLinkStatus");
                     break;
                 case 9:
-                    message.setRule("ValidationFeatureLinkProgramIncrement");
+                    message.setRule("Validacion Feature Link Program Increment: Se valida que el program increment del feature link corresponda al Q vigente");//("ValidationFeatureLinkProgramIncrement");
                     break;
                 case 10:
-                    message.setRule("ValidationValidateImpactLabel");
+                    message.setRule("Validacion Impact Label: Se valida que el ticket JIR cuente con un Impact Label segun el tipo de desarrollo");//("ValidationValidateImpactLabel");
                     break;
                 case 11:
-                    message.setRule("ValidationFixVersion");
+                    message.setRule("Validacion Fix Version: Para el caso de mallas y host, se valida que se cuente con un fix version");//("ValidationFixVersion");
                     break;
                 case 12:
-                    message.setRule("ValidationValidateSubTaskStatus");
+                    message.setRule("Validacion Subtareas Status: Se valida el status de las subtareas, para evitar tener subtareas en new o ready según corresponda");//("ValidationValidateSubTaskStatus");
                     break;
                 case 13:
-                    message.setRule("ValidationValidateSubTaskValidateContractor");
+                    message.setRule("Validacion Subtareas Contractor: Se valida que el VoBo de la subtarea no lo de un correo .contractor");//("ValidationValidateSubTaskValidateContractor");
                     break;
                 case 14:
-                    message.setRule("ValidationAcceptanceCriteria");
+                    message.setRule("Validacion MVP: Se obtiene el MVP del criterio de aceptacion y se valida con el registrado en el excel de lideres");//("ValidationAcceptanceCriteria");
                     break;
                 case 15:
-                    message.setRule("ValidationTeamAssigned");
+                    message.setRule("Validacion Asignacion a Tablero de DQA: Se valida que el Ticket JIRA fuera enviado al tablero de DQA");//("ValidationTeamAssigned");
                     break;
                 case 16:
-                    message.setRule("ValidationValidateJIRAStatus");
+                    message.setRule("Validacion Status JIRA: Se valida que el ticket JIRA no llegue en estados invalidos, como new, discarded, etc");//("ValidationValidateJIRAStatus");
+                    break;
+                case 18:
+                    message.setRule("Validacion Subtareas: Segun el tipo de desarrollo / tipo de ticket, se valida que existan ciertas subtareas");//("ValidationValidateSubTask");
+                    break;
+                case 19:
+                    message.setRule("Validacion de documentos adjuntos: C204, P110, RC");//("ValidationValidateAttachment");
                     break;
                 default:
                     message.setRule("Unknown");
@@ -187,9 +200,6 @@ public class JiraValidatorService {
         jiraResponseDTO.setSuccessCount(successCount);
         jiraResponseDTO.setErrorCount(errorCount);
         jiraResponseDTO.setWarningCount(warningCount);
-
-//        var url = ApiJiraName.URL_API_JIRA_SQL + this.query + jiraApiService.getQuerySuffixURL();
-//        var resultado = jiraApiService.GetJiraAsync(dto.getUserName(),dto.getToken(),url);
 
         return new SuccessDataResult<>(jiraResponseDTO, "Reglas de validacion");
     }
@@ -242,112 +252,10 @@ public class JiraValidatorService {
         return resutlPrsString;
     }
 
-    /*public List<Map<String,Object>> getResults() {
-        List<Map<String,Object>> res = new ArrayList<>();
-        boolean isWithError = false;
-
-        try {
-            // to prevent invalid urls sent directly to the server
-            if (jiraTicketResult != null && isValidURL) {
-                String ticketGroup = "Ticket";
-                Map<String, Object> validationURLJiraResult = validationUrlJira.getValidationURLJIRA("Validar que sea PAD3 o PAD5", ticketGroup);
-
-                if (!(Boolean) validationURLJiraResult.get("isValid")) {
-                    res.add(validationURLJiraResult);
-                } else {
-                    //Map<String, Object> validacionEnvioFormulario = getValidatorValidateSentToTablero05("Validar envio de formulario", ticketGroup); // validar a través de un google sheet o BD???
-                    //res.add(validacionEnvioFormulario);
-                    //Map<String, Object> validacionSummaryResult = getValidatorValidateSummaryHUTType("Validar el tipo de desarrollo en el summary", ticketGroup);
-                    //String tipoDesarrolloSummary = (String) validacionSummaryResult.get("tipoDesarrolloSummary");
-
-//                    Map<String, Object> validacionTipoDesarrolloResult = getValidatorValidateHUTType(
-//                            "Detectar el tipo de desarrollo por el prefijo de " + ticketVisibleLabel + " y el summary",
-//                            tipoDesarrolloSummary,
-//                            ticketGroup
-//                    );
-                }
-            }
-        }
-        finally {
-            if (res.isEmpty()) {
-                res.add(Map.of("message", "No se encontraron errores", "isValid", true, "isWarning", false, "helpMessage", "", "group", "Ticket"));
-            }
-        }
-        return res;
-    }*/
-
     public boolean validateJiraFormatURL(String jiraURL) {
         String regexPattern = "^(?:https://jira.globaldevtools.bbva.com/(?:browse/)?(?:plugins/servlet/mobile#issue/)?)?([a-zA-Z0-9]+-[a-zA-Z0-9]+)$";
         Pattern pattern = Pattern.compile(regexPattern);
         Matcher matcher = pattern.matcher(jiraURL.toLowerCase());
         return matcher.matches();
     }
-
-
-    //------------------- REGLA DE NEGOCIO 1-------------------
-
-
-    //------------------- REGLA DE NEGOCIO 2-------------------
-
-
-    //------------------- REGLA DE NEGOCIO 3-------------------
-    public Map<String, Object> getValidatorValidateHUTType(String helpMessage, String tipoDesarrolloSummary, String group) {
-        String message;
-        boolean isValid;
-        boolean isWarning = false;
-
-        if ((jiraPADCode.equals("PAD3") || jiraPADCode.equals("PAD5")) && !tipoDesarrolloSummary.isEmpty()) {
-            this.tipoDesarrollo = tipoDesarrolloSummary;
-            if (this.tipoDesarrolloFormulario.toLowerCase().contains("scaffolder") && !this.tipoDesarrolloFormulario.toLowerCase().contains("despliegue")) {
-                this.tipoDesarrollo = "Scaffolder";
-            }
-
-            message = "<div class=\"" + boxClassesBorder + "\">Tipo de desarrollo</div> es <div class=\"" + boxClassesBorder + " bg-dark border border-dark\">" + this.tipoDesarrollo + "</div>";
-            isValid = true;
-        } else {
-            message = "No se pudo detectar el <div class=\"" + boxClassesBorder + "\">Tipo de desarrollo</div>";
-            isValid = false;
-        }
-        return Map.of("message", message, "isValid", isValid, "isWarning", isWarning, "helpMessage", helpMessage, "group", group);
-    }
 }
-
-/*
-        jiraApiService = new JiraApiService(dto.getUserName(), dto.getToken());
-        //jiraApiService.testConnection();
-
-
-
-
-        if (!isValidURL) {
-            System.out.println("CONEXION FALLIDA");
-            return new SuccessDataResult<>(null, "CONEXION FALLIDA");
-        }
-
-        System.out.println("CONEXION EXITOSA");
-        // Querying Jira API
-        List<Map<String, Object>> queryResult = jiraApiService.searchByTicket(List.of(jiraCode),
-                List.of("id", "issuetype", "changelog", "teamId", "petitionerTeamId", "receptorTeamId", "labels", "featureLink", "issuelinks", "status", "summary", "acceptanceCriteria", "subtasks", "impactLabel", "itemType", "techStack",
-                        "fixVersions", "attachment", "prs"));
-
-        System.out.println("QUERY RESULT: " + queryResult);
-        List<Map<String, Object>> results = queryResult;
-        System.out.println("RESULTS: " + results);
-        if (results != null && !results.isEmpty()) {
-            jiraTicketResult = results;
-            System.out.println(jiraTicketResult);
-        }
-
-        List<Map<String, Object>> results2 = getResults();
-        List<JiraResDTO> jiraResDTOList = new ArrayList<>();
-
-        for (Map<String, Object> result : results2) {
-            JiraResDTO jiraResDTO = new JiraResDTO();
-            jiraResDTO.setIsValid((String) result.get("isValid"));
-            jiraResDTO.setIsWarning((String) result.get("isWarning"));
-            jiraResDTO.setHelpMessage((String) result.get("helpMessage"));
-            jiraResDTO.setGroup((String) result.get("group"));
-            jiraResDTOList.add(jiraResDTO);
-        }
-        LOGGER.log(null, "DTORESPONSE: " + jiraResDTOList.toString());
-        */
