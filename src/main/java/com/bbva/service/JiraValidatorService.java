@@ -91,7 +91,7 @@ public class JiraValidatorService {
         var result_19 = instancesRules.getValidationValidateAttachment(tipoDesarrollo,"Validar la existencia de los adjuntos", "Attachment");
 
         var result_17 = instancesRules.getValidationPR(tipoDesarrollo, "Validar que se tenga una PR asociada", prGroup);
-        var result_18 = instancesRules.getValidationPRBranch("Validar que este asociado a la rama correcta", prGroup);
+        var result_20 = instancesRules.getValidationPRBranch("Validar que este asociado a la rama correcta", prGroup);
 
         result_final.add(result_1);
         result_final.add(result_2);
@@ -117,6 +117,7 @@ public class JiraValidatorService {
         result_final.add(result_16);
         result_final.add(result_17);
         result_final.add(result_18);
+        result_final.add(result_20);
 
 
 
@@ -172,11 +173,17 @@ public class JiraValidatorService {
                 case 16:
                     message.setRule("Validacion Status JIRA: Se valida que el ticket JIRA no llegue en estados invalidos, como new, discarded, etc");//("ValidationValidateJIRAStatus");
                     break;
+                case 17:
+                    message.setRule("Validacion PR: Se valida que tenga, no tenga PRs o solo tenga 1 PR asociada segun sea el caso");//("ValidationPR");
+                    break;
                 case 18:
                     message.setRule("Validacion Subtareas: Segun el tipo de desarrollo / tipo de ticket, se valida que existan ciertas subtareas");//("ValidationValidateSubTask");
                     break;
                 case 19:
                     message.setRule("Validacion de documentos adjuntos: C204, P110, RC");//("ValidationValidateAttachment");
+                    break;
+                case 20:
+                    message.setRule("Validacion PR Rama Destino: Se valida que la rama destino de la PR sea solo master o develop");//("ValidationPRBranch");
                     break;
                 default:
                     message.setRule("Unknown");
@@ -220,8 +227,8 @@ public class JiraValidatorService {
         String idTicket = jiraTicketResult.getAsJsonObject().get("id").getAsString();
         var url = ApiJiraName.URL_API_JIRA_PULL_REQUEST + idTicket + "&applicationType=stash&dataType=pullrequest";
 
-        String result = this.jiraApiService.GetPRsAsync(dto.getUserName(), dto.getToken(), url);
-        var prsJsonResponse = JsonParser.parseString(result).getAsJsonObject();
+        String resultPRs = this.jiraApiService.GetJiraAsync(dto.getUserName(), dto.getToken(), url);
+        var prsJsonResponse = JsonParser.parseString(resultPRs).getAsJsonObject();
         var detailPR = prsJsonResponse
                 .getAsJsonArray("detail")
                 .get(0).getAsJsonObject()
