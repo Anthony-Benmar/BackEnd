@@ -88,6 +88,7 @@ public class JiraValidatorService {
         var result_16 = instancesRules.getValidationValidateJIRAStatus(tipoDesarrollo,"Validar el Status de Ticket JIRA","Ticket");
 
         var result_17 = instancesRules.getValidationPR(tipoDesarrollo, "Validar que se tenga una PR asociada", prGroup);
+        var result_18 = instancesRules.getValidationPRBranch("Validar que este asociado a la rama correcta", prGroup);
 
         result_final.add(result_1);
         result_final.add(result_2);
@@ -110,6 +111,7 @@ public class JiraValidatorService {
         result_final.add(result_15);
         result_final.add(result_16);
         result_final.add(result_17);
+        result_final.add(result_18);
 
         for (Map<String, Object> result : result_final) {
             JiraMessageResponseDTO message = new JiraMessageResponseDTO();

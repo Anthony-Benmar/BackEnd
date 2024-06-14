@@ -25,7 +25,7 @@ public class ValidationUrlJira {
     private String impactLabel;
     private String coordinationMessage = "de ser necesario coordinar con el <strong>SM / QE</strong>";
     private String currentQ = "2024-Q2";
-
+    private Map<String,Object> branchPRObject = new HashMap<>();
     public ValidationUrlJira(String jiraCode, JsonObject jiraTicketResult) {
         this.jiraCode = jiraCode;
         this.jiraTicketResult = jiraTicketResult;
@@ -35,7 +35,8 @@ public class ValidationUrlJira {
         this.featureLink = featureLinkElement.isJsonNull() ? null : featureLinkElement.getAsString();
         JsonElement impactLabelElement = this.jiraTicketResult.get("fields").getAsJsonObject().get("customfield_10267");
         this.impactLabel = impactLabelElement.isJsonNull() ? null : impactLabelElement.getAsString();
-
+        this.branchPRObject.put("branch","");
+        this.branchPRObject.put("status","");
     }
 
     public  Map<String, Object> getValidatorProjectPAD(String helpMessage, String group) {
@@ -385,6 +386,7 @@ public class ValidationUrlJira {
         return newMessage;
     }
 //-----------------------------------------------------------------------------------------------
+    //REGLA OK
 public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMessage, String group) {
     String message = "";
     boolean isValid = false;
@@ -401,16 +403,12 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
     //convertir todos los elementos del tipoDesarrolloPRs a minúsculas
     tipoDesarrolloPRs.replaceAll(String::toLowerCase);
 
-    Map<String,Object> branchPRObject = new HashMap<>();
-    branchPRObject.put("branch","");
-    branchPRObject.put("status","");
-
     if (jiraTicketResultPrs.get("prs") != null) {
         cantidadPRs = jiraTicketResultPrs.get("prs").getAsJsonArray().size();
         // por defecto solo deberia venir una pr, asi que se tomara la primera
         if (cantidadPRs > 0) {
-            branchPRObject.put("branch",jiraTicketResultPrs.get("prs").getAsJsonArray().get(0).getAsJsonObject().get("destinyBranch").getAsString());
-            branchPRObject.put("status",jiraTicketResultPrs.get("prs").getAsJsonArray().get(0).getAsJsonObject().get("status").getAsString());
+            this.branchPRObject.put("branch",jiraTicketResultPrs.get("prs").getAsJsonArray().get(0).getAsJsonObject().get("destinyBranch").getAsString());
+            this.branchPRObject.put("status",jiraTicketResultPrs.get("prs").getAsJsonArray().get(0).getAsJsonObject().get("status").getAsString());
         }
         // se obtienen las urls de las PRs
         for (JsonElement prObj : jiraTicketResultPrs.get("prs").getAsJsonArray()) {
@@ -450,8 +448,18 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
     }
     return this.getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
 }
+    public Map<String, Object> getValidationPRBranch(String helpMessage, String group) {
+        String message = "";
+        boolean isValid = false;
+        boolean isWarning = false;
 
+        List<String> validBranches = Arrays.asList("develop", "master");
 
+        message = "Rama destino: " + this.branchPRObject.get("branch");
+        isValid = validBranches.contains(this.branchPRObject.get("branch"));
+
+        return getValidationResultsDict(message, isValid, isWarning, helpMessage, group);
+    }
 
     public Map<String, Object> getValidationValidateSubTaskStatus(String tipoDesarrollo,String helpMessage, String group) {
         AtomicReference<String> message = new AtomicReference<>("");

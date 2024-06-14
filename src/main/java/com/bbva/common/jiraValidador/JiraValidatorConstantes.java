@@ -8,9 +8,7 @@ public class JiraValidatorConstantes {
     public static final Map<String, List<String>> VOBO_BY_DEVELOP_TYPES;
     public static final Map<String, List<String>> SUBTASKS_SPECIALS;
     public static final Map<String, List<String>> SUBTASKS_BY_DEVELOP_TYPES;
-
     public static final Map<String, Map<String, Object>> CRITERIA_BY_DEVELOP_TYPES;
-
     public static final Map<String, Map<String, Object>> SUBTASKS_TYPE_OWNER;
 
     static {
