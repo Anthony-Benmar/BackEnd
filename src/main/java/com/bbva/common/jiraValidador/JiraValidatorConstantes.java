@@ -36,6 +36,16 @@ public class JiraValidatorConstantes {
         mapAttachByDevTypes.put("prs", new ArrayList<>(List.of("C204")));
         mapAttachByDevTypes.put("hammurabi", new ArrayList<>(List.of("C204","RC")));
         mapAttachByDevTypes.put("host", new ArrayList<>(List.of("C204","P110")));
+        mapAttachByDevTypes.put("migrationtool", new ArrayList<>(List.of("C204")));
+        mapAttachByDevTypes.put("smartcleaner", new ArrayList<>(List.of("C204")));
+        mapAttachByDevTypes.put("ingesta", new ArrayList<>(List.of("C204")));
+        mapAttachByDevTypes.put("procesamiento", new ArrayList<>(List.of("C204")));
+        mapAttachByDevTypes.put("operativizacion", new ArrayList<>(List.of("C204")));
+        mapAttachByDevTypes.put("productivizacion", new ArrayList<>(List.of("C204")));
+        mapAttachByDevTypes.put("scaffolder", new ArrayList<>(List.of("C204")));
+        mapAttachByDevTypes.put("json global", new ArrayList<>(List.of("C204")));
+        mapAttachByDevTypes.put("teradata", new ArrayList<>(List.of("C204")));
+        mapAttachByDevTypes.put("sparkcompactor", new ArrayList<>(List.of("C204")));
         ATTACHS_BY_DEVELOP_TYPES = Collections.unmodifiableMap(mapAttachByDevTypes);
 
 
