@@ -85,7 +85,8 @@ public class JiraValidatorService {
         var result_15 = instancesRules.getValidationTeamAssigned(tipoDesarrollo,true,"Validar que el equipo asignado sea el correcto", "Ticket");
         var result_16 = instancesRules.getValidationValidateJIRAStatus(tipoDesarrollo,"Validar el Status de Ticket JIRA","Ticket");
 
-        var result_17 = instancesRules.getValidationValidateSubTask(tipoDesarrollo,"Se valida la existencia de las subtareas", "Subtask");
+        var result_17 = instancesRules.getValidationValidateSubTask(tipoDesarrollo,"Validar la existencia de las subtareas", "Subtask");
+        var result_18 = instancesRules.getValidationValidateAttachment(tipoDesarrollo,"Validar la existencia de los adjuntos", "Attachment");
 
         result_final.add(result_1);
         result_final.add(result_2);
@@ -109,6 +110,7 @@ public class JiraValidatorService {
         result_final.add(result_16);
 
         result_final.add(result_17);
+        result_final.add(result_18);
 
         for (Map<String, Object> result : result_final) {
             JiraMessageResponseDTO message = new JiraMessageResponseDTO();
@@ -162,8 +164,11 @@ public class JiraValidatorService {
                 case 16:
                     message.setRule("Validacion Status JIRA: Se valida que el ticket JIRA no llegue en estados invalidos, como new, discarded, etc");//("ValidationValidateJIRAStatus");
                     break;
-                    case 17:
+                case 17:
                     message.setRule("Validacion Subtareas: Segun el tipo de desarrollo / tipo de ticket, se valida que existan ciertas subtareas");//("ValidationValidateSubTask");
+                    break;
+                case 18:
+                    message.setRule("Validacion de documentos adjuntos: C204, P110, RC");//("ValidationValidateAttachment");
                     break;
                 default:
                     message.setRule("Unknown");

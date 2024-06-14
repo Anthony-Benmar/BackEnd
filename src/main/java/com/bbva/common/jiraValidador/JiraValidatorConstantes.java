@@ -34,7 +34,8 @@ public class JiraValidatorConstantes {
         Map<String, List<String>> mapAttachByDevTypes = new HashMap<>();
         mapAttachByDevTypes.put("mallas", new ArrayList<>(List.of("C204","P110")));
         mapAttachByDevTypes.put("prs", new ArrayList<>(List.of("C204")));
-        mapAttachByDevTypes.put("hammurabi", new ArrayList<>(List.of("C204", "Reglas de Calidad")));
+        mapAttachByDevTypes.put("hammurabi", new ArrayList<>(List.of("C204","RC")));
+        mapAttachByDevTypes.put("host", new ArrayList<>(List.of("C204","P110")));
         ATTACHS_BY_DEVELOP_TYPES = Collections.unmodifiableMap(mapAttachByDevTypes);
 
 

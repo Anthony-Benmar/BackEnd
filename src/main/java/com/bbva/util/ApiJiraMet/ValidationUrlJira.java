@@ -931,28 +931,21 @@ public class ValidationUrlJira {
         boolean isValid = false;
         boolean isWarning = false;
 
-        // Obtener las subtareas requeridas para el tipo de desarrollo dado
         List<String> requiredSubTasks = JiraValidatorConstantes.SUBTASKS_BY_DEVELOP_TYPES.get(tipoDesarrollo);
 
-        // Obtener todas las subtareas del ticket de Jira actual
         JsonArray subTasks = jiraTicketResult
                 .getAsJsonObject("fields")
                 .getAsJsonArray("subtasks");
 
-        // Crear una lista para almacenar las subtareas que se encuentran
         List<String> foundSubTasks = new ArrayList<>();
 
-        // Verificar cada subtarea
         for (JsonElement subTask : subTasks) {
             String subTaskLabel = subTask.getAsJsonObject().get("fields").getAsJsonObject().get("summary").getAsString();
-
-            // Si la subtarea es requerida, añadirla a la lista de subtareas encontradas
             if (requiredSubTasks.contains(subTaskLabel)) {
                 foundSubTasks.add(subTaskLabel);
             }
         }
 
-        // Verificar si todas las subtareas requeridas se encontraron
         if (foundSubTasks.containsAll(requiredSubTasks)) {
             message = "Todas las subtareas requeridas fueron encontradas.";
             isValid = true;
@@ -1034,6 +1027,47 @@ public class ValidationUrlJira {
 
         return getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
     }
+
+    public Map<String, Object> getValidationValidateAttachment(String tipoDesarrollo, String helpMessage, String group) {
+        List<String> requiredAttachments = JiraValidatorConstantes.ATTACHS_BY_DEVELOP_TYPES.get(tipoDesarrollo);
+        JsonArray attachments = jiraTicketResult
+                .getAsJsonObject("fields")
+                .getAsJsonArray("attachment");
+
+        List<String> foundAttachments = new ArrayList<>();
+
+        for (JsonElement attachment : attachments) {
+            String filename = attachment.getAsJsonObject().get("filename").getAsString();
+            String attachmentLabel = filename.split("\\s+")[0];
+            if (requiredAttachments.contains(attachmentLabel)) {
+                foundAttachments.add(attachmentLabel);
+            }
+        }
+
+        if (foundAttachments.containsAll(requiredAttachments)) {
+            return getValidationResultsDict("Todos los adjuntos requeridos fueron encontrados.", true, false, helpMessage, group);
+        } else {
+            List<String> missingAttachments = new ArrayList<>(requiredAttachments);
+            missingAttachments.removeAll(foundAttachments);
+            return getValidationResultsDict("Faltan los siguientes adjuntos: " + String.join(", ", missingAttachments), false, false, helpMessage, group);
+        }
+   }
+//        List<String> adjuntosWithParts = new ArrayList<>();
+//        for (String adjunto : this.adjuntos) {
+//            String[] adjuntoParts = adjunto.split("\\.");
+//            String[] adjuntoSPartsSinEXT = adjuntoParts[0].split("-");
+//            adjuntosWithParts.add(adjuntoSPartsSinEXT[0].trim().toLowerCase());
+//        }
+//
+//        String message = "";
+//        boolean isValid = false;
+//        boolean isWarning = false;
+//        isValid = adjuntosWithParts.contains(adjuntoObject.get("label").toLowerCase());
+//        String extraLabel = adjuntoObject.containsKey("extraLabel") ? "(" + adjuntoObject.get("extraLabel") + ")" : "";
+//        message = "El documento <div class='" + this.boxClassesBorder + "'>" + adjuntoObject.get("label") + "</div> " + (isValid ? "" : "no") + " existe " + extraLabel;
+//
+//        return getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
+//    }
 
     //    public Map<String, Object> getValidationValidateJIRAStatus(String helpMessage, String group) {
 //        String message = "";
