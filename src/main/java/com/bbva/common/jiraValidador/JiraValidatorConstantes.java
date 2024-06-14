@@ -41,7 +41,7 @@ public class JiraValidatorConstantes {
         mapAttachByDevTypes.put("ingesta", new ArrayList<>(List.of("C204")));
         mapAttachByDevTypes.put("procesamiento", new ArrayList<>(List.of("C204")));
         mapAttachByDevTypes.put("operativizacion", new ArrayList<>(List.of("C204")));
-        mapAttachByDevTypes.put("productivizacion", new ArrayList<>(List.of("C204")));
+        mapAttachByDevTypes.put("productivizacion", new ArrayList<>(List.of("")));
         mapAttachByDevTypes.put("scaffolder", new ArrayList<>(List.of("C204")));
         mapAttachByDevTypes.put("json global", new ArrayList<>(List.of("C204")));
         mapAttachByDevTypes.put("teradata", new ArrayList<>(List.of("C204")));

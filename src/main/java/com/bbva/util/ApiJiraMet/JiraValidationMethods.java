@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static com.bbva.common.jiraValidador.JiraValidatorConstantes.*;
 
-public class ValidationUrlJira {
+public class JiraValidationMethods {
     private  String jiraCode ;
     private final List<String> validPAD = Arrays.asList("pad3", "pad5");
     private JsonObject jiraTicketResult;
@@ -26,7 +26,7 @@ public class ValidationUrlJira {
     private String coordinationMessage = "de ser necesario coordinar con el <strong>SM / QE</strong>";
     private String currentQ = "2024-Q2";
 
-    public ValidationUrlJira(String jiraCode, JsonObject jiraTicketResult) {
+    public JiraValidationMethods(String jiraCode, JsonObject jiraTicketResult) {
         this.jiraCode = jiraCode;
         this.jiraTicketResult = jiraTicketResult;
         this.isInTableroDQA = false;
@@ -38,7 +38,7 @@ public class ValidationUrlJira {
 
     }
 
-    public  Map<String, Object> getValidatorProjectPAD(String helpMessage, String group) {
+    public  Map<String, Object> getValidationURLJIRA(String helpMessage, String group) {
         String message;
         boolean isValid;
         boolean isWarning = false;

@@ -6,7 +6,7 @@ import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dto.jira.request.JiraValidatorByUrlRequest;
 import com.bbva.dto.jira.response.JiraMessageResponseDTO;
 import com.bbva.dto.jira.response.JiraResponseDTO;
-import com.bbva.util.ApiJiraMet.ValidationUrlJira;
+import com.bbva.util.ApiJiraMet.JiraValidationMethods;
 import com.bbva.util.ApiJiraMet.ValidatorValidateSummaryHUTType;
 import com.bbva.util.ApiJiraName;
 import com.google.gson.*;
@@ -34,7 +34,7 @@ public class JiraValidatorService {
     private CookieStore cookieStore = new BasicCookieStore();
     //Map<String, String> customFields = new HashMap<>();
 
-    private ValidationUrlJira validationUrlJira;
+    private JiraValidationMethods validationUrlJira;
     private ValidatorValidateSummaryHUTType validatorValidateSummaryHUTType;
 
     //Todas la reglas de negocio
@@ -66,10 +66,10 @@ public class JiraValidatorService {
         ArrayList<Map<String, Object>> result_final = new ArrayList<>();
         int ruleIdCounter = 1;
 
-        var instancesRules = new ValidationUrlJira(dto.getUrlJira(), jiraTicketResult);
-        var result_1 = instancesRules.getValidatorProjectPAD("Validar que sea PAD3 o PAD5", "Ticket");
-        var result_2 = instancesRules.getValidatorValidateSummaryHUTType("Validar el tipo de desarrollo en el summary", "Ticket");
-        var tipoDesarrollo = result_2.get("tipoDesarrolloSummary").toString();
+        var instancesRules = new JiraValidationMethods(dto.getUrlJira(), jiraTicketResult);
+        var result_5 = instancesRules.getValidationURLJIRA("Validar que sea PAD3 o PAD5", "Ticket");
+        //var result_2 = instancesRules.getValidatorValidateSummaryHUTType("Validar el tipo de desarrollo en el summary", "Ticket");
+        //var tipoDesarrollo = result_2.get("tipoDesarrolloSummary").toString();
         var result_3 = instancesRules.getValidatorValidateHUTType("Detectar el tipo de desarrollo por el prefijo y el summary", result_2.get("tipoDesarrolloSummary").toString(), "Ticket");
         var result_4 = instancesRules.getValidatorIssueType("Validar que el Issue type sea Story o Dependency", "Ticket");
         var result_5 = instancesRules.getValidatorDocumentAttachByDevType(tipoDesarrollo);
@@ -88,9 +88,10 @@ public class JiraValidatorService {
         var result_16 = instancesRules.getValidationValidateJIRAStatus(tipoDesarrollo,"Validar el Status de Ticket JIRA","Ticket");
 
         var result_18 = instancesRules.getValidationValidateSubTask(tipoDesarrollo,"Validar la existencia de las subtareas", "Subtask");
-        var result_19 = instancesRules.getValidationValidateAttachment(tipoDesarrollo,"Validar la existencia de los adjuntos", "Attachment");
+        //result_19
+        var result_1 = instancesRules.getValidationValidateAttachment(tipoDesarrollo,"Validar la existencia de los adjuntos", "Attachment");
 
-        var result_17 = instancesRules.getValidationPR(tipoDesarrollo, "Validar que se tenga una PR asociada", prGroup);
+        var result_6 = instancesRules.getValidationPR(tipoDesarrollo, "Validar que se tenga una PR asociada", prGroup);
 
         result_final.add(result_1);
         result_final.add(result_2);
@@ -214,6 +215,7 @@ public class JiraValidatorService {
         String result = this.jiraApiService.GetJiraAsync(dto.getUserName(), dto.getToken() ,url);
         return result;
     }
+
     public String metadataPRs(JsonObject jiraTicketResult, JiraValidatorByUrlRequest dto) throws Exception {
         String idTicket = jiraTicketResult.getAsJsonObject().get("id").getAsString();
         var url = ApiJiraName.URL_API_JIRA_PULL_REQUEST + idTicket + "&applicationType=stash&dataType=pullrequest";
