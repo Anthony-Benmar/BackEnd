@@ -160,5 +160,35 @@ public class JiraApiService {
 
         return responseBodyString;
     }
+    public String GetPRsAsync(String username, String token,String url)
+            throws Exception
+    {
+        Object responseBody = null;
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        HttpGet httpGet = new HttpGet(url);
+        httpGet.setHeader("Content-Type", "application/json");
+
+        Integer responseCode =0;
+        String responseBodyString = "";
+        HttpEntity entity = null;
+        try(CloseableHttpClient httpclient = HttpClients.createDefault()){
+            //getBasicSession(username, token, httpclient);
+            httpGet.setHeader("Cookie", createCookieHeader(cookieStore.getCookies()));
+            CloseableHttpResponse response = httpclient.execute(httpGet);
+            responseCode = response.getStatusLine().getStatusCode();
+            entity = response.getEntity();
+            responseBodyString = EntityUtils.toString(entity);
+            response.close();
+        }
+
+        if (responseCode.equals(302)) {
+            throw new HandledException(responseCode.toString(), "Token Expirado");
+        }
+        if (responseCode>=400 && responseCode<=500) {
+            throw new HandledException(responseCode.toString(), "Error al actualizar tickets, revise los datos ingresados");
+        }
+
+        return responseBodyString;
+    }
 }
 

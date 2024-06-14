@@ -9,7 +9,7 @@ import com.bbva.dto.jira.response.JiraResponseDTO;
 import com.bbva.util.ApiJiraMet.ValidationUrlJira;
 import com.bbva.util.ApiJiraMet.ValidatorValidateSummaryHUTType;
 import com.bbva.util.ApiJiraName;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import org.apache.http.client.CookieStore;
 import org.apache.http.impl.client.BasicCookieStore;
 import java.net.http.HttpClient;
@@ -47,14 +47,16 @@ public class JiraValidatorService {
         this.jiraApiService = new JiraApiService();
         this.httpClient = HttpClient.newHttpClient();
         String acceptanceCriteriaGroup = "Criterio de Aceptacion";
+        String prGroup="PR";
 
         var isValidUrl = validateJiraFormatURL(dto.getUrlJira());
 
         var issuesMetadada = getMetadataIssues(dto);
         var jsonResponse = JsonParser.parseString(issuesMetadada).getAsJsonObject();
         var jiraTicketResult = jsonResponse.getAsJsonArray("issues").get(0).getAsJsonObject();
-
-
+        //Añadir PRs al ticket
+        var prs = metadataPRs(jiraTicketResult, dto);
+        jiraTicketResult.getAsJsonObject("fields").add("prs", JsonParser.parseString(prs).getAsJsonArray());
 
         if (issuesMetadada.isEmpty() && jiraTicketResult !=null){
             throw new HandledException("500", "no existe datos del ticket jira");
@@ -85,6 +87,8 @@ public class JiraValidatorService {
         var result_15 = instancesRules.getValidationTeamAssigned(tipoDesarrollo,true,"Validar que el equipo asignado sea el correcto", "Ticket");
         var result_16 = instancesRules.getValidationValidateJIRAStatus(tipoDesarrollo,"Validar el Status de Ticket JIRA","Ticket");
 
+        var result_17 = instancesRules.getValidationPR(tipoDesarrollo, "Validar que se tenga una PR asociada", prGroup);
+
         result_final.add(result_1);
         result_final.add(result_2);
         result_final.add(result_3);
@@ -105,6 +109,7 @@ public class JiraValidatorService {
         result_final.add(result_14);
         result_final.add(result_15);
         result_final.add(result_16);
+        result_final.add(result_17);
 
         for (Map<String, Object> result : result_final) {
             JiraMessageResponseDTO message = new JiraMessageResponseDTO();
@@ -198,6 +203,41 @@ public class JiraValidatorService {
         var url = ApiJiraName.URL_API_JIRA_SQL + query + this.jiraApiService.getQuerySuffixURL();
         String result = this.jiraApiService.GetJiraAsync(dto.getUserName(), dto.getToken() ,url);
         return result;
+    }
+    public String metadataPRs(JsonObject jiraTicketResult, JiraValidatorByUrlRequest dto) throws Exception {
+        String idTicket = jiraTicketResult.getAsJsonObject().get("id").getAsString();
+        var url = ApiJiraName.URL_API_JIRA_PULL_REQUEST + idTicket + "&applicationType=stash&dataType=pullrequest";
+
+        String result = this.jiraApiService.GetPRsAsync(dto.getUserName(), dto.getToken(), url);
+        var prsJsonResponse = JsonParser.parseString(result).getAsJsonObject();
+        var detailPR = prsJsonResponse
+                .getAsJsonArray("detail")
+                .get(0).getAsJsonObject()
+                .getAsJsonArray("pullRequests");
+        List<Map<String,Object>> prs = new ArrayList<>();
+
+        for(JsonElement pr : detailPR){
+            JsonObject prDetail = pr.getAsJsonObject();
+            List<Map<String,Object>> reviewersList = new ArrayList<>();
+            JsonArray reviewersArray = prDetail.getAsJsonArray("reviewers");
+            for(JsonElement reviewerElement : reviewersArray){
+                JsonObject reviewerObject = reviewerElement.getAsJsonObject();
+                Map<String,Object> reviewerMap = new HashMap<>();
+                reviewerMap.put("approved",reviewerObject.get("approved").getAsBoolean());
+                reviewerMap.put("user",reviewerObject.get("name").getAsString());
+                reviewersList.add(reviewerMap);
+            }
+            Map<String, Object> prMap = new HashMap<>();
+            prMap.put("url", prDetail.get("url").getAsString());
+            prMap.put("status", prDetail.get("status").getAsString());
+            prMap.put("destinyBranch", prDetail.getAsJsonObject("destination").get("branch").getAsString());
+            prMap.put("reviewers", reviewersList);
+            prs.add(prMap);
+        }
+        //Transformar la lista de objetos Java a una representación JSON en forma de cadena
+        Gson gson = new Gson();
+        String resutlPrsString = gson.toJson(prs);
+        return resutlPrsString;
     }
 
     /*public List<Map<String,Object>> getResults() {

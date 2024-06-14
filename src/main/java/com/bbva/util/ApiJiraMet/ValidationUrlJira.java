@@ -385,6 +385,73 @@ public class ValidationUrlJira {
         return newMessage;
     }
 //-----------------------------------------------------------------------------------------------
+public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMessage, String group) {
+    String message = "";
+    boolean isValid = false;
+    boolean isWarning = false;
+    List<String> prsUrls = new ArrayList<>();
+    int cantidadPRs = 0;
+    JsonObject jiraTicketResultPrs = jiraTicketResult
+            .getAsJsonObject("fields");
+
+    // se obtienen las PRs asociadas al ticket
+    List<String> tipoDesarrolloPRs = Arrays.asList("Procesamiento","MigrationTool",
+            "Hammurabi", "Ingesta", "Scaffolder", "Operativizacion",
+            "Teradata", "SmartCleaner","SparkCompactor", "JSON Global");
+    //convertir todos los elementos del tipoDesarrolloPRs a minúsculas
+    tipoDesarrolloPRs.replaceAll(String::toLowerCase);
+
+    Map<String,Object> branchPRObject = new HashMap<>();
+    branchPRObject.put("branch","");
+    branchPRObject.put("status","");
+
+    if (jiraTicketResultPrs.get("prs") != null) {
+        cantidadPRs = jiraTicketResultPrs.get("prs").getAsJsonArray().size();
+        // por defecto solo deberia venir una pr, asi que se tomara la primera
+        if (cantidadPRs > 0) {
+            branchPRObject.put("branch",jiraTicketResultPrs.get("prs").getAsJsonArray().get(0).getAsJsonObject().get("destinyBranch").getAsString());
+            branchPRObject.put("status",jiraTicketResultPrs.get("prs").getAsJsonArray().get(0).getAsJsonObject().get("status").getAsString());
+        }
+        // se obtienen las urls de las PRs
+        for (JsonElement prObj : jiraTicketResultPrs.get("prs").getAsJsonArray()) {
+            Map<String, Object> pr = new HashMap<>();
+            pr.put("url", prObj.getAsJsonObject().get("url").getAsString());
+            prsUrls.add(pr.get("url").toString());
+        }
+    }
+
+    if (tipoDesarrollo.equals("PRs") || tipoDesarrollo.equals("Mallas") || tipoDesarrolloPRs.contains(tipoDesarrollo)) {
+        // validar que se tenga solo 1 PR
+        if (cantidadPRs == 1) {
+            message = "Con PR asociada: " + prsUrls.get(0);
+            isValid = true;
+            // setear self.urlPRActual y self.prActual aquí si es necesario
+        } else if (cantidadPRs > 1) {
+            message = "Se encontraron " + cantidadPRs + " PRs asociadas: " + String.join(", ", prsUrls);
+            isValid = false;
+            message += "Atención: No se puede tener más de una PR asociada.";
+            isWarning = true;
+        } else {
+            message = "No se detectó una PR asociada.";
+            isValid = false;
+            message += "Atención: Si la PR fue asociada correctamente, falta dar permisos de acceso a los QEs.";
+        }
+    } else {
+        // validar que no se tenga PRs
+        // por las dudas limpiar url de pr actual, asi en el futuro si se asigna por error, no mandara ningun resultado
+        // self.urlPRActual = "";
+        if (cantidadPRs == 0) {
+            message = "Sin PR asociada.";
+            isValid = true;
+        } else {
+            message = "No se debe asociar una PR a este Tipo de Desarrollo.";
+            isValid = false;
+        }
+    }
+    return this.getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
+}
+
+
 
     public Map<String, Object> getValidationValidateSubTaskStatus(String tipoDesarrollo,String helpMessage, String group) {
         AtomicReference<String> message = new AtomicReference<>("");
