@@ -1104,7 +1104,10 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
     }
 
     public Map<String, Object> getValidationValidateAttachment(String tipoDesarrollo, String helpMessage, String group) {
-        List<String> requiredAttachments = JiraValidatorConstantes.ATTACHS_BY_DEVELOP_TYPES.get(tipoDesarrollo);
+        String message = "";
+        boolean isValid;
+        boolean isWarning = false;
+        List<String> requiredAttachments = JiraValidatorConstantes.ATTACHS_BY_DEVELOP_TYPES.get(tipoDesarrollo.toLowerCase());
         JsonArray attachments = jiraTicketResult
                 .getAsJsonObject("fields")
                 .getAsJsonArray("attachment");
@@ -1120,64 +1123,23 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
         }
 
         if (foundAttachments.containsAll(requiredAttachments)) {
-            return getValidationResultsDict("Todos los adjuntos requeridos fueron encontrados.", true, false, helpMessage, group);
+            message = "Todos los adjuntos requeridos fueron encontrados.";
+            isValid = true;
+            return getValidationResultsDict(message, isValid, isWarning, helpMessage, group);
         } else {
             List<String> missingAttachments = new ArrayList<>(requiredAttachments);
             missingAttachments.removeAll(foundAttachments);
-            return getValidationResultsDict("Faltan los siguientes adjuntos: " + String.join(", ", missingAttachments), false, false, helpMessage, group);
+            message = "Faltan los siguientes adjuntos: " + String.join(", ", missingAttachments);
+            isValid = false;
+            return getValidationResultsDict(message, isValid, isWarning, helpMessage, group);
         }
    }
-//        List<String> adjuntosWithParts = new ArrayList<>();
-//        for (String adjunto : this.adjuntos) {
-//            String[] adjuntoParts = adjunto.split("\\.");
-//            String[] adjuntoSPartsSinEXT = adjuntoParts[0].split("-");
-//            adjuntosWithParts.add(adjuntoSPartsSinEXT[0].trim().toLowerCase());
-//        }
-//
-//        String message = "";
-//        boolean isValid = false;
-//        boolean isWarning = false;
-//        isValid = adjuntosWithParts.contains(adjuntoObject.get("label").toLowerCase());
-//        String extraLabel = adjuntoObject.containsKey("extraLabel") ? "(" + adjuntoObject.get("extraLabel") + ")" : "";
-//        message = "El documento <div class='" + this.boxClassesBorder + "'>" + adjuntoObject.get("label") + "</div> " + (isValid ? "" : "no") + " existe " + extraLabel;
-//
-//        return getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
-//    }
 
-    //    public Map<String, Object> getValidationValidateJIRAStatus(String helpMessage, String group) {
+//   public Map<String, Object> getValidationProductivizacionIssueLink(String tipoDesarrollo, String helpMessage, String group){
 //        String message = "";
-//        boolean isValid = false;
+//        boolean isValid;
 //        boolean isWarning = false;
 //
-//        List<String> statusList = new ArrayList<>(statusTableroDQA);
-//
-//        if (tipoDesarrollo.equals("Mallas") || tipoDesarrollo.equals("HOST")) {
-//            statusList.addAll(estadosExtraMallasHost);
-//        }
-//
-//        message = "Con estado <div class='" + boxClassesBorder + "'>" + jiraTicketStatus + "</div>";
-//
-//        if (statusList.contains(jiraTicketStatus)) {
-//            isValid = true;
-//
-//            List<String> listaEstados = new ArrayList<>();
-//            listaEstados.add("Ready");
-//            listaEstados.add("Deployed");
-//            if (tipoDesarrollo.equals("Mallas") || tipoDesarrollo.equals("HOST")) {
-//                listaEstados.addAll(estadosExtraMallasHost);
-//            }
-//
-//            if (!listaEstados.contains(jiraTicketStatus)) {
-//                if (isInTableroDQA && isEnviadoFormulario) {
-//                    isValid = true;
-//                    isWarning = true;
-//                    message += "<div class='" + boxWarningClasses + "'><strong>Atenci&oacute;n</strong>:<br> Es posible que el <div class='" + boxClassesBorder + " border-dark'>" + ticketVisibleLabel + "</div> se encuentre en revisi&oacute;n, recordar que el estado inicial de un <div class='" + boxClassesBorder + " border-dark mt-2'>" + ticketVisibleLabel + "</div> por revisar es <div class='mt-2 " + boxClassesBorder + " border-dark'>Ready</div></div>";
-//                } else {
-//                    isValid = false;
-//                }
-//            }
-//        }
-//
-//        return getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
-//    }
+//        JsonArray
+//   }
 }
