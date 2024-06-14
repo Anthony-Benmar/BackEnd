@@ -9,7 +9,7 @@ import com.bbva.dto.jira.response.JiraResponseDTO;
 import com.bbva.util.ApiJiraMet.ValidationUrlJira;
 import com.bbva.util.ApiJiraMet.ValidatorValidateSummaryHUTType;
 import com.bbva.util.ApiJiraName;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import org.apache.http.client.CookieStore;
 import org.apache.http.impl.client.BasicCookieStore;
 import java.net.http.HttpClient;
@@ -47,14 +47,16 @@ public class JiraValidatorService {
         this.jiraApiService = new JiraApiService();
         this.httpClient = HttpClient.newHttpClient();
         String acceptanceCriteriaGroup = "Criterio de Aceptacion";
+        String prGroup="PR";
 
         var isValidUrl = validateJiraFormatURL(dto.getUrlJira());
 
         var issuesMetadada = getMetadataIssues(dto);
         var jsonResponse = JsonParser.parseString(issuesMetadada).getAsJsonObject();
         var jiraTicketResult = jsonResponse.getAsJsonArray("issues").get(0).getAsJsonObject();
-
-
+        //Añadir PRs al ticket
+        var prs = metadataPRs(jiraTicketResult, dto);
+        jiraTicketResult.getAsJsonObject("fields").add("prs", JsonParser.parseString(prs).getAsJsonArray());
 
         if (issuesMetadada.isEmpty() && jiraTicketResult !=null){
             throw new HandledException("500", "no existe datos del ticket jira");
@@ -85,8 +87,10 @@ public class JiraValidatorService {
         var result_15 = instancesRules.getValidationTeamAssigned(tipoDesarrollo,true,"Validar que el equipo asignado sea el correcto", "Ticket");
         var result_16 = instancesRules.getValidationValidateJIRAStatus(tipoDesarrollo,"Validar el Status de Ticket JIRA","Ticket");
 
-        var result_17 = instancesRules.getValidationValidateSubTask(tipoDesarrollo,"Validar la existencia de las subtareas", "Subtask");
-        var result_18 = instancesRules.getValidationValidateAttachment(tipoDesarrollo,"Validar la existencia de los adjuntos", "Attachment");
+        var result_18 = instancesRules.getValidationValidateSubTask(tipoDesarrollo,"Validar la existencia de las subtareas", "Subtask");
+        var result_19 = instancesRules.getValidationValidateAttachment(tipoDesarrollo,"Validar la existencia de los adjuntos", "Attachment");
+
+        var result_17 = instancesRules.getValidationPR(tipoDesarrollo, "Validar que se tenga una PR asociada", prGroup);
 
         result_final.add(result_1);
         result_final.add(result_2);
@@ -101,6 +105,8 @@ public class JiraValidatorService {
         result_final.add(result_9);
         result_final.add(result_10);
         result_final.add(result_11);
+        result_final.add(result_18);
+        result_final.add(result_19);
 
         //Validaciones Juan
         result_final.add(result_12);
@@ -108,22 +114,22 @@ public class JiraValidatorService {
         result_final.add(result_14);
         result_final.add(result_15);
         result_final.add(result_16);
-
         result_final.add(result_17);
-        result_final.add(result_18);
+
+
 
         for (Map<String, Object> result : result_final) {
             JiraMessageResponseDTO message = new JiraMessageResponseDTO();
             message.setRuleId(ruleIdCounter++);
             switch (message.getRuleId()) {
                 case 1:
-                    message.setRule("Validacion URL JIRA: Se valida que el ticket sea PAD3 o PAD5");//("ValidationURLJIRA");
+                    message.setRule("ValidationURLJIRA");
                     break;
                 case 2:
-                    message.setRule("Validar el tipo de desarrollo en el summary");//("ValidatorValidateSummaryHUTType");
+                    message.setRule("ValidatorValidateSummaryHUTType");
                     break;
                 case 3:
-                    message.setRule("Detectar el tipo de desarrollo por el prefijo y el summary");//("ValidatorValidateHUTType");
+                    message.setRule("ValidatorValidateHUTType");
                     break;
                 case 4:
                     message.setRule("Validar que el Issue type sea Story o Dependency");//("ValidatorIssueType");
@@ -164,10 +170,10 @@ public class JiraValidatorService {
                 case 16:
                     message.setRule("Validacion Status JIRA: Se valida que el ticket JIRA no llegue en estados invalidos, como new, discarded, etc");//("ValidationValidateJIRAStatus");
                     break;
-                case 17:
+                case 18:
                     message.setRule("Validacion Subtareas: Segun el tipo de desarrollo / tipo de ticket, se valida que existan ciertas subtareas");//("ValidationValidateSubTask");
                     break;
-                case 18:
+                case 19:
                     message.setRule("Validacion de documentos adjuntos: C204, P110, RC");//("ValidationValidateAttachment");
                     break;
                 default:
@@ -193,9 +199,6 @@ public class JiraValidatorService {
         jiraResponseDTO.setErrorCount(errorCount);
         jiraResponseDTO.setWarningCount(warningCount);
 
-//        var url = ApiJiraName.URL_API_JIRA_SQL + this.query + jiraApiService.getQuerySuffixURL();
-//        var resultado = jiraApiService.GetJiraAsync(dto.getUserName(),dto.getToken(),url);
-
         return new SuccessDataResult<>(jiraResponseDTO, "Reglas de validacion");
     }
 
@@ -211,40 +214,41 @@ public class JiraValidatorService {
         String result = this.jiraApiService.GetJiraAsync(dto.getUserName(), dto.getToken() ,url);
         return result;
     }
+    public String metadataPRs(JsonObject jiraTicketResult, JiraValidatorByUrlRequest dto) throws Exception {
+        String idTicket = jiraTicketResult.getAsJsonObject().get("id").getAsString();
+        var url = ApiJiraName.URL_API_JIRA_PULL_REQUEST + idTicket + "&applicationType=stash&dataType=pullrequest";
 
-    /*public List<Map<String,Object>> getResults() {
-        List<Map<String,Object>> res = new ArrayList<>();
-        boolean isWithError = false;
+        String result = this.jiraApiService.GetPRsAsync(dto.getUserName(), dto.getToken(), url);
+        var prsJsonResponse = JsonParser.parseString(result).getAsJsonObject();
+        var detailPR = prsJsonResponse
+                .getAsJsonArray("detail")
+                .get(0).getAsJsonObject()
+                .getAsJsonArray("pullRequests");
+        List<Map<String,Object>> prs = new ArrayList<>();
 
-        try {
-            // to prevent invalid urls sent directly to the server
-            if (jiraTicketResult != null && isValidURL) {
-                String ticketGroup = "Ticket";
-                Map<String, Object> validationURLJiraResult = validationUrlJira.getValidationURLJIRA("Validar que sea PAD3 o PAD5", ticketGroup);
-
-                if (!(Boolean) validationURLJiraResult.get("isValid")) {
-                    res.add(validationURLJiraResult);
-                } else {
-                    //Map<String, Object> validacionEnvioFormulario = getValidatorValidateSentToTablero05("Validar envio de formulario", ticketGroup); // validar a través de un google sheet o BD???
-                    //res.add(validacionEnvioFormulario);
-                    //Map<String, Object> validacionSummaryResult = getValidatorValidateSummaryHUTType("Validar el tipo de desarrollo en el summary", ticketGroup);
-                    //String tipoDesarrolloSummary = (String) validacionSummaryResult.get("tipoDesarrolloSummary");
-
-//                    Map<String, Object> validacionTipoDesarrolloResult = getValidatorValidateHUTType(
-//                            "Detectar el tipo de desarrollo por el prefijo de " + ticketVisibleLabel + " y el summary",
-//                            tipoDesarrolloSummary,
-//                            ticketGroup
-//                    );
-                }
+        for(JsonElement pr : detailPR){
+            JsonObject prDetail = pr.getAsJsonObject();
+            List<Map<String,Object>> reviewersList = new ArrayList<>();
+            JsonArray reviewersArray = prDetail.getAsJsonArray("reviewers");
+            for(JsonElement reviewerElement : reviewersArray){
+                JsonObject reviewerObject = reviewerElement.getAsJsonObject();
+                Map<String,Object> reviewerMap = new HashMap<>();
+                reviewerMap.put("approved",reviewerObject.get("approved").getAsBoolean());
+                reviewerMap.put("user",reviewerObject.get("name").getAsString());
+                reviewersList.add(reviewerMap);
             }
+            Map<String, Object> prMap = new HashMap<>();
+            prMap.put("url", prDetail.get("url").getAsString());
+            prMap.put("status", prDetail.get("status").getAsString());
+            prMap.put("destinyBranch", prDetail.getAsJsonObject("destination").get("branch").getAsString());
+            prMap.put("reviewers", reviewersList);
+            prs.add(prMap);
         }
-        finally {
-            if (res.isEmpty()) {
-                res.add(Map.of("message", "No se encontraron errores", "isValid", true, "isWarning", false, "helpMessage", "", "group", "Ticket"));
-            }
-        }
-        return res;
-    }*/
+        //Transformar la lista de objetos Java a una representación JSON en forma de cadena
+        Gson gson = new Gson();
+        String resutlPrsString = gson.toJson(prs);
+        return resutlPrsString;
+    }
 
     public boolean validateJiraFormatURL(String jiraURL) {
         String regexPattern = "^(?:https://jira.globaldevtools.bbva.com/(?:browse/)?(?:plugins/servlet/mobile#issue/)?)?([a-zA-Z0-9]+-[a-zA-Z0-9]+)$";
@@ -252,72 +256,4 @@ public class JiraValidatorService {
         Matcher matcher = pattern.matcher(jiraURL.toLowerCase());
         return matcher.matches();
     }
-
-
-    //------------------- REGLA DE NEGOCIO 1-------------------
-
-
-    //------------------- REGLA DE NEGOCIO 2-------------------
-
-
-    //------------------- REGLA DE NEGOCIO 3-------------------
-    public Map<String, Object> getValidatorValidateHUTType(String helpMessage, String tipoDesarrolloSummary, String group) {
-        String message;
-        boolean isValid;
-        boolean isWarning = false;
-
-        if ((jiraPADCode.equals("PAD3") || jiraPADCode.equals("PAD5")) && !tipoDesarrolloSummary.isEmpty()) {
-            this.tipoDesarrollo = tipoDesarrolloSummary;
-            if (this.tipoDesarrolloFormulario.toLowerCase().contains("scaffolder") && !this.tipoDesarrolloFormulario.toLowerCase().contains("despliegue")) {
-                this.tipoDesarrollo = "Scaffolder";
-            }
-
-            message = "<div class=\"" + boxClassesBorder + "\">Tipo de desarrollo</div> es <div class=\"" + boxClassesBorder + " bg-dark border border-dark\">" + this.tipoDesarrollo + "</div>";
-            isValid = true;
-        } else {
-            message = "No se pudo detectar el <div class=\"" + boxClassesBorder + "\">Tipo de desarrollo</div>";
-            isValid = false;
-        }
-        return Map.of("message", message, "isValid", isValid, "isWarning", isWarning, "helpMessage", helpMessage, "group", group);
-    }
 }
-
-/*
-        jiraApiService = new JiraApiService(dto.getUserName(), dto.getToken());
-        //jiraApiService.testConnection();
-
-
-
-
-        if (!isValidURL) {
-            System.out.println("CONEXION FALLIDA");
-            return new SuccessDataResult<>(null, "CONEXION FALLIDA");
-        }
-
-        System.out.println("CONEXION EXITOSA");
-        // Querying Jira API
-        List<Map<String, Object>> queryResult = jiraApiService.searchByTicket(List.of(jiraCode),
-                List.of("id", "issuetype", "changelog", "teamId", "petitionerTeamId", "receptorTeamId", "labels", "featureLink", "issuelinks", "status", "summary", "acceptanceCriteria", "subtasks", "impactLabel", "itemType", "techStack",
-                        "fixVersions", "attachment", "prs"));
-
-        System.out.println("QUERY RESULT: " + queryResult);
-        List<Map<String, Object>> results = queryResult;
-        System.out.println("RESULTS: " + results);
-        if (results != null && !results.isEmpty()) {
-            jiraTicketResult = results;
-            System.out.println(jiraTicketResult);
-        }
-
-        List<Map<String, Object>> results2 = getResults();
-        List<JiraResDTO> jiraResDTOList = new ArrayList<>();
-
-        for (Map<String, Object> result : results2) {
-            JiraResDTO jiraResDTO = new JiraResDTO();
-            jiraResDTO.setIsValid((String) result.get("isValid"));
-            jiraResDTO.setIsWarning((String) result.get("isWarning"));
-            jiraResDTO.setHelpMessage((String) result.get("helpMessage"));
-            jiraResDTO.setGroup((String) result.get("group"));
-            jiraResDTOList.add(jiraResDTO);
-        }
-        LOGGER.log(null, "DTORESPONSE: " + jiraResDTOList.toString());
-        */
