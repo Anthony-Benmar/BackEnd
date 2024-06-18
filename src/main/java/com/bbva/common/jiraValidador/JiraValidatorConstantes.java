@@ -10,6 +10,7 @@ public class JiraValidatorConstantes {
     public static final Map<String, List<String>> SUBTASKS_BY_DEVELOP_TYPES;
     public static final Map<String, Map<String, Object>> CRITERIA_BY_DEVELOP_TYPES;
     public static final Map<String, Map<String, Object>> SUBTASKS_TYPE_OWNER;
+    public static final Map<String, List<String>> LABELS_BY_DEVELOP_TYPES;
 
     static {
         Map<String, List<String>> mapDevTypes = new HashMap<>();
@@ -44,12 +45,31 @@ public class JiraValidatorConstantes {
         mapAttachByDevTypes.put("json global", new ArrayList<>(List.of("C204")));
         mapAttachByDevTypes.put("teradata", new ArrayList<>(List.of("C204")));
         mapAttachByDevTypes.put("sparkcompactor", new ArrayList<>(List.of("C204")));
+
         ATTACHS_BY_DEVELOP_TYPES = Collections.unmodifiableMap(mapAttachByDevTypes);
 
+        Map<String, List<String>> mapLabelsByDevTypes = new HashMap<>();
+        mapLabelsByDevTypes.put("mallas", new ArrayList<>(List.of("release","ReleaseMallasDatio")));
+        mapLabelsByDevTypes.put("prs", new ArrayList<>(List.of("ReleasePRDatio")));
+        mapLabelsByDevTypes.put("productivizacion", new ArrayList<>(List.of("ReleaseScaffolderDatio")));
+        mapLabelsByDevTypes.put("host", new ArrayList<>(List.of("releaseTransmisionDatio")));
+        mapLabelsByDevTypes.put("hammurabi", new ArrayList<>(List.of("ReleasePRDatio")));
+        mapLabelsByDevTypes.put("migrationtool", new ArrayList<>(List.of("ReleasePRDatio")));
+        mapLabelsByDevTypes.put("smartcleaner", new ArrayList<>(List.of("ReleasePRDatio")));
+        mapLabelsByDevTypes.put("ingesta", new ArrayList<>(List.of("ReleasePRDatio")));
+        mapLabelsByDevTypes.put("procesamiento", new ArrayList<>(List.of("ReleasePRDatio")));
+        mapLabelsByDevTypes.put("operativizacion", new ArrayList<>(List.of("ReleasePRDatio")));
+        mapLabelsByDevTypes.put("scaffolder", new ArrayList<>(List.of("ReleaseScaffolderDatio")));
+        mapLabelsByDevTypes.put("sparkcompactor", new ArrayList<>(List.of("ReleasePRDatio")));
+        mapLabelsByDevTypes.put("json global", new ArrayList<>(List.of("ReleasePRDatio")));
+        mapLabelsByDevTypes.put("teradata", new ArrayList<>(List.of("ReleasePRDatio")));
+
+        LABELS_BY_DEVELOP_TYPES = Collections.unmodifiableMap(mapLabelsByDevTypes);
 
         Map<String, List<String>> mapVoBoByDevTypes = new HashMap<>();
         mapVoBoByDevTypes.put("mallas", new ArrayList<>(List.of("PO","AT","DEV")));
         mapVoBoByDevTypes.put("scaffolder", new ArrayList<>(List.of("PO")));
+
         VOBO_BY_DEVELOP_TYPES = Collections.unmodifiableMap(mapVoBoByDevTypes);
 
         Map<String, Map<String, Object>> mapCriteriaByDevTypes = new HashMap<>();
@@ -62,6 +82,7 @@ public class JiraValidatorConstantes {
         mapCriteriaByDevTypes.put("productivizacion", Map.of(
                 "texto", "Despliegue según los Lineamientos del Equipo de DQA"
         ));
+
         CRITERIA_BY_DEVELOP_TYPES = Collections.unmodifiableMap(mapCriteriaByDevTypes);
 
         Map<String, List<String>> mapSubtasksByDevTypes = new HashMap<>();
@@ -79,6 +100,7 @@ public class JiraValidatorConstantes {
         mapSubtasksByDevTypes.put("sparkcompactor", new ArrayList<>(List.of("[C204][PO]", "[C204][QA]")));
         mapSubtasksByDevTypes.put("json global", new ArrayList<>(List.of("[C204][PO]", "[C204][QA]")));
         mapSubtasksByDevTypes.put("teradata", new ArrayList<>(List.of("[C204][PO]", "[C204][QA]")));
+
         SUBTASKS_BY_DEVELOP_TYPES = Collections.unmodifiableMap(mapSubtasksByDevTypes);
 
 
@@ -86,6 +108,7 @@ public class JiraValidatorConstantes {
         mapSubtasksSpecials.put("cambio dummy", new ArrayList<>(List.of("[AT]","[QA]"))); //VB = VoBo [VB]
         mapSubtasksSpecials.put("ruta critica", new ArrayList<>(List.of("[KM]"))); //VB = VoBo [VB]
         mapSubtasksSpecials.put("ticket integracion", new ArrayList<>(List.of("[AT]", "[QA]"))); //VB = VoBo [VB]
+
         SUBTASKS_SPECIALS = Collections.unmodifiableMap(mapSubtasksSpecials);
 
         Map<String, Map<String, Object>> mapSubtasksTipoOwner = new HashMap<>();
@@ -145,6 +168,8 @@ public class JiraValidatorConstantes {
                 )));
     SUBTASKS_TYPE_OWNER = Collections.unmodifiableMap(mapSubtasksTipoOwner);
     }
+
+
 }
 
 

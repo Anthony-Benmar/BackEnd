@@ -71,7 +71,7 @@ public class JiraValidatorService {
         var result_30 = instancesRules.getValidatorValidateSummaryHUTType("Validar el tipo de desarrollo en el summary", "Ticket");
         var tipoDesarrollo = result_30.get("tipoDesarrolloSummary").toString();
         var result_1 = instancesRules.getValidationValidateAttachment(tipoDesarrollo,"Validar la existencia de los adjuntos", "Attachment");
-        Map<String, Object> result_2 = Map.of("message", "Falta implementar", "isWarning", false, "isValid", false);
+        var result_2 = instancesRules.getValidationProductivizacionIssueLink(tipoDesarrollo, "Validar que el ticket de deployado como isChild (scaffolder)", "Ticket");
         var result_3 = instancesRules.getValidatorValidateHUTType("Detectar el tipo de desarrollo por el prefijo y el summary", result_30.get("tipoDesarrolloSummary").toString(), "Ticket");
         var result_4 = instancesRules.getValidatorIssueType("Validar que el Issue type sea Story o Dependency", "Ticket");
         var result_5 = instancesRules.getValidationURLJIRA("Validar que sea PAD3 o PAD5", "Ticket");
@@ -79,8 +79,8 @@ public class JiraValidatorService {
         var result_7 = instancesRules.getValidationPRBranch("Validar que esté asociado a la rama correcta", prGroup);
         Map<String, Object> result_8 = Map.of("message", "Falta implementar", "isWarning", false, "isValid", false);
         Map<String, Object> result_9 = Map.of("message", "Falta implementar", "isWarning", false, "isValid", false);
-        Map<String, Object> result_10 = Map.of("message", "Falta implementar", "isWarning", false, "isValid", false);
-        Map<String, Object> result_11 = Map.of("message", "Falta implementar", "isWarning", false, "isValid", false);
+        var result_10 = instancesRules.getValidationInitialTeam("Validar si se creo en el tablero de DQA", "Tablero");
+        var result_11 = instancesRules.getValidationLabels(tipoDesarrollo,"Validar que se tengan los labels correctos", "Ticket");
         var result_12 = instancesRules.getValidationFeatureLink("Se valida el tenga un Feature Link asignado", "Feature Link");
         var result_13 = instancesRules.getValidationFeatureLinkPAD3("Validar que el Feature Link, se recomienda que sea PAD3", "Feature Link");
         var result_14 = instancesRules.getValidationFeatureLinkStatus(dto, "Validar el estado Jira del Feature Link", "Feature Link");
@@ -96,8 +96,8 @@ public class JiraValidatorService {
         var result_24 = instancesRules.getValidationValidateJIRAStatus(tipoDesarrollo,"Validar el Status de Ticket JIRA","Ticket");
         var result_25 = instancesRules.getValidationValidateImpactLabel("Validar que se tengan los Impact Label correctos (Solo Mallas/HOST)","Ticket", tipoDesarrollo);
         var result_26 = instancesRules.getValidationFixVersion("Validar que se tenga Fix Version (Solo Mallas/HOST)","Ticket");
-        Map<String, Object> result_27 = Map.of("message", "Falta implementar", "isWarning", false, "isValid", false);
-        Map<String, Object> result_28 = Map.of("message", "Falta implementar", "isWarning", false, "isValid", false);
+        var result_27 = instancesRules.getValidationDependency("Validar que exista una Dependencia asignada correctamente y comprometida (Comentario HUD Comprometida)","Dependencia");
+        var result_28 = instancesRules.getValidationDependencyFeatureVsHUTFeature(dto,"Validar que el ticket tenga el mismo feature link que la dependencia","Dependencia");
 
 
         result_final.add(result_1);

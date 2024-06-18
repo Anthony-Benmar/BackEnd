@@ -9,9 +9,13 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.bbva.common.jiraValidador.JiraValidatorConstantes.*;
 
@@ -1136,11 +1140,209 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
         }
    }
 
-//   public Map<String, Object> getValidationProductivizacionIssueLink(String tipoDesarrollo, String helpMessage, String group){
-//        String message = "";
-//        boolean isValid;
-//        boolean isWarning = false;
-//
-//        JsonArray
-//   }
+   public Map<String, Object> getValidationProductivizacionIssueLink(String tipoDesarrollo, String helpMessage, String group){
+        String message = "";
+        boolean isValid = false;
+        boolean isWarning = false;
+
+       String inwardIssueStatus ="";
+        if (!tipoDesarrollo.toLowerCase().equals("productivizacion")) {
+            message = "El tipo de desarrollo del ticket no es Productivización";
+            return getValidationResultsDict(message, isValid, isWarning, helpMessage, group);
+        }
+        JsonArray issueLinks = jiraTicketResult
+                .getAsJsonObject("fields")
+                .getAsJsonArray("issuelinks");
+
+        List<String> statusCollection = new ArrayList<>();
+        for (JsonElement issueLinkElement : issueLinks){
+            inwardIssueStatus = issueLinkElement
+                    .getAsJsonObject()
+                    .getAsJsonObject("inwardIssue")
+                    .getAsJsonObject("fields")
+                    .getAsJsonObject("status")
+                    .get("name").getAsString().toLowerCase();
+            statusCollection.add(inwardIssueStatus);
+        }
+
+        if (statusCollection.stream().allMatch(status -> status.equals("deployed"))){
+            message = "Todos los ticketc asociados se encuentran deployados";
+            isValid = true;
+        } else {
+            message = "No todos los tickets asociados se encuentran deployados";
+            isValid = false;
+        }
+
+       return getValidationResultsDict(message, isValid, isWarning, helpMessage, group);
+   }
+
+   //LABELS_BY_DEVELOP_TYPES
+   public Map<String, Object> getValidationLabels(String tipoDesarrollo, String helpMessage, String group){
+        String message = "";
+        boolean isValid;
+        boolean isWarning = false;
+        List<String> requiredLabels = LABELS_BY_DEVELOP_TYPES.get(tipoDesarrollo.toLowerCase());
+        JsonArray labels = jiraTicketResult
+                .getAsJsonObject("fields")
+                .getAsJsonArray("labels");
+        List<String> foundLabels = new ArrayList<>();
+
+        for (JsonElement label : labels) {
+            String labelName = label.getAsString();
+            if (requiredLabels.contains(labelName)) {
+                foundLabels.add(labelName);
+            }
+        }
+
+        if (foundLabels.containsAll(requiredLabels)) {
+            message = "Todas las etiquetas correspondientes fueron encontradas.";
+            isValid = true;
+            return getValidationResultsDict(message, isValid, isWarning, helpMessage, group);
+        } else {
+            List<String> missingLabels = new ArrayList<>(requiredLabels);
+            missingLabels.removeAll(foundLabels);
+            message = "Faltan las siguientes etiquetas: " + String.join(", ", missingLabels);
+            isValid = false;
+            return getValidationResultsDict(message, isValid, isWarning, helpMessage, group);
+        }
+   }
+
+    public Map<String, Object> getValidationDependency(String helpMessage, String group) {
+        String message = "";
+        boolean isValid = false;
+        boolean isWarning = false;
+
+        String statusDependencyTicket = "";
+        //"In Progress"
+
+        JsonArray issueLinks = jiraTicketResult
+                .getAsJsonObject("fields")
+                .getAsJsonArray("issuelinks");
+
+        List<String> statusDependencyCollection = new ArrayList<>();
+        List<String> dependencyPadCollection = new ArrayList<>();
+        for (JsonElement issueLinkElement : issueLinks) {
+            statusDependencyTicket = issueLinkElement
+                    .getAsJsonObject()
+                    .getAsJsonObject("inwardIssue")
+                    .getAsJsonObject("fields")
+                    .getAsJsonObject("status")
+                    .get("name").getAsString().toLowerCase();
+            statusDependencyCollection.add(statusDependencyTicket);
+            dependencyPadCollection
+                    .add(issueLinkElement
+                            .getAsJsonObject()
+                            .getAsJsonObject("inwardIssue")
+                            .get("key").getAsString());
+        }
+        boolean allInProgress = statusDependencyCollection.stream().allMatch(status -> status.equals("In Progress"));
+
+        if (allInProgress) {
+            isValid = true;
+            message = "Todas las dependencias se encuentran en el estado que corresponde.";
+        } else {
+            isValid = false;
+            isWarning = true;
+            StringBuilder urlMessage = new StringBuilder("Las siguientes dependencias: ");
+            for (int i = 0; i < statusDependencyCollection.size(); i++) {
+                if (!statusDependencyCollection.get(i).equals("In Progress")) {
+                    urlMessage.append(ApiJiraName.URL_API_BROWSE).append(dependencyPadCollection.get(i)).append(", ");
+                }
+            }
+            urlMessage.setLength(urlMessage.length() - 2); // Remove trailing comma and space
+            urlMessage.append(" no se encuentran en el estado correspondiente.");
+            message = urlMessage.toString();
+        }
+        return getValidationResultsDict(message, isValid, isWarning, helpMessage, group);
+    }
+
+    public Map<String, Object> getValidationInitialTeam(String helpMessage, String group) throws ParseException {
+        String message = "";
+        boolean isValid = false;
+        boolean isWarning = false;
+
+        String extractedContent = "";
+        JsonArray changelog = jiraTicketResult
+                .getAsJsonObject("changelog")
+                .getAsJsonArray("histories");
+
+        Date oldestDate = new SimpleDateFormat("yyyy-MM-dd").parse("9999-12-31");
+        String fromString = "";
+        for (JsonElement history : changelog) {
+            JsonObject historyObj = history.getAsJsonObject();
+            String created = historyObj.get("created").getAsString();
+            Date createdDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").parse(created);
+
+            if (createdDate.before(oldestDate)) {
+                JsonArray items = historyObj.getAsJsonArray("items");
+                String field = items.get(0).getAsJsonObject().get("field").getAsString();
+                if (field.equals("Team Backlog")) {
+                    if (items.get(0).getAsJsonObject().get("fromString").isJsonNull()) {
+                        fromString = "";
+                    } else {
+                        fromString = items.get(0).getAsJsonObject().get("fromString").getAsString();
+                    }
+                    Pattern pattern = Pattern.compile("<span style=\"color: #fff\">(.*?)</span>");
+                    Matcher matcher = pattern.matcher(fromString);
+                    if (matcher.find()) {
+                        extractedContent = matcher.group(1);
+                    }
+                    if (extractedContent.contains("Data Quality")) {
+                        isValid = false;
+                        message = "Se creó en tablero DQA.";
+                    } else {
+                        isValid = true;
+                        message = "Se creó en tablero diferente a DQA: " + extractedContent + ".";
+                    }
+                    oldestDate = createdDate;
+                }
+            }
+        }
+        return getValidationResultsDict(message, isValid, isWarning, helpMessage, group);
+    }
+
+    public Map<String, Object> getValidationDependencyFeatureVsHUTFeature(JiraValidatorByUrlRequest dto, String helpMessage, String group) {
+        boolean isValid = true;
+        String message = "Todas las dependencias tienen el mismo features link";
+        boolean isWarning = false;
+
+        String isChildPadName ="";
+        JsonArray issueLinks = jiraTicketResult
+                .getAsJsonObject("fields")
+                .getAsJsonArray("issuelinks");
+
+        List<String> isChildPadNameCollection = new ArrayList<>();
+        for (JsonElement issueLinkElement : issueLinks){
+            isChildPadName = issueLinkElement
+                    .getAsJsonObject()
+                    .getAsJsonObject("inwardIssue")
+                    .get("key").getAsString();
+            isChildPadNameCollection.add(isChildPadName);
+        }
+
+        try {
+            JiraApiService jiraApiService = new JiraApiService();
+            for (String isChildPad : isChildPadNameCollection) {
+                var query = "key%20in%20(" + isChildPad + ")";
+                var url = ApiJiraName.URL_API_JIRA_SQL + query + jiraApiService.getQuerySuffixURL();
+                var response = jiraApiService.GetJiraAsync(dto.getUserName(), dto.getToken(), url);
+                JsonObject metaData = JsonParser.parseString(response).getAsJsonObject();
+                String isChildFeatureLink = metaData
+                        //customfield_10004
+                        .getAsJsonArray("issues")
+                        .get(0).getAsJsonObject()
+                        .getAsJsonObject("fields")
+                        .get("customfield_10004").getAsString();
+                if (!isChildFeatureLink.equals(featureLink)) {
+                    isValid = false;
+                    message = "No todas las dependencias tienen el mismo features link";
+                    break;
+                    }
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        return getValidationResultsDict(message, isValid, isWarning, helpMessage, group);
+    }
 }
