@@ -9,7 +9,9 @@ import java.util.List;
 @Setter
 public class WorkOrderDtoRequest {
     public int workOrderId;
-    public String workOrderCode;
+    public String feature;
+    public Integer jiraProjectId;
+    public String jiraProjectName;
     public String folio;
     public int boardId;
     public int projectId;

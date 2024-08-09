@@ -77,7 +77,7 @@ spec:
                             '''
                         }
                     }
-
+                    echo 'Error executing test and coverage analysis'
                     // if (statusCode != 0) {
                     //     error 'Error executing test and coverage analysis'
                     // }
