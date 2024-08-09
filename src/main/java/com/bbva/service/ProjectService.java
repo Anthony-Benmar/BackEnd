@@ -8,23 +8,19 @@ import com.bbva.dao.MapDependencyDao;
 import com.bbva.dao.ProjectDao;
 import com.bbva.dao.UseCaseDefinitionDao;
 import com.bbva.dao.UserDao;
-import com.bbva.dto.feature.response.featureDtoResponse;
 import com.bbva.dto.map_dependency.response.MapDependencyListByProjectResponse;
 import com.bbva.dto.project.request.*;
 import com.bbva.dto.project.response.*;
 import com.bbva.entities.User;
 import com.bbva.entities.common.PeriodPEntity;
-import com.bbva.entities.issueticket.WorkOrderDetail;
 import com.bbva.entities.map_dependecy.MapDependencyEntity;
 import com.bbva.entities.project.ProjectPortafolioEntity;
 import com.bbva.entities.use_case_definition.UseCaseDefinitionEntity;
 
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 public class ProjectService {
     private final ProjectDao projectDao = new ProjectDao();
@@ -386,20 +382,6 @@ public class ProjectService {
         try {
             var result = projectDao.getProjectsByDomainId(domainId);
             return new SuccessDataResult(result);
-        } catch (Exception e) {
-            log.log(Level.SEVERE, e.getMessage(), e);
-            return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
-        }
-    }
-
-    public IDataResult getFeaturesByProject(String sdatoolId) {
-        try {
-            var listFeaturesEntity = projectDao.getFeaturesByProject(sdatoolId, "");
-            var listFeatureDto = listFeaturesEntity.stream()
-                    .map(s -> new featureDtoResponse(s.featureId, s.featureKey, s.featureName, s.sdatoolId, s.teamBacklog,
-                            s.jiraProjectId, s.jiraProjectName))
-                    .collect(Collectors.toList());
-            return new SuccessDataResult(listFeatureDto);
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
             return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());

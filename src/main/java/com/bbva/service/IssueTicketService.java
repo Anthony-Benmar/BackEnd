@@ -13,7 +13,6 @@ import com.bbva.dto.issueticket.response.sourceTicketDtoResponse;
 import com.bbva.dto.jira.request.IssueBulkDto;
 import com.bbva.dto.jira.request.IssueDto;
 import com.bbva.dto.jira.response.IssueBulkResponse;
-import com.bbva.entities.feature.JiraFeatureEntity;
 import com.bbva.entities.issueticket.WorkOrder;
 import com.bbva.entities.issueticket.WorkOrderDetail;
 import com.google.gson.Gson;
@@ -98,7 +97,7 @@ public class IssueTicketService {
             if(dto.workOrderDetail==null || dto.workOrderDetail.stream().count() == 0){
                 return new ErrorDataResult(null,"500","Para poder registrar debe seleccionar al menos una plantilla");
             }
-            var workOrderRequest = new WorkOrder(0, dto.feature, dto.folio, dto.boardId, dto.projectId, dto.sourceId, dto.sourceName
+            var workOrderRequest = new WorkOrder(0, dto.workOrderCode, dto.folio, dto.boardId, dto.projectId, dto.sourceId, dto.sourceName
                     , dto.flowType, 1, 1, dto.registerUserId, new Date(), null, 0);
 
             var countWorkOrder= issueTicketDao.findRecordWorkOrder(workOrderRequest);
@@ -108,8 +107,8 @@ public class IssueTicketService {
             var workOrderDetailsRequest = dto.workOrderDetail.stream()
                     .map(s -> new WorkOrderDetail(0, 0, s.templateId, "", "ready", dto.registerUserId, new Date(), null))
                     .collect(Collectors.toList());
-            var objFeature = new JiraFeatureEntity(0, dto.feature,"","","",dto.jiraProjectId, dto.jiraProjectName);
-            var issuesRequests = issueTicketDao.getDataRequestIssueJira2(workOrderRequest, workOrderDetailsRequest, objFeature);
+
+            var issuesRequests = issueTicketDao.getDataRequestIssueJira2(workOrderRequest, workOrderDetailsRequest);
 
             try{
                 createTicketJira2(dto, issuesRequests, workOrderDetailsRequest);
@@ -129,7 +128,7 @@ public class IssueTicketService {
             throws Exception {
         try {
 
-            WorkOrder workOrderRequest = new WorkOrder(dto.workOrderId, dto.feature, dto.folio, dto.boardId, dto.projectId, dto.sourceId, dto.sourceName
+            WorkOrder workOrderRequest = new WorkOrder(dto.workOrderId, dto.workOrderCode, dto.folio, dto.boardId, dto.projectId, dto.sourceId, dto.sourceName
                     , dto.flowType, 1, 1, dto.registerUserId, new Date(), null, 0);
 
             if (dto.workOrderId == 0) {
@@ -160,15 +159,14 @@ public class IssueTicketService {
             throws Exception {
         List<WorkOrderDetail> workOrderDetailsRequest = new ArrayList();
         try {
-            WorkOrder workOrderRequest = new WorkOrder(dto.workOrderId, dto.feature, dto.folio, dto.boardId, dto.projectId, dto.sourceId, dto.sourceName
+            WorkOrder workOrderRequest = new WorkOrder(dto.workOrderId, dto.workOrderCode, dto.folio, dto.boardId, dto.projectId, dto.sourceId, dto.sourceName
                     , dto.flowType, 1, 1, dto.registerUserId, new Date(), null, 0);
 
             workOrderDetailsRequest = dto.workOrderDetail.stream().map(s -> {
                 var workorderid = dto.workOrderId > 0 ? dto.workOrderId : workOrderRequest.work_order_id;
                 return new WorkOrderDetail(0, workorderid, s.templateId, "", "ready", dto.registerUserId, new Date(), null);
             }).collect(Collectors.toList());
-            var objFeature = new JiraFeatureEntity(0, dto.feature,"","","",dto.jiraProjectId, dto.jiraProjectName);
-            var issuesRequests = issueTicketDao.getDataRequestIssueJira2(workOrderRequest, workOrderDetailsRequest, objFeature);
+            var issuesRequests = issueTicketDao.getDataRequestIssueJira2(workOrderRequest, workOrderDetailsRequest);
             createTicketJira2(dto, issuesRequests, workOrderDetailsRequest);
             workOrderDetailsRequest = workOrderDetailsRequest.stream().filter(w -> !StringUtils.isNullOrEmpty(w.issue_code)).collect(Collectors.toList());
             issueTicketDao.InsertWorkOrderDetail(workOrderDetailsRequest);
@@ -223,8 +221,7 @@ public class IssueTicketService {
             throws Exception
     {
         httpClient = HttpClient.newHttpClient();
-        var objFeature = new JiraFeatureEntity(0, dto.feature,"","","", dto.jiraProjectId, dto.jiraProjectName);
-        Map<String, IssueDto> issuesRequests = issueTicketDao.getDataRequestIssueJiraEdit(workOrder, workOrderDetail, objFeature);
+        Map<String, IssueDto> issuesRequests = issueTicketDao.getDataRequestIssueJiraEdit(workOrder, workOrderDetail);
 
         for (Map.Entry<String, IssueDto> issue : issuesRequests.entrySet())
         {

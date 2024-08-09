@@ -12,7 +12,6 @@ import com.bbva.entities.InsertEntity;
 import com.bbva.entities.common.PeriodPEntity;
 import com.bbva.entities.common.ProjectByPeriodEntity;
 import com.bbva.entities.common.ProjectEntity;
-import com.bbva.entities.feature.JiraFeatureEntity;
 import com.bbva.entities.project.ProjectFilterEntity;
 import com.bbva.entities.project.ProjectPortafolioEntity;
 import com.bbva.entities.project.ProjectPortafolioFilterEntity;
@@ -487,14 +486,6 @@ public class ProjectDao {
         try (SqlSession session = sqlSessionFactory.openSession()) {
             ProjectMapper mapper = session.getMapper(ProjectMapper.class);
             return mapper.getProjectsByDomainId(domainId);
-        }
-    }
-
-    public List<JiraFeatureEntity> getFeaturesByProject(String sdatoolId, String featureKey) {
-        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
-        try (SqlSession session = sqlSessionFactory.openSession()) {
-            ProjectMapper mapper = session.getMapper(ProjectMapper.class);
-            return mapper.getFeaturesByProject(sdatoolId, featureKey);
         }
     }
 }

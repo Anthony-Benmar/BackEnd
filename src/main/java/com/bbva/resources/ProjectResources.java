@@ -7,7 +7,6 @@ import com.bbva.dto.project.request.*;
 import com.bbva.dto.project.response.*;
 import com.bbva.entities.common.PeriodPEntity;
 import com.bbva.service.ProjectService;
-import com.bbva.dto.feature.response.featureDtoResponse;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
@@ -268,15 +267,5 @@ public class ProjectResources {
             throws ExecutionException, InterruptedException
     {
         return projectService.getProjectsByDomainId(domainId);
-    }
-
-    @GET
-    @Path("/features/{sdatoolId}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public IDataResult<List<featureDtoResponse>> getFeaturesByProject(@Context HttpServletRequest request,
-                                                               @PathParam("sdatoolId") String sdatoolId)
-            throws ExecutionException, InterruptedException
-    {
-        return projectService.getFeaturesByProject(sdatoolId);
     }
 }

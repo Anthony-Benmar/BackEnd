@@ -7,7 +7,6 @@ import com.bbva.dto.project.response.ProjectInfoSelectResponse;
 import com.bbva.entities.InsertEntity;
 import com.bbva.entities.common.ProjectByPeriodEntity;
 import com.bbva.entities.common.ProjectEntity;
-import com.bbva.entities.feature.JiraFeatureEntity;
 import com.bbva.entities.project.ProjectPortafolioEntity;
 import com.bbva.entities.project.ProjectFilterEntity;
 import com.bbva.entities.project.ProjectPortafolioFilterEntity;
@@ -373,17 +372,4 @@ public interface ProjectMapper {
             @Result(property = "domainId", column = "domain_id")
     })
     List<ProjectByDomainIdDTO> getProjectsByDomainId(@Param("domainId") String domainId);
-
-    @Select("CALL SP_LIST_FEATURES_BY_PARAMS(#{sdatoolId}, #{featureKey})")
-    @Results({
-            @Result(property = "featureId", column = "feature_id"),
-            @Result(property = "featureKey", column = "feature_key"),
-            @Result(property = "featureName", column = "title_name"),
-            @Result(property = "sdatoolId", column = "attends_sdatool_id"),
-            @Result(property = "teamBacklog", column = "team_backlog_id"),
-            @Result(property = "jiraProjectId", column = "jira_project_id"),
-            @Result(property = "jiraProjectName", column = "jira_project_name"),
-    })
-    List<JiraFeatureEntity> getFeaturesByProject(@Param("sdatoolId") String sdatoolId,
-                                                 @Param("featureKey") String featureKey);
 }

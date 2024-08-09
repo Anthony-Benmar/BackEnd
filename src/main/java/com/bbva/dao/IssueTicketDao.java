@@ -10,7 +10,6 @@ import com.bbva.dto.issueticket.response.*;
 import com.bbva.dto.jira.request.*;
 import com.bbva.entities.board.Board;
 import com.bbva.entities.common.CatalogEntity;
-import com.bbva.entities.feature.JiraFeatureEntity;
 import com.bbva.entities.issueticket.WorkOrder;
 import com.bbva.entities.issueticket.WorkOrderDetail;
 import com.bbva.entities.template.Template;
@@ -209,7 +208,7 @@ public class IssueTicketDao {
         return result;
     }
 
-    public IssueBulkDto getDataRequestIssueJira2(WorkOrder workOrder, List<WorkOrderDetail> workOrderDetail, JiraFeatureEntity feature)
+    public IssueBulkDto getDataRequestIssueJira2(WorkOrder workOrder, List<WorkOrderDetail> workOrderDetail)
     {
         var result = new IssueBulkDto();
         result.issueUpdates = new ArrayList<IssueUpdate>();
@@ -235,8 +234,8 @@ public class IssueTicketDao {
 
             var fields = new Fields();
             fields.project = new Project();
-            fields.project.id = feature.jiraProjectId.toString();
-            fields.project.key = feature.jiraProjectName;
+            fields.project.id = board.project_jira_id;
+            fields.project.key = board.project_jira_key;
 
             Board finalBoard = board;
             fields.customfield_13300 = new ArrayList<String>(){{
@@ -253,7 +252,7 @@ public class IssueTicketDao {
             }};
 
             fields.customfield_10004 = workOrder.feature;
-            fields.summary = template.name.toLowerCase().replace("[fuente]", workOrder.source_name);
+            fields.summary = template.name.replace("[fuente]", workOrder.source_name);
             fields.description = template.description;
 
             fields.issuetype = new Issuetype();
@@ -266,7 +265,7 @@ public class IssueTicketDao {
         return result;
     }
 
-    public Map<String, IssueDto> getDataRequestIssueJiraEdit(WorkOrder workOrder, List<WorkOrderDetail> workOrderDetail, JiraFeatureEntity feature)
+    public Map<String, IssueDto> getDataRequestIssueJiraEdit(WorkOrder workOrder, List<WorkOrderDetail> workOrderDetail)
     {
         var result = new HashMap<String, IssueDto>();
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
@@ -296,8 +295,8 @@ public class IssueTicketDao {
             var issueJira = new IssueDto();
             issueJira.fields = new Fields();
             issueJira.fields.project = new Project();
-            issueJira.fields.project.id = feature.jiraProjectId.toString();
-            issueJira.fields.project.key = feature.jiraProjectName;
+            issueJira.fields.project.id = board.project_jira_id;
+            issueJira.fields.project.key = board.project_jira_key;
 
             Board finalBoard = board;
             issueJira.fields.customfield_13300 = new ArrayList<String>(){{
@@ -314,7 +313,7 @@ public class IssueTicketDao {
             }};
 
             issueJira.fields.customfield_10004 = workOrder.feature;
-            issueJira.fields.summary = template.name.toLowerCase().replace("[fuente]", workOrder.source_name);
+            issueJira.fields.summary = template.name.replace("[fuente]", workOrder.source_name);
             issueJira.fields.description = template.description;
 
             issueJira.fields.issuetype = new Issuetype();
