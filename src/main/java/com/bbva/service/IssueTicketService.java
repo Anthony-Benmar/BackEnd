@@ -147,8 +147,12 @@ public class IssueTicketService {
             var workOrderDetails = issueTicketDao.ListWorkOrderDetails(workOrder.work_order_id);
             if (workOrderDetails != null && workOrderDetails.stream().count()>0) {
                 workOrderDetails = workOrderDetails.stream().filter(w -> !StringUtils.isNullOrEmpty(w.issue_code)).collect(Collectors.toList());
-                updateTicketJira(dto, workOrder, workOrderDetails);
+                var ticketsUpdates = updateTicketJira(dto, workOrder, workOrderDetails);
                 issueTicketDao.UpdateWorkOrder(workOrder);
+                if (ticketsUpdates.stream().count()>0 &&
+                        ticketsUpdates.stream().count()<workOrderDetails.stream().count()) {
+                    return new SuccessDataResult(null, "Algunas HUs no pudieron actualizarse, esto puede deberse a que se encuentren en un estado no permitido para la actualización o no existan en Jira");
+                }
             }
         }catch (HandledException ex){
             return new ErrorDataResult(ex.getCause(),ex.getCode(),ex.getMessage());
@@ -219,17 +223,28 @@ public class IssueTicketService {
         }
     }
 
-    private void updateTicketJira(WorkOrderDtoRequest dto, WorkOrder workOrder, List<WorkOrderDetail> workOrderDetail)
+    private List<String> updateTicketJira(WorkOrderDtoRequest dto, WorkOrder workOrder, List<WorkOrderDetail> workOrderDetail)
             throws Exception
     {
         httpClient = HttpClient.newHttpClient();
         var objFeature = new JiraFeatureEntity(0, dto.feature,"","","", dto.jiraProjectId, dto.jiraProjectName);
         Map<String, IssueDto> issuesRequests = issueTicketDao.getDataRequestIssueJiraEdit(workOrder, workOrderDetail, objFeature);
-
+        Integer nroFails = 0;
+        Integer responseCode = 0;
+        List<String> ticketsUpdates = new ArrayList();
         for (Map.Entry<String, IssueDto> issue : issuesRequests.entrySet())
         {
-            PutResponseEditAsync(dto, issue.getKey(), issue.getValue());
+            responseCode = PutResponseEditAsync(dto, issue.getKey(), issue.getValue());
+            if (responseCode>=400 && responseCode<=500) {
+                nroFails = nroFails + 1;
+            }else{
+                ticketsUpdates.add(issue.getKey());
+            }
         }
+        if(nroFails>0 && nroFails.equals(issuesRequests.size())){
+            throw new HandledException(responseCode.toString(), "No se pudo actualizar ninguna HU, esto puede deberse a un feature incorrecto o que las HU se encuentren en un estado no permitido para la actualización o no existan en Jira");
+        }
+        return ticketsUpdates;
     }
 
     private Object PostResponseAsync(String cookie_oauth, int templaye_id, IssueDto issueJira, List<WorkOrderDetail> workOrderDetail)
@@ -337,7 +352,7 @@ public class IssueTicketService {
         return issueCreated;
     }
 
-    private Object PutResponseEditAsync(WorkOrderDtoRequest objAuth,String issueTicketCode, IssueDto issueJira)
+    private Integer PutResponseEditAsync(WorkOrderDtoRequest objAuth,String issueTicketCode, IssueDto issueJira)
             throws Exception
     {
         Object responseBody = null;
@@ -361,15 +376,10 @@ public class IssueTicketService {
             entity = response.getEntity();
             response.close();
         }
-
         if (responseCode.equals(302)) {
             throw new HandledException(responseCode.toString(), "Token Expirado");
         }
-        if (responseCode>=400 && responseCode<=500) {
-            throw new HandledException(responseCode.toString(), "Error al actualizar tickets, revise los datos ingresados");
-        }
-
-        return entity;
+        return responseCode;
     }
 
     private static String createCookieHeader(List<Cookie> cookieList) {
