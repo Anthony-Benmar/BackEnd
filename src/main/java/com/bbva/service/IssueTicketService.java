@@ -18,11 +18,13 @@ import com.bbva.entities.issueticket.WorkOrder;
 import com.bbva.entities.issueticket.WorkOrderDetail;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonParser;
 import com.mysql.cj.util.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.cookie.Cookie;
@@ -45,7 +47,8 @@ import java.util.stream.Collectors;
 public class IssueTicketService {
     private final IssueTicketDao issueTicketDao = new IssueTicketDao();
     private static final String URL_API_BASE = "https://jira.globaldevtools.bbva.com";
-    private static final String URL_API_JIRA = URL_API_BASE + "/rest/api/2/issue/";
+    private static final String URL_API_JIRA_ISSUE = "/rest/api/2/issue/";
+    private static final String URL_API_JIRA = URL_API_BASE + URL_API_JIRA_ISSUE;
     private static final String URL_API_JIRA_BULK = URL_API_BASE + "/rest/api/2/issue/bulk";
     private static final String URL_API_JIRA_SESSION = URL_API_BASE + "/rest/auth/1/session";
     private static final String URL_API_JIRA_SQL = URL_API_BASE + "/rest/api/2/search?jql=";
@@ -136,10 +139,16 @@ public class IssueTicketService {
                 return new ErrorDataResult(null,"500","Es necesario el código de registro (workOrderId) para la edición");
             }
 
+            //consultar si feature existe
+            var issueMetadataJson = GetResponseAsync(dto.username, dto.token,URL_API_JIRA_ISSUE + dto.feature);
+            var issueMetadata = JsonParser.parseString(issueMetadataJson).getAsJsonObject();
+            var issueKey = issueMetadata.get("key").getAsString();
+
+
             var workOrder = issueTicketDao.ListWorkOrder(dto.workOrderId).stream()
                     .findFirst().orElse(null);
             workOrder.board_id = workOrderRequest.board_id;
-            workOrder.feature = workOrderRequest.feature;
+            workOrder.feature = issueKey;
             workOrder.folio = workOrderRequest.folio;
             workOrder.source_id = workOrderRequest.source_id;
             workOrder.source_name = workOrderRequest.source_name;
@@ -203,17 +212,6 @@ public class IssueTicketService {
         return new SuccessDataResult(modelo);
     }
 
-    private void createTicketJira(String cookie_oauth, WorkOrder workOrder, List<WorkOrderDetail> workOrderDetail)
-            throws Exception
-    {
-        httpClient = HttpClient.newHttpClient();
-        Map<Integer, IssueDto> issuesRequests = issueTicketDao.getDataRequestIssueJira(workOrder, workOrderDetail);
-        for(Map.Entry<Integer, IssueDto> issue : issuesRequests.entrySet())
-        {
-            PostResponseAsync(cookie_oauth, issue.getKey(), issue.getValue(), workOrderDetail);
-        }
-    }
-
     private void createTicketJira2(WorkOrderDtoRequest objAuth, IssueBulkDto issuesRequests, List<WorkOrderDetail> workOrderDetail)
             throws Exception
     {
@@ -245,76 +243,6 @@ public class IssueTicketService {
             throw new HandledException(responseCode.toString(), "No se pudo actualizar ninguna HU, esto puede deberse a un feature incorrecto o que las HU se encuentren en un estado no permitido para la actualización o no existan en Jira");
         }
         return ticketsUpdates;
-    }
-
-    private Object PostResponseAsync(String cookie_oauth, int templaye_id, IssueDto issueJira, List<WorkOrderDetail> workOrderDetail)
-            throws Exception
-    {
-
-        Object responseBody = null;
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        String jsonString = gson.toJson(issueJira);
-        String cookie = HEADER_COOKIE_JIRA + cookie_oauth;
-
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(URL_API_JIRA))
-                .header("Content-type", "application/json")
-                .headers("Cookie", cookie)
-                .POST(HttpRequest.BodyPublishers.ofString(jsonString))
-                .build();
-
-        CompletableFuture<HttpResponse<String>> futureResponse = httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString());
-        HttpResponse<String> response = futureResponse.get();
-        Integer responseCode = response.statusCode();
-
-        if (responseCode.equals(302)) {
-            throw new HandledException(responseCode.toString(), "Token Expirado");
-        }
-        if (responseCode>=400 && responseCode<=500) {
-            throw new HandledException(responseCode.toString(), "Error al intentar generar tickets, revise los datos ingresados");
-        }
-        responseBody = response.body();
-        var responseBodyString = responseBody.toString();
-        IssueDto issueCreated = new Gson().fromJson(responseBodyString, IssueDto.class);
-        for (WorkOrderDetail item:workOrderDetail)
-        {
-            if (item.template_id.equals(templaye_id))
-                item.issue_code = issueCreated.key;
-        }
-
-        return responseBody;
-    }
-
-    private IssueBulkResponse PostResponseAsync2(String cookie_oauth, IssueBulkDto issueJira)
-            throws Exception
-    {
-        // NOTA: el api bulk de jira permite hasta 50 issues por petición
-        var httpClient2 = HttpClient.newHttpClient();
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        String jsonString = gson.toJson(issueJira);
-        String cookie = HEADER_COOKIE_JIRA + cookie_oauth;
-
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(URL_API_JIRA_BULK))
-                .header("Content-type", "application/json")
-                .headers("Cookie", cookie)
-                .POST(HttpRequest.BodyPublishers.ofString(jsonString))
-                .build();
-
-        CompletableFuture<HttpResponse<String>> futureResponse = httpClient2.sendAsync(request, HttpResponse.BodyHandlers.ofString());
-        HttpResponse<String> response = futureResponse.get();
-        Integer responseCode = response.statusCode();
-
-        if (responseCode.equals(302)) {
-            throw new HandledException(responseCode.toString(), "Token Expirado");
-        }
-        if (responseCode>=400 && responseCode<=500) {
-            throw new HandledException(responseCode.toString(), "Error al intentar generar tickets, revise los datos ingresados");
-        }
-        var responseBody = response.body();
-        var responseBodyString = responseBody.toString();
-        var issueCreated = new Gson().fromJson(responseBodyString, IssueBulkResponse.class);
-        return issueCreated;
     }
 
     private IssueBulkResponse PostResponseAsync3(WorkOrderDtoRequest objAuth, IssueBulkDto issueJira)
@@ -380,6 +308,34 @@ public class IssueTicketService {
             throw new HandledException(responseCode.toString(), "Token Expirado");
         }
         return responseCode;
+    }
+
+    private String GetResponseAsync(String username, String password, String apiPath)
+            throws Exception
+    {
+        HttpGet httpGet = new HttpGet(URL_API_BASE + apiPath);
+        httpGet.setHeader("Content-Type", "application/json");
+
+        Integer responseCode =0;
+        String responseBodyString = "";
+        HttpEntity entity = null;
+        try(CloseableHttpClient httpclient = HttpClients.createDefault()){
+            getBasicSession(username, password, httpclient);
+            httpGet.setHeader("Cookie", createCookieHeader(cookieStore.getCookies()));
+            CloseableHttpResponse response = httpclient.execute(httpGet);
+            responseCode = response.getStatusLine().getStatusCode();
+            entity = response.getEntity();
+            responseBodyString = EntityUtils.toString(entity);
+            response.close();
+        }
+
+        if (responseCode.equals(302)) {
+            throw new HandledException(responseCode.toString(), "Token Expirado");
+        }
+        if (responseCode>=400 && responseCode<=500) {
+            throw new HandledException(responseCode.toString(), "El feature no existe");
+        }
+        return responseBodyString;
     }
 
     private static String createCookieHeader(List<Cookie> cookieList) {
