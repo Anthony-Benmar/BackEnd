@@ -18,6 +18,7 @@ import com.bbva.entities.issueticket.WorkOrder;
 import com.bbva.entities.issueticket.WorkOrderDetail;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonParser;
 import com.mysql.cj.util.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -139,13 +140,15 @@ public class IssueTicketService {
             }
 
             //consultar si feature existe
-            var issueMetadata = GetResponseAsync(dto.username, dto.token,URL_API_JIRA_ISSUE + dto.feature);
+            var issueMetadataJson = GetResponseAsync(dto.username, dto.token,URL_API_JIRA_ISSUE + dto.feature);
+            var issueMetadata = JsonParser.parseString(issueMetadataJson).getAsJsonObject();
+            var issueKey = issueMetadata.get("key").getAsString();
 
 
             var workOrder = issueTicketDao.ListWorkOrder(dto.workOrderId).stream()
                     .findFirst().orElse(null);
             workOrder.board_id = workOrderRequest.board_id;
-            workOrder.feature = workOrderRequest.feature;
+            workOrder.feature = issueKey;
             workOrder.folio = workOrderRequest.folio;
             workOrder.source_id = workOrderRequest.source_id;
             workOrder.source_name = workOrderRequest.source_name;
@@ -330,7 +333,7 @@ public class IssueTicketService {
             throw new HandledException(responseCode.toString(), "Token Expirado");
         }
         if (responseCode>=400 && responseCode<=500) {
-            throw new HandledException(responseCode.toString(), "Error al consultar api JIRA");
+            throw new HandledException(responseCode.toString(), "El feature no existe");
         }
         return responseBodyString;
     }
