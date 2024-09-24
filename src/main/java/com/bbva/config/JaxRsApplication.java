@@ -11,6 +11,7 @@ public class JaxRsApplication extends Application {
     @Override
     public Set<Class<?>> getClasses() {
         final Set<Class<?>> classes = new HashSet<>();
+        classes.add(HealthResource.class);
         classes.add(AuthenticationResources.class);
         classes.add(BoardResources.class);
         classes.add(BucResources.class);

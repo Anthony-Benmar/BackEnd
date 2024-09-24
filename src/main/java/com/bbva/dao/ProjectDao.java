@@ -1,6 +1,7 @@
 package com.bbva.dao;
 
 import com.bbva.common.HttpStatusCodes;
+import com.bbva.core.HandledException;
 import com.bbva.core.results.DataResult;
 import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
@@ -264,7 +265,9 @@ public class ProjectDao {
         }
     }
 
-    public InsertProjectInfoDTORequest insertProjectInfo(InsertProjectInfoDTORequest dto) {
+    public InsertProjectInfoDTORequest insertProjectInfo(InsertProjectInfoDTORequest dto)
+            throws Exception
+    {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         try (SqlSession session = sqlSessionFactory.openSession()) {
             ProjectMapper projectMapper = session.getMapper(ProjectMapper.class);
@@ -289,6 +292,7 @@ public class ProjectDao {
             } catch (Exception e) {
                 session.rollback();
                 log.log(Level.SEVERE, e.getMessage(), e);
+                throw new HandledException("500", "No se pudo registrar el proyecto");
             }
         }
         return dto;

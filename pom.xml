@@ -1,54 +1,59 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <name>bbva-gob-dicc-datos-pe-sp</name>
-    <description>BBVA Google AppEngine Backend Diccionario de Datos</description>
+    <description>BBVA Google AppEngine Backend Diccionario de Datos java 17</description>
 
     <groupId>com.bbva</groupId>
     <artifactId>bbva-gob-dicc-datos-pe-sp</artifactId>
     <packaging>jar</packaging>
-    <version>1-0-0</version>
+    <version>1-1-7</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.release>11</maven.compiler.release>
+        <maven.compiler.release>17</maven.compiler.release>
         <maven.compiler.parameters>true</maven.compiler.parameters>
         <!--suppress UnresolvedMavenProperty -->
-        <appengine.deploy.version>back-java-11-${git.commit.id.abbrev}</appengine.deploy.version>
+        <appengine.deploy.version>back-java-17-${git.commit.id.abbrev}</appengine.deploy.version>
         <jetty.http.port>8080</jetty.http.port>
         <app.main.class>com.bbva.jetty.MainApp</app.main.class>
 
         <!-- Applications identifiers -->
-        <appengine.app.id>${dev.appengine.app.id}</appengine.app.id>
+        <appengine.app.id>${pr.appengine.app.id}</appengine.app.id>
         <dev.appengine.app.id>dev-bbva-gob-dicc-datos-pe-sp</dev.appengine.app.id>
         <au.appengine.app.id>au-bbva-gob-dicc-datos-pe-sp</au.appengine.app.id>
         <pr.appengine.app.id>bbva-gob-dicc-datos-pe-sp</pr.appengine.app.id>
 
         <!-- Environments -->
-        <bbva.environment>${local.bbva.environment}</bbva.environment>
+        <bbva.environment>${pr.bbva.environment}</bbva.environment>
         <local.bbva.environment>local</local.bbva.environment>
         <dev.bbva.environment>dev.bbva.com</dev.bbva.environment>
         <au.bbva.environment>au.bbva.com</au.bbva.environment>
         <pr.bbva.environment>bbva.com</pr.bbva.environment>
 
-        <fga.core.version>1.1.2</fga.core.version>
-        <resteasy.version>4.7.5.Final</resteasy.version>
-        <jetty.version>9.4.44.v20210927</jetty.version>
+        <fga.core.version>3.0.0</fga.core.version>
+        <resteasy.version>5.0.7.Final</resteasy.version>
+        <jetty.version>10.0.15</jetty.version>
 
         <!-- Plugins -->
-        <appengine.maven.plugin.version>2.4.1</appengine.maven.plugin.version>
-        <jacoco.maven.plugin.version>0.8.6</jacoco.maven.plugin.version>
+        <appengine.maven.plugin.version>2.4.4</appengine.maven.plugin.version>
+        <jacoco.maven.plugin.version>0.8.10</jacoco.maven.plugin.version>
         <maven.clean.plugin.version>3.1.0</maven.clean.plugin.version>
-        <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
+        <maven.compiler.plugin.version>3.13.0</maven.compiler.plugin.version>
         <maven.resources.plugin.version>3.2.0</maven.resources.plugin.version>
-        <maven.surefire.plugin.version>3.0.0-M5</maven.surefire.plugin.version>
-        <maven.jar.plugin.version>3.2.0</maven.jar.plugin.version>
+        <maven.surefire.plugin.version>3.1.2</maven.surefire.plugin.version>
+        <maven.jar.plugin.version>3.3.0</maven.jar.plugin.version>
         <maven.dependency.plugin.version>3.2.0</maven.dependency.plugin.version>
         <maven.exec.plugin.version>3.0.0</maven.exec.plugin.version>
         <maven.git-commit-id.plugin.version>4.9.10</maven.git-commit-id.plugin.version>
         <maven.enforcer.plugin>3.0.0</maven.enforcer.plugin>
+        <maven.sonar.plugin>3.11.0.3922</maven.sonar.plugin>
+
+        <sonar.java.source>17</sonar.java.source>
+        <sonar.sources>src/main/java</sonar.sources>
 
     </properties>
 
@@ -56,11 +61,12 @@
         <repository>
             <name>BBVA GCP Repository Virtual</name>
             <id>gl-gcp-maven-virtual</id>
+
             <url>https://artifactory.globaldevtools.bbva.com/artifactory/gl-gcp-maven-virtual</url>
         </repository>
     </repositories>
 
-    
+
     <dependencies>
 
         <!--        <dependency>-->
@@ -71,7 +77,7 @@
 
         <dependency>
             <groupId>com.bbva.fga</groupId>
-            <artifactId>fga-core-java11</artifactId>
+            <artifactId>fga-core-java17</artifactId>
             <version>${fga.core.version}</version>
         </dependency>
 
@@ -103,32 +109,38 @@
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-logging</artifactId>
-            <version>3.6.1</version>
+            <version>3.14.5</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-jdk14</artifactId>
+            <version>2.0.9</version>
         </dependency>
 
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.22</version>
+            <version>1.18.26</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-text</artifactId>
-            <version>1.9</version>
+            <version>1.10.0</version>
         </dependency>
 
         <!-- Testing -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-engine</artifactId>
-            <version>5.8.2</version>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.10.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>4.2.0</version>
+            <version>5.5.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -311,6 +323,12 @@
             </plugin>
 
             <plugin>
+                <groupId>org.sonarsource.scanner.maven</groupId>
+                <artifactId>sonar-maven-plugin</artifactId>
+                <version>${maven.sonar.plugin}</version>
+            </plugin>
+
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>${maven.jar.plugin.version}</version>
@@ -410,6 +428,8 @@
                         <includeOnlyProperty>^git.commit.id.abbrev$</includeOnlyProperty>
                     </includeOnlyProperties>
                     <commitIdGenerationMode>full</commitIdGenerationMode>
+
+
                 </configuration>
             </plugin>
 
