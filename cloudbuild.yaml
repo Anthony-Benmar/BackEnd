@@ -34,7 +34,7 @@ steps:
     entrypoint: 'bash'
     args: [
         '-c',
-        'mvn clean package appengine:deploy --settings /workspace/settings.xml -Dbbva.environment=${_BBVA_GAE_ENV} -Dmaven.test.skip=true -Dapp.deploy.promote=false -Dapp.deploy.projectId=$PROJECT_ID -Dappengine.deploy.version=$(cat /workspace/version)'
+        'mvn clean package appengine:deployAll -P ${_BBVA_GAE_ENV} --settings /workspace/settings.xml -Dmaven.test.skip=true -Dapp.deploy.promote=false -Dappengine.deploy.version=$(cat /workspace/version)'
     ]
 
 availableSecrets:
