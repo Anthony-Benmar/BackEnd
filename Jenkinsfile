@@ -8,26 +8,42 @@ pipeline {
     agent {
         kubernetes {
             label buildAgent
-            defaultContainer 'fga-cli'
+            defaultContainer 'gcloud-sdk'
             yaml """
 apiVersion: v1
 kind: Pod
+metadata:
+  labels:
+    name: ${buildAgent}
 spec:
   securityContext:
     runAsUser: 1000
   containers:
-    - name: fga-cli
-      image: artifactory.globaldevtools.bbva.com:443/gl-gcp-docker-local/gcp/arch/bbva-fga-cli-ng:latest
+    - name: gcloud-sdk
+      image: google/cloud-sdk:alpine
       command:
         - cat
       tty: true
       resources:
         requests:
           cpu: 1
-          memory: 2048Mi
+          memory: 256Mi
         limits:
           cpu: 1
-          memory: 2048Mi
+          memory: 256Mi
+
+    - name: maven
+      image: maven:3.8.6-openjdk-18
+      command:
+        - cat
+      tty: true
+      resources:
+        requests:
+          cpu: 1
+          memory: 768Mi
+        limits:
+          cpu: 1
+          memory: 768Mi
   imagePullSecrets:
     - name: registrypullsecret
 """
@@ -41,10 +57,7 @@ spec:
 
     environment {
         UUAA = ''
-        SAMUEL_PROJECT_NAME = 'BBVA_PE_GCP_GOB_DICCIONARIO_DATOS'
-        CLI_MODE = 'jenkins'
-        BOT_GCP_READER_USER = credentials('bot_gcp_reader_vdc_user')
-        BOT_GCP_READER_PASSWORD = credentials('bot_gcp_reader_vdc_password')
+        SAMUEL_PROJECT_NAME = 'Pipeline Java Back GAE'
         NO_PROXY = "172.20.0.0/16,10.60.0.0/16,169.254.169.254,.igrupobbva,.jenkins,.internal,localhost,127.0.0.1,127.20.0.1,central-jenkins-cache.s3.eu-west-1.amazonaws.com,central-jenkins-cache.s3.amazonaws.com,.eu-west-1.amazonaws.com,jenkins.globaldevtools.bbva.com,globaldevtools.bbva.com"
         HTTPS_PROXY = "http://proxy.cloud.local:8080"
         HTTP_PROXY = "http://proxy.cloud.local:8080"
@@ -64,23 +77,57 @@ spec:
 
         stage ('Test & Coverage') {
             steps {
-                library 'sonar@lts'
-                script {
-                    def statusCode = null
+                container(name: 'maven', shell: '/bin/bash') {
+                    library 'sonar@lts'
+                    script {
+                        def statusCode = null
 
-                    sonar([
+                        sonar([
+                            sonarInstanceName: 'sonar-community-pro',
                             waitForQualityGate: true
-                    ]) {
-                        withCredentials([file(credentialsId: 'bot_gcp_maven_settings', variable: 'GCP_MAVEN_SETTINGS')]) {
-                            statusCode = sh returnStatus: true, script: '''
-                                mvn -B -V -U -s $GCP_MAVEN_SETTINGS clean verify sonar:sonar
-                            '''
+                        ]) {
+                            withCredentials([
+                                    string(credentialsId: 'gcp-global-mvn-repository-server-vdc', variable: 'GCP_MAVEN_SERVER'),
+                                    string(credentialsId: 'gcp-global-mvn-repository-mirror-vdc', variable: 'GCP_MAVEN_MIRROR'),
+                                    usernamePassword(credentialsId: 'proxyng-user-pass', usernameVariable: 'PROXYNG_USER', passwordVariable: 'PROXYNG_PASS')
+                            ]) {
+                                statusCode = sh returnStatus: true, script: '''
+                                    echo "
+                                        <settings>
+                                          <localRepository>~/.m2/repository</localRepository>
+                                          <proxies>
+                                            <proxy>
+                                              <id>proxyng</id>
+                                              <active>true</active>
+                                              <protocol>https</protocol>
+                                              <host>proxy.cloud.local</host>
+                                              <port>8080</port>
+                                              <username>$PROXYNG_USER</username>
+                                              <password>$PROXYNG_PASS</password>
+                                              <nonProxyHosts></nonProxyHosts>
+                                            </proxy>
+                                          </proxies>
+
+                                          <servers>
+                                            <server>
+                                              $GCP_MAVEN_SERVER
+                                            </server>
+                                          </servers>
+                                          <mirrors>
+                                            <mirror>
+                                              $GCP_MAVEN_MIRROR
+                                            </mirror>
+                                          </mirrors>
+                                        </settings>" > mvn-settings.xml
+                                    mvn -B -V -U -s mvn-settings.xml clean verify sonar:sonar
+                                '''
+                            }
+                        }
+
+                        if (statusCode != 0) {
+                            error 'Error executing test and coverage analysis'
                         }
                     }
-                    echo 'Error executing test and coverage analysis'
-                    // if (statusCode != 0) {
-                    //     error 'Error executing test and coverage analysis'
-                    // }
                 }
             }
         }
@@ -100,10 +147,6 @@ spec:
         }
 
         stage ('Tag code') {
-            when {
-                branch 'master'
-            }
-
             steps {
                 script {
                     gcphelper.createTag()
