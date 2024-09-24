@@ -22,17 +22,17 @@
         <app.main.class>com.bbva.jetty.MainApp</app.main.class>
 
         <!-- Applications identifiers -->
-        <appengine.app.id>${pr.appengine.app.id}</appengine.app.id>
+        <appengine.app.id>${dev.appengine.app.id}</appengine.app.id>
         <dev.appengine.app.id>dev-bbva-gob-dicc-datos-pe-sp</dev.appengine.app.id>
         <au.appengine.app.id>au-bbva-gob-dicc-datos-pe-sp</au.appengine.app.id>
         <pr.appengine.app.id>bbva-gob-dicc-datos-pe-sp</pr.appengine.app.id>
 
         <!-- Environments -->
-        <bbva.environment>${pr.bbva.environment}</bbva.environment>
+        <bbva.environment>${local.bbva.environment}</bbva.environment>
         <local.bbva.environment>local</local.bbva.environment>
-        <dev.bbva.environment>dev.bbva.com</dev.bbva.environment>
-        <au.bbva.environment>au.bbva.com</au.bbva.environment>
-        <pr.bbva.environment>bbva.com</pr.bbva.environment>
+        <dev.bbva.environment>dev</dev.bbva.environment>
+        <au.bbva.environment>au</au.bbva.environment>
+        <pr.bbva.environment>pro</pr.bbva.environment>
 
         <fga.core.version>3.0.0</fga.core.version>
         <resteasy.version>5.0.7.Final</resteasy.version>
@@ -428,8 +428,6 @@
                         <includeOnlyProperty>^git.commit.id.abbrev$</includeOnlyProperty>
                     </includeOnlyProperties>
                     <commitIdGenerationMode>full</commitIdGenerationMode>
-
-
                 </configuration>
             </plugin>
 
