@@ -26,7 +26,9 @@ public class MyBatisConnectionFactory {
     public static void initialiceInstance(){
         try {
             HikariConfig config = new HikariConfig();
+            MainApp.ROOT_LOOGER.log(Level.SEVERE,"inicializando HikariConfig");
             Properties properties = AppProperties.getInstance();
+            MainApp.ROOT_LOOGER.log(Level.SEVERE,"database.url: -> " + properties.getProperty("database.url"));
             config.setJdbcUrl(properties.getProperty("database.url"));
 
             if (EnvironmentUtils.isLocalEnvironment()) {
@@ -41,6 +43,8 @@ public class MyBatisConnectionFactory {
                         properties.getProperty("database.cloud_sql_instance"));
                 config.addDataSourceProperty("ipTypes", "PUBLIC,PRIVATE");
             }
+            MainApp.ROOT_LOOGER.log(Level.SEVERE,"database.UserName: -> " + config.getUsername());
+            MainApp.ROOT_LOOGER.log(Level.SEVERE,"database.Password: -> " + config.getPassword());
             // config.setAutoCommit(false);
             config.setMaximumPoolSize(
                     Integer.parseInt(properties.getProperty("database.maximum_pool_size"))
@@ -50,6 +54,7 @@ public class MyBatisConnectionFactory {
             );
             config.setConnectionTestQuery("SELECT 1");
             HikariDataSource dataSource = new HikariDataSource(config);
+            MainApp.ROOT_LOOGER.log(Level.SEVERE,"HikariDataSource dataSource = new HikariDataSource(config)");
             TransactionFactory transactionFactory = new JdbcTransactionFactory();
             Environment environment = new Environment("mysql", transactionFactory, dataSource);
             Configuration configuration = new Configuration(environment);
