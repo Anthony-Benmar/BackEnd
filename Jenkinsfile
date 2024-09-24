@@ -133,12 +133,12 @@ spec:
         }
 
         stage ('Wait for Cloud Build') {
-            when {
-                 anyOf {
-                        branch 'master'
-                        branch 'develop'
-                    }
-                }
+           when {
+               anyOf {
+                   branch 'develop'
+                   branch 'master'
+               }
+           }
             steps {
                 script {
                     try {
