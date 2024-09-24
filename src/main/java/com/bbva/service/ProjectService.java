@@ -254,7 +254,7 @@ public class ProjectService {
         return new SuccessDataResult(result);
     }
 
-    public IDataResult<InsertProjectInfoDTORequest> insertProjectInfo(InsertProjectInfoDTORequest dto) {
+    public IDataResult<InsertProjectInfoDTORequest> insertProjectInfo(InsertProjectInfoDTORequest dto)  throws Exception{
         var result = projectDao.insertProjectInfo(dto);
         return new SuccessDataResult(result);
     }

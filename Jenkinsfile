@@ -27,10 +27,10 @@ spec:
       resources:
         requests:
           cpu: 1
-          memory: 256Mi
+          memory: 2048Mi
         limits:
           cpu: 1
-          memory: 256Mi
+          memory: 2048Mi
 
     - name: maven
       image: maven:3.8.6-openjdk-18
@@ -133,6 +133,12 @@ spec:
         }
 
         stage ('Wait for Cloud Build') {
+            when {
+                 anyOf {
+                        branch 'master'
+                        branch 'develop'
+                    }
+                }
             steps {
                 script {
                     try {
@@ -147,6 +153,9 @@ spec:
         }
 
         stage ('Tag code') {
+            when {
+                    branch 'master'
+                }
             steps {
                 script {
                     gcphelper.createTag()

@@ -126,7 +126,8 @@ public class ProjectResources {
     @Path("/info")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public IDataResult<InsertProjectInfoDTORequest> insertProjectInfo(InsertProjectInfoDTORequest request){
+    public IDataResult<InsertProjectInfoDTORequest> insertProjectInfo(InsertProjectInfoDTORequest request)
+            throws Exception{
         if (projectService.sdatoolIdExists(request.getSdatoolId())) {
             return new ErrorDataResult("El proyecto que desea registrar ya existe, verifique el código SDATOOL");
         }
