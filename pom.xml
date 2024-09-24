@@ -428,8 +428,6 @@
                         <includeOnlyProperty>^git.commit.id.abbrev$</includeOnlyProperty>
                     </includeOnlyProperties>
                     <commitIdGenerationMode>full</commitIdGenerationMode>
-
-
                 </configuration>
             </plugin>
 
