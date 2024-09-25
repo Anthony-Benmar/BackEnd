@@ -16,6 +16,7 @@ import com.bbva.dto.jira.response.IssueBulkResponse;
 import com.bbva.entities.feature.JiraFeatureEntity;
 import com.bbva.entities.issueticket.WorkOrder;
 import com.bbva.entities.issueticket.WorkOrderDetail;
+import com.bbva.util.GsonConfig;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParser;
@@ -35,13 +36,9 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.util.EntityUtils;
 
-import java.net.URI;
 import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.time.Instant;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 public class IssueTicketService {
@@ -249,7 +246,8 @@ public class IssueTicketService {
             throws Exception
     {
         // NOTA: el api bulk de jira permite hasta 50 issues por petición
-        var gson = new GsonBuilder().setPrettyPrinting().create();
+        //var gson = new GsonBuilder().setPrettyPrinting().create();
+        Gson gson = GsonConfig.createGson();
         String jsonString = gson.toJson(issueJira);
 
         HttpPost httpPost = new HttpPost(URL_API_JIRA_BULK);
