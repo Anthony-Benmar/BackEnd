@@ -26,7 +26,7 @@ public class JiraValidationMethods {
     private boolean isInTableroDQA;
     private boolean isEnviadoFormulario;
     private String featureLink;
-    private String impactLabel;
+    private List<String> impactLabel;
     private String coordinationMessage = "de ser necesario coordinar con el <strong>SM / QE</strong>";
     private String currentQ = "2024-Q2";
     private Map<String,Object> branchPRObject = new HashMap<>();
@@ -39,9 +39,20 @@ public class JiraValidationMethods {
         JsonElement featureLinkElement = this.jiraTicketResult.get("fields").getAsJsonObject().get("customfield_10004");
         this.featureLink = featureLinkElement.isJsonNull() ? null : featureLinkElement.getAsString();
         JsonElement impactLabelElement = this.jiraTicketResult.get("fields").getAsJsonObject().get("customfield_10267");
-        this.impactLabel = impactLabelElement.isJsonNull() ? null : impactLabelElement.getAsString();
+        this.impactLabel = convertJsonElementToList(impactLabelElement);
         this.branchPRObject.put("branch","");
         this.branchPRObject.put("status","");
+    }
+
+    private List<String> convertJsonElementToList(JsonElement element) {
+        if (element != null && !element.isJsonNull() && element.isJsonArray()) {
+            JsonArray jsonArray = element.getAsJsonArray();
+            List<String> resultList = new ArrayList<>();
+            jsonArray.forEach(jsonElem -> resultList.add(jsonElem.getAsString()));
+            return resultList;
+        } else {
+            return null;
+        }
     }
 
     public  Map<String, Object> getValidationURLJIRA(String helpMessage, String group) {
@@ -546,6 +557,7 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
     public Map<String, Object> getValidationValidateSubTaskValidateContractor(JiraValidatorByUrlRequest dto, String helpMessage, String group) {
         AtomicReference<String> message = new AtomicReference<>("");
         AtomicBoolean isValid = new AtomicBoolean(false);
+        AtomicBoolean noAsignee = new AtomicBoolean(false);
         boolean isWarning = false;
 
         Map<String, Object> subTaskAcceptedRow = new HashMap<>(); //Es un elemento de la lista de subtareas que han sido validadas con "Accepted"
@@ -567,16 +579,34 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-
-            JsonObject assignee = metaData
+            List<String> huSubtaskValid = Arrays.asList("[PO]", "[KM]", "[AT]", "[SO]");
+            JsonElement issue = metaData
                     .getAsJsonArray("issues")
                     .get(0).getAsJsonObject()
-                    .getAsJsonObject("fields")
-                    .getAsJsonObject("assignee");
-            //.get("emailAddress").getAsString();
-            subTaskAsigCollection.add(assignee);
-        });
+                    .getAsJsonObject("fields");
+            String summary = issue.getAsJsonObject().get("summary").getAsString();
 
+            boolean matchFound = huSubtaskValid.stream().anyMatch(summary::contains);
+
+            if (matchFound) {
+                JsonObject assignee = metaData
+                        .getAsJsonArray("issues")
+                        .get(0).getAsJsonObject()
+                        .getAsJsonObject("fields")
+                        .getAsJsonObject("assignee");
+                if(assignee != null){
+                    subTaskAsigCollection.add(assignee);
+                }
+                else {
+                    message.set("Subtarea " + summary + " no tiene correo asignado");
+                    isValid.set(false);
+                    noAsignee.set(true);
+                }
+            }
+        });
+        if (noAsignee.get()) {
+            return getValidatonResultsDict(message.get(), isValid.get(), isWarning, helpMessage, group);
+        }
         List<String> invalidEmails = new ArrayList<>();
         for (JsonObject asig : subTaskAsigCollection) {
             if (asig.get("emailAddress").getAsString().contains(".contractor")) {
@@ -591,11 +621,6 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
             message.set("Todos los correos son Interno BBVA");
             isValid.set(true);
         }
-
-//        if (subtaskObject.containsKey("messagePrefix")) {
-//            message = String.format("%s %s", subtaskObject.get("messagePrefix"), message);
-//        }
-
         return getValidatonResultsDict(message.get(), isValid.get(), isWarning, helpMessage, group);
     }
 
@@ -1044,35 +1069,40 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
         String message = "";
         boolean isValid = false;
         boolean isWarning = false;
+        if (tipoDesarrollo.equals("HOST") || tipoDesarrollo.equals("mallas")) {
+            List<String> validImpactLabel = Arrays.asList("AppsInternos", "Datio");
+            List<String> validImpactLabelListHost = Arrays.asList("DataHub", "Host", "Plataforma_InformacionalP11");
 
-        List<String> validImpactLabel = Arrays.asList("AppsInternos", "Datio");
-        List<String> validImpactLabelListHost = Arrays.asList("DataHub", "Host", "Plataforma_InformacionalP11");
+            List<String> validImpactLabelFinalList = tipoDesarrollo.equals("HOST") ? validImpactLabelListHost : validImpactLabel;
 
-        List<String> validImpactLabelFinalList = tipoDesarrollo.equals("HOST") ? validImpactLabelListHost : validImpactLabel;
-
-        List<String> impactLabelNotExistsList = new ArrayList<>();
-
-
-        List<String> jiraTicketImpactLabelList = impactLabel == null ? new ArrayList<>() : Collections.singletonList(impactLabel);
+            List<String> impactLabelNotExistsList = new ArrayList<>();
 
 
-        for (String impactLabel : validImpactLabelFinalList) {
-            if (!jiraTicketImpactLabelList.contains(impactLabel)) {
-                impactLabelNotExistsList.add(impactLabel);
+            List<String> jiraTicketImpactLabelList = impactLabel == null ? new ArrayList<>() : this.impactLabel;
+
+
+            for (String impactLabel : validImpactLabelFinalList) {
+                if (!jiraTicketImpactLabelList.contains(impactLabel)) {
+                    impactLabelNotExistsList.add(impactLabel);
+                }
+            }
+
+            if (impactLabelNotExistsList.isEmpty()) {
+                message = "Impact Label " + ", " + validImpactLabelFinalList;
+                isValid = true;
+            } else {
+                message = "Falta Impact Label: " + ", " + impactLabelNotExistsList;
+                if (!jiraTicketImpactLabelList.isEmpty()) {
+                    message += " Se tiene: " + ", " + jiraTicketImpactLabelList;
+                } else {
+                    message += " No se tiene Impact Label definidos";
+                }
+                isValid = false;
             }
         }
-
-        if (impactLabelNotExistsList.isEmpty()) {
-            message = "Impact Label " + ", " + validImpactLabelFinalList;
+        else{
+            message = "Impact Label no es necesario para este tipo de desarrollo";
             isValid = true;
-        } else {
-            message = "Falta Impact Label: " + ", " + impactLabelNotExistsList;
-            if (!jiraTicketImpactLabelList.isEmpty()) {
-                message += " Se tiene: " + ", " + jiraTicketImpactLabelList;
-            } else {
-                message += " No se tiene Impact Label definidos";
-            }
-            isValid = false;
         }
 
         return getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
