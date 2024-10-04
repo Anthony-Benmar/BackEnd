@@ -157,7 +157,6 @@ public class JiraValidationMethods {
         var result = JiraValidatorConstantes.ATTACHS_BY_DEVELOP_TYPES.get(tipoDesarrollo);
 
         var attachments = jiraTicketResult.getAsJsonObject("fields").getAsJsonObject().get("attachment").getAsJsonArray();
-
         attachments.forEach(attachment -> {
 
         });
@@ -705,12 +704,13 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
         Map<String, Map<String, String>> teamFieldLabelByIssueType = new HashMap<>();
         teamFieldLabelByIssueType.put("Historia", storyMap);
         teamFieldLabelByIssueType.put("Story", storyMap);
-        teamFieldLabelByIssueType.put("Dependency", dependencyMap);
+        teamFieldLabelByIssueType.put("Dependency", storyMap); //dependencyMap
         String issueType = jiraTicketResult.getAsJsonObject("fields")
                 .getAsJsonObject("issuetype")
                 .get("name").getAsString();
 
         String currentTeamFieldField = (teamFieldLabelByIssueType.containsKey(issueType)) ? teamFieldLabelByIssueType.get(issueType).get("field") : "";
+        String currentTeamFieldLabel = (teamFieldLabelByIssueType.containsKey(issueType)) ? teamFieldLabelByIssueType.get(issueType).get("label") : "";
 
         List<String> estadosExtraMallasHost = Arrays.asList("Ready", "Test", "Ready To Verify");
         List<String> statusTableroDQA = new ArrayList<>();
@@ -724,33 +724,50 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
         //convertir todos los elementos del statusTableroDQA a minúsculas
         statusTableroDQA.replaceAll(String::toLowerCase);
 
-        Object currentTeam = null;
-        if (!currentTeamFieldField.equals("")) {
-            currentTeam = this.jiraTicketResult.get(currentTeamFieldField) == null ? null : this.jiraTicketResult.get(currentTeamFieldField);
-        }
+        JsonArray histories = this.jiraTicketResult.getAsJsonObject("changelog").getAsJsonArray("histories");
 
-        if (currentTeam != null && ((HashMap)currentTeam).get("id").equals(teamIdDQA)) {
-            this.isInTableroDQA = true;
-            message = "Asignado a Tablero de DQA";
-            isValid = true;
-        } else {
-            message = "No está en el Tablero de DQA";
-            statusTableroDQA.replaceAll(String::toLowerCase);
-            List<String> statusTableroDQANew = statusTableroDQA;
-            if (statusTableroDQANew.contains( jiraTicketStatus.trim().toLowerCase())) {
-                if (validacionEnvioFormulario) {
-                    message += "Atención: No olvidar que para regresar el ticket a DQA, se debe cambiar el estado del ticket y la Subtarea DQA";
+        for (JsonElement historyElement : histories) {
+            JsonObject history = historyElement.getAsJsonObject();
 
-                    if (tipoDesarrollo.equals("Mallas") || tipoDesarrollo.equals("HOST")) {
-                        message += String.join(", ", estadosExtraMallasHost);
-                    } else {
-                        message += "Ready";
+            if (history.has("items")) {
+                JsonArray items = history.getAsJsonArray("items");
+                for (JsonElement itemElement : items) {
+                    JsonObject item = itemElement.getAsJsonObject();
+
+                    if (item.has("field") && item.get("field").getAsString().equals(currentTeamFieldLabel)) {
+                        // Obtener otros valores, por ejemplo "fromString" y "toString"
+                        String from = item.get("from").getAsString();
+                        String to = item.get("to").getAsString();
+
+                        HashMap<String, String> currentTeam = new HashMap<>();
+                        currentTeam.put("from", from);
+                        currentTeam.put("id", to);
+
+                        if (currentTeam != null && (currentTeam.get("id").equals(teamIdDQA))) {
+                            this.isInTableroDQA = true;
+                            message = "Asignado a Tablero de DQA";
+                            isValid = true;
+                        } else {
+                            message = "No está en el Tablero de DQA";
+                            statusTableroDQA.replaceAll(String::toLowerCase);
+                            List<String> statusTableroDQANew = statusTableroDQA;
+                            if (statusTableroDQANew.contains( jiraTicketStatus.trim().toLowerCase())) {
+                                if (validacionEnvioFormulario) {
+                                    message += "Atención: No olvidar que para regresar el ticket a DQA, se debe cambiar el estado del ticket y la Subtarea DQA";
+
+                                    if (tipoDesarrollo.equals("Mallas") || tipoDesarrollo.equals("HOST")) {
+                                        message += String.join(", ", estadosExtraMallasHost);
+                                    } else {
+                                        message += "Ready";
+                                    }
+                                }
+                                isValid = false;
+                            }
+                        }
                     }
                 }
-                isValid = false;
             }
         }
-
         return getValidationResultsDict(message, isValid, isWarning, helpMessage, group);
     }
 
@@ -1043,23 +1060,32 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
                 .getAsJsonArray("subtasks");
 
         List<String> foundSubTasks = new ArrayList<>();
+        List<String> additionalSubTasks = new ArrayList<>();
 
         for (JsonElement subTask : subTasks) {
             String subTaskLabel = subTask.getAsJsonObject().get("fields").getAsJsonObject().get("summary").getAsString();
             if (requiredSubTasks.contains(subTaskLabel)) {
                 foundSubTasks.add(subTaskLabel);
+            }else {
+                additionalSubTasks.add(subTaskLabel);
             }
         }
 
         if (foundSubTasks.containsAll(requiredSubTasks)) {
             message = "Todas las subtareas requeridas fueron encontradas.";
             isValid = true;
+            if (!additionalSubTasks.isEmpty()) {
+                message += " Tambien se encontraron subtareas adicionales: " + String.join(", ", additionalSubTasks);
+            }
         } else {
             // Encontrar las subtareas que faltan
             List<String> missingSubTasks = new ArrayList<>(requiredSubTasks);
             missingSubTasks.removeAll(foundSubTasks);
 
             message = "Faltan las siguientes subtareas: " + String.join(", ", missingSubTasks);
+            if (!additionalSubTasks.isEmpty()) {
+                message += " Además, se encontraron subtareas adicionales: " + String.join(", ", additionalSubTasks);
+            }
         }
 
         return getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
@@ -1146,12 +1172,11 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
         JsonArray attachments = jiraTicketResult
                 .getAsJsonObject("fields")
                 .getAsJsonArray("attachment");
-
         List<String> foundAttachments = new ArrayList<>();
 
         for (JsonElement attachment : attachments) {
             String filename = attachment.getAsJsonObject().get("filename").getAsString();
-            String attachmentLabel = filename.split("\\s+")[0];
+            String attachmentLabel = filename.split("-")[0].replaceAll("\\s+", "");;
             if (requiredAttachments.contains(attachmentLabel)) {
                 foundAttachments.add(attachmentLabel);
             }
@@ -1265,7 +1290,7 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
                             .getAsJsonObject("inwardIssue")
                             .get("key").getAsString());
         }
-        boolean allInProgress = statusDependencyCollection.stream().allMatch(status -> status.equals("In Progress"));
+        boolean allInProgress = statusDependencyCollection.stream().allMatch(status ->  status.equalsIgnoreCase("In Progress"));
 
         if (allInProgress) {
             isValid = true;
