@@ -119,7 +119,8 @@ public class JiraValidatorConstantes {
                 "advertenciaReadyToVerify", true,
                 "advertenciaEstadoInicial", false,
                 "status", new ArrayList<>(List.of("Accepted", "Ready To Verify")),
-                "items", new ArrayList<>(List.of("[P110][AT]","[VB][AT]","[C204][AT]"))
+                "items", new ArrayList<>(List.of("[P110][AT]","[VB][AT]","[C204][AT]")),
+                "rol", new ArrayList<>(List.of("1","2"))
                 )));
         mapSubtasksTipoOwner.put("po", new HashMap<>(Map.of(
                 "label", "PO",
@@ -128,7 +129,8 @@ public class JiraValidatorConstantes {
                 "advertenciaReadyToVerify", true,
                 "advertenciaEstadoInicial", false,
                 "status", new ArrayList<>(List.of("Accepted", "Ready To Verify")),
-                "items", new ArrayList<>(List.of("[C204][PO]","[VB][PO]"))
+                "items", new ArrayList<>(List.of("[C204][PO]","[VB][PO]")),
+                "rol", new ArrayList<>(List.of("5","14"))
                 )));
         mapSubtasksTipoOwner.put("so", new HashMap<>(Map.of(
                 "label", "SO",
@@ -137,7 +139,8 @@ public class JiraValidatorConstantes {
                 "advertenciaReadyToVerify", true,
                 "advertenciaEstadoInicial", false,
                 "status", new ArrayList<>(List.of("Accepted", "Ready To Verify")),
-                "items", new ArrayList<>(List.of("[VB][SO]"))
+                "items", new ArrayList<>(List.of("[VB][SO]")),
+                "rol", new ArrayList<>(List.of("12","13"))
                 )));
         mapSubtasksTipoOwner.put("km", new HashMap<>(Map.of(
                 "label", "KM",
@@ -146,7 +149,8 @@ public class JiraValidatorConstantes {
                 "advertenciaReadyToVerify", true,
                 "advertenciaEstadoInicial", false,
                 "status", new ArrayList<>(List.of("Accepted", "Ready To Verify")),
-                "items", new ArrayList<>(List.of("[VB][KM]"))
+                "items", new ArrayList<>(List.of("[VB][KM]")),
+                "rol", new ArrayList<>(List.of("10","11"))
                 )));
         mapSubtasksTipoOwner.put("gc", new HashMap<>(Map.of(
                 "label", "GC",
@@ -167,6 +171,7 @@ public class JiraValidatorConstantes {
                 "items", new ArrayList<>(List.of("[C204][QA]", "[VB][QA]"))
                 )));
     SUBTASKS_TYPE_OWNER = Collections.unmodifiableMap(mapSubtasksTipoOwner);
+
     }
 
 

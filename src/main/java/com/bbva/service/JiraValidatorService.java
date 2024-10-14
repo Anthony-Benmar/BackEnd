@@ -3,9 +3,11 @@ package com.bbva.service;
 import com.bbva.core.HandledException;
 import com.bbva.core.abstracts.IDataResult;
 import com.bbva.core.results.SuccessDataResult;
+import com.bbva.dao.InfoJiraProjectDao;
 import com.bbva.dto.jira.request.JiraValidatorByUrlRequest;
 import com.bbva.dto.jira.response.JiraMessageResponseDTO;
 import com.bbva.dto.jira.response.JiraResponseDTO;
+import com.bbva.entities.jiravalidator.InfoJiraProject;
 import com.bbva.util.ApiJiraMet.JiraValidationMethods;
 import com.bbva.util.ApiJiraMet.ValidatorValidateSummaryHUTType;
 import com.bbva.util.ApiJiraName;
@@ -36,6 +38,7 @@ public class JiraValidatorService {
 
     private JiraValidationMethods validationUrlJira;
     private ValidatorValidateSummaryHUTType validatorValidateSummaryHUTType;
+    private List<InfoJiraProject> infoJiraProjectList;
 
     //Todas la reglas de negocio
     public IDataResult<JiraResponseDTO> getValidatorByUrl(JiraValidatorByUrlRequest dto) throws Exception {
@@ -46,6 +49,8 @@ public class JiraValidatorService {
         int warningCount = 0;
         this.jiraApiService = new JiraApiService();
         this.httpClient = HttpClient.newHttpClient();
+        this.infoJiraProjectList = InfoJiraProjectDao.getInstance().list();
+        System.out.println(infoJiraProjectList);
         String acceptanceCriteriaGroup = "Criterio de Aceptacion";
         String prGroup="PR";
 
@@ -77,6 +82,7 @@ public class JiraValidatorService {
         var result_5 = instancesRules.getValidationURLJIRA("Validar que sea PAD3 o PAD5", "Ticket");
         var result_6 = instancesRules.getValidationPR(tipoDesarrollo, "Validar que se tenga una PR asociada", prGroup);
         var result_7 = instancesRules.getValidationPRBranch("Validar que esté asociado a la rama correcta", prGroup);
+        //var result_8 = instancesRules.getValidationValidateSubtaskAssociate(tipoDesarrollo,"Validar que las Subtareas asociadas al sean las correctas para el desarrollo", "Subtask");
         Map<String, Object> result_8 = Map.of("message", "Falta implementar", "isWarning", false, "isValid", false);
         Map<String, Object> result_9 = Map.of("message", "Falta implementar", "isWarning", false, "isValid", false);
         var result_10 = instancesRules.getValidationInitialTeam("Validar si se creo en el tablero de DQA", "Tablero");
@@ -86,16 +92,19 @@ public class JiraValidatorService {
         var result_14 = instancesRules.getValidationFeatureLinkStatus(dto, "Validar el estado Jira del Feature Link", "Feature Link");
         var result_15 = instancesRules.getValidationFeatureLinkProgramIncrement(dto, "Validar que el Feature Link tenga el Program Increment asignado y correcto (Q Actual)", "Feature Link");
         var result_16 = instancesRules.getValidationValidateSubTask(tipoDesarrollo,"Validar la existencia de las subtareas", "Subtask");
-        var result_17 = instancesRules.getValidationValidateSubTaskStatus(tipoDesarrollo,"Se valida que la subtarea tenga el Status correcto", "Subtarea");
-        Map<String, Object> result_18 = Map.of("message", "Falta implementar", "isWarning", false, "isValid", false);
+        var result_17 = instancesRules.getValidationValidateSubTaskStatus(tipoDesarrollo,"Se valida que la subtarea tenga el Status correcto", "Subtask");
+        var result_18 = instancesRules.getValidationValidateSubtaskPerson(dto,tipoDesarrollo,"Validar que la subtarea tenga el VoBo de la persona en el tablero de Lideres","Subtask",infoJiraProjectList);
+        //wMap<String, Object> result_18 = Map.of("message", "Falta implementar", "isWarning", false, "isValid", false);
+        //Map<String, Object> result_18 = Map.of("message", "Falta implementar", "isWarning", false, "isValid", false);
         var result_19 = instancesRules.getValidationValidateSubTaskValidateContractor(dto,"Se valida la subtarea: El email debe pertenecer a un Usuario de Negocio Interno BBVA", "Subtarea");
         var result_20 = instancesRules.getValidationAcceptanceCriteria("Validar el criterio de aceptacion, segun el tipo de desarrollo debe ser similar a la plantilla", acceptanceCriteriaGroup);
         Map<String, Object> result_21 = Map.of("message", "Falta implementar", "isWarning", false, "isValid", false);
         var result_22 = instancesRules.getValidationTeamAssigned(tipoDesarrollo,true,"Validar que el equipo asignado sea el correcto", "Ticket");
-        Map<String, Object> result_23 = Map.of("message", "Falta implementar", "isWarning", false, "isValid", false);
+        var result_23 = instancesRules.getValidationBoardProject(dto, "Validar el Tablero del proyecto", "Feature Link","Feature Link",infoJiraProjectList);
+        //Map<String, Object> result_23 = Map.of("message", "Falta implementar", "isWarning", false, "isValid", false);
         var result_24 = instancesRules.getValidationValidateJIRAStatus(tipoDesarrollo,"Validar el Status de Ticket JIRA","Ticket");
         var result_25 = instancesRules.getValidationValidateImpactLabel("Validar que se tengan los Impact Label correctos (Solo Mallas/HOST)","Ticket", tipoDesarrollo);
-        var result_26 = instancesRules.getValidationFixVersion("Validar que se tenga Fix Version (Solo Mallas/HOST)","Ticket");
+        var result_26 = instancesRules.getValidationFixVersion(tipoDesarrollo,"Validar que se tenga Fix Version (Solo Mallas/HOST)","Ticket");
         var result_27 = instancesRules.getValidationDependency("Validar que exista una Dependencia asignada correctamente y comprometida (Comentario HUD Comprometida)","Dependencia");
         var result_28 = instancesRules.getValidationDependencyFeatureVsHUTFeature(dto,"Validar que el ticket tenga el mismo feature link que la dependencia","Dependencia");
 
@@ -145,7 +154,7 @@ public class JiraValidatorService {
                     message.setRule("Validacion ticket de integracion: Validar que el ticket de integracion tenga tickets deployados");
                     break;
                 case 4:
-                    message.setRule("Validacicion Ticket de Integracion VoBo PO: Validar si hace falta que el ticket de integracion tenga el VoBo del PO");
+                    message.setRule("Validacion Ticket de Integracion VoBo PO: Validar si hace falta que el ticket de integracion tenga el VoBo del PO");
                     break;
                 case 5:
                     message.setRule("Validacion URL JIRA: Se valida que el ticket sea PAD3 o PAD5");
@@ -157,7 +166,7 @@ public class JiraValidatorService {
                     message.setRule("Validacion PR Rama Destino: Se valida que la rama destino de la PR sea solo master o develop");
                     break;
                 case 8:
-                    message.setRule("Validacion PR Checks: Se valida el VoBo del SM / KM / SO en la PR (SE VALIDA CON DOCUMENTO DE LIDERES)");
+                    message.setRule("Validacion PR Checks: Se valida el VoBo del SM / PO en la PR");
                     break;
                 case 9:
                     message.setRule("Validacion PR vs Formulario: Se valida la URL de la PR enviada via el formulario vs la URL de la PR asociada al ticket JIRA (SE VALIDA CON FORMULARIO SCALPY)");
