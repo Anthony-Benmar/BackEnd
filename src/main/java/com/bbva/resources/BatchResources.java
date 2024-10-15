@@ -29,11 +29,11 @@ public class BatchResources {
     }
 
     @POST
-    @Path("/job_execution_cstat")
+    @Path("/job_execution/status")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public IDataResult<InsertCSATJobExecutionResponseDTO> createCSAUTJobExecution(List<InsertCSATJobExecutionRequest> requests){
-        IDataResult<InsertCSATJobExecutionResponseDTO>  result = batchService.insertCSATJobExecution(requests);
+    public IDataResult saveJobExecutionStatus(List<InsertJobExecutionStatusRequest> request){
+        IDataResult result = batchService.saveJobExecutionStatus(request);
         return result;
     }
 
@@ -88,7 +88,7 @@ public class BatchResources {
     @Path("/Typified_job/{jobId}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public IDataResult<InsertAJIFJobExecutionResponseDTO> createAJIFJobExecution(List<InsertCSATJobExecutionRequest> requests) {
+    public IDataResult<InsertAJIFJobExecutionResponseDTO> createAJIFJobExecution(List<InsertJobExecutionStatusRequest> requests) {
         IDataResult<InsertAJIFJobExecutionResponseDTO> result = batchService.insertAJIFJobExecution(requests);
         return result;
     }

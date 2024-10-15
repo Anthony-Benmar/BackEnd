@@ -1,21 +1,27 @@
 package com.bbva.database.mappers;
 
 import com.bbva.dto.batch.request.InsertAJIFJobExecutionRequest;
-import com.bbva.dto.batch.request.InsertCSATJobExecutionRequest;
-import com.bbva.dto.batch.request.InsertReliabilityIncidenceDTO;
-import com.bbva.dto.batch.response.BatchIssuesActionSelectDtoResponse;
-import com.bbva.dto.batch.response.JobExecutionByIdDTO;
-import com.bbva.dto.batch.response.JobExecutionFilterData;
-import com.bbva.dto.batch.response.StatusJobExecutionDTO;
+import com.bbva.dto.batch.request.InsertJobExecutionStatusRequest;
+import com.bbva.dto.batch.response.*;
 import com.bbva.entities.InsertEntity;
 import org.apache.ibatis.annotations.*;
 
-import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
 public interface BatchMapper {
+
+    @Insert({
+            "<script>",
+            "INSERT IGNORE INTO job_execution_status (job_name, schedtable, application, sub_application, run_as, order_id, odate, start_time, end_time, run_time, run_counter, ended_status, host, cputime)",
+            "VALUES",
+            "<foreach item='item' collection='jobExecutionStatus' separator=','>",
+            "(#{item.jobName}, #{item.schedtable}, #{item.application}, #{item.subApplication}, #{item.runAs}, #{item.orderId}, #{item.odate}, #{item.startTime}, #{item.endTime}, #{item.runTime}, #{item.runCounter}, #{item.endedStatus}, #{item.host}, #{item.cputime})",
+            "</foreach>",
+            "</script>"
+    })
+    void insertJobExecutionStatus(@Param("jobExecutionStatus") List<InsertJobExecutionStatusRequest> jobExecutionStatus);
+
     @Select("CALL SP_FILTER_JOB_EXECUTION(" +
             "#{pageCurrent}," +
             "#{recordsAmount}," +
@@ -154,7 +160,7 @@ public interface BatchMapper {
             @Result(property = "createDate", column = "create_date"),
             @Result(property = "updateDate", column = "source_origin"),
     })
-    InsertEntity insertCSATJobExecution(InsertCSATJobExecutionRequest dto);
+    InsertEntity insertCSATJobExecution(InsertJobExecutionStatusRequest dto);
 
     @Select("CALL SP_INSERT_JOB_EXECUTION_AJIF("+
             "#{jobId},"+

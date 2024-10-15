@@ -5,6 +5,7 @@ import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dao.BatchDao;
 import com.bbva.dto.batch.request.BatchIssuesActionFilterDtoRequest;
+import com.bbva.dto.batch.request.InsertJobExecutionStatusRequest;
 import com.bbva.dto.batch.request.InsertReliabilityIncidenceDTO;
 import com.bbva.dto.batch.request.JobExecutionFilterRequestDTO;
 import com.bbva.dto.batch.response.*;
@@ -24,10 +25,15 @@ public class BatchService {
         var result = batchDao.insertReliabilityIncidence(dto);
         return new SuccessDataResult(result, "Job guardado correctamente");
     }
-    public IDataResult<InsertCSATJobExecutionResponseDTO> insertCSATJobExecution(List dto){
-        var result = batchDao.insertCSATJobExecutionRequest(dto);
-        return new SuccessDataResult(result);
+    public IDataResult saveJobExecutionStatus(List<InsertJobExecutionStatusRequest> request){
+        try {
+            batchDao.saveJobExecutionStatus(request);
+        } catch (Exception e) {
+            return new ErrorDataResult(e.getCause(),"500","No se pudo realizar el registro");
+        }
+        return new SuccessDataResult(null);
     }
+
     public IDataResult<InsertAJIFJobExecutionResponseDTO> insertAJIFJobExecution(List dto){
         var result = batchDao.insertAJIFJobExecutionRequest(dto);
         return new SuccessDataResult(result);

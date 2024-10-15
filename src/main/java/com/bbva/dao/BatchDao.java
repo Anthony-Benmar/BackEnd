@@ -5,18 +5,14 @@ import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.database.MyBatisConnectionFactory;
 import com.bbva.database.mappers.BatchMapper;
-import com.bbva.database.mappers.JobMapper;
 import com.bbva.dto.batch.request.*;
 import com.bbva.dto.batch.response.*;
-import com.bbva.dto.job.response.JobBasicInfoFilterDtoResponse;
-import com.bbva.dto.job.response.JobBasicInfoSelectDtoResponse;
 import com.bbva.entities.InsertEntity;
 import com.bbva.util.JSONUtils;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 
 import java.text.ParseException;
-import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -142,23 +138,24 @@ public class BatchDao {
         }
     }
 
-    public DataResult<InsertCSATJobExecutionResponseDTO>insertCSATJobExecutionRequest(List<InsertCSATJobExecutionRequest> dto) {
+    public void saveJobExecutionStatus(List<InsertJobExecutionStatusRequest> request) {
         try {
             SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
             try (SqlSession session = sqlSessionFactory.openSession()) {
                 BatchMapper batchMapper = session.getMapper(BatchMapper.class);
-                InsertEntity result = null;
-                for (InsertCSATJobExecutionRequest request : dto) {
-                    result = batchMapper.insertCSATJobExecution(request);
+                try {
+                    batchMapper.insertJobExecutionStatus(request);
+                    session.commit();
+                } catch (Exception e) {
+                    session.rollback();
+                    log.log(Level.SEVERE, e.getMessage(), e);
                 }
-                session.commit();
-                return new SuccessDataResult(result);
             }
-        }catch (Exception e) {
+        } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
-            return new ErrorDataResult(null, "500",e.getMessage());
         }
     }
+
     public DataResult<InsertAJIFJobExecutionResponseDTO>insertAJIFJobExecutionRequest(List<InsertAJIFJobExecutionRequest> dto) {
         try {
             SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
