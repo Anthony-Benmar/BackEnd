@@ -73,15 +73,31 @@ public class JiraValidatorConstantes {
         VOBO_BY_DEVELOP_TYPES = Collections.unmodifiableMap(mapVoBoByDevTypes);
 
         Map<String, Map<String, Object>> mapCriteriaByDevTypes = new HashMap<>();
-        mapCriteriaByDevTypes.put("mallas",Map.of(
-                "texto", "Como equipo declaramos que el siguiente Pase está listo para transitar por las etapas de Certificación QA y Pase a Producción, y la documentación Adjunta corresponde {0} así como las Historias de Usuario enlazadas a este pase."
+        mapCriteriaByDevTypes.put("mallas", Map.of(
+                "texto", "Como {0} declaramos que este Pase se encuentra listo para transitar por las etapas de Certificación Técnica, QA y Despliegue a Producción. La documentación adjunta corresponde al {1} así como las Historias de Usuario enlazadas a este pase."
         ));
         mapCriteriaByDevTypes.put("prs", Map.of(
-                "texto", "Desarrollo según los Lineamientos del Equipo de DQA"
+                "texto", "Desarrollo según lineamientos globales ONE y de Data Quality Assurance Perú"
         ));
         mapCriteriaByDevTypes.put("productivizacion", Map.of(
                 "texto", "Despliegue según los Lineamientos del Equipo de DQA"
         ));
+
+        // Texto común para los tipos de desarrollo
+        String commonText = "Desarrollo según lineamientos globales ONE y de Data Quality Assurance Perú";
+
+        // Agregar tipos de desarrollo que comparten el mismo texto
+        List<String> devTypesWithCommonText = List.of(
+                "hammurabi", "migrationtool", "smartcleaner",
+                "ingesta", "procesamiento", "operativizacion",
+                "scaffolder", "sparkcompactor", "json global",
+                "teradata"
+        );
+
+        // Añadir cada tipo de desarrollo al mapa con el texto común
+        for (String devType : devTypesWithCommonText) {
+            mapCriteriaByDevTypes.put(devType, Map.of("texto", commonText));
+        }
 
         CRITERIA_BY_DEVELOP_TYPES = Collections.unmodifiableMap(mapCriteriaByDevTypes);
 
