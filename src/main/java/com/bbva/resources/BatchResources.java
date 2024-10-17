@@ -17,6 +17,14 @@ public class BatchResources {
     private Helper helper = new Helper();
 
     @GET
+    @Path("/lastJobExecutionStatusDate")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<String> getLastJobExecutionStatusDate() {
+        return batchService.getLastJobExecutionStatusDate();
+    }
+
+    @GET
     @Path("/{jobName}/job/{quantity}/executions")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -29,11 +37,20 @@ public class BatchResources {
     }
 
     @POST
-    @Path("/job_execution_cstat")
+    @Path("/job_execution/status")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public IDataResult<InsertCSATJobExecutionResponseDTO> createCSAUTJobExecution(List<InsertCSATJobExecutionRequest> requests){
-        IDataResult<InsertCSATJobExecutionResponseDTO>  result = batchService.insertCSATJobExecution(requests);
+    public IDataResult saveJobExecutionStatus(List<InsertJobExecutionStatusRequest> request){
+        IDataResult result = batchService.saveJobExecutionStatus(request);
+        return result;
+    }
+
+    @POST
+    @Path("/job_execution/active")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult saveJobExecutionActive(List<InsertJobExecutionActiveRequest> request){
+        IDataResult result = batchService.saveJobExecutionActive(request);
         return result;
     }
 
@@ -88,7 +105,7 @@ public class BatchResources {
     @Path("/Typified_job/{jobId}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public IDataResult<InsertAJIFJobExecutionResponseDTO> createAJIFJobExecution(List<InsertCSATJobExecutionRequest> requests) {
+    public IDataResult<InsertAJIFJobExecutionResponseDTO> createAJIFJobExecution(List<InsertJobExecutionStatusRequest> requests) {
         IDataResult<InsertAJIFJobExecutionResponseDTO> result = batchService.insertAJIFJobExecution(requests);
         return result;
     }
