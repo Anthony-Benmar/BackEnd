@@ -281,8 +281,7 @@ public class IssueTicketService {
     private Integer PutResponseEditAsync(WorkOrderDtoRequest objAuth,String issueTicketCode, IssueDto issueJira)
             throws Exception
     {
-        Object responseBody = null;
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        Gson gson = GsonConfig.createGson();
         String jsonString = gson.toJson(issueJira);
 
         String url = URL_API_JIRA + issueTicketCode;
