@@ -24,6 +24,15 @@ public class BatchDao {
 
     private static final Logger log = Logger.getLogger(BatchDao.class.getName());
 
+    public String getLastJobExecutionStatusDate() {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            BatchMapper batchMapper = session.getMapper(BatchMapper.class);
+            String result = batchMapper.getLastJobExecutionStatusDate();
+            return result;
+        }
+    }
+
     public JobExecutionFilterResponseDTO filter(JobExecutionFilterRequestDTO dto) {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         List<JobExecutionFilterData> lista;
@@ -145,6 +154,25 @@ public class BatchDao {
                 BatchMapper batchMapper = session.getMapper(BatchMapper.class);
                 try {
                     batchMapper.insertJobExecutionStatus(request);
+                    session.commit();
+                } catch (Exception e) {
+                    session.rollback();
+                    log.log(Level.SEVERE, e.getMessage(), e);
+                }
+            }
+        } catch (Exception e) {
+            log.log(Level.SEVERE, e.getMessage(), e);
+        }
+    }
+
+    public void saveJobExecutionActive(List<InsertJobExecutionActiveRequest> request) {
+        try {
+            SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+            try (SqlSession session = sqlSessionFactory.openSession()) {
+                BatchMapper batchMapper = session.getMapper(BatchMapper.class);
+                try {
+                    batchMapper.deleteJobExecutionActive(request);
+                    batchMapper.insertJobExecutionActive(request);
                     session.commit();
                 } catch (Exception e) {
                     session.rollback();

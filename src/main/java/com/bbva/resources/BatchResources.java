@@ -17,6 +17,14 @@ public class BatchResources {
     private Helper helper = new Helper();
 
     @GET
+    @Path("/lastJobExecutionStatusDate")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<String> getLastJobExecutionStatusDate() {
+        return batchService.getLastJobExecutionStatusDate();
+    }
+
+    @GET
     @Path("/{jobName}/job/{quantity}/executions")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -34,6 +42,15 @@ public class BatchResources {
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult saveJobExecutionStatus(List<InsertJobExecutionStatusRequest> request){
         IDataResult result = batchService.saveJobExecutionStatus(request);
+        return result;
+    }
+
+    @POST
+    @Path("/job_execution/active")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult saveJobExecutionActive(List<InsertJobExecutionActiveRequest> request){
+        IDataResult result = batchService.saveJobExecutionActive(request);
         return result;
     }
 
