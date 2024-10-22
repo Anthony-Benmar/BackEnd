@@ -5,6 +5,7 @@ import com.bbva.dto.jira.request.JiraValidatorByUrlRequest;
 import com.bbva.entities.jiravalidator.InfoJiraProject;
 import com.bbva.service.JiraApiService;
 import com.bbva.util.ApiJiraName;
+import com.google.api.client.json.Json;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -32,8 +33,9 @@ public class JiraValidationMethods {
     private String coordinationMessage = "de ser necesario coordinar con el <strong>SM / QE</strong>";
     private String currentQ = "2024-Q4";
     private Map<String, Object> branchPRObject = new HashMap<>();
+    private String teamBackLogId;
 
-    public JiraValidationMethods(String jiraCode, JsonObject jiraTicketResult) {
+    public JiraValidationMethods(String jiraCode, JsonObject jiraTicketResult) throws ParseException {
         this.jiraCode = jiraCode;
         this.jiraTicketResult = jiraTicketResult;
         this.isInTableroDQA = false;
@@ -44,7 +46,33 @@ public class JiraValidationMethods {
         this.impactLabel = convertJsonElementToList(impactLabelElement);
         this.branchPRObject.put("branch", "");
         this.branchPRObject.put("status", "");
+        this.teamBackLogId = getTeamBackLogId();
     }
+
+    public String getTeamBackLogId() throws ParseException {
+        String teamBackLogId = null;
+        Date oldestDate = new SimpleDateFormat("yyyy-MM-dd").parse("9999-12-31");
+        JsonArray changelog = jiraTicketResult
+                .getAsJsonObject("changelog")
+                .getAsJsonArray("histories");
+        for (JsonElement history : changelog) {
+            JsonObject historyObj = history.getAsJsonObject();
+            String created = historyObj.get("created").getAsString();
+            Date createdDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").parse(created);
+            if (createdDate.before(oldestDate)) {
+                JsonArray items = historyObj.getAsJsonArray("items");
+                String field = items.get(0).getAsJsonObject().get("field").getAsString();
+                if (field.equals("Team Backlog")) {
+                    if (items.get(0).getAsJsonObject().get("to").getAsString().equals("2461905")) { //tablero de QA
+                        teamBackLogId =  items.get(0).getAsJsonObject().get("from").getAsString();
+                        oldestDate = createdDate;
+                    }
+                }
+            }
+        }
+        return teamBackLogId;
+    }
+
 
     private List<String> convertJsonElementToList(JsonElement element) {
         if (element != null && !element.isJsonNull() && element.isJsonArray()) {
@@ -593,7 +621,7 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
             String teamBackLogId =jiraTicketResult
                     .getAsJsonObject()
                     .getAsJsonObject("fields")
-                    .get("customfield_13301").getAsString(); //customfield_13300
+                    .get("customfield_13300").getAsString(); //customfield_13300
             if(teamBackLogId == null || teamBackLogId.isEmpty()){
                 message.set("HU sin Team BackLog");
                 isValid.set(false);
@@ -1151,6 +1179,12 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
         String message = "";
         boolean isValid = false;
         boolean isWarning = false;
+        boolean aditionalLabel = false;
+        List<String> aditionalSpecialSubtask = List.of("[VB][KM]", "[VB][SO]");
+        List<String> aditionalSpecialLabels = List.of("datioRutaCritica", "JobsHuerfanos");
+        JsonArray labels = jiraTicketResult
+                .getAsJsonObject("fields")
+                .getAsJsonArray("labels");
 
         List<String> requiredSubTasks = JiraValidatorConstantes.SUBTASKS_BY_DEVELOP_TYPES.get(tipoDesarrollo);
 
@@ -1160,6 +1194,14 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
 
         List<String> foundSubTasks = new ArrayList<>();
         List<String> additionalSubTasks = new ArrayList<>();
+        List<String> foundSpecialLabel = new ArrayList<>();
+        List<String> foundSpecialSubtasks = new ArrayList<>();
+
+        for (JsonElement label : labels){
+            if (aditionalSpecialLabels.contains(label.getAsString())){
+                foundSpecialLabel.add(label.getAsString());
+            }
+        }
 
         for (JsonElement subTask : subTasks) {
             String subTaskLabel = subTask.getAsJsonObject().get("fields").getAsJsonObject().get("summary").getAsString();
@@ -1167,6 +1209,9 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
                 foundSubTasks.add(subTaskLabel);
             }else {
                 additionalSubTasks.add(subTaskLabel);
+                if(!foundSpecialLabel.isEmpty() || aditionalSpecialSubtask.contains(subTaskLabel)){
+                    foundSpecialSubtasks.add(subTaskLabel);
+                }
             }
         }
 
@@ -1175,6 +1220,30 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
             isValid = true;
             if (!additionalSubTasks.isEmpty()) {
                 message += " Tambien se encontraron subtareas adicionales: " + String.join(", ", additionalSubTasks);
+                if (tipoDesarrollo.equals("mallas")){
+                    if(!foundSpecialLabel.isEmpty() && foundSpecialSubtasks.isEmpty()){
+                        message += "Faltan alguna de las siguientes subtareas: " + String.join(", ", aditionalSpecialSubtask);
+                        isValid = false;
+                    }
+                    else if(foundSpecialLabel.isEmpty() && !foundSpecialSubtasks.isEmpty()) {
+                        message += "Se recomienda validar las subtareas adicional: " + String.join(", ", aditionalSpecialSubtask)
+                                + " para casos de jobs eliminados, huerfanos, ruta critica, puede estar pendiente el label correspondiente.";
+                        isValid = true;
+                        isWarning = true;
+                    }
+                }
+                else {
+                    if(!foundSpecialLabel.isEmpty() && foundSpecialSubtasks.isEmpty()){
+                        message += "Faltan alguna de las siguientes subtareas: " + String.join(", ", aditionalSpecialSubtask);
+                        isValid = false;
+                    }
+                    else if(foundSpecialLabel.isEmpty() && !foundSpecialSubtasks.isEmpty()) {
+                        message += "Se recomienda validar las subtareas adicional: " + String.join(", ", aditionalSpecialSubtask)
+                                + " para casos de jobs ruta critica, puede estar pendiente el label correspondiente.";
+                        isValid = true;
+                        isWarning = true;
+                    }
+                }
             }
         } else {
             // Encontrar las subtareas que faltan
@@ -1184,6 +1253,30 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
             message = "Faltan las siguientes subtareas: " + String.join(", ", missingSubTasks);
             if (!additionalSubTasks.isEmpty()) {
                 message += " Además, se encontraron subtareas adicionales: " + String.join(", ", additionalSubTasks);
+                if (tipoDesarrollo.equals("mallas")){
+                    if(!foundSpecialLabel.isEmpty() && foundSpecialSubtasks.isEmpty()){
+                        message += "Faltan alguna de las siguientes subtareas: " + String.join(", ", aditionalSpecialSubtask);
+                        isValid = false;
+                    }
+                    else if(foundSpecialLabel.isEmpty() && !foundSpecialSubtasks.isEmpty()) {
+                        message += "Se recomienda validar las subtareas adicional: " + String.join(", ", aditionalSpecialSubtask)
+                                + " para casos de jobs eliminados, huerfanos, ruta critica, puede estar pendiente el label correspondiente.";
+                        isValid = true;
+                        isWarning = true;
+                    }
+                }
+                else {
+                    if(!foundSpecialLabel.isEmpty() && foundSpecialSubtasks.isEmpty()){
+                        message += "Faltan alguna de las siguientes subtareas: " + String.join(", ", aditionalSpecialSubtask);
+                        isValid = false;
+                    }
+                    else if(foundSpecialLabel.isEmpty() && !foundSpecialSubtasks.isEmpty()) {
+                        message += "Se recomienda validar las subtareas adicional: " + String.join(", ", aditionalSpecialSubtask)
+                                + " para casos de jobs ruta critica, puede estar pendiente el label correspondiente.";
+                        isValid = true;
+                        isWarning = true;
+                    }
+                }
             }
         }
 
@@ -1576,5 +1669,63 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
             isValid.set(false);
         }
         return getValidationResultsDict(message.get(), isValid.get(), isWarning, helpMessage, group);
+    }
+
+    public Map<String, Object> getValidationAlpha(String tipoDesarrollo, String helpMessage, String group) {
+        String message = "";
+        boolean isValid = false;
+        boolean isWarning = false;
+        String alphaVoBo = "[VB][ALPHA]";
+        List<String> alphaUuaas = List.of("KUSU", "KLIM", "KFUL", "ATAU", "KSKR",
+                "KMOL", "KAGE", "KSAN", "W1BD", "KCOL");
+        JsonArray atachments = jiraTicketResult
+                .getAsJsonObject("fields").get("attachment").getAsJsonArray();
+        List<String> atachmentFilenameList = new ArrayList<>();
+        List<String> matchedUuaas = new ArrayList<>();
+        if (tipoDesarrollo.equalsIgnoreCase("mallas")) {
+            for (JsonElement attachment : atachments){
+                String filename = attachment.getAsJsonObject().get("filename").getAsString();
+                atachmentFilenameList.add(filename);
+            }
+            if(!atachmentFilenameList.isEmpty()){
+                matchedUuaas = alphaUuaas.stream()
+                        .filter(uuaa -> atachmentFilenameList.stream().anyMatch(fileName -> fileName.contains(uuaa)))
+                        .collect(Collectors.toList());
+                if(matchedUuaas.isEmpty()){
+                    message = "No se encontro UUAA bajo dominio de Alpha ";
+                    isValid = true;
+                }
+                else {
+                    JsonArray subTasks = jiraTicketResult
+                            .getAsJsonObject("fields")
+                            .getAsJsonArray("subtasks");
+                    for (JsonElement subTask: subTasks) {
+                        String subTaskLabel = subTask.getAsJsonObject().get("fields").getAsJsonObject().get("summary").getAsString();
+                        if (subTaskLabel.equals(alphaVoBo)) {
+                            String statusSubtask = subTask.getAsJsonObject().getAsJsonObject("fields").getAsJsonObject("status").get("name").getAsString();
+                            if (statusSubtask.equals("Accepted")) {
+                                message = "Se encontro UUAAs "+String.join(", ", matchedUuaas)+" bajo dominio de Alpha y Subtarea en estado Accepted";
+                                isValid = true;
+                                break;
+                            }else{
+                                message = "Se encontro UUAAs "+String.join(", ", matchedUuaas)+" bajo dominio de Alpha y Subtarea en estado incorrecto "+statusSubtask;
+                                break;
+                            }
+                        }
+                        else{
+                            message = "Se encontro UUAAs "+String.join(", ", matchedUuaas)+" bajo dominio de Alpha sin Subtarea";
+                        }
+                    }
+
+                }
+            }
+            else {
+                message = "No se pudo Validar Alpha por no tener adjuntos.";
+            }
+
+        } else {
+            message = "Esta regla no es válida para este tipo de desarrollo.";
+        }
+        return getValidationResultsDict(message, isValid, isWarning, helpMessage, group);
     }
 }

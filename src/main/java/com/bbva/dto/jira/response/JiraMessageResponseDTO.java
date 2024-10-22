@@ -10,4 +10,5 @@ public class JiraMessageResponseDTO {
     private String rule;
     private String message;
     private String status;
+    private Boolean visible = true;
 }
