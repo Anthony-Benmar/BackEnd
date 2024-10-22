@@ -76,8 +76,8 @@ public class JiraValidatorService {
 
         var instancesRules = new JiraValidationMethods(dto.getUrlJira(), jiraTicketResult);
         String teamBackLogId = instancesRules.getTeamBackLogId();
-        this.infoJiraProjectList = this.infoJiraProjectList.stream().filter(obj -> obj.getTeamBackLogId().equals(teamBackLogId)).collect(Collectors.toList());
-        List<String> tablerosRLB = List.of("123","124","125","126");
+        this.infoJiraProjectList = this.infoJiraProjectList.stream().filter(obj -> obj.getTeamBackLogId() != null)
+                .collect(Collectors.toList());
 
         // var result_29 = instancesRules.getValidatorDocumentAttachByDevType(tipoDesarrollo);
         Map<String, Object> result_29 = Map.of("message", "Regla pendiente por definir", "isWarning", false, "isValid", true);

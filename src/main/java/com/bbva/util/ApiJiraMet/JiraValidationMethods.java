@@ -617,11 +617,6 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
             JsonArray subTasks = jiraTicketResult
                     .getAsJsonObject("fields")
                     .getAsJsonArray("subtasks");
-            List<JsonObject> subTaskCollection = new ArrayList<>();
-            String teamBackLogId =jiraTicketResult
-                    .getAsJsonObject()
-                    .getAsJsonObject("fields")
-                    .get("customfield_13300").getAsString(); //customfield_13300
             if(teamBackLogId == null || teamBackLogId.isEmpty()){
                 message.set("HU sin Team BackLog");
                 isValid.set(false);
