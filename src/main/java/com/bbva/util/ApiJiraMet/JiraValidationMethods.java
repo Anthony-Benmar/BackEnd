@@ -1627,10 +1627,6 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
         String summaryTicket =  jiraTicketResult.getAsJsonObject()
                 .getAsJsonObject("fields")
                 .get("summary").getAsString();
-        String teamBackLogTicketId =jiraTicketResult
-                .getAsJsonObject()
-                .getAsJsonObject("fields")
-                .get("customfield_13301").getAsString(); //customfield_13300
         var query = "key%20in%20(" + String.join(",", featureLink) + ")";
         JsonObject metaData = null;
         try {
@@ -1645,12 +1641,12 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
                 .get(0).getAsJsonObject()
                 .getAsJsonObject("fields")
                 .getAsJsonArray("customfield_13300").get(0).getAsString();
-        if (!teamBackLogFeatureId.equals(teamBackLogTicketId)){
+        if (!teamBackLogFeatureId.equals(teamBackLogId)){
             message.set("El tablero del Ticket es distinto al tablero del Feature");
             isValid.set(false);
         }
         List<InfoJiraProject> projectFiltrado =  infoJiraProjectList.stream().filter(project ->  project.getTeamBackLogId() != null
-                && project.getTeamBackLogId().equals(teamBackLogTicketId)).collect(Collectors.toList());
+                && project.getTeamBackLogId().equals(teamBackLogId)).collect(Collectors.toList());
         if(!projectFiltrado.isEmpty()) {
             String tableroNombre = projectFiltrado.get(0).getTeamBackLogName();
             if(!summaryTicket.contains(tableroNombre)) {
