@@ -77,14 +77,14 @@ public class JiraValidatorConstantes {
                 "texto", "Como {0} declaramos que este Pase se encuentra listo para transitar por las etapas de Certificación Técnica, QA y Despliegue a Producción. La documentación adjunta corresponde al {1} así como las Historias de Usuario enlazadas a este pase."
         ));
         mapCriteriaByDevTypes.put("prs", Map.of(
-                "texto", "Desarrollo según lineamientos globales ONE y de Data Quality Assurance Perú"
+                "texto", "Desarrollo según lineamientos globales ONE y de Data Quality Assurance Perú."
         ));
         mapCriteriaByDevTypes.put("productivizacion", Map.of(
-                "texto", "Despliegue según los Lineamientos del Equipo de DQA"
+                "texto", "Despliegue según los Lineamientos del Equipo de DQA."
         ));
 
         // Texto común para los tipos de desarrollo
-        String commonText = "Desarrollo según lineamientos globales ONE y de Data Quality Assurance Perú";
+        String commonText = "Desarrollo según lineamientos globales ONE y de Data Quality Assurance Perú.";
 
         // Agregar tipos de desarrollo que comparten el mismo texto
         List<String> devTypesWithCommonText = List.of(

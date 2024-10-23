@@ -751,9 +751,11 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
     }
 
     //FALTA
-    public Map<String, Object> getValidationAcceptanceCriteria(String tipoDesarrollo, String helpMessage, String group) {
+    public Map<String, Object> getValidationAcceptanceCriteria(String tipoDesarrollo, String helpMessage, String group, List<InfoJiraProject> infoJiraProjectList) {
         String message = "";
         boolean isValid = false;
+        List<String> teamBackLogTicketIdRLB = List.of("6037769","6037765","6037905");
+        Map<String, Object> validAcceptanceCriteriaObject = CRITERIA_BY_DEVELOP_TYPES.get(tipoDesarrollo);
 
         String acceptanceCriteriaString = jiraTicketResult
                 .getAsJsonObject("fields")
@@ -764,38 +766,129 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
         String acceptanceCriteria = acceptanceCriteriaString.replace("*", "").trim();  // Elimina los asteriscos
         acceptanceCriteria = acceptanceCriteria.replaceAll("\\p{Z}", " ").trim();
 
-        Map<String, Object> validAcceptanceCriteriaObject = CRITERIA_BY_DEVELOP_TYPES.get(tipoDesarrollo);
+        System.out.println("acceptanceCriteria: " + acceptanceCriteria);
+        System.out.println("tipoDesarrollo: " + tipoDesarrollo);
 
-        if (!acceptanceCriteria.isEmpty()) {
-            if (validAcceptanceCriteriaObject != null) {
-                String expectedPattern = (String) validAcceptanceCriteriaObject.get("texto");
+        if(tipoDesarrollo.equalsIgnoreCase("mallas")){ // PR DE TIPO MALLAS
+            String teamBackLogTicketId = jiraTicketResult
+                    .getAsJsonObject()
+                    .getAsJsonObject("fields")
+                    .get("customfield_13301").getAsString();
 
-                expectedPattern = expectedPattern
-                        .replace("{0}", "[A-Za-z\\s-]+")  // Captura el nombre del plan (por ejemplo, Plan Cross Sell FX)
-                        .replace("{1}", "SDATOOL-\\d+\\s+con\\s+MVP\\s+D-\\d+-\\d+,");  // Captura el SDATOOL, MVP y la coma después
+            if(teamBackLogTicketIdRLB.contains(teamBackLogTicketId)){ //MALLA RELIABILITY
+                System.out.println("ES RELIABILITY");
+                if (!acceptanceCriteria.isEmpty()) {
+                    if (validAcceptanceCriteriaObject != null) {
+                        String FeatureTicketId = jiraTicketResult
+                                .getAsJsonObject()
+                                .getAsJsonObject("fields")
+                                .get("customfield_10004").getAsString();
+                        System.out.println("FeatureTicketId: " + FeatureTicketId);
 
-                String regexPattern = expectedPattern
-                        .replaceAll("\\s+", "\\\\s+")
-                        .replaceAll("\\.", "\\\\.");
+                        String expectedPattern = (String) validAcceptanceCriteriaObject.get("texto");
 
-                Pattern pattern = Pattern.compile(regexPattern);
-                Matcher matcher = pattern.matcher(acceptanceCriteria);
+                        expectedPattern = expectedPattern
+                                .replace("{0}", "[A-Za-z\\s-/.&]+")  // Captura el nombre del plan (por ejemplo, Plan Cross Sell FX)
+                                .replace("{1}", FeatureTicketId + "\\s+una\\s+solución\\s+interna\\s+del\\s+servicio,");  // Captura el SDATOOL, MVP y la coma después
+                        //.replace("{1}", sdatoolIdEncontrado!= null ? sdatoolIdEncontrado + "\\s+con\\s+MVP\\s+D-\\d+-\\d+," : "SDATOOL-\\\\d+\\\\s+con\\\\s+MVP\\\\s+D-\\\\d+-\\\\d+,");
+                        String regexPattern = expectedPattern
+                                .replaceAll("\\s+", "\\\\s+")
+                                .replaceAll("\\.", "\\\\.");
 
-                if (matcher.matches()) {
-                    message = String.format("Es válido: %s", acceptanceCriteria);
-                    isValid = true;
+                        Pattern pattern = Pattern.compile(regexPattern);
+                        Matcher matcher = pattern.matcher(acceptanceCriteria);
+
+                        System.out.println("regexPattern: " + regexPattern);
+                        System.out.println("pattern: " + pattern);
+                        System.out.println("acceptanceCriteria: " + acceptanceCriteria);
+
+                        if (matcher.matches()) {
+                            message = String.format("Es válido: %s", acceptanceCriteria);
+                            isValid = true;
+                        } else {
+                            message = "Criterio de aceptación no cumple con el formato requerido";
+                            isValid = false;
+                        }
+
+                    } else {
+                        message = "Tipo de desarrollo no encontrado en los criterios de aceptación";
+                        isValid = false;
+                    }
                 } else {
-                    message = "Criterio de aceptación no cumple con el formato requerido";
+                    message = "Sin Criterio de Aceptación";
                     isValid = false;
                 }
+            } else{ //MALLAS NO REALIABILITY
 
+                //String sdatoolIdEncontrado = infoJiraProjectList.stream()
+                //        .map(InfoJiraProject::getSdatoolId) // Obtiene los sdatoolId
+                //        .filter(sdatoolId -> sdatoolId != null && sdatoolId.toString().matches("SDATOOL-\\d{5}")) // Filtra por el formato
+                //        .findFirst() // Encuentra el primero que coincida
+                //        .orElse(null); // Devuelve null si no se encuentra ninguno
+
+                //System.out.println("sdatoolIdEncontrado" + sdatoolIdEncontrado);
+
+                if (!acceptanceCriteria.isEmpty()) {
+                    if (validAcceptanceCriteriaObject != null) {
+                        String expectedPattern = (String) validAcceptanceCriteriaObject.get("texto");
+
+                        expectedPattern = expectedPattern
+                                .replace("{0}", "[A-Za-z\\s-]+")  // Captura el nombre del plan (por ejemplo, Plan Cross Sell FX)
+                                .replace("{1}", "SDATOOL-\\d+\\s+con\\s+MVP\\s+D-\\d+-\\d+,");  // Captura el SDATOOL, MVP y la coma después
+                        //.replace("{1}", sdatoolIdEncontrado!= null ? sdatoolIdEncontrado + "\\s+con\\s+MVP\\s+D-\\d+-\\d+," : "SDATOOL-\\\\d+\\\\s+con\\\\s+MVP\\\\s+D-\\\\d+-\\\\d+,");
+                        String regexPattern = expectedPattern
+                                .replaceAll("\\s+", "\\\\s+")
+                                .replaceAll("\\.", "\\\\.");
+
+                        Pattern pattern = Pattern.compile(regexPattern);
+                        Matcher matcher = pattern.matcher(acceptanceCriteria);
+
+                        if (matcher.matches()) {
+                            message = String.format("Es válido: %s", acceptanceCriteria);
+                            isValid = true;
+                        } else {
+                            message = "Criterio de aceptación no cumple con el formato requerido";
+                            isValid = false;
+                        }
+
+                    } else {
+                        message = "Tipo de desarrollo no encontrado en los criterios de aceptación";
+                        isValid = false;
+                    }
+                } else {
+                    message = "Sin Criterio de Aceptación";
+                    isValid = false;
+                }
+            }
+
+        } else{ // ES UNA PR QUE NO ES MALLAA
+            if (!acceptanceCriteria.isEmpty()) {
+                if (validAcceptanceCriteriaObject != null) {
+                    String expectedPattern = (String) validAcceptanceCriteriaObject.get("texto");
+                    String regexPattern = expectedPattern
+                            .replaceAll("\\s+", "\\\\s+")
+                            .replaceAll("\\.", "\\\\.");
+
+                    Pattern pattern = Pattern.compile(regexPattern);
+                    Matcher matcher = pattern.matcher(acceptanceCriteria);
+
+                    if (matcher.matches()) {
+                        message = String.format("Es válido: %s", acceptanceCriteria);
+                        isValid = true;
+                    } else {
+                        message = "Criterio de aceptación no cumple con el formato requerido";
+                        isValid = false;
+                    }
+
+                } else {
+                    message = "Tipo de desarrollo no encontrado en los criterios de aceptación";
+                    isValid = false;
+                }
             } else {
-                message = "Tipo de desarrollo no encontrado en los criterios de aceptación";
+                message = "Sin Criterio de Aceptación";
                 isValid = false;
             }
-        } else {
-            message = "Sin Criterio de Aceptación";
-            isValid = false;
+
         }
 
         return getValidatonResultsDict(message, isValid, false, helpMessage, group);
