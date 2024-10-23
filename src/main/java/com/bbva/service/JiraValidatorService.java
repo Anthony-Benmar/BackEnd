@@ -75,12 +75,10 @@ public class JiraValidatorService {
         int ruleIdCounter = 1;
 
         var instancesRules = new JiraValidationMethods(dto.getUrlJira(), jiraTicketResult);
-        String teamBackLogId = instancesRules.getTeamBackLogId();
         this.infoJiraProjectList = this.infoJiraProjectList.stream().filter(obj -> obj.getTeamBackLogId() != null)
                 .collect(Collectors.toList());
 
         // var result_29 = instancesRules.getValidatorDocumentAttachByDevType(tipoDesarrollo);
-        Map<String, Object> result_29 = Map.of("message", "Regla pendiente por definir", "isWarning", false, "isValid", true);
         var result_30 = instancesRules.getValidatorValidateSummaryHUTType("Validar el tipo de desarrollo en el summary", "Ticket");
         var tipoDesarrollo = result_30.get("tipoDesarrolloSummary").toString();
         var result_1 = instancesRules.getValidationValidateAttachment(tipoDesarrollo,"Validar la existencia de los adjuntos", "Attachment");
@@ -101,7 +99,6 @@ public class JiraValidatorService {
         var result_15 = instancesRules.getValidationFeatureLinkProgramIncrement(dto, "Validar que el Feature Link tenga el Program Increment asignado y correcto (Q Actual)", "Feature Link");
         var result_16 = instancesRules.getValidationValidateSubTask(tipoDesarrollo,"Validar la existencia de las subtareas", "Subtask");
         var result_17 = instancesRules.getValidationValidateSubTaskStatus(tipoDesarrollo,"Se valida que la subtarea tenga el Status correcto", "Subtask");
-
         var result_18 = instancesRules.getValidationValidateSubtaskPerson(dto,tipoDesarrollo,"Validar que la subtarea tenga el VoBo de la persona en el tablero de Lideres","Subtask",infoJiraProjectList);
         var result_19 = instancesRules.getValidationValidateSubTaskValidateContractor(dto,"Se valida la subtarea: El email debe pertenecer a un Usuario de Negocio Interno BBVA", "Subtarea");
         var result_20 = instancesRules.getValidationAcceptanceCriteria(tipoDesarrollo,"Validar el criterio de aceptacion, segun el tipo de desarrollo debe ser similar a la plantilla", acceptanceCriteriaGroup);
@@ -113,7 +110,8 @@ public class JiraValidatorService {
         var result_25 = instancesRules.getValidationValidateImpactLabel("Validar que se tengan los Impact Label correctos (Solo Mallas/HOST)","Ticket", tipoDesarrollo);
         var result_26 = instancesRules.getValidationFixVersion(tipoDesarrollo,"Validar que se tenga Fix Version (Solo Mallas/HOST)","Ticket");
         var result_27 = instancesRules.getValidationDependency("Validar que exista una Dependencia asignada correctamente y comprometida (Comentario HUD Comprometida)","Dependencia");
-        var result_28 = instancesRules.getValidationDependencyFeatureVsHUTFeature(dto,"Validar que el ticket tenga el mismo feature link que la dependencia","Dependencia");
+        var result_28 = instancesRules.getValidationDependencyFeatureVsHUTFeature(dto,"Validar que el ticket tenga el mismo feature link que la dependencia","Dependencia", infoJiraProjectList);
+        Map<String, Object> result_29 = Map.of("message", "Regla pendiente por definir", "isWarning", false, "isValid", true);
 
 
         result_final.add(result_1);
@@ -174,8 +172,6 @@ public class JiraValidatorService {
                     message.setRule("Validacion PR Rama Destino: Se valida que la rama destino de la PR sea solo master o develop");
                     break;
                 case 8:
-                case 21:
-                    message.setRule("Validacion Alpha: Se valida que para UUAAs bajo dominio de Alpha es necesario su VoBo");
                 case 9:
                 case 29:
                     message.setRule("Regla pendiente por definir");
@@ -215,6 +211,9 @@ public class JiraValidatorService {
                 case 20:
                     message.setRule("Validacion Acceptance Criteria: Se valida que el ticket jira cuente con un criterio de aceptacion valido");
                     break;
+                case 21:
+                    message.setRule("Validacion Alpha: Se valida que para UUAAs bajo dominio de Alpha es necesario su VoBo");
+                    break;
                 case 22:
                     message.setRule("Validacion Asignacion a Tablero de DQA: Se valida que el Ticket JIRA fuera enviado al tablero de DQA");
                     break;
@@ -225,7 +224,7 @@ public class JiraValidatorService {
                     message.setRule("Validacion Status JIRA: Se valida que el ticket JIRA no llegue en estados invalidos, como new, discarded, etc");
                     break;
                 case 25:
-                    message.setRule("Validacion Impact Label: Se valida que el ticket JIR cuente con un Impact Label segun el tipo de desarrollo");
+                    message.setRule("Validacion Impact Label: Se valida que el ticket JIRA cuente con un Impact Label segun el tipo de desarrollo");
                     break;
                 case 26:
                     message.setRule("Validacion Fix Version: Para el caso de mallas y host, se valida que se cuente con un fix version");

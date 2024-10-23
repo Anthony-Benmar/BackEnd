@@ -1479,6 +1479,7 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
         if (issueLinks == null || issueLinks.isEmpty()){
             isValid = false;
             message = "Ticket no cuenta con Dependencia Asociada, Solo RLB tiene Excepción";
+            isWarning = true;
         }
         else {
             List<String> statusDependencyCollection = new ArrayList<>();
@@ -1564,11 +1565,11 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
         return getValidationResultsDict(message, isValid, isWarning, helpMessage, group);
     }
 
-    public Map<String, Object> getValidationDependencyFeatureVsHUTFeature(JiraValidatorByUrlRequest dto, String helpMessage, String group) {
+    public Map<String, Object> getValidationDependencyFeatureVsHUTFeature(JiraValidatorByUrlRequest dto, String helpMessage, String group, List<InfoJiraProject> infoJiraProjectList) {
         boolean isValid = true;
-        String message = "Todas las dependencias tienen el mismo features link";
+        String message = "Todas las dependencias tienen el mismo features link y cuentan con al menos un comentario del QE asociado";
         boolean isWarning = false;
-
+        var rolIdQE = "15";
         String isChildPadName ="";
         JsonArray issueLinks = jiraTicketResult
                 .getAsJsonObject("fields")
@@ -1588,14 +1589,12 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
             }
 
             try {
-                JiraApiService jiraApiService = new JiraApiService();
                 for (String isChildPad : isChildPadNameCollection) {
                     var query = "key%20in%20(" + isChildPad + ")";
-                    var url = ApiJiraName.URL_API_JIRA_SQL + query + jiraApiService.getQuerySuffixURL();
-                    var response = jiraApiService.GetJiraAsync(dto.getUserName(), dto.getToken(), url);
+                    var url = ApiJiraName.URL_API_JIRA_SQL + query + new JiraApiService().getQuerySuffixURL();
+                    var response = new JiraApiService().GetJiraAsync(dto.getUserName(), dto.getToken(), url);
                     JsonObject metaData = JsonParser.parseString(response).getAsJsonObject();
                     String isChildFeatureLink = metaData
-                            //customfield_10004
                             .getAsJsonArray("issues")
                             .get(0).getAsJsonObject()
                             .getAsJsonObject("fields")
@@ -1604,6 +1603,27 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
                         isValid = false;
                         message = "No todas las dependencias tienen el mismo features link";
                         break;
+                    } else{
+                        JsonArray comments = metaData
+                                .getAsJsonArray("issues")
+                                .get(0).getAsJsonObject()
+                                .getAsJsonObject("fields")
+                                .getAsJsonObject("comment")
+                                .getAsJsonArray("comments");
+                        List<InfoJiraProject> infoJiraProjectListFiltered = new ArrayList<>();
+                        for (JsonElement comment : comments){
+                            String authorEmailAddress = comment.getAsJsonObject()
+                                    .getAsJsonObject("author").get("emailAddress").getAsString();
+                            infoJiraProjectListFiltered = infoJiraProjectList.stream().filter(project
+                            -> project.getTeamBackLogId().equals(teamBackLogId)
+                                    && project.getParticipantEmail().equals(authorEmailAddress)
+                                    && project.getProjectRolType().equals(rolIdQE)
+                            ).collect(Collectors.toList());
+                        }
+                        if(infoJiraProjectListFiltered.isEmpty()){
+                            isValid = false;
+                            message = "Dependencia no cuenta con ningun comentario del QE";
+                        }
                     }
                 }
             } catch (Exception e) {
@@ -1667,7 +1687,7 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
         boolean isValid = false;
         boolean isWarning = false;
         String alphaVoBo = "[VB][ALPHA]";
-        List<String> alphaUuaas = List.of("KUSU", "KLIM", "KFUL", "ATAU", "KSKR",
+        List<String> alphaUuaas = List.of("KLIM", "KFUL", "ATAU", "KSKR",
                 "KMOL", "KAGE", "KSAN", "W1BD", "KCOL");
         JsonArray atachments = jiraTicketResult
                 .getAsJsonObject("fields").get("attachment").getAsJsonArray();
