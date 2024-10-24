@@ -751,56 +751,44 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
     }
 
     //FALTA
-    public Map<String, Object> getValidationAcceptanceCriteria(String tipoDesarrollo, String helpMessage, String group, List<InfoJiraProject> infoJiraProjectList) {
+    public Map<String, Object> getValidationAcceptanceCriteria(JiraValidatorByUrlRequest dto,String tipoDesarrollo, String helpMessage, String group, List<InfoJiraProject> infoJiraProjectList) {
         String message = "";
         boolean isValid = false;
-        List<String> teamBackLogTicketIdRLB = List.of("6037769","6037765","6037905");
+        boolean isWarning = false;
+        List<String> teamBackLogTicketIdRLB = List.of("6037769","6037765","6037905","4403027","7912651","2461914");
         Map<String, Object> validAcceptanceCriteriaObject = CRITERIA_BY_DEVELOP_TYPES.get(tipoDesarrollo);
 
-        String acceptanceCriteriaString = jiraTicketResult
+        String acceptanceCriteria = jiraTicketResult
                 .getAsJsonObject("fields")
                 .get("customfield_10260").getAsString();
 
-        acceptanceCriteriaString = acceptanceCriteriaString.replaceAll("\\s+", " ").trim();
-        acceptanceCriteriaString = acceptanceCriteriaString.replaceAll("\\{\\}", ""); // Elimina llaves vacías
-        String acceptanceCriteria = acceptanceCriteriaString.replace("*", "").trim();  // Elimina los asteriscos
-        acceptanceCriteria = acceptanceCriteria.replaceAll("\\p{Z}", " ").trim();
+        acceptanceCriteria = acceptanceCriteria.replaceAll("[\\s\\u00A0]+", " ").trim();
 
-        System.out.println("acceptanceCriteria: " + acceptanceCriteria);
-        System.out.println("tipoDesarrollo: " + tipoDesarrollo);
-
-        if(tipoDesarrollo.equalsIgnoreCase("mallas")){ // PR DE TIPO MALLAS
+        if(tipoDesarrollo.equalsIgnoreCase("mallas")){ //PR DE TIPO MALLAS
             String teamBackLogTicketId = jiraTicketResult
                     .getAsJsonObject()
                     .getAsJsonObject("fields")
                     .get("customfield_13301").getAsString();
 
-            if(teamBackLogTicketIdRLB.contains(teamBackLogTicketId)){ //MALLA RELIABILITY
-                System.out.println("ES RELIABILITY");
+            if(teamBackLogTicketIdRLB.contains(teamBackLogTicketId)){ //TICKET RELIABILITY
                 if (!acceptanceCriteria.isEmpty()) {
                     if (validAcceptanceCriteriaObject != null) {
                         String FeatureTicketId = jiraTicketResult
                                 .getAsJsonObject()
                                 .getAsJsonObject("fields")
                                 .get("customfield_10004").getAsString();
-                        System.out.println("FeatureTicketId: " + FeatureTicketId);
 
                         String expectedPattern = (String) validAcceptanceCriteriaObject.get("texto");
 
                         expectedPattern = expectedPattern
                                 .replace("{0}", "[A-Za-z\\s-/.&]+")  // Captura el nombre del plan (por ejemplo, Plan Cross Sell FX)
-                                .replace("{1}", FeatureTicketId + "\\s+una\\s+solución\\s+interna\\s+del\\s+servicio,");  // Captura el SDATOOL, MVP y la coma después
-                        //.replace("{1}", sdatoolIdEncontrado!= null ? sdatoolIdEncontrado + "\\s+con\\s+MVP\\s+D-\\d+-\\d+," : "SDATOOL-\\\\d+\\\\s+con\\\\s+MVP\\\\s+D-\\\\d+-\\\\d+,");
+                                .replace("{1}", FeatureTicketId + ",");  // Captura el SDATOOL, MVP y la coma después
                         String regexPattern = expectedPattern
                                 .replaceAll("\\s+", "\\\\s+")
                                 .replaceAll("\\.", "\\\\.");
 
                         Pattern pattern = Pattern.compile(regexPattern);
                         Matcher matcher = pattern.matcher(acceptanceCriteria);
-
-                        System.out.println("regexPattern: " + regexPattern);
-                        System.out.println("pattern: " + pattern);
-                        System.out.println("acceptanceCriteria: " + acceptanceCriteria);
 
                         if (matcher.matches()) {
                             message = String.format("Es válido: %s", acceptanceCriteria);
@@ -833,9 +821,9 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
                         String expectedPattern = (String) validAcceptanceCriteriaObject.get("texto");
 
                         expectedPattern = expectedPattern
-                                .replace("{0}", "[A-Za-z\\s-]+")  // Captura el nombre del plan (por ejemplo, Plan Cross Sell FX)
-                                .replace("{1}", "SDATOOL-\\d+\\s+con\\s+MVP\\s+D-\\d+-\\d+,");  // Captura el SDATOOL, MVP y la coma después
-                        //.replace("{1}", sdatoolIdEncontrado!= null ? sdatoolIdEncontrado + "\\s+con\\s+MVP\\s+D-\\d+-\\d+," : "SDATOOL-\\\\d+\\\\s+con\\\\s+MVP\\\\s+D-\\\\d+-\\\\d+,");
+                                .replace("{0}", "[A-Za-z\\s-]+")
+                                .replace("{1}", "(SDATOOL-\\d{5}|SDATOOL\\s+\\d{5})\\s+con\\s+MVP\\s+D-\\d+-\\d+,");
+
                         String regexPattern = expectedPattern
                                 .replaceAll("\\s+", "\\\\s+")
                                 .replaceAll("\\.", "\\\\.");
@@ -861,7 +849,7 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
                 }
             }
 
-        } else{ // ES UNA PR QUE NO ES MALLAA
+        } else{ // ES UNA PR QUE NO ES MALLA
             if (!acceptanceCriteria.isEmpty()) {
                 if (validAcceptanceCriteriaObject != null) {
                     String expectedPattern = (String) validAcceptanceCriteriaObject.get("texto");
@@ -891,7 +879,7 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
 
         }
 
-        return getValidatonResultsDict(message, isValid, false, helpMessage, group);
+        return getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
     }
 
 
@@ -1196,6 +1184,79 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
         }
         return getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
     }
+
+    public Map<String, Object> getValidationFeatureLinkRLB(JiraValidatorByUrlRequest dto,String tipoDesarrollo, String helpMessage, String group){
+        String message = "";
+        boolean isValid = false;
+        boolean isWarning = false;
+        List<String> teamBackLogTicketIdRLB = List.of("6037769","6037765","6037905","4403027","7912651","2461914");
+
+        if(tipoDesarrollo.equalsIgnoreCase("mallas")){ // PR DE TIPO MALLAS
+            String teamBackLogTicketId = jiraTicketResult
+                    .getAsJsonObject()
+                    .getAsJsonObject("fields")
+                    .get("customfield_13301").getAsString();
+
+            if(teamBackLogTicketIdRLB.contains(teamBackLogTicketId)){
+                //INCIDENCIAS
+                JsonObject metaData = null;
+                List<String> validStatuses = Arrays.asList("INC", "PRB", "PB");
+
+                if (featureLink == null || featureLink.isBlank()) {
+                    message = "Sin Feature Link asociado";
+                    isValid = false;
+                } else {
+                    var query = "key%20in%20(" + String.join(",", featureLink) + ")";
+                    try {
+                        var url = ApiJiraName.URL_API_JIRA_SQL + query + new JiraApiService().getQuerySuffixURL();
+                        var response = new JiraApiService().GetJiraAsync(dto.getUserName(), dto.getToken(), url);
+                        metaData = JsonParser.parseString(response).getAsJsonObject();
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                    JsonArray featureLinkLabels = metaData
+                            .getAsJsonArray("issues")
+                            .get(0).getAsJsonObject()
+                            .getAsJsonObject("fields")
+                            .getAsJsonArray("labels");
+
+                    boolean containsValidStatus = false;
+
+                    // Iterar sobre el JsonArray y verificar los valores
+                    for (int i = 0; i < featureLinkLabels.size(); i++) {
+                        String label = featureLinkLabels.get(i).getAsString();
+                        // Verificar si el label comienza con alguna de las validaciones
+                        for (String status : validStatuses) {
+                            if (label.startsWith(status)) {
+                                containsValidStatus = true;
+                                break; // Salir del bucle si se encuentra una coincidencia
+                            }
+                        }
+                        if (containsValidStatus) break; // Salir del bucle externo si hay coincidencia
+                    }
+
+                    // Mostrar mensaje según la verificación
+                    if (containsValidStatus) {
+                        message += "El ticket es una incidencia o problema.";
+                        isValid = true;
+                    } else {
+                        message += "El ticket debe corresponder a un evolutivo o solicitud interna para no llevar los labels correspondientes";
+                        isValid = true;
+                        isWarning = true;
+                    }
+
+                }
+            }else{
+
+            }
+        }else{
+            message = "No aplica para este tipo de desarrollo";
+            isValid = true;
+        }
+
+        return getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
+    }
+
 //Pendiente
 //    public Map<String, Object> getValidationValidateSubTask(String tipoDesarrollo, String helpMessage, String group) {
 //        String message = "";
