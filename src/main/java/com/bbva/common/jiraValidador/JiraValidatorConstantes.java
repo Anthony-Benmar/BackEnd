@@ -11,6 +11,7 @@ public class JiraValidatorConstantes {
     public static final Map<String, Map<String, Object>> CRITERIA_BY_DEVELOP_TYPES;
     public static final Map<String, Map<String, Object>> SUBTASKS_TYPE_OWNER;
     public static final Map<String, List<String>> LABELS_BY_DEVELOP_TYPES;
+    public static final Map<String, List<String>> TICKET_HU_TYPES;
 
     static {
         Map<String, List<String>> mapDevTypes = new HashMap<>();
@@ -65,6 +66,24 @@ public class JiraValidatorConstantes {
         mapLabelsByDevTypes.put("teradata", new ArrayList<>(List.of("ReleasePRDatio")));
 
         LABELS_BY_DEVELOP_TYPES = Collections.unmodifiableMap(mapLabelsByDevTypes);
+
+        Map<String, List<String>> mapTicketHuTypes = new HashMap<>();
+        mapTicketHuTypes.put("mallas", new ArrayList<>(List.of("Dependency")));
+        mapTicketHuTypes.put("prs", new ArrayList<>(List.of("Story")));
+        mapTicketHuTypes.put("productivizacion", new ArrayList<>(List.of("Story")));
+        mapTicketHuTypes.put("host", new ArrayList<>(List.of("Dependency")));
+        mapTicketHuTypes.put("hammurabi", new ArrayList<>(List.of("Story")));
+        mapTicketHuTypes.put("migrationtool", new ArrayList<>(List.of("Story")));
+        mapTicketHuTypes.put("smartcleaner", new ArrayList<>(List.of("Story")));
+        mapTicketHuTypes.put("ingesta", new ArrayList<>(List.of("Story")));
+        mapTicketHuTypes.put("procesamiento", new ArrayList<>(List.of("Story")));
+        mapTicketHuTypes.put("operativizacion", new ArrayList<>(List.of("Story")));
+        mapTicketHuTypes.put("scaffolder", new ArrayList<>(List.of("Story")));
+        mapTicketHuTypes.put("sparkcompactor", new ArrayList<>(List.of("Story")));
+        mapTicketHuTypes.put("json global", new ArrayList<>(List.of("Story")));
+        mapTicketHuTypes.put("teradata", new ArrayList<>(List.of("Story")));
+
+        TICKET_HU_TYPES = Collections.unmodifiableMap(mapTicketHuTypes);
 
         Map<String, List<String>> mapVoBoByDevTypes = new HashMap<>();
         mapVoBoByDevTypes.put("mallas", new ArrayList<>(List.of("PO","AT","DEV")));

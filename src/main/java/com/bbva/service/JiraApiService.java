@@ -52,6 +52,7 @@ public class JiraApiService {
         customFields.put("itemType", "customfield_10270");
         customFields.put("techStack", "customfield_18001");
     }
+
     public String getQuerySuffixURL() {
         int maxResults = 500;
         boolean jsonResult = true;
@@ -61,6 +62,7 @@ public class JiraApiService {
         return String.format("&maxResults=%d&json_result=%b&expand=%s&fields=%s", maxResults, jsonResult, expand,
                 fields);
     }
+
     private List<String> getTicketsByIdFieldsToGet() {
         List<String> fieldsToGet = new ArrayList<>();
         // Agregar campos predeterminados
