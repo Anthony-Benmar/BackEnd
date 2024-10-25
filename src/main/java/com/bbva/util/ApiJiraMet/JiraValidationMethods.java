@@ -1,6 +1,7 @@
 package com.bbva.util.ApiJiraMet;
 
 import com.bbva.common.jiraValidador.JiraValidatorConstantes;
+import com.bbva.dao.InfoJiraProjectDao;
 import com.bbva.dto.jira.request.JiraValidatorByUrlRequest;
 import com.bbva.entities.jiravalidator.InfoJiraProject;
 import com.bbva.service.JiraApiService;
@@ -52,8 +53,7 @@ public class JiraValidationMethods {
     }
 
     public String getCurrentQ(){
-        String currentQ = "";
-        return currentQ;
+        return InfoJiraProjectDao.getInstance().currentQ();
     }
 
     public String getTeamBackLogId() throws ParseException {
