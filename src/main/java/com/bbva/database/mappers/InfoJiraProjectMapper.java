@@ -33,7 +33,7 @@ public interface InfoJiraProjectMapper {
     @Select(SQL_QUERY_ACTION)
     List<InfoJiraProject> list();
 
-    String SQL_CURRENT_Q ="SELECT pi_id FROM calendar_pi WHERE CURDATE() BETWEEN start_date AND end_date";
+    String SQL_CURRENT_Q ="SELECT pi_large_name FROM calendar_pi WHERE CURDATE() BETWEEN start_date AND end_date";
     @Select(SQL_CURRENT_Q)
     String currentQ();
 

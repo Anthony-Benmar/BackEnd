@@ -36,6 +36,7 @@ public class JiraValidationMethods {
     private String currentQ;
     private Map<String, Object> branchPRObject = new HashMap<>();
     private String teamBackLogId;
+    private final String teamBackLogDQAId = "2461905";
 
     public JiraValidationMethods(String jiraCode, JsonObject jiraTicketResult) throws ParseException {
         this.jiraCode = jiraCode;
@@ -70,7 +71,7 @@ public class JiraValidationMethods {
                 JsonArray items = historyObj.getAsJsonArray("items");
                 String field = items.get(0).getAsJsonObject().get("field").getAsString();
                 if (field.equals("Team Backlog")) {
-                    if (items.get(0).getAsJsonObject().get("to").getAsString().equals("2461905")) { //tablero de QA
+                    if (items.get(0).getAsJsonObject().get("to").getAsString().equals(teamBackLogDQAId)) { //tablero de QA
                         teamBackLogId =  items.get(0).getAsJsonObject().get("from").getAsString();
                         oldestDate = createdDate;
                     }
@@ -921,7 +922,6 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
                 .getAsJsonObject("fields")
                 .getAsJsonObject("status")
                 .get("name").getAsString();
-        String teamIdDQA = "2461905";
         //boolean isInTableroDQA = false; //debería ser variable global
         //String tipoDesarrollo = "";
         Map<String, String> storyMap = new HashMap<>();
@@ -972,7 +972,7 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
                         currentTeam.put("from", from);
                         currentTeam.put("id", to);
 
-                        if (currentTeam != null && (currentTeam.get("id").equals(teamIdDQA))) {
+                        if (currentTeam != null && (currentTeam.get("id").equals(teamBackLogDQAId))) {
                             this.isInTableroDQA = true;
                             message = "Asignado a Tablero de DQA";
                             isValid = true;
@@ -1663,6 +1663,7 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
                 .getAsJsonArray("histories");
 
         Date oldestDate = new SimpleDateFormat("yyyy-MM-dd").parse("9999-12-31");
+        String from = "";
         String fromString = "";
         for (JsonElement history : changelog) {
             JsonObject historyObj = history.getAsJsonObject();
@@ -1674,8 +1675,10 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
                 String field = items.get(0).getAsJsonObject().get("field").getAsString();
                 if (field.equals("Team Backlog")) {
                     if (items.get(0).getAsJsonObject().get("fromString").isJsonNull()) {
+                        from = "";
                         fromString = "";
                     } else {
+                        from = items.get(0).getAsJsonObject().get("from").getAsString();
                         fromString = items.get(0).getAsJsonObject().get("fromString").getAsString();
                     }
                     Pattern pattern = Pattern.compile("<span style=\"color: #fff\">(.*?)</span>");
@@ -1683,7 +1686,7 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
                     if (matcher.find()) {
                         extractedContent = matcher.group(1);
                     }
-                    if (extractedContent.contains("Data Quality")) {
+                    if (from.equals(teamBackLogDQAId)) {
                         isValid = false;
                         message = "Se creó en tablero DQA.";
                     } else {
