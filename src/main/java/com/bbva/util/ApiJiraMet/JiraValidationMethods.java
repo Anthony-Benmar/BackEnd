@@ -202,7 +202,7 @@ public class JiraValidationMethods {
         return getValidatonResultsDict(message, isValid, isWarning, "helpMessage", "group");
     }
 
-
+    //SOLO INGESTA
     public Map<String, Object> getValidatorValidateHUTType(String helpMessage, String tipoDesarrollo, String group) {
         String message = "";
         boolean isValid = false;
@@ -215,40 +215,52 @@ public class JiraValidationMethods {
         String name = null;
         String statusCategory = null;
 
-        for (JsonElement issueLinkElement : issuelinks) {
+        if (tipoDesarrollo.equalsIgnoreCase("ingesta")) {
+            if (issuelinks != null && issuelinks.size() > 0) {
+                System.out.println("hola");
+                for (JsonElement issueLinkElement : issuelinks) {
+                    JsonObject issueLink = issueLinkElement.getAsJsonObject();
+                    String inward = issueLink.getAsJsonObject("type").get("inward").getAsString();
+                    if (inward.equalsIgnoreCase("is child item")) {
+                        if (issueLink.has("inwardIssue")) {
+                            JsonObject inwardIssue = issueLink.getAsJsonObject("inwardIssue");
+                            if (inwardIssue.has("fields")) {
+                                JsonObject fields = inwardIssue.getAsJsonObject("fields");
+                                if (fields.has("issuetype") && fields.has("status")) {
+                                    JsonObject issuetype = fields.getAsJsonObject("issuetype");
+                                    JsonObject status = fields.getAsJsonObject("status");
 
-            JsonObject issueLink = issueLinkElement.getAsJsonObject();
-
-            if (issueLink.has("inwardIssue")) {
-                JsonObject inwardIssue = issueLink.getAsJsonObject("inwardIssue");
-
-                JsonObject issuetype = inwardIssue.getAsJsonObject("fields").getAsJsonObject("issuetype");
-                JsonObject status = inwardIssue.getAsJsonObject("fields").getAsJsonObject("status");
-
-                statusCategory = status.get("name").getAsString(); //deployes
-                name = issuetype.get("name").getAsString();//story
-
-            }
-        }
-
-        if (tipoDesarrollo.equalsIgnoreCase("procesamiento") || tipoDesarrollo.equalsIgnoreCase("kirby")) {
-            if (name.equals("Story")) {
-                if (statusCategory.equals("Deployed")) {
-                    message = "Ticket de integracion con tickets deployados";
-                    isValid = true;
-                } else {
-                    message = "Ticket de integracion sin tickets deployados";
-                    isValid = false;
+                                    statusCategory = status.get("name").getAsString();
+                                    name = issuetype.get("name").getAsString();
+                                }
+                            }
+                        }
+                    } else {
+                        message = "No es ticket de integración";
+                        isValid = true;
+                    }
                 }
-            }else {
-                message = "El ticket asociado debe ser de tipo Story";
+                if (name != null && name.equals("Story")) {
+                    if (statusCategory != null && statusCategory.equals("Deployed")) {
+                        message = "Ticket de integración con tickets deployados";
+                        isValid = true;
+                    } else {
+                        message = "Ticket de integración sin tickets deployados";
+                        isValid = false;
+                    }
+                } else {
+                    message = "No es ticket de integración";
+                    isValid = true;
+                }
+            } else {
+                message = "Ticket no cuenta con Dependencia Asociada.";
                 isValid = false;
             }
         } else {
             isValid = true;
-            isWarning = true;
             message = "Esta regla no es válida para este tipo de desarrollo.";
         }
+
         return getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
     }
 
@@ -539,7 +551,7 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
         boolean isWarning = false;
         List<String> results = new ArrayList<>(SUBTASKS_BY_DEVELOP_TYPES.get(tipoDesarrollo));
         results.addAll(List.of("[VB][KM]", "[VB][SO]"));
-        if(tipoDesarrollo.equalsIgnoreCase("mallas")) {
+        if(tipoDesarrollo.equalsIgnoreCase("mallas") || tipoDesarrollo.equalsIgnoreCase("host")) {
             results.add("[VB][DEV]");
         }
         results.removeIf(subtask -> subtask.contains("QA"));
@@ -1210,7 +1222,7 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
         boolean isWarning = false;
         List<String> teamBackLogTicketIdRLB = List.of("6037769","6037765","6037905","4403027","7912651","2461914");
 
-        if(tipoDesarrollo.equalsIgnoreCase("mallas")){ // PR DE TIPO MALLAS
+        if(tipoDesarrollo.equalsIgnoreCase("mallas")||tipoDesarrollo.equalsIgnoreCase("host")){ // PR DE TIPO MALLAS
             String teamBackLogTicketId = jiraTicketResult
                     .getAsJsonObject()
                     .getAsJsonObject("fields")
@@ -1256,7 +1268,7 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
 
                     // Mostrar mensaje según la verificación
                     if (containsValidStatus) {
-                        message += "El ticket es una incidencia o problema.";
+                        message += "El ticket es una incidencia o problema, contiene los labels correspondientes";
                         isValid = true;
                     } else {
                         message += "El ticket debe corresponder a un evolutivo o solicitud interna para no llevar los labels correspondientes";
@@ -1266,7 +1278,8 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
 
                 }
             }else{
-
+                message += "El ticket no es una incidencia o problema.";
+                isValid = true;
             }
         }else{
             message = "Esta regla no es válida para este tipo de desarrollo.";

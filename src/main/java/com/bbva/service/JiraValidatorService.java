@@ -250,7 +250,7 @@ public class JiraValidatorService {
                     message.setRule("Validacion Summary HUT Type: Se valida el tipo de desarrollo en el summary");
                     break;
                 case 31:
-                    message.setRule("Validacion Feature Link RLB: Se valida que tenga INC PRB o PB como label, excepto para evolutivos");
+                    message.setRule("Validacion Feature Link Incidencia/problema: Se valida que tenga INC PRB o PB como label, excepto para evolutivos");
                     break;
                 default:
                     message.setRule("Regla desconocida");
