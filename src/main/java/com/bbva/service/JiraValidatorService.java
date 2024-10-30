@@ -110,7 +110,6 @@ public class JiraValidatorService {
         var result_21 = instancesRules.getValidationAlpha(tipoDesarrollo,"Validar que la UUAA corresponda al Dominio de ALPHA", "Subtask");
         var result_22 = instancesRules.getValidationTeamAssigned(tipoDesarrollo,true,"Validar que el equipo asignado sea el correcto", "Ticket");
         var result_23 = instancesRules.getValidationBoardProject(dto, "Validar el Tablero del proyecto", "Feature Link","Feature Link",infoJiraProjectList);
-        //Map<String, Object> result_23 = Map.of("message", "Falta implementar", "isWarning", false, "isValid", false);
         var result_24 = instancesRules.getValidationValidateJIRAStatus(tipoDesarrollo,"Validar el Status de Ticket JIRA","Ticket");
         var result_25 = instancesRules.getValidationValidateImpactLabel("Validar que se tengan los Impact Label correctos (Solo Mallas/HOST)","Ticket", tipoDesarrollo);
         var result_26 = instancesRules.getValidationFixVersion(tipoDesarrollo,"Validar que se tenga Fix Version (Solo Mallas/HOST)","Ticket");
@@ -157,100 +156,128 @@ public class JiraValidatorService {
             message.setRuleId(ruleIdCounter++);
             switch (message.getRuleId()) {
                 case 1:
-                    message.setRule("Validacion de documentos adjuntos: C204, P110, RC");
+                    message.setRule("Validacion documentos adjuntos:");
+                    message.setOrder(16);
                     break;
                 case 2:
-                    message.setRule("Validacion de productivizacion: Ticket de deployado como isChild (scaffolder)");
+                    message.setRule("Validacion de productivizacion:");
+                    message.setOrder(28);
                     break;
                 case 3:
-                    message.setRule("Validacion ticket de integracion: Validar que el ticket de integracion tenga tickets deployados");
+                    message.setRule("Validacion ticket de integracion:");
+                    message.setOrder(29);
                     break;
                 case 4:
-                    message.setRule("Validacion Issue Type del Ticket");
+                    message.setRule("Validacion Issue Type:");
+                    message.setOrder(2);
                     break;
                 case 5:
-                    message.setRule("Validacion URL JIRA: Se valida que el ticket sea PAD3 o PAD5");
+                    message.setRule("Validacion URL JIRA:");
                     message.setVisible(false);
                     break;
                 case 6:
-                    message.setRule("Validacion PR: Se valida que tenga, no tenga PRs o solo tenga 1 PR asociada segun sea el caso");
+                    message.setRule("Validacion PR:");
+                    message.setOrder(26);
                     break;
                 case 7:
-                    message.setRule("Validacion PR Rama Destino: Se valida que la rama destino de la PR sea solo master o develop");
+                    message.setRule("Validacion PR Rama Destino:");
+                    message.setOrder(27);
                     break;
                 case 8:
-                    message.setRule("Validacion de Item Type: ");
+                    message.setRule("Validacion Item Type:");
+                    message.setOrder(12);
                     break;
                 case 9:
-                    message.setRule("Validacion de Tech Stack: ");
+                    message.setRule("Validacion Tech Stack:");
+                    message.setOrder(13);
                     break;
                 case 29:
                     message.setRule("Regla pendiente por definir");
                     message.setVisible(false);
                     break;
                 case 10:
-                    message.setRule("Validacion Tablero DQA: Se valida que el ticket no fuera creado en el tablero de DQA");
+                    message.setRule("Validacion Tablero DQA:");
+                    message.setOrder(7);
                     break;
                 case 11:
-                    message.setRule("Validacion Labels: Segun sea el caso, se valida que existan ciertos labels asociados al ticket JIRA, como releasePRDatio, ReleaseMallasDatio, etc");
+                    message.setRule("Validacion Labels:");
+                    message.setOrder(4);
                     break;
                 case 12:
-                    message.setRule("Validacion Feature Link: Se valida que se cuente con un Feature Link Asociado");
+                    message.setRule("Validacion Feature Link:");
+                    message.setOrder(8);
                     break;
                 case 13:
-                    message.setRule("Validacion Feature Link PAD3: Se valida que el ticket jira del feature link sea PAD3 (Como advertencia)");
+                    message.setRule("Validacion Feature Link PAD3:");
                     message.setVisible(false);
                     break;
                 case 14:
-                    message.setRule("Validacion Feature Link Status: Se valida el status del ticket jira del feature link, para evitar que un feature link en estado new o ready sea enviado (debe estar en in progress)");
+                    message.setRule("Validacion Feature Link Status:");
+                    message.setOrder(9);
                     break;
                 case 15:
-                    message.setRule("Validacion Feature Link Program Increment: Se valida que el program increment del feature link corresponda al Q vigente");
+                    message.setRule("Validacion Feature Link Program Increment:");
+                    message.setOrder(10);
                     break;
                 case 16:
-                    message.setRule("Validacion Subtareas: Segun el tipo de desarrollo / tipo de ticket, se valida que existan ciertas subtareas");
+                    message.setRule("Validacion Subtareas:");
+                    message.setOrder(19);
                     break;
                 case 17:
-                    message.setRule("Validacion Subtareas Status: Se valida el status de las subtareas, para evitar tener subtareas en new o ready segun corresponda");
+                    message.setRule("Validacion Subtareas Status:");
+                    message.setOrder(21);
                     break;
                 case 18:
-                    message.setRule("Validacion Subtareas VoBo: Se valida que la persona que las subtareas que necesitan estar en accepted fueran aceptadas por el usuario que le corresponde, por ejemplo que el PO diera un VoBo y su correo se encuentre en el excel de lideres");
+                    message.setRule("Validacion Subtareas VoBo:");
+                    message.setOrder(22);
                     break;
                 case 19:
-                    message.setRule("Validacion Subtareas Contractor: Se valida que el VoBo de la subtarea no lo de un correo .contractor");
+                    message.setRule("Validacion Subtareas Contractor:");
+                    message.setOrder(23);
                     break;
                 case 20:
-                    message.setRule("Validacion Acceptance Criteria: Se valida que el ticket jira cuente con un criterio de aceptacion valido");
+                    message.setRule("Validacion Acceptance Criteria:");
+                    message.setOrder(14);
                     break;
                 case 21:
-                    message.setRule("Validacion Alpha: Se valida que para UUAAs bajo dominio de Alpha es necesario su VoBo");
+                    message.setRule("Validacion Subtarea Alpha:");
+                    message.setOrder(24);
                     break;
                 case 22:
-                    message.setRule("Validacion Asignacion a Tablero de DQA: Se valida que el Ticket JIRA fuera enviado al tablero de DQA");
+                    message.setRule("Validacion Asignacion a Tablero de DQA:");
+                    message.setOrder(6);
                     break;
                 case 23:
-                    message.setRule("Validacion Tablero Proyecto: Se busca el tablero del proyecto en el excel de lideres");
+                    message.setRule("Validacion Tablero Proyecto:");
+                    message.setOrder(5);
                     break;
                 case 24:
-                    message.setRule("Validacion Status JIRA: Se valida que el ticket JIRA no llegue en estados invalidos, como new, discarded, etc");
+                    message.setRule("Validacion Status JIRA:");
+                    message.setOrder(25);
                     break;
                 case 25:
-                    message.setRule("Validacion Impact Label: Se valida que el ticket JIRA cuente con un Impact Label segun el tipo de desarrollo");
+                    message.setRule("Validacion Impact Label:");
+                    message.setOrder(15);
                     break;
                 case 26:
-                    message.setRule("Validacion Fix Version: Para el caso de mallas y host, se valida que se cuente con un fix version");
+                    message.setRule("Validacion Fix Version:");
+                    message.setOrder(3);
                     break;
                 case 27:
-                    message.setRule("Validacion Dependencias: Se valida que se cuente con una dependencia valida asociada");
+                    message.setRule("Validacion Dependencias:");
+                    message.setOrder(17);
                     break;
                 case 28:
-                    message.setRule("Validacion Dependencias - Feature Dependencia vs Ticket: Se valida que el Feature Link de la dependencia se el mismo que el Feature Link del Ticket JIRA asociado");
+                    message.setRule("Validacion Dependencias - Feature Dependencia vs Ticket: ");
+                    message.setOrder(18);
                     break;
                 case 30:
-                    message.setRule("Validacion Summary HUT Type: Se valida el tipo de desarrollo en el summary");
+                    message.setRule("Validacion Summary HUT Type:");
+                    message.setOrder(1);
                     break;
                 case 31:
-                    message.setRule("Validacion Feature Link Incidencia/problema: Se valida que tenga INC PRB o PB como label, excepto para evolutivos");
+                    message.setRule("Validacion Feature Link Incidencia/problema:");
+                    message.setOrder(11);
                     break;
                 default:
                     message.setRule("Regla desconocida");
@@ -270,7 +297,9 @@ public class JiraValidatorService {
             messages.add(message);
         }
 
-        jiraResponseDTO.setData(messages.stream().filter(message -> message.getVisible()).collect(Collectors.toList()));
+        jiraResponseDTO.setData(messages.stream().filter(message -> message.getVisible())
+                .sorted(Comparator.comparing(JiraMessageResponseDTO::getOrder))
+                .collect(Collectors.toList()));
         jiraResponseDTO.setSuccessCount(successCount);
         jiraResponseDTO.setErrorCount(errorCount);
         jiraResponseDTO.setWarningCount(warningCount);

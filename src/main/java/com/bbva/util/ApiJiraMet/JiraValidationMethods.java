@@ -1789,7 +1789,7 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
         boolean isValid = true;
         String message = "Todas las dependencias tienen el mismo feature link y cuentan con al menos un comentario del QE asociado";
         boolean isWarning = false;
-        var rolIdQE = "15";
+        List<String> rolIdQE = new ArrayList<>(List.of("11","12"));
         String isChildPadName ="";
         JsonArray issueLinks = jiraTicketResult
                 .getAsJsonObject("fields")
@@ -1852,7 +1852,7 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
                             infoJiraProjectListFiltered = infoJiraProjectList.stream().filter(project
                             -> project.getTeamBackLogId().equals(teamBackLogId)
                                     && project.getParticipantEmail().equals(authorEmailAddress)
-                                    && project.getProjectRolType().equals(rolIdQE)
+                                    && rolIdQE.contains(project.getProjectRolType())
                             ).collect(Collectors.toList());
                         }
                         if(infoJiraProjectListFiltered.isEmpty()){

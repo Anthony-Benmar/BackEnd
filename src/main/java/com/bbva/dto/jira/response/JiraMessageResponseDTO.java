@@ -11,4 +11,5 @@ public class JiraMessageResponseDTO {
     private String message;
     private String status;
     private Boolean visible = true;
+    private int order;
 }

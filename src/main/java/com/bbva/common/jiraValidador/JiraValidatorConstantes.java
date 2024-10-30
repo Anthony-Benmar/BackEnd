@@ -163,7 +163,7 @@ public class JiraValidatorConstantes {
                 "advertenciaEstadoInicial", false,
                 "status", new ArrayList<>(List.of("Accepted", "Ready To Verify")),
                 "items", new ArrayList<>(List.of("[C204][PO]","[VB][PO]")),
-                "rol", new ArrayList<>(List.of("5","14"))
+                "rol", new ArrayList<>(List.of("5","8"))
                 )));
         mapSubtasksTipoOwner.put("so", new HashMap<>(Map.of(
                 "label", "SO",
@@ -173,7 +173,7 @@ public class JiraValidatorConstantes {
                 "advertenciaEstadoInicial", false,
                 "status", new ArrayList<>(List.of("Accepted", "Ready To Verify")),
                 "items", new ArrayList<>(List.of("[VB][SO]")),
-                "rol", new ArrayList<>(List.of("12","13"))
+                "rol", new ArrayList<>(List.of("9","10"))
                 )));
         mapSubtasksTipoOwner.put("km", new HashMap<>(Map.of(
                 "label", "KM",
@@ -183,7 +183,7 @@ public class JiraValidatorConstantes {
                 "advertenciaEstadoInicial", false,
                 "status", new ArrayList<>(List.of("Accepted", "Ready To Verify")),
                 "items", new ArrayList<>(List.of("[VB][KM]")),
-                "rol", new ArrayList<>(List.of("10","11"))
+                "rol", new ArrayList<>(List.of("13","14"))
                 )));
         mapSubtasksTipoOwner.put("gc", new HashMap<>(Map.of(
                 "label", "GC",
