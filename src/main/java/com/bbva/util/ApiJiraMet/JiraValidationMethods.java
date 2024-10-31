@@ -1938,22 +1938,25 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
             var response = new JiraApiService().GetJiraAsync(dto.getUserName(), dto.getToken(), url);
             metaData = JsonParser.parseString(response).getAsJsonObject();
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            System.out.println("Se produjo un error al validar el proyecto: " + e.getMessage());
+            //throw new RuntimeException(e);
         }
-        String teamBackLogFeatureId = metaData
-                .getAsJsonArray("issues")
-                .get(0).getAsJsonObject()
-                .getAsJsonObject("fields")
-                .getAsJsonArray("customfield_13300").get(0).getAsString();
-        if (!teamBackLogFeatureId.equals(teamBackLogId)){
-            message.set("El tablero del Ticket es distinto al tablero del Feature");
-            isValid.set(false);
+        if (metaData != null) {
+            String teamBackLogFeatureId = metaData
+                    .getAsJsonArray("issues")
+                    .get(0).getAsJsonObject()
+                    .getAsJsonObject("fields")
+                    .getAsJsonArray("customfield_13300").get(0).getAsString();
+            if (!teamBackLogFeatureId.equals(teamBackLogId)){
+                message.set("El tablero del Ticket es distinto al tablero del Feature");
+                isValid.set(false);
+            }
         }
-        List<InfoJiraProject> projectFiltrado =  infoJiraProjectList.stream().filter(project ->  project.getTeamBackLogId() != null
+        List<InfoJiraProject> projectFiltrado = infoJiraProjectList.stream().filter(project -> project.getTeamBackLogId() != null
                 && project.getTeamBackLogId().equals(teamBackLogId)).collect(Collectors.toList());
-        if(!projectFiltrado.isEmpty()) {
+        if (!projectFiltrado.isEmpty()) {
             String tableroNombre = projectFiltrado.get(0).getTeamBackLogName();
-            if(!summaryTicket.contains(tableroNombre)) {
+            if (!summaryTicket.contains(tableroNombre)) {
                 message.set("El tablero del Ticket es distinto al mencionado en el summary");
                 isWarning = true;
                 isValid.set(false);
@@ -1965,7 +1968,6 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
         }
         return getValidationResultsDict(message.get(), isValid.get(), isWarning, helpMessage, group);
     }
-
     public Map<String, Object> getValidationAlpha(String tipoDesarrollo, String helpMessage, String group) {
         String message = "";
         boolean isValid = false;
