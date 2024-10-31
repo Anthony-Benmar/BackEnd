@@ -13,14 +13,21 @@ import com.google.gson.JsonParser;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
+import java.time.DayOfWeek;
 
 import static com.bbva.common.jiraValidador.JiraValidatorConstantes.*;
 
@@ -217,7 +224,6 @@ public class JiraValidationMethods {
 
         if (tipoDesarrollo.equalsIgnoreCase("ingesta")) {
             if (issuelinks != null && issuelinks.size() > 0) {
-                System.out.println("hola");
                 for (JsonElement issueLinkElement : issuelinks) {
                     JsonObject issueLink = issueLinkElement.getAsJsonObject();
                     String inward = issueLink.getAsJsonObject("type").get("inward").getAsString();
@@ -229,7 +235,6 @@ public class JiraValidationMethods {
                                 if (fields.has("issuetype") && fields.has("status")) {
                                     JsonObject issuetype = fields.getAsJsonObject("issuetype");
                                     JsonObject status = fields.getAsJsonObject("status");
-
                                     statusCategory = status.get("name").getAsString();
                                     name = issuetype.get("name").getAsString();
                                 }
@@ -804,7 +809,6 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
                 .get("customfield_10260").getAsString();
 
         acceptanceCriteria = acceptanceCriteria.replaceAll("[\\s\\u00A0]+", " ").trim();
-
         if(tipoDesarrollo.equalsIgnoreCase("mallas")){ //PR DE TIPO MALLAS
             String teamBackLogTicketId = jiraTicketResult
                     .getAsJsonObject()
@@ -862,7 +866,7 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
                         String expectedPattern = (String) validAcceptanceCriteriaObject.get("texto");
 
                         expectedPattern = expectedPattern
-                                .replace("{0}", "[A-Za-z\\s-]+")
+                                .replace("{0}", "[A-Za-z\\s-/.&]+")
                                 .replace("{1}", "(SDATOOL-\\d{5}|SDATOOL\\s+\\d{5})\\s+con\\s+MVP\\s+D-\\d+-\\d+,");
 
                         String regexPattern = expectedPattern
@@ -1284,6 +1288,57 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
         }else{
             message = "Esta regla no es válida para este tipo de desarrollo.";
             isValid = true;
+        }
+
+        return getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
+    }
+
+    public Map<String, Object> getValidationIFRS9(String helpMessage, String group) {
+        String message = "";
+        boolean isValid = true;
+        boolean isWarning = false;
+
+        LocalDate today = LocalDate.now();
+
+        // Obtener el primer día del próximo mes
+        LocalDate firstDayOfNextMonth = today.with(TemporalAdjusters.firstDayOfNextMonth());
+
+        // Calcular el último y penúltimo día hábil del mes actual
+        LocalDate lastBusinessDayOfMonth = today.with(TemporalAdjusters.lastDayOfMonth());
+        while (lastBusinessDayOfMonth.getDayOfWeek() == DayOfWeek.SATURDAY || lastBusinessDayOfMonth.getDayOfWeek() == DayOfWeek.SUNDAY) {
+            lastBusinessDayOfMonth = lastBusinessDayOfMonth.minusDays(1);
+        }
+
+        LocalDate secondLastBusinessDayOfMonth = lastBusinessDayOfMonth.minusDays(1);
+        while (secondLastBusinessDayOfMonth.getDayOfWeek() == DayOfWeek.SATURDAY || secondLastBusinessDayOfMonth.getDayOfWeek() == DayOfWeek.SUNDAY) {
+            secondLastBusinessDayOfMonth = secondLastBusinessDayOfMonth.minusDays(1);
+        }
+
+        // Calcular los primeros 4 días hábiles del próximo mes
+        LocalDate currentDate = firstDayOfNextMonth;
+        int businessDaysCount = 0;
+
+        while (businessDaysCount < 4) {
+            if (currentDate.getDayOfWeek() != DayOfWeek.SATURDAY && currentDate.getDayOfWeek() != DayOfWeek.SUNDAY) {
+                businessDaysCount++;
+            }
+            if (businessDaysCount < 4) {
+                currentDate = currentDate.plusDays(1);
+            }
+        }
+
+        LocalDate fourthBusinessDay = currentDate.minusDays(1);
+
+        // Determinar si hoy está en el rango de advertencia
+        boolean isWarningDate = (today.equals(secondLastBusinessDayOfMonth) || today.equals(lastBusinessDayOfMonth))
+                || (today.isAfter(firstDayOfNextMonth.minusDays(1)) && today.isBefore(fourthBusinessDay.plusDays(1)));
+
+        // Configurar el mensaje de advertencia
+        if (isWarningDate) {
+            message = "La validación se está realizando durante el período de bloqueos. Revisar la lista de bloqueos IFRS9.";
+            isWarning = true;
+        } else {
+            message = "No se encontraron advertencias relacionadas con la fecha.";
         }
 
         return getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);

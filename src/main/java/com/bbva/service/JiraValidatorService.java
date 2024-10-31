@@ -117,7 +117,7 @@ public class JiraValidatorService {
         var result_28 = instancesRules.getValidationDependencyFeatureVsHUTFeature(teamBackLogTicketIdRLB, dto,"Validar que el ticket tenga el mismo feature link que la dependencia","Dependencia", infoJiraProjectList);
         Map<String, Object> result_29 = Map.of("message", "Regla pendiente por definir", "isWarning", false, "isValid", true);
         var result_31 = instancesRules.getValidationFeatureLinkRLB(dto,tipoDesarrollo,"Validar que el Feature Link tenga INC PRB o PB como label, excepto para evolutivos", "Feature Link");
-
+        var result_32 = instancesRules.getValidationIFRS9("Validar los bloqueo IFRS9 en las solicitudes", "Ticket");
 
         result_final.add(result_1);
         result_final.add(result_2);
@@ -150,6 +150,7 @@ public class JiraValidatorService {
         result_final.add(result_29);
         result_final.add(result_30);
         result_final.add(result_31);
+        result_final.add(result_32);
 
         for (Map<String, Object> result : result_final) {
             JiraMessageResponseDTO message = new JiraMessageResponseDTO();
@@ -278,6 +279,9 @@ public class JiraValidatorService {
                 case 31:
                     message.setRule("Validacion Feature Link Incidencia/problema:");
                     message.setOrder(11);
+                    break;
+                case 32:
+                    message.setRule("Advertencia IFRS9: Se alerta sobre la fecha de los bloqueos correspondientes a IFRS9");
                     break;
                 default:
                     message.setRule("Regla desconocida");
