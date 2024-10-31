@@ -1,6 +1,5 @@
 package com.bbva.jetty;
 
-import com.github.stefanbirkner.systemlambda.SystemLambda;
 import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.junit.jupiter.api.Assertions;
@@ -9,6 +8,8 @@ import org.junit.jupiter.api.Test;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URI;
+import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -22,9 +23,8 @@ class MainAppTest {
     void main() throws Exception {
         // When
         MainApp.main(null);
-        HttpURLConnection httpURLConnection = (HttpURLConnection) new URL(
-                "http://localhost:8080/swagger/index.html"
-        ).openConnection();
+        URI uri = new URI("http://localhost:8080/swagger/index.html");
+        HttpURLConnection httpURLConnection = (HttpURLConnection)uri.toURL().openConnection();
         httpURLConnection.connect();
 
         // Then
@@ -48,12 +48,10 @@ class MainAppTest {
     }
 
     @Test
-    void setLoggerHandler() throws Exception {
+    void setLoggerHandler() {
         // When
-        SystemLambda.withEnvironmentVariable("GOOGLE_CLOUD_PROJECT", "fake-project-id")
-                .execute(MainApp::setLoggerHandler);
-
+        MainApp.initRootLogger();
         // Then
-        Assertions.assertEquals(1, MainApp.ROOT_LOOGER.getHandlers().length);
+        Assertions.assertEquals(1, Logger.getLogger("").getHandlers().length);
     }
 }

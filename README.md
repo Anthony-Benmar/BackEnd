@@ -17,7 +17,7 @@ These are the necessary tools in order to use this archetype.
 
 ## Migration from Java 8
 
-If you come from Java 8 runtime, you can use this [guide](upgrade_from_java8.md) in order to upgrade your project to
+If you come from Java 17 runtime, you can use this [guide](upgrade_from_java8.md) in order to upgrade your project to
 Java 11 runtime.
 
 ## Project creation

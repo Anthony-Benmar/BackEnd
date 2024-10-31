@@ -11,6 +11,7 @@ public class JaxRsApplication extends Application {
     @Override
     public Set<Class<?>> getClasses() {
         final Set<Class<?>> classes = new HashSet<>();
+        classes.add(HealthResource.class);
         classes.add(AuthenticationResources.class);
         classes.add(BoardResources.class);
         classes.add(BucResources.class);
@@ -33,7 +34,6 @@ public class JaxRsApplication extends Application {
         classes.add(DictionaryGenerationResources.class);
         classes.add(UseCaseTrackingResources.class);
         classes.add(JobResources.class);
-        classes.add(JiraValidatorResources.class);
         return classes;
     }
 }

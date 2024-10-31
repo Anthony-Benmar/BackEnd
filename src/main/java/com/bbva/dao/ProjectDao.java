@@ -1,6 +1,7 @@
 package com.bbva.dao;
 
 import com.bbva.common.HttpStatusCodes;
+import com.bbva.core.HandledException;
 import com.bbva.core.results.DataResult;
 import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
@@ -12,6 +13,7 @@ import com.bbva.entities.InsertEntity;
 import com.bbva.entities.common.PeriodPEntity;
 import com.bbva.entities.common.ProjectByPeriodEntity;
 import com.bbva.entities.common.ProjectEntity;
+import com.bbva.entities.feature.JiraFeatureEntity;
 import com.bbva.entities.project.ProjectFilterEntity;
 import com.bbva.entities.project.ProjectPortafolioEntity;
 import com.bbva.entities.project.ProjectPortafolioFilterEntity;
@@ -263,7 +265,9 @@ public class ProjectDao {
         }
     }
 
-    public InsertProjectInfoDTORequest insertProjectInfo(InsertProjectInfoDTORequest dto) {
+    public InsertProjectInfoDTORequest insertProjectInfo(InsertProjectInfoDTORequest dto)
+            throws Exception
+    {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         try (SqlSession session = sqlSessionFactory.openSession()) {
             ProjectMapper projectMapper = session.getMapper(ProjectMapper.class);
@@ -288,6 +292,7 @@ public class ProjectDao {
             } catch (Exception e) {
                 session.rollback();
                 log.log(Level.SEVERE, e.getMessage(), e);
+                throw new HandledException("500", "No se pudo registrar el proyecto");
             }
         }
         return dto;
@@ -486,6 +491,14 @@ public class ProjectDao {
         try (SqlSession session = sqlSessionFactory.openSession()) {
             ProjectMapper mapper = session.getMapper(ProjectMapper.class);
             return mapper.getProjectsByDomainId(domainId);
+        }
+    }
+
+    public List<JiraFeatureEntity> getFeaturesByProject(String sdatoolId, String featureKey) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ProjectMapper mapper = session.getMapper(ProjectMapper.class);
+            return mapper.getFeaturesByProject(sdatoolId, featureKey);
         }
     }
 }

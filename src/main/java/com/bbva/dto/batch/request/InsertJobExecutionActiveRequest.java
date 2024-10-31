@@ -5,20 +5,16 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class InsertCSATJobExecutionRequest {
-    private Long jobId;
-    private String jobName;
+public class InsertJobExecutionActiveRequest {
     private String orderId;
-    private String folder;
+    private String jobName;
+    private String schedtable;
     private String application;
     private String subApplication;
-    private String orderDate;
+    private String odate;
     private String startTime;
     private String endTime;
     private String host;
     private String runAs;
-    private String executionStatus;
-    private String sourceOrigin;
-    private String createDate;
-    private String updateDate;
+    private String status;
 }

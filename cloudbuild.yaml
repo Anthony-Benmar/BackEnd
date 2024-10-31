@@ -1,32 +1,56 @@
 steps:
-  - name: 'docker:19.03'
-    id: 'Artifactory Registry authentication'
-    entrypoint: '/bin/sh'
-    args: ['-c', 'docker login -u=$$BOT_GCP_READER_USER -p=$$BOT_GCP_READER_PASSWORD artifactory.globaldevtools.bbva.com']
-    secretEnv: ['BOT_GCP_READER_USER', 'BOT_GCP_READER_PASSWORD']
-
-  - name: 'artifactory.globaldevtools.bbva.com/gl-gcp-docker-local/gcp/arch/bbva-fga-cli-ng:latest'
-    id: 'Application deployment cli'
+  - name: 'gcr.io/cloud-builders/mvn:appengine'
+    id: 'Generate Maven settings file'
     entrypoint: 'bash'
-    args: [ '-c','fga-cli.py deploy all --env=${_BBVA_GAE_ENV} -- -Dmaven.test.skip=true -Dapp.deploy.promote=false']
-    env:
-      - 'CLI_MODE=cloud_build'
-      - 'MAVEN_OPTS=-Duser.home=/builder/home'
-    secretEnv: ['BOT_GCP_READER_USER','BOT_GCP_READER_PASSWORD']
+    args: [
+        '-c',
+        'echo "
+        <settings>
+          <servers>
+            <server>
+              $$GCP_MVN_REPO_SERVER
+            </server>
+          </servers>
+          <mirrors>
+            <mirror>
+              $$GCP_MVN_REPO_MIRROR
+            </mirror>
+          </mirrors>
+        </settings>" > /workspace/settings.xml'
+    ]
+    secretEnv: ['GCP_MVN_REPO_SERVER','GCP_MVN_REPO_MIRROR']
+
+  - name: 'gcr.io/cloud-builders/mvn:appengine'
+    id: 'Generate GAE version name'
+    entrypoint: 'bash'
+    args: [
+        '-c',
+        'echo build-$(echo $BUILD_ID | cut -d"-" -f 1) > /workspace/version
+      && echo VERSION NAME = $(cat /workspace/version)'
+    ]
+
+  - name: 'gcr.io/cloud-builders/mvn:appengine'
+    id: 'Application deployment'
+    entrypoint: 'bash'
+    args: [
+        '-c',
+        'mvn clean package appengine:deployAll -P ${_BBVA_GAE_ENV} --settings /workspace/settings.xml -Dmaven.test.skip=true -Dapp.deploy.promote=false -Dappengine.deploy.version=$(cat /workspace/version)'
+    ]
 
 availableSecrets:
   secretManager:
-    - versionName: projects/${_GCP_SM_PROJECT}/secrets/${_GCP_VDC_READER_USER}/versions/${_GCP_VDC_READER_USER_VERSION}
-      env: 'BOT_GCP_READER_USER'
-    - versionName: projects/${_GCP_SM_PROJECT}/secrets/${_GCP_VDC_READER_PASS}/versions/${_GCP_VDC_READER_PASS_VERSION}
-      env: 'BOT_GCP_READER_PASSWORD'
+    - versionName: projects/${_GCP_MVN_REPO_SERVER_PROJECT}/secrets/${_GCP_MVN_REPO_SERVER_SECRET_NAME}/versions/${_GCP_MVN_REPO_SERVER_VERSION}
+      env: 'GCP_MVN_REPO_SERVER'
+    - versionName: projects/${_GCP_MVN_REPO_MIRROR_PROJECT}/secrets/${_GCP_MVN_REPO_MIRROR_SECRET_NAME}/versions/${_GCP_MVN_REPO_MIRROR_VERSION}
+      env: 'GCP_MVN_REPO_MIRROR'
 
 substitutions:
-  _GCP_VDC_READER_USER: 'bot-gcp-reader-vdc-username'
-  _GCP_VDC_READER_USER_VERSION: 'latest'
-  _GCP_VDC_READER_PASS: 'bot-gcp-reader-vdc-password'
-  _GCP_VDC_READER_PASS_VERSION: 'latest'
-  _GCP_SM_PROJECT: 'bbva-devtools-gcp'
+  _GCP_MVN_REPO_SERVER_SECRET_NAME: 'gcp-global-mvn-repository-server-vdc'
+  _GCP_MVN_REPO_SERVER_VERSION: 'latest'
+  _GCP_MVN_REPO_SERVER_PROJECT: 'bbva-devtools-gcp'
+  _GCP_MVN_REPO_MIRROR_SECRET_NAME: 'gcp-global-mvn-repository-mirror-vdc'
+  _GCP_MVN_REPO_MIRROR_VERSION: 'latest'
+  _GCP_MVN_REPO_MIRROR_PROJECT: 'bbva-devtools-gcp'
 
 logsBucket: 'gs://$PROJECT_ID-cloudbuild-logs'
 timeout: "1200s"
