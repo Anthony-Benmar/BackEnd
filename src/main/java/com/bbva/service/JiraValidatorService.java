@@ -271,6 +271,7 @@ public class JiraValidatorService {
                     break;
                 case 32:
                     message.setRule("Advertencia IFRS9: Se alerta sobre la fecha de los bloqueos correspondientes a IFRS9");
+                    message.setOrder(30);
                     break;
                 default:
                     message.setRule("Regla desconocida");
