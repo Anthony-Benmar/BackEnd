@@ -9,20 +9,15 @@ import com.bbva.dto.jira.response.JiraMessageResponseDTO;
 import com.bbva.dto.jira.response.JiraResponseDTO;
 import com.bbva.entities.jiravalidator.InfoJiraProject;
 import com.bbva.util.ApiJiraMet.JiraValidationMethods;
-import com.bbva.util.ApiJiraMet.ValidatorValidateSummaryHUTType;
 import com.bbva.util.ApiJiraName;
 import com.google.gson.*;
 import org.apache.http.client.CookieStore;
 import org.apache.http.impl.client.BasicCookieStore;
 import java.net.http.HttpClient;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.List;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 
@@ -37,13 +32,10 @@ public class JiraValidatorService {
     private final String ticketVisibleLabel = "Ticket";
     private HttpClient httpClient;
     private CookieStore cookieStore = new BasicCookieStore();
-    //Map<String, String> customFields = new HashMap<>();
 
     private JiraValidationMethods validationUrlJira;
-    private ValidatorValidateSummaryHUTType validatorValidateSummaryHUTType;
     private List<InfoJiraProject> infoJiraProjectList;
 
-    //Todas la reglas de negocio
     public IDataResult<JiraResponseDTO> getValidatorByUrl(JiraValidatorByUrlRequest dto) throws Exception {
         JiraResponseDTO jiraResponseDTO = new JiraResponseDTO();
         List<JiraMessageResponseDTO> messages = new ArrayList<>();
@@ -53,7 +45,6 @@ public class JiraValidatorService {
         this.jiraApiService = new JiraApiService();
         this.httpClient = HttpClient.newHttpClient();
         this.infoJiraProjectList = InfoJiraProjectDao.getInstance().list();
-        //System.out.println(infoJiraProjectList);
         String acceptanceCriteriaGroup = "Criterio de Aceptacion";
         String prGroup="PR";
         List<String> teamBackLogTicketIdRLB = List.of("6037769"//CS
@@ -64,11 +55,9 @@ public class JiraValidatorService {
         );
 
         var isValidUrl = validateJiraFormatURL(dto.getUrlJira());
-
         var issuesMetadada = getMetadataIssues(dto);
         var jsonResponse = JsonParser.parseString(issuesMetadada).getAsJsonObject();
         var jiraTicketResult = jsonResponse.getAsJsonArray("issues").get(0).getAsJsonObject();
-        //Añadir PRs al ticket
         var prs = metadataPRs(jiraTicketResult, dto);
         jiraTicketResult.getAsJsonObject("fields").add("prs", JsonParser.parseString(prs).getAsJsonArray());
 
@@ -312,11 +301,7 @@ public class JiraValidatorService {
     }
 
     public String getMetadataIssues(JiraValidatorByUrlRequest dto) throws Exception {
-
-        //String jiraCode = dto.getUrlJira().split("/")[dto.getUrlJira().split("/").length - 1];
-        //var tickets = List.of(jiraCode);
         var tickets = List.of(dto.getUrlJira());
-
         var query = "key%20in%20(" + String.join(",", tickets) + ")";
 
         var url = ApiJiraName.URL_API_JIRA_SQL + query + this.jiraApiService.getQuerySuffixURL();
@@ -366,6 +351,4 @@ public class JiraValidatorService {
         Matcher matcher = pattern.matcher(jiraURL.toLowerCase());
         return matcher.matches();
     }
-
-
 }
