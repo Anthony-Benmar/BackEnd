@@ -34,6 +34,7 @@ public class JaxRsApplication extends Application {
         classes.add(DictionaryGenerationResources.class);
         classes.add(UseCaseTrackingResources.class);
         classes.add(JobResources.class);
+        classes.add(JiraValidatorResources.class);
         return classes;
     }
 }
