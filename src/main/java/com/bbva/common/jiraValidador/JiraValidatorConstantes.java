@@ -97,11 +97,11 @@ public class JiraValidatorConstantes {
         mapCriteriaByDevTypes.put("host", Map.of("texto", acceptanceCriteria));
 
         mapCriteriaByDevTypes.put("prs", Map.of(
-                "texto", "Desarrollo según lineamientos globales ONE y de Data Quality Assurance Perú"
+                "texto", "Desarrollo según lineamientos globales ONE y de Data Quality Assurance Perú."
         ));
 
         // Texto común para los tipos de desarrollo
-        String commonText = "Desarrollo según lineamientos globales ONE y de Data Quality Assurance Perú";
+        String commonText = "Desarrollo según lineamientos globales ONE y de Data Quality Assurance Perú.";
 
         // Agregar tipos de desarrollo que comparten el mismo texto
         List<String> devTypesWithCommonText = List.of(

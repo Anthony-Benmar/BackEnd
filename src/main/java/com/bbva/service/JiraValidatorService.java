@@ -313,34 +313,38 @@ public class JiraValidatorService {
     public String metadataPRs(JsonObject jiraTicketResult, JiraValidatorByUrlRequest dto) throws Exception {
         String idTicket = jiraTicketResult.getAsJsonObject().get("id").getAsString();
         var url = ApiJiraName.URL_API_JIRA_PULL_REQUEST + idTicket + "&applicationType=stash&dataType=pullrequest";
-
-        String resultPRs = this.jiraApiService.GetJiraAsync(dto.getUserName(), dto.getToken(), url);
-        var prsJsonResponse = JsonParser.parseString(resultPRs).getAsJsonObject();
-        var detailPR = prsJsonResponse
-                .getAsJsonArray("detail")
-                .get(0).getAsJsonObject()
-                .getAsJsonArray("pullRequests");
         List<Map<String,Object>> prs = new ArrayList<>();
+        String resultPRs = this.jiraApiService.GetJiraAsync(dto.getUserName(), dto.getToken(), url);
+        
+        var prsJsonResponse = JsonParser.parseString(resultPRs).getAsJsonObject();
+        if(!prsJsonResponse
+                .getAsJsonArray("detail").isEmpty()){
+            var detailPR = prsJsonResponse
+                    .getAsJsonArray("detail")
+                    .get(0).getAsJsonObject()
+                    .getAsJsonArray("pullRequests");
 
-        for(JsonElement pr : detailPR){
-            JsonObject prDetail = pr.getAsJsonObject();
-            List<Map<String,Object>> reviewersList = new ArrayList<>();
-            JsonArray reviewersArray = prDetail.getAsJsonArray("reviewers");
-            for(JsonElement reviewerElement : reviewersArray){
-                JsonObject reviewerObject = reviewerElement.getAsJsonObject();
-                Map<String,Object> reviewerMap = new HashMap<>();
-                reviewerMap.put("approved",reviewerObject.get("approved").getAsBoolean());
-                reviewerMap.put("user",reviewerObject.get("name").getAsString());
-                reviewersList.add(reviewerMap);
+
+            for(JsonElement pr : detailPR){
+                JsonObject prDetail = pr.getAsJsonObject();
+                List<Map<String,Object>> reviewersList = new ArrayList<>();
+                JsonArray reviewersArray = prDetail.getAsJsonArray("reviewers");
+                for(JsonElement reviewerElement : reviewersArray){
+                    JsonObject reviewerObject = reviewerElement.getAsJsonObject();
+                    Map<String,Object> reviewerMap = new HashMap<>();
+                    reviewerMap.put("approved",reviewerObject.get("approved").getAsBoolean());
+                    reviewerMap.put("user",reviewerObject.get("name").getAsString());
+                    reviewersList.add(reviewerMap);
+                }
+                Map<String, Object> prMap = new HashMap<>();
+                prMap.put("url", prDetail.get("url").getAsString());
+                prMap.put("status", prDetail.get("status").getAsString());
+                prMap.put("destinyBranch", prDetail.getAsJsonObject("destination").get("branch").getAsString());
+                prMap.put("reviewers", reviewersList);
+                prs.add(prMap);
             }
-            Map<String, Object> prMap = new HashMap<>();
-            prMap.put("url", prDetail.get("url").getAsString());
-            prMap.put("status", prDetail.get("status").getAsString());
-            prMap.put("destinyBranch", prDetail.getAsJsonObject("destination").get("branch").getAsString());
-            prMap.put("reviewers", reviewersList);
-            prs.add(prMap);
+            //Transformar la lista de objetos Java a una representación JSON en forma de cadena
         }
-        //Transformar la lista de objetos Java a una representación JSON en forma de cadena
         Gson gson = new Gson();
         String resutlPrsString = gson.toJson(prs);
         return resutlPrsString;
