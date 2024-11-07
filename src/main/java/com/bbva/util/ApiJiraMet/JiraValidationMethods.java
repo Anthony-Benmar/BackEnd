@@ -697,10 +697,9 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
             if (!acceptanceCriteria.isEmpty()) {
                 if (validAcceptanceCriteriaObject != null) {
                     String expectedPattern = (String) validAcceptanceCriteriaObject.get("texto");
-                    acceptanceCriteria = acceptanceCriteria.replaceAll("\\s+", " ");
+                    String[] palabras = expectedPattern.split("\\s+");
 
-
-                    if (expectedPattern.contains(acceptanceCriteria)) {
+                    if (palabras.length >= 11) {
                         message = String.format("Es válido: %s", acceptanceCriteria);
                         isValid = true;
                     } else {
