@@ -520,9 +520,12 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
                     boolean existeVoboPerson = projectsFiltrados.stream()
                             .anyMatch(obj -> obj.getParticipantEmail().equals(voboPerson));
                     if (existeVoboPerson){
-                        messsageGoodList.add(voboPerson + " para "+ subtaskLabel + " es valida.");
+                        messsageGoodList.add(voboPerson + " para "+ subtaskLabel + " es valida");
                     }
                 }
+            }
+            if(messsageBadList.isEmpty() && messsageGoodList.isEmpty()){
+                messsageBadList.add("No se encontraron subtareas asociadas");
             }
         }
         if (messsageBadList.isEmpty() && !messsageGoodList.isEmpty()){
@@ -625,11 +628,14 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
                         String expectedPattern = (String) validAcceptanceCriteriaObject.get("texto");
 
                         expectedPattern = expectedPattern
-                                .replace("{0}", "[A-Za-z\\s-/.&]+")  // Captura el nombre del plan (por ejemplo, Plan Cross Sell FX)
-                                .replace("{1}", FeatureTicketId + ",");  // Captura el SDATOOL, MVP y la coma después
+                                .replace("{0}", "[A-Za-z\\s-/.\\&]+");
+
                         String regexPattern = expectedPattern
                                 .replaceAll("\\s+", "\\\\s+")
                                 .replaceAll("\\.", "\\\\.");
+                        regexPattern = regexPattern
+                                .replace("{1}", "(SDATOOL-\\d{5}|SDATOOL\\s+\\d{5})(.*?)\\s*,")+"?";
+
 
                         Pattern pattern = Pattern.compile(regexPattern);
                         Matcher matcher = pattern.matcher(acceptanceCriteria);
@@ -657,12 +663,14 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
                         String expectedPattern = (String) validAcceptanceCriteriaObject.get("texto");
 
                         expectedPattern = expectedPattern
-                                .replace("{0}", "[A-Za-z\\s-/.&]+")
-                                .replace("{1}", "(SDATOOL-\\d{5}|SDATOOL\\s+\\d{5})\\s+con\\s+MVP\\s+D-\\d+-\\d+,");
+                                .replace("{0}", "[A-Za-z\\s-/.\\&]+");
 
                         String regexPattern = expectedPattern
                                 .replaceAll("\\s+", "\\\\s+")
                                 .replaceAll("\\.", "\\\\.");
+                        regexPattern = regexPattern
+                                .replace("{1}", "(SDATOOL-\\d{5}|SDATOOL\\s+\\d{5})(.*?)\\s*,")+"?";
+
 
                         Pattern pattern = Pattern.compile(regexPattern);
                         Matcher matcher = pattern.matcher(acceptanceCriteria);
@@ -689,14 +697,9 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
             if (!acceptanceCriteria.isEmpty()) {
                 if (validAcceptanceCriteriaObject != null) {
                     String expectedPattern = (String) validAcceptanceCriteriaObject.get("texto");
-                    String regexPattern = expectedPattern
-                            .replaceAll("\\s+", "\\\\s+")
-                            .replaceAll("\\.", "\\\\.");
+                    String[] palabras = expectedPattern.split("\\s+");
 
-                    Pattern pattern = Pattern.compile(regexPattern);
-                    Matcher matcher = pattern.matcher(acceptanceCriteria);
-
-                    if (matcher.matches()) {
+                    if (palabras.length >= 11) {
                         message = String.format("Es válido: %s", acceptanceCriteria);
                         isValid = true;
                     } else {
@@ -1154,14 +1157,14 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
             message = "Todas las subtareas requeridas fueron encontradas.";
             isValid = true;
             if (!additionalSubTasks.isEmpty()) {
-                message += " Tambien se encontraron subtareas adicionales: " + String.join(", ", additionalSubTasks);
+                message += " Tambien se encontraron subtareas adicionales: " + String.join(", ", additionalSubTasks)+ ". ";
                 if (tipoDesarrollo.equals("mallas")){
                     if(!foundSpecialLabel.isEmpty() && foundSpecialSubtasks.isEmpty()){
                         message += "Faltan alguna de las siguientes subtareas: " + String.join(", ", aditionalSpecialSubtask);
                         isValid = false;
                     }
                     else if(foundSpecialLabel.isEmpty() && !foundSpecialSubtasks.isEmpty()) {
-                        message += "Se recomienda validar las subtareas adicional: " + String.join(", ", aditionalSpecialSubtask)
+                        message += "Se recomienda validar las subtareas adicionales: " + String.join(", ", aditionalSpecialSubtask)
                                 + " para casos de jobs eliminados, huerfanos, ruta critica, puede estar pendiente el label correspondiente.";
                         isValid = true;
                         isWarning = true;
@@ -1651,7 +1654,7 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
         List<InfoJiraProject> projectFiltrado = infoJiraProjectList.stream().filter(project -> project.getTeamBackLogId() != null
                 && project.getTeamBackLogId().equals(teamBackLogId)).collect(Collectors.toList());
         if (!projectFiltrado.isEmpty()) {
-            String tableroNombre = projectFiltrado.get(0).getTeamBackLogName();
+            String tableroNombre = projectFiltrado.get(0).getTeamBackLogName().trim();
             if (!summaryTicket.contains(tableroNombre)) {
                 message.set("El tablero del Ticket es distinto al mencionado en el summary");
                 isWarning = true;
