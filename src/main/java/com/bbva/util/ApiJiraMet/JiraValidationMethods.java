@@ -10,7 +10,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import java.sql.SQLOutput;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
@@ -37,7 +37,6 @@ public class JiraValidationMethods {
     private List<String> impactLabel;
     private String coordinationMessage = "de ser necesario coordinar con el <strong>SM / QE</strong>";
     private String currentQ;
-    private Map<String, Object> branchPRObject = new HashMap<>();
     private String teamBackLogId;
     private final String teamBackLogDQAId = "2461905";
 
@@ -50,8 +49,6 @@ public class JiraValidationMethods {
         this.featureLink = featureLinkElement.isJsonNull() ? null : featureLinkElement.getAsString();
         JsonElement impactLabelElement = this.jiraTicketResult.get("fields").getAsJsonObject().get("customfield_10267");
         this.impactLabel = convertJsonElementToList(impactLabelElement);
-        this.branchPRObject.put("branch", "");
-        this.branchPRObject.put("status", "");
         this.teamBackLogId = getTeamBackLogId();
         this.currentQ = getCurrentQ();
     }
@@ -80,6 +77,10 @@ public class JiraValidationMethods {
                     }
                 }
             }
+        }
+        if (teamBackLogId == null){
+            teamBackLogId = jiraTicketResult.getAsJsonObject("fields")
+                    .getAsJsonArray("customfield_13300").get(0).getAsString();
         }
         return teamBackLogId;
     }
@@ -287,8 +288,11 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
     String message = "";
     boolean isValid = false;
     boolean isWarning = false;
-    List<String> prsUrls = new ArrayList<>();
-    int cantidadPRs = 0;
+    List<String> prsStatusException = new ArrayList<>(List.of("DECLINED"));
+    List<String> prsStatusWarning = new ArrayList<>(List.of("MERGED"));
+    Map<String, String> prException = new HashMap<>();
+    Map<String, String> prWarning = new HashMap<>();
+    Map<String, String> prValid = new HashMap<>();
     JsonObject jiraTicketResultPrs = jiraTicketResult
             .getAsJsonObject("fields");
 
@@ -299,34 +303,41 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
     tipoDesarrolloPRs.replaceAll(String::toLowerCase);
 
     if (jiraTicketResultPrs.get("prs") != null) {
-        cantidadPRs = jiraTicketResultPrs.get("prs").getAsJsonArray().size();
+        int cantidadPRs = jiraTicketResultPrs.get("prs").getAsJsonArray().size();
         if (cantidadPRs > 0) {
-            this.branchPRObject.put("branch",jiraTicketResultPrs.get("prs").getAsJsonArray().get(0).getAsJsonObject().get("destinyBranch").getAsString());
-            this.branchPRObject.put("status",jiraTicketResultPrs.get("prs").getAsJsonArray().get(0).getAsJsonObject().get("status").getAsString());
-        }
-        for (JsonElement prObj : jiraTicketResultPrs.get("prs").getAsJsonArray()) {
-            Map<String, Object> pr = new HashMap<>();
-            pr.put("url", prObj.getAsJsonObject().get("url").getAsString());
-            prsUrls.add(pr.get("url").toString());
+            for (JsonElement prObj : jiraTicketResultPrs.get("prs").getAsJsonArray()) {
+                String status = jiraTicketResultPrs.get("prs").getAsJsonArray().get(0).getAsJsonObject().get("status").getAsString();
+                if (prsStatusException.contains(status)){
+                    prException.put(prObj.getAsJsonObject().get("url").getAsString(), prObj.getAsJsonObject().get("status").getAsString());
+                } else if (prsStatusWarning.contains(status)) {
+                    prWarning.put(prObj.getAsJsonObject().get("url").getAsString(), prObj.getAsJsonObject().get("status").getAsString());
+                }else{
+                    prValid.put(prObj.getAsJsonObject().get("url").getAsString(), prObj.getAsJsonObject().get("status").getAsString());
+                }
+            }
         }
     }
-
+    int cantidadPrsValidas = prValid.size();
+    int cantidadPrsWarning = prWarning.size();
     if (tipoDesarrollo.equals("PRs") || tipoDesarrollo.equals("mallas") || tipoDesarrolloPRs.contains(tipoDesarrollo)) {
-        if (cantidadPRs == 1) {
-            message = "Con PR asociada: " + prsUrls.get(0);
+        if (cantidadPrsValidas == 1) {
+            message = "Con PR asociada: " + prValid.keySet();
             isValid = true;
-        } else if (cantidadPRs > 1) {
-            message = "Se encontraron " + cantidadPRs + " PRs asociadas: " + String.join(", ", prsUrls);
+        } else if (cantidadPrsValidas > 1) {
+            message = "Se encontraron " + cantidadPrsValidas + " PRs asociadas: " + prValid.keySet();
             isValid = false;
-            message += "Atención: No se puede tener más de una PR asociada.";
-            isWarning = true;
+            message += " Atención: No se puede tener más de una PR asociada.";
         } else {
-            message = "No se detectó una PR asociada.";
+            message = "No se detectó una PR valida asociada.";
             isValid = false;
-            message += "Atención: Si la PR fue asociada correctamente, falta dar permisos de acceso a los QEs.";
+            message += " Atención: Si la PR fue asociada correctamente, falta dar permisos de acceso a los QEs.";
+        }
+        if (cantidadPrsWarning>0){
+            isWarning = true;
+            message += " Atención: Se encontraron " + cantidadPrsWarning + " PRs asociadas en MERGED: " + prWarning.keySet();
         }
     } else {
-        if (cantidadPRs == 0) {
+        if (cantidadPrsValidas == 0) {
             message = "Sin PR asociada.";
             isValid = true;
         } else {
@@ -340,18 +351,39 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
         String message = "";
         boolean isValid = false;
         boolean isWarning = false;
-        if (!tipoDesarrollo.equalsIgnoreCase("productivizacion")) {
-            List<String> validBranches = Arrays.asList("develop", "master");
+        List<String> validBranches = Arrays.asList("develop", "master");
+        JsonObject jiraTicketResultPrs = jiraTicketResult
+                .getAsJsonObject("fields");
 
-            message = "Rama destino: " + this.branchPRObject.get("branch");
-            isValid = validBranches.contains(this.branchPRObject.get("branch"));
+        List<String> tipoDesarrolloPRs = Arrays.asList("Procesamiento","MigrationTool",
+                "Hammurabi", "Ingesta", "Scaffolder", "Operativizacion",
+                "Teradata", "SmartCleaner","SparkCompactor", "JSON Global");
 
-        } else {
-            message = "Esta regla no es válida para este tipo de desarrollo.";
-            isValid = true;
+        tipoDesarrolloPRs.replaceAll(String::toLowerCase);
+
+        if (jiraTicketResultPrs.get("prs") != null) {
+            int cantidadPRs = jiraTicketResultPrs.get("prs").getAsJsonArray().size();
+            if (cantidadPRs > 0) {
+                for (JsonElement prObj : jiraTicketResultPrs.get("prs").getAsJsonArray()) {
+                    String branch = prObj.getAsJsonObject().get("destinyBranch").getAsString();
+                    if(validBranches.contains(branch)){
+                        isValid = true;
+                        message = "Se encontró PR branch destino correcta: "+branch;
+                        return this.getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
+                    }
+                    else{
+                        isValid = false;
+                        message = "No se encontró PR branch Asociada correcta: "+branch+ ". Solo son validas"+String.join(",",validBranches);
+                    }
+                }
+            }
+            else {
+                isValid = false;
+                message = "No se encontraron PRs asociadas";
+            }
         }
 
-        return getValidationResultsDict(message, isValid, isWarning, helpMessage, group);
+        return this.getValidatonResultsDict(message, isValid, isWarning, helpMessage, group);
     }
 
     public Map<String, Object> getValidationValidateSubTaskStatus(String tipoDesarrollo,String helpMessage, String group) {
@@ -392,7 +424,7 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
                         .getAsJsonObject("fields")
                         .getAsJsonObject("status")
                         .get("name").getAsString();
-                if (!status.equalsIgnoreCase("Accepted")){
+                if (!status.equalsIgnoreCase("Accepted") && !status.equalsIgnoreCase("Discarded")){
                     subTaskCollectionBadStatus.add(subTaskElement);
                     subTaskLabelBadStatus.add(subTaskElement.getAsJsonObject().getAsJsonObject("fields").get("summary").getAsString());
                 }
@@ -437,7 +469,16 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
                 String subtaskLabel = subtask.getAsJsonObject()
                         .getAsJsonObject("fields")
                         .get("summary").getAsString();
+
                 if(subtaskLabel.contains("QA") || subtaskLabel.contains("DEV")|| subtaskLabel.contains("GC")){
+                    continue;
+                }
+                String subtaskStatus = subtask.getAsJsonObject()
+                        .getAsJsonObject("fields")
+                        .getAsJsonObject("status")
+                        .getAsJsonPrimitive("name")
+                        .getAsString();
+                if(subtaskStatus.equals("Discarded")){
                     continue;
                 }
                 String codeJiraSubTask = subtask.getAsJsonObject().get("key").getAsString();
@@ -559,6 +600,14 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
                     .getAsJsonObject("fields")
                     .get("summary").getAsString();
             if(subtaskLabel.contains("QA") || subtaskLabel.contains("DEV")){
+                continue;
+            }
+            String subtaskStatus = subtask.getAsJsonObject()
+                    .getAsJsonObject("fields")
+                    .getAsJsonObject("status")
+                    .getAsJsonPrimitive("name")
+                    .getAsString();
+            if(subtaskStatus.equals("Discarded")){
                 continue;
             }
             String codeJiraSubTask = subtask.getAsJsonObject().get("key").getAsString();
@@ -1543,9 +1592,8 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
 
     public Map<String, Object> getValidationDependencyFeatureVsHUTFeature(List<String> teamBackLogTicketIdRLB, JiraValidatorByUrlRequest dto, String helpMessage, String group, List<InfoJiraProject> infoJiraProjectList) {
         boolean isValid = true;
-        String message = "Todas las dependencias tienen el mismo feature link y cuentan con al menos un comentario del QE asociado";
+        String message = "Todas las dependencias tienen el mismo feature link";
         boolean isWarning = false;
-        List<String> rolIdQE = new ArrayList<>(List.of("11","12"));
         String isChildPadName ="";
         JsonArray issueLinks = jiraTicketResult
                 .getAsJsonObject("fields")
@@ -1592,27 +1640,6 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
                             isValid = false;
                             message = "No todas las dependencias tienen el mismo features link";
                             break;
-                        } else {
-                            JsonArray comments = metaData
-                                    .getAsJsonArray("issues")
-                                    .get(0).getAsJsonObject()
-                                    .getAsJsonObject("fields")
-                                    .getAsJsonObject("comment")
-                                    .getAsJsonArray("comments");
-                            List<InfoJiraProject> infoJiraProjectListFiltered = new ArrayList<>();
-                            for (JsonElement comment : comments) {
-                                String authorEmailAddress = comment.getAsJsonObject()
-                                        .getAsJsonObject("author").get("emailAddress").getAsString();
-                                infoJiraProjectListFiltered = infoJiraProjectList.stream().filter(project
-                                        -> project.getTeamBackLogId().equals(teamBackLogId)
-                                        && project.getParticipantEmail().equals(authorEmailAddress)
-                                        && rolIdQE.contains(project.getProjectRolType())
-                                ).collect(Collectors.toList());
-                            }
-                            if (infoJiraProjectListFiltered.isEmpty()) {
-                                isValid = false;
-                                message = "Dependencia no cuenta con ningun comentario del QE";
-                            }
                         }
                     }
                 } catch (Exception e) {
@@ -1767,6 +1794,117 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
         }
         else{
             message = "No se encontró Item Type";
+        }
+        return getValidationResultsDict(message, isValid, isWarning, helpMessage, group);
+    }
+
+    public Map<String, Object> getValidationDependencyComment(List<String> teamBackLogTicketIdRLB, JiraValidatorByUrlRequest dto, String helpMessage, String group, List<InfoJiraProject> infoJiraProjectList) {
+        boolean isValid = true;
+        String message = "";
+        boolean isWarning = false;
+        List<String> rolIdQE = new ArrayList<>(List.of("11","12")); //QE Y QE TEMPORAL
+        String isChildPadName ="";
+        JsonArray issueLinks = jiraTicketResult
+                .getAsJsonObject("fields")
+                .getAsJsonArray("issuelinks");
+        if (issueLinks == null || issueLinks.isEmpty()){
+            isValid = false;
+            message = "Ticket no cuenta con Dependencia Asociada.";
+            return getValidationResultsDict(message, isValid, isWarning, helpMessage, group);
+        }
+        else {
+            if(teamBackLogTicketIdRLB.contains(teamBackLogId)){
+                message = "Esta regla no es válida para RLB.";
+                return getValidationResultsDict(message, isValid, isWarning, helpMessage, group);
+            }
+            List<String> isChildPadNameCollection = new ArrayList<>();
+            for (JsonElement issueLinkElement : issueLinks) {
+                String type  = issueLinkElement.getAsJsonObject().getAsJsonObject("type").get("inward").getAsString();
+                JsonElement inwardIssue = issueLinkElement
+                        .getAsJsonObject()
+                        .getAsJsonObject("inwardIssue");
+                if(type.equals("is child item of") && inwardIssue != null) {
+                    String issuetype = inwardIssue.getAsJsonObject().getAsJsonObject("fields").getAsJsonObject("issuetype").get("name").getAsString();
+                    if(issuetype.equalsIgnoreCase("Dependency")) {
+                        isChildPadName = issueLinkElement
+                                .getAsJsonObject()
+                                .getAsJsonObject("inwardIssue")
+                                .get("key").getAsString();
+                        isChildPadNameCollection.add(isChildPadName);
+                    }
+                }
+            }
+
+            if (isChildPadNameCollection.isEmpty()){
+                isValid = false;
+                message = "Ticket no cuenta con Dependencia Asociada de Type \"Dependency\" o su asociación no es \"is child item of\".";
+                return getValidationResultsDict(message, isValid, isWarning, helpMessage, group);
+            }
+
+            try {
+                for (String isChildPad : isChildPadNameCollection) {
+                    var query = "key%20in%20(" + isChildPad + ")";
+                    var url = ApiJiraName.URL_API_JIRA_SQL + query + new JiraApiService().getQuerySuffixURL();
+                    var response = new JiraApiService().GetJiraAsync(dto.getUserName(), dto.getToken(), url);
+                    JsonObject metaData = JsonParser.parseString(response).getAsJsonObject();
+
+                    JsonArray comments = metaData
+                            .getAsJsonArray("issues")
+                            .get(0).getAsJsonObject()
+                            .getAsJsonObject("fields")
+                            .getAsJsonObject("comment")
+                            .getAsJsonArray("comments");
+                    if (comments.isEmpty()){
+                        isValid = false;
+                        message = "Dependencia Asociada no tiene comentarios";
+                        return getValidationResultsDict(message, isValid, isWarning, helpMessage, group);
+                    }
+                    for (JsonElement comment : comments){
+                        String authorEmailAddress = comment.getAsJsonObject()
+                                .getAsJsonObject("author").get("emailAddress").getAsString();
+                        String comentario = comment.getAsJsonObject()
+                                .get("body").getAsString();
+                        String patron = "comprometid";
+                        Pattern pattern = Pattern.compile(patron, Pattern.CASE_INSENSITIVE);
+                        Matcher matcher = pattern.matcher(comentario);
+                        if (matcher.find()){
+                            List<InfoJiraProject> infoJiraProjectListFiltered = infoJiraProjectList.stream().filter(project
+                                    -> project.getTeamBackLogId().equals(teamBackLogId)
+                                    && project.getParticipantEmail().equals(authorEmailAddress)
+                                    && rolIdQE.contains(project.getProjectRolType())
+                            ).toList();
+
+                            List<String> personsRolIdQE = infoJiraProjectList.stream()
+                                    .filter(project ->  rolIdQE.contains(project.getProjectRolType()))
+                                    .map(InfoJiraProject::getParticipantEmail)
+                                    .distinct()
+                                    .toList();
+
+                            if(infoJiraProjectListFiltered.isEmpty()){
+                                if (personsRolIdQE.contains(authorEmailAddress)){
+                                    isWarning = true;
+                                    message = "Dependencia cuenta con comentario \"Comprometido\", QE o del QE temporal "+authorEmailAddress+" pero no está asociado al proyecto";
+                                }
+                                else {
+                                    isWarning = true;
+                                    message = "Dependencia cuenta con comentario \"Comprometido\", pero no de algún QE o del QE temporal";
+                                }
+                            }
+                            else {
+                                message = "Dependencia cuenta con comentario \"Comprometido\", del QE o del QE temporal "+ authorEmailAddress+" asociado al proyecto";
+                            }
+                            break;
+                        }
+                        else {
+                            isValid = false;
+                            message = "Dependencia no cuenta con ningun comentario \"Comprometido\"";
+                        }
+
+                    }
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
         return getValidationResultsDict(message, isValid, isWarning, helpMessage, group);
     }
