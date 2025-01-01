@@ -78,7 +78,7 @@ public class JiraValidatorService {
         var tipoDesarrollo = result_30.get("tipoDesarrolloSummary").toString();
         var result_1 = instancesRules.getValidationValidateAttachment(tipoDesarrollo,"Validar la existencia de los adjuntos", "Attachment");
         var result_2 = instancesRules.getValidationProductivizacionIssueLink(tipoDesarrollo, "Validar que el ticket de deployado como isChild (scaffolder)", "Ticket");
-        var result_3 = instancesRules.getValidatorValidateHUTType("Detectar el tipo de desarrollo por el prefijo y el summary", tipoDesarrollo, "Ticket");
+        var result_3 = instancesRules.getValidatorValidateHUTType(teamBackLogTicketIdRLB,"Detectar el tipo de desarrollo por el prefijo y el summary", tipoDesarrollo, "Ticket");
         var result_4 = instancesRules.getValidatorIssueType(tipoDesarrollo,"Validar que el Issue type sea Story o Dependency", "Ticket");
         var result_5 = instancesRules.getValidationURLJIRA("Validar que sea PAD3 o PAD5", "Ticket");
         var result_6 = instancesRules.getValidationPR(tipoDesarrollo, "Validar que se tenga una PR asociada", prGroup);
@@ -104,7 +104,7 @@ public class JiraValidatorService {
         var result_26 = instancesRules.getValidationFixVersion(tipoDesarrollo,"Validar que se tenga Fix Version (Solo Mallas/HOST)","Ticket");
         var result_27 = instancesRules.getValidationDependency(teamBackLogTicketIdRLB,"Validar que exista una Dependencia asignada correctamente y comprometida (Comentario HUD Comprometida)","Dependencia");
         var result_28 = instancesRules.getValidationDependencyFeatureVsHUTFeature(teamBackLogTicketIdRLB, dto,"Validar que el ticket tenga el mismo feature link que la dependencia","Dependencia", infoJiraProjectList);
-        Map<String, Object> result_29 = Map.of("message", "Regla pendiente por definir", "isWarning", false, "isValid", true);
+        var result_29 = instancesRules.getValidationDependencyComment(teamBackLogTicketIdRLB, dto,"Validar que la dependencia cuente con un comentario comprometido de QE o QE temporal","Dependencia", infoJiraProjectList);
         var result_31 = instancesRules.getValidationFeatureLinkRLB(dto,tipoDesarrollo,"Validar que el Feature Link tenga INC PRB o PB como label, excepto para evolutivos", "Feature Link");
         var result_32 = instancesRules.getValidationIFRS9("Validar los bloqueo IFRS9 en las solicitudes", "Ticket");
 
@@ -181,10 +181,6 @@ public class JiraValidatorService {
                     message.setRule("Validacion Tech Stack:");
                     message.setOrder(13);
                     break;
-                case 29:
-                    message.setRule("Regla pendiente por definir");
-                    message.setVisible(false);
-                    break;
                 case 10:
                     message.setRule("Validacion Tablero DQA:");
                     message.setOrder(7);
@@ -259,6 +255,10 @@ public class JiraValidatorService {
                     break;
                 case 28:
                     message.setRule("Validacion Dependencias - Feature Dependencia vs Ticket: ");
+                    message.setOrder(18);
+                    break;
+                case 29:
+                    message.setRule("Validacion Dependencias - Comprometida por QE: ");
                     message.setOrder(18);
                     break;
                 case 30:
