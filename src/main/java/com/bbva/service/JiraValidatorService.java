@@ -14,6 +14,7 @@ import com.google.gson.*;
 import org.apache.http.client.CookieStore;
 import org.apache.http.impl.client.BasicCookieStore;
 import java.net.http.HttpClient;
+import java.sql.*;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -39,6 +40,11 @@ public class JiraValidatorService {
     public IDataResult<JiraResponseDTO> getValidatorByUrl(JiraValidatorByUrlRequest dto) throws Exception {
         JiraResponseDTO jiraResponseDTO = new JiraResponseDTO();
         List<JiraMessageResponseDTO> messages = new ArrayList<>();
+        LOGGER.info("Fecha - hora: " + dto.getTimestamp());
+        LOGGER.info("Usuario: " + dto.getUserName());
+        LOGGER.info("Nombre: " + dto.getName());
+        LOGGER.info("Ticket / URL: " + dto.getUrlJira());
+
         int successCount = 0;
         int errorCount = 0;
         int warningCount = 0;
@@ -297,6 +303,45 @@ public class JiraValidatorService {
         jiraResponseDTO.setSuccessCount(successCount);
         jiraResponseDTO.setErrorCount(errorCount);
         jiraResponseDTO.setWarningCount(warningCount);
+
+        try {
+            // Establecer conexión con la base de datos
+            Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/test", "root", "");
+
+            // Preparar la consulta SQL para insertar datos
+            String sql = "INSERT INTO log_results (timestamp, usuario, nombre, ticket, " +
+                    "regla_30, regla_4, regla_26, regla_11, regla_23, regla_22, regla_10, regla_12, regla_14, regla_15, " +
+                    "regla_31, regla_8, regla_9, regla_20, regla_25, regla_1, regla_27, regla_28, regla_16, regla_17, " +
+                    "regla_18, regla_19, regla_21, regla_24, regla_6, regla_7, regla_2, regla_3, regla_32, regla_5, regla_13, regla_29) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            PreparedStatement preparedStatement = conn.prepareStatement(sql);
+
+            // Asignar valores a los parámetros de la consulta
+            preparedStatement.setTimestamp(1, Timestamp.valueOf(dto.getTimestamp()));
+            preparedStatement.setString(2, dto.getUserName());
+            preparedStatement.setString(3, dto.getName());
+            preparedStatement.setString(4, dto.getUrlJira());
+
+            int ruleIdCount = 1;
+            for (Map<String, Object> result : result_final) {
+                boolean isValid = (boolean) result.get("isValid");
+                String estado = isValid ? "OK" : "NOT OK";
+                preparedStatement.setString(4 + ruleIdCount, estado); // Empieza a partir del 5to parámetro
+                ruleIdCount++;
+            }
+
+            preparedStatement.executeUpdate();
+            preparedStatement.close();
+            conn.close();
+
+            System.out.println("Datos insertados correctamente en la base de datos.");
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.err.println("Error al insertar datos en la base de datos: " + e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Error general: " + e.getMessage());
+        }
 
         return new SuccessDataResult<>(jiraResponseDTO, "Reglas de validacion");
     }

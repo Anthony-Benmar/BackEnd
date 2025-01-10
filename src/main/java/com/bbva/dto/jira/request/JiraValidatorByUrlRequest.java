@@ -10,5 +10,7 @@ import java.util.Locale;
 public class JiraValidatorByUrlRequest {
     private String urlJira;
     private String userName;
+    private String name;
     private String token;
+    private String timestamp;
 }
