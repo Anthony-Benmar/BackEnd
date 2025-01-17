@@ -516,15 +516,17 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
                     LocalDateTime historyDate = LocalDateTime.parse(createdDate, formatter);
                     JsonArray itemsHistory = history.getAsJsonArray("items");
 
-                    if (itemsHistory != null && itemsHistory.size() > 0) {
+                    if (itemsHistory != null && !itemsHistory.isEmpty()) {
                         boolean hasMatchingItem = false;
 
                         for (JsonElement itemElement : itemsHistory) {
-                            JsonObject item = itemElement.getAsJsonObject();
-                            String toString = item.get("toString").getAsString();
-                            if ("Accepted".equals(toString)) {
-                                hasMatchingItem = true;
-                                break;
+                            JsonElement itemToString = itemElement.getAsJsonObject().get("toString");
+                            if(itemToString != null && !itemToString.isJsonNull()) {
+                                String toString = itemToString.getAsString();
+                                if ("Accepted".equals(toString)) {
+                                    hasMatchingItem = true;
+                                    break;
+                                }
                             }
                         }
 
@@ -1682,7 +1684,7 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
                 && project.getTeamBackLogId().equals(teamBackLogId)).collect(Collectors.toList());
         if (!projectFiltrado.isEmpty()) {
             String tableroNombre = projectFiltrado.get(0).getTeamBackLogName().trim();
-            if (!summaryTicket.contains(tableroNombre)) {
+            if (!summaryTicket.toLowerCase().contains(tableroNombre.toLowerCase())) {
                 message.set("El tablero del Ticket es distinto al mencionado en el summary");
                 isWarning = true;
                 isValid.set(false);
