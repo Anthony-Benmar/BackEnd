@@ -126,4 +126,28 @@ public class JiraValidatorLogEntity{
     @SerializedName("regla_32")
     private String regla32;
 
+    @SerializedName("regla_33")
+    private String regla33;
+
+    @SerializedName("regla_34")
+    private String regla34;
+
+    @SerializedName("regla_35")
+    private String regla35;
+
+    @SerializedName("regla_36")
+    private String regla36;
+
+    @SerializedName("regla_37")
+    private String regla37;
+
+    @SerializedName("regla_38")
+    private String regla38;
+
+    @SerializedName("regla_39")
+    private String regla39;
+
+    @SerializedName("regla_40")
+    private String regla40;
+
 }
