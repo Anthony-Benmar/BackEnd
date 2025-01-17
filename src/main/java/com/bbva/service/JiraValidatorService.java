@@ -16,7 +16,6 @@ import com.google.gson.*;
 import org.apache.http.client.CookieStore;
 import org.apache.http.impl.client.BasicCookieStore;
 import java.net.http.HttpClient;
-import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.logging.Logger;
