@@ -88,12 +88,12 @@ public class UserDao {
         return permissionsList;
     }
 
-    public List<User> listByEmail(String email) {
+    public List<User> getUser(String googleId, String email) {
         List<User> userList = null;
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         try (SqlSession session = sqlSessionFactory.openSession()) {
             UserMapper mapper = session.getMapper(UserMapper.class);
-            userList = mapper.listByEmail(email);
+            userList = mapper.getUser(googleId, email);
         }
         return userList;
     }
@@ -204,7 +204,7 @@ public class UserDao {
             SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
             try (SqlSession session = sqlSessionFactory.openSession()) {
                 UserMapper mapper = session.getMapper(UserMapper.class);
-                userResponse = mapper.listByEmail(dto.email).stream()
+                userResponse = mapper.getUser(dto.googleId,dto.email).stream()
                         .findFirst().orElse(null);
    
                 response.User = new ValidateUserDtoResponse(userResponse.getUserId(), userResponse.getGoogleId(),

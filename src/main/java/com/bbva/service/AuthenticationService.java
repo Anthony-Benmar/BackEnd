@@ -23,7 +23,7 @@ public class AuthenticationService {
 
     public IDataResult<ValidateDtoResponse> Validate(ValidateDtoRequest dto) {
 
-        List<User> lstUsers = userDao.listByEmail(dto.email);
+        List<User> lstUsers = userDao.getUser(dto.googleId, dto.email);
         if (lstUsers.size() == 0) {
             User newUser = new User(0,dto.googleId,dto.name,dto.email, dto.employeeId, null, null);
             newUser.setStatusType(1);
@@ -31,12 +31,6 @@ public class AuthenticationService {
             userDao.insertUser(newUser);
             UserRole newUserRole = new UserRole(0,newUser.getUserId(),1,newUser.getStatusType(), newUser.getOperationUser());
             userDao.insertRoles(newUserRole);
-        } else {           
-            User updUser = lstUsers.get(0);
-            if(StringUtils.isEmpty(updUser.getEmployeeId())){
-                updUser.setEmployeeId(dto.getEmployeeId());
-                userDao.updateUserEmployeeId(updUser);
-            }            
         }
         var userValidate = userDao.validate(dto);
         if (userValidate ==  null) {

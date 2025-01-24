@@ -30,7 +30,7 @@ public interface UserMapper {
                                 "operation_date AS operationDate " +
                                 "FROM secu_user";
 
-    String SQL_QUERY_USERS_BY_EMAIL = "CALL SP_FILTER_USER (#{email})";
+    String SQL_QUERY_USERS_BY_EMAIL = "CALL SP_FILTER_USER (#{googleId},#{email})";
 
     String SQL_QUERY_INSERT_USER="INSERT INTO secu_user ( google_id, full_name, email, status_type, operation_user, operation_date, employee_id) " +
             "VALUES (#{googleId},#{fullName},#{email}, #{statusType}, #{operationUser}, now(), #{employeeId})";
@@ -86,7 +86,7 @@ public interface UserMapper {
     List<User> findByUserID(@Param("arrayUserId") int[] arrayUserId);
 
     @Select(SQL_QUERY_USERS_BY_EMAIL)
-    List<User> listByEmail(String email);
+    List<User> getUser(String googleId, String email);
 
     @Select(SQL_QUERY_ROLE_MENU_USER)
     List<RolMenu> roleMenuList(@Param("user_id") int user_id);
