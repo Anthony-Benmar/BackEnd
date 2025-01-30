@@ -14,4 +14,6 @@ public class ProjectInfoFilterRequest {
     public Integer statusType;
     public Integer projectType;
     public Integer wowType;
+    public int startQ;
+    public int endQ;
 }

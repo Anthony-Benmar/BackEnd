@@ -215,7 +215,9 @@ public interface ProjectMapper {
             "#{domainId}," +
             "#{statusType}," +
             "#{projectType}," +
-            "#{wowType})")
+            "#{wowType}," +
+            "#{startQ}," +
+            "#{endQ})")
     @Results({
             @Result(property = "projectId", column = "project_id"),
             @Result(property = "sdatoolId", column = "sdatool_id"),
@@ -250,7 +252,10 @@ public interface ProjectMapper {
                                                       @Param("domainId") String domainId,
                                                       @Param("statusType") int statusType,
                                                       @Param("projectType") int projectType,
-                                                      @Param("wowType") int wowType);
+                                                      @Param("wowType") int wowType,
+                                                      @Param("startQ") int startQ,
+                                                      @Param("endQ") int endQ
+                                                      );
     @Select("CALL SP_LIST_ALL_PROJECT_BY_DOMAIN(" +
             "#{projectId}," +
             "#{domainId})")
