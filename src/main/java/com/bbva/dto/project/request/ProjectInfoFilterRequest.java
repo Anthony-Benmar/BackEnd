@@ -11,9 +11,9 @@ public class ProjectInfoFilterRequest {
     public Integer projectId;
     public String sdatoolIdOrProjectName;
     public String domainId;
-    public Integer statusType;
-    public Integer projectType;
-    public Integer wowType;
-    public int startQ;
-    public int endQ;
+    public String statusType;
+    public String projectType;
+    public String wowType;
+    public String startQ;
+    public String endQ;
 }

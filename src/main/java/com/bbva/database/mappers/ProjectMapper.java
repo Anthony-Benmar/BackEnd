@@ -250,11 +250,11 @@ public interface ProjectMapper {
     List<ProjectInfoSelectResponse> projectInfoFilter(@Param("projectId") int projectId,
                                                       @Param("sdatoolIdOrProjectName") String sdatoolId,
                                                       @Param("domainId") String domainId,
-                                                      @Param("statusType") int statusType,
-                                                      @Param("projectType") int projectType,
-                                                      @Param("wowType") int wowType,
-                                                      @Param("startQ") int startQ,
-                                                      @Param("endQ") int endQ
+                                                      @Param("statusType") String statusType,
+                                                      @Param("projectType") String projectType,
+                                                      @Param("wowType") String wowType,
+                                                      @Param("startQ") String startQ,
+                                                      @Param("endQ") String endQ
                                                       );
     @Select("CALL SP_LIST_ALL_PROJECT_BY_DOMAIN(" +
             "#{projectId}," +
