@@ -1,18 +1,14 @@
 package com.bbva.dto.jira.request;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.Locale;
-
-@AllArgsConstructor
 @Getter
 @Setter
-public class JiraValidatorByUrlRequest {
+public class GeneradorDocumentosMallasRequest {
     private String urlJira;
     private String userName;
     private String name;
     private String token;
-    private String timestamp;
+    private DataDocumentosMallas dataDocumentosMallas;
 }
