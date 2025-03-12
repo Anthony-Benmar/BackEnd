@@ -17,25 +17,31 @@ public class GeneradorDocumentosResources {
     private GeneradorDocumentosService generadorDocumentosService = new GeneradorDocumentosService();
 
     @POST
-    @Path("/mallas")
+    @Path("/c204Mallas")
     @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public String generadorDocumentosMallas(GeneradorDocumentosMallasRequest dto)
-            throws Exception {
-        return generadorDocumentosService.generarDocumentosMallas(dto);
+    @Produces("application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+    public Response generarC204MallasDocumento(GeneradorDocumentosMallasRequest dto) throws Exception {
+        
+        byte[] documentoModificado = generadorDocumentosService.generarC204MallasDocumento(dto);
+        String nombreDocumento = generadorDocumentosService.generarC204MallasNombre(dto);
+        
+        return Response.ok(documentoModificado)
+                .header("Content-Disposition", "attachment; filename=\"C204 - MALLA - "+nombreDocumento+".docx\"")
+                .header("Access-Control-Expose-Headers", "Content-Disposition")
+                .build();
     }
 
     @POST
-    @Path("/descargar")
+    @Path("/p110Mallas")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces("application/vnd.openxmlformats-officedocument.wordprocessingml.document")
-    public Response descargarDocumento(GeneradorDocumentosMallasRequest dto) throws Exception {
-        
-        byte[] documentoModificado = generadorDocumentosService.generarDocumentoModificado(dto);
+    public Response generarP110MallasDocumento(GeneradorDocumentosMallasRequest dto) throws Exception {
 
-        
+        byte[] documentoModificado = generadorDocumentosService.generarP110MallasDocumento(dto);
+        String nombreDocumento = generadorDocumentosService.generarC204MallasNombre(dto);
+
         return Response.ok(documentoModificado)
-                .header("Content-Disposition", "attachment; filename=\"documentoModificado.docx\"")
+                .header("Content-Disposition", "attachment; filename=\"P110-Plantilla_Seguimiento de Mallas_"+nombreDocumento+".xlsx\"")
                 .header("Access-Control-Expose-Headers", "Content-Disposition")
                 .build();
     }

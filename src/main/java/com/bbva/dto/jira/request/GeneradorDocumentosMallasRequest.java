@@ -6,7 +6,9 @@ import lombok.Setter;
 @Getter
 @Setter
 public class GeneradorDocumentosMallasRequest {
-    private String urlJira;
+    private int projectId;
+    private String projectDescription;
+    private String sdatool;
     private String userName;
     private String name;
     private String token;
