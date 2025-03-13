@@ -488,12 +488,12 @@ public class GeneradorDocumentosService {
         if(uuaa.startsWith("P")){
             jobGlobal = 0;
         }
-        String[] partesJobNameDataproc = jobNameDataproc.split("-");
-        String jobNameDataprocType = partesJobNameDataproc[2];
-        String jobNameDataprocOperation = partesJobNameDataproc[3];
         String jobNameType = jobName.substring(4+jobGlobal,5+jobGlobal);
         switch (jobNameType){
             case "C":
+                String[] partesJobNameDataproc = jobNameDataproc.split("-");
+                String jobNameDataprocType = partesJobNameDataproc[2];
+                String jobNameDataprocOperation = partesJobNameDataproc[3];
                 if(jobNameDataprocType.equals("krb")){
                     clasificacionTipo = "Ingesta";
                 }
