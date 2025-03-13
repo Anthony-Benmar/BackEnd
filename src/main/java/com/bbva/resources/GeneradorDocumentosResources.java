@@ -38,10 +38,10 @@ public class GeneradorDocumentosResources {
     public Response generarP110MallasDocumento(GeneradorDocumentosMallasRequest dto) throws Exception {
 
         byte[] documentoModificado = generadorDocumentosService.generarP110MallasDocumento(dto);
-        String nombreDocumento = generadorDocumentosService.generarC204MallasNombre(dto);
+        String nombreDocumento = generadorDocumentosService.generarP110MallasNombre(dto);
 
         return Response.ok(documentoModificado)
-                .header("Content-Disposition", "attachment; filename=\"P110-Plantilla_Seguimiento de Mallas_"+nombreDocumento+".xlsx\"")
+                .header("Content-Disposition", "attachment; filename=\"P110-Plantilla_Seguimiento de Mallas_"+nombreDocumento+"_v1.xlsx\"")
                 .header("Access-Control-Expose-Headers", "Content-Disposition")
                 .build();
     }
