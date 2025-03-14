@@ -492,17 +492,17 @@ public class GeneradorDocumentosService {
         switch (jobNameType){
             case "C":
                 String[] partesJobNameDataproc = jobNameDataproc.split("-");
-                String jobNameDataprocType = partesJobNameDataproc[2];
-                String jobNameDataprocOperation = partesJobNameDataproc[3];
-                if(jobNameDataprocType.equals("krb")){
-                    clasificacionTipo = "Ingesta";
-                }
-                else{
-                    if (jobNameDataprocOperation.equals("out")){
-                        clasificacionTipo = "Operativización";
-                    }
-                    else {
-                        clasificacionTipo = "Procesamiento";
+                if (partesJobNameDataproc.length > 0) {
+                    String jobNameDataprocType = partesJobNameDataproc[2];
+                    String jobNameDataprocOperation = partesJobNameDataproc[3];
+                    if (jobNameDataprocType.equals("krb")) {
+                        clasificacionTipo = "Ingesta";
+                    } else {
+                        if (jobNameDataprocOperation.equals("out")) {
+                            clasificacionTipo = "Operativización";
+                        } else {
+                            clasificacionTipo = "Procesamiento";
+                        }
                     }
                 }
                 break;
