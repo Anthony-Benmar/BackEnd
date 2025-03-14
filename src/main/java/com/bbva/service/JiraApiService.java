@@ -3,7 +3,6 @@ package com.bbva.service;
 
 import com.bbva.core.HandledException;
 import com.bbva.dto.issueticket.request.authJiraDtoRequest;
-import com.bbva.dto.jira.request.JiraValidatorByUrlRequest;
 import com.bbva.util.ApiJiraName;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -163,6 +162,5 @@ public class JiraApiService {
 
         return responseBodyString;
     }
-
 }
 
