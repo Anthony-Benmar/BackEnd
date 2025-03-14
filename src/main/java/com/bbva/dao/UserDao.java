@@ -244,7 +244,7 @@ public class UserDao {
 
                     role.Role = menuList.stream().map(ml ->ml.getRoleName())
                             .findFirst().orElse(null);
-                    var groupMenuUniques2 = groupMenuUniques.stream().map(
+                    var groupMenuUniquesSub = groupMenuUniques.stream().map(
                             t -> {
                                 var subMenu = groupSubMenuParents.stream()
                                         .filter(w -> w.getMenuParent() == t.getID())
@@ -262,7 +262,7 @@ public class UserDao {
                                 return t;
                             }
                     ).collect(Collectors.toList());
-                    menus.addAll(groupMenuUniques2);
+                    menus.addAll(groupMenuUniquesSub);
 
                     role.Menus = menus.stream().sorted(Comparator.comparing(ValidateRoleMenuDtoResponse::getOrder))
                             .collect(Collectors.toList());
