@@ -1,14 +1,9 @@
 package com.bbva.service;
 
 
-import com.bbva.dao.InfoJiraProjectDao;
 import com.bbva.dao.ProjectDao;
 import com.bbva.dto.jira.request.*;
 import com.bbva.dto.project.request.InsertProjectParticipantDTO;
-import com.bbva.dto.project.response.ProjectInfoSelectResponse;
-import com.bbva.entities.jiravalidator.InfoJiraProject;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.xwpf.usermodel.*;
@@ -18,13 +13,10 @@ import org.xml.sax.InputSource;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.StringReader;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -32,8 +24,6 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import com.bbva.util.ApiJiraName;
-import org.xml.sax.SAXException;
 
 public class GeneradorDocumentosService {
     private static final Logger LOGGER = Logger.getLogger(GeneradorDocumentosService.class.getName());
