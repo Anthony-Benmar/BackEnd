@@ -209,31 +209,31 @@ public class UserDao {
 
                 List<RolMenu> joinRoleMenu = mapper.roleMenuList(userResponse.getUserId());
                 List<Integer> roles = joinRoleMenu.stream()
-                        .map(rl ->rl.getRoleId()).distinct()
-                        .collect(Collectors.toList());
+                        .map(RolMenu::getRoleId).distinct()
+                        .toList();
 
                 roles.forEach(r -> {
                     ValidateRoleDtoResponse role = new ValidateRoleDtoResponse();
                     var menuList = joinRoleMenu.stream()
                             .filter(jr -> jr.getRoleId() == r)
-                            .collect(Collectors.toList());
+                            .toList();
 
                     var groupMenuUniques  = menuList.stream()
                             .filter(f->f.getMenuParent()==0)
                             .map( rs -> new ValidateRoleMenuDtoResponse(rs.getMenuId(),rs.getMenuDesc(),rs.getMenuIcon(),rs.getMenuUrl(),rs.getMenuOrder(),null))
-                            .collect(Collectors.toList());
+                            .toList();
 
                     var groupSubMenuParents  = menuList.stream()
-                            .filter(f->f.getMenuParent()>0 && groupMenuUniques.stream().map(u -> u.getID()).collect(Collectors.toList()).contains(f.getMenuParent()))
-                            .collect(Collectors.toList());
+                            .filter(f->f.getMenuParent()>0 && groupMenuUniques.stream().map(ValidateRoleMenuDtoResponse::getID).toList().contains(f.getMenuParent()))
+                            .toList();
 
                     var groupMenuParents  = menuList.stream()
                             .filter(f->f.getMenuParent()>0)
-                            .filter(f->!groupSubMenuParents.stream().map(u -> u.getMenuParent()).collect(Collectors.toList()).contains(f.getMenuParent()))
+                            .filter(f->!groupSubMenuParents.stream().map(RolMenu::getMenuParent).toList().contains(f.getMenuParent()))
                             .collect(Collectors.groupingBy(p -> Arrays.asList(p.getMenuParent(), p.getMenuParentDesc(), p.getMenuIconParent(), p.getMenuOrderParent())));
 
                     var menus = groupMenuParents.entrySet().stream()
-                            .filter(f -> !groupSubMenuParents.stream().map(u ->u.getMenuId()).collect(Collectors.toList()).contains(f.getKey().get(0)))
+                            .filter(f -> !groupSubMenuParents.stream().map(RolMenu::getMenuId).toList().contains(f.getKey().get(0)))
                             .map(w -> {
                                 var keys= w.getKey();
                                 var options = w.getValue().stream()
@@ -242,26 +242,23 @@ public class UserDao {
                                 return new ValidateRoleMenuDtoResponse((Integer) keys.get(0), (String) keys.get(1), (String) keys.get(2),"",(Integer)keys.get(3),options);
                             }).collect(Collectors.toList());
 
-                    role.Role = menuList.stream().map(ml ->ml.getRoleName())
+                    role.Role = menuList.stream().map(RolMenu::getRoleName)
                             .findFirst().orElse(null);
                     var groupMenuUniquesSub = groupMenuUniques.stream().map(
                             t -> {
                                 var subMenu = groupSubMenuParents.stream()
                                         .filter(w -> w.getMenuParent() == t.getID())
-                                        .map(w -> {
-                                            return new ValidateRoleMenuDtoResponse((Integer) w.getMenuId(), (String) w.getMenuDesc(), (String) w.getMenuIcon(), (String) w.getMenuUrl(), w.getMenuOrder(),
-                                                    menuList.stream()
-                                                            .filter(f -> w.getMenuId() == f.getMenuParent())
-                                                            .map(f -> {
-                                                                return new ValidateRoleMenuDtoResponse((Integer) f.getMenuId(), (String) f.getMenuDesc(), (String) f.getMenuIcon(), (String)f.getMenuUrl(),(Integer)f.getMenuOrder(),null);
-                                                            }).collect(Collectors.toList()))
-                                                    ;
-                                        })
+                                        .map(w -> new ValidateRoleMenuDtoResponse(w.getMenuId(), w.getMenuDesc(), w.getMenuIcon(), w.getMenuUrl(), w.getMenuOrder(),
+                                                menuList.stream()
+                                                        .filter(f -> w.getMenuId() == f.getMenuParent())
+                                                        .map(f -> {
+                                                            return new ValidateRoleMenuDtoResponse(f.getMenuId(), f.getMenuDesc(), f.getMenuIcon(), f.getMenuUrl(), f.getMenuOrder(),null);
+                                                        }).collect(Collectors.toList())))
                                         .collect(Collectors.toList());
                                         t.setOptions(subMenu);
                                 return t;
                             }
-                    ).collect(Collectors.toList());
+                    ).toList();
                     menus.addAll(groupMenuUniquesSub);
 
                     role.Menus = menus.stream().sorted(Comparator.comparing(ValidateRoleMenuDtoResponse::getOrder))
