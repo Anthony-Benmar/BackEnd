@@ -166,7 +166,7 @@ public class GeneradorDocumentosService {
 
             return baos.toByteArray();
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Error DocumentosService: " + e.getMessage());;
         }
         return null;
     }
@@ -224,7 +224,7 @@ public class GeneradorDocumentosService {
                 result.put(folderName, jobsMap);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("Error DocumentosService: " + e.getMessage());;
         }
         return result;
     }
@@ -253,10 +253,13 @@ public class GeneradorDocumentosService {
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             factory.setNamespaceAware(true);
+            factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+            factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+            factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
             DocumentBuilder builder = factory.newDocumentBuilder();
             return builder.parse(new InputSource(new StringReader(xml)));
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("Error DocumentosService: " + e.getMessage());;
         }
         return null;
     }
