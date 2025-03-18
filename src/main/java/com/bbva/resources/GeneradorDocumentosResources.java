@@ -1,11 +1,7 @@
 package com.bbva.resources;
 
-import com.bbva.core.abstracts.IDataResult;
 import com.bbva.dto.jira.request.GeneradorDocumentosMallasRequest;
-import com.bbva.dto.jira.request.JiraValidatorByUrlRequest;
-import com.bbva.dto.jira.response.JiraResponseDTO;
 import com.bbva.service.GeneradorDocumentosService;
-import com.bbva.service.JiraValidatorService;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;

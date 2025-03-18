@@ -34,16 +34,16 @@ public class GeneradorDocumentosService {
         return Base64.getDecoder().decode(documentoBase64);
     }
 
-    public byte[] generarC204MallasDocumento(GeneradorDocumentosMallasRequest dto) throws Exception {
+    public byte[] generarC204MallasDocumento(GeneradorDocumentosMallasRequest dto) {
         byte[] documentoBytes = getDocumentoBytes(C204MALLAS_BASE64);
         ProjectDao projectDao = new ProjectDao();
         List<InsertProjectParticipantDTO> projectParticipant = projectDao.getProjectParticipants(dto.getProjectId());
         List<InsertProjectParticipantDTO> smParticipant = projectParticipant.stream()
                 .filter(t -> t.getProjectRolType().equals(1) || t.getProjectRolType().equals(2))
-                .collect(Collectors.toList());
+                .toList();
         List<InsertProjectParticipantDTO> poParticipant = projectParticipant.stream()
                 .filter(t -> t.getProjectRolType().equals(5) || t.getProjectRolType().equals(8))
-                .collect(Collectors.toList());
+                .toList();
         Map<String, Map<String, Long>> conteoMallas = conteoMallas(dto.getDataDocumentosMallas());
         Map<String, String> descripcionMallas = descripcionMallas(conteoMallas);
         Map<String, Map<String, String>> jobsDetail = buildJobsSummaryDetail(dto.getDataDocumentosMallas());
@@ -164,7 +164,6 @@ public class GeneradorDocumentosService {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             document.write(baos);
 
-
             return baos.toByteArray();
         } catch (IOException e) {
             e.printStackTrace();
@@ -215,37 +214,40 @@ public class GeneradorDocumentosService {
 
         try {
             Document doc = getDocumentXML(xml);
-
+            assert doc != null;
             NodeList folderNodes = doc.getElementsByTagName("FOLDER");
             for (int i = 0; i < folderNodes.getLength(); i++) {
                 Element folderElement = (Element) folderNodes.item(i);
 
                 String folderName = folderElement.getAttribute("FOLDER_NAME");
-                Map<String, String> jobsMap = new HashMap<>();
-
-
-                NodeList jobNodes = folderElement.getElementsByTagName("JOB");
-                for (int j = 0; j < jobNodes.getLength(); j++) {
-                    Element jobElement = (Element) jobNodes.item(j);
-                    String jobName = jobElement.getAttribute("JOBNAME");
-
-
-                    NodeList variableNodes = jobElement.getElementsByTagName("VARIABLE");
-                    for (int k = 0; k < variableNodes.getLength(); k++) {
-                        Element variableElement = (Element) variableNodes.item(k);
-                        String value= "";
-                        if ("%%SENTRY_PARM".equals(variableElement.getAttribute("NAME"))) {
-                            value = variableElement.getAttribute("VALUE");
-                        }
-                        jobsMap.put(jobName, value);
-                    }
-                }
+                Map<String, String> jobsMap = getJobsMap(folderElement);
                 result.put(folderName, jobsMap);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
         return result;
+    }
+
+    private static Map<String, String> getJobsMap(Element folderElement) {
+        Map<String, String> jobsMap = new HashMap<>();
+
+        NodeList jobNodes = folderElement.getElementsByTagName("JOB");
+        for (int j = 0; j < jobNodes.getLength(); j++) {
+            Element jobElement = (Element) jobNodes.item(j);
+            String jobName = jobElement.getAttribute("JOBNAME");
+
+            NodeList variableNodes = jobElement.getElementsByTagName("VARIABLE");
+            for (int k = 0; k < variableNodes.getLength(); k++) {
+                Element variableElement = (Element) variableNodes.item(k);
+                String value= "";
+                if ("%%SENTRY_PARM".equals(variableElement.getAttribute("NAME"))) {
+                    value = variableElement.getAttribute("VALUE");
+                }
+                jobsMap.put(jobName, value);
+            }
+        }
+        return jobsMap;
     }
 
     private Document getDocumentXML (String xml) {
@@ -285,7 +287,7 @@ public class GeneradorDocumentosService {
                             int index2 = order.indexOf(state2);
                             return Integer.compare(index1, index2);
                         })
-                        .collect(Collectors.toList());
+                        .toList();
 
 
                 for (DataDocumentosMallasJobName jobDto : sortedJobs) {
@@ -364,7 +366,7 @@ public class GeneradorDocumentosService {
         List<InsertProjectParticipantDTO> projectParticipant = projectDao.getProjectParticipants(dto.getProjectId());
         List<InsertProjectParticipantDTO> smParticipant = projectParticipant.stream()
                 .filter(t -> t.getProjectRolType().equals(1) || t.getProjectRolType().equals(2))
-                .collect(Collectors.toList());
+                .toList();
         try (ByteArrayInputStream inputStream = new ByteArrayInputStream(documentoBytes);
              Workbook workbook = new XSSFWorkbook(inputStream)) {
             Sheet sheet = workbook.getSheetAt(0);
@@ -381,6 +383,7 @@ public class GeneradorDocumentosService {
                     jobNameEstado = jobNameEstado.substring(0, 1).toUpperCase() + jobNameEstado.substring(1).toLowerCase();
                     Row row = sheet.getRow(filaInicio + i);
                     Cell uuaa = row.getCell(columnaInicio);
+                    assert doc != null;
                     uuaa.setCellValue(getUUAA(jobName,doc));
                     Cell nombreProductivo = row.getCell(columnaInicio + 1);
                     nombreProductivo.setCellValue(jobName);
@@ -409,9 +412,7 @@ public class GeneradorDocumentosService {
             workbook.write(outputStream);
             workbook.close();
 
-            byte[] nuevoExcelBytes = outputStream.toByteArray();
-
-            return nuevoExcelBytes;
+            return outputStream.toByteArray();
         }
 
     }
@@ -424,7 +425,7 @@ public class GeneradorDocumentosService {
             NodeList jobNodes = folderElement.getElementsByTagName("JOB");
             for (int j = 0; j < jobNodes.getLength(); j++) {
                 Element jobElement = (Element) jobNodes.item(j);
-                if (jobElement.getAttribute("JOBNAME").toString().equals(jobName)){
+                if (jobElement.getAttribute("JOBNAME").equals(jobName)){
                     uuaaApplication = jobElement.getAttribute("APPLICATION").split("-")[0];
                     if (uuaaApplication.length() == 3){
                         return "P" + uuaaApplication;
@@ -446,11 +447,11 @@ public class GeneradorDocumentosService {
             NodeList jobNodes = folderElement.getElementsByTagName("JOB");
             for (int j = 0; j < jobNodes.getLength(); j++) {
                 Element jobElement = (Element) jobNodes.item(j);
-                if (jobElement.getAttribute("JOBNAME").toString().equals(jobName)){
+                if (jobElement.getAttribute("JOBNAME").equals(jobName)){
                     NodeList variableNodes = jobElement.getElementsByTagName("VARIABLE");
                     for (int k = 0; k < variableNodes.getLength(); k++) {
                         Element variableElement = (Element) variableNodes.item(k);
-                        String value= "";
+                        String value;
                         if ("%%SENTRY_JOB".equals(variableElement.getAttribute("NAME"))) {
                             value = variableElement.getAttribute("VALUE");
                             jobDataproc = extraeJobNameDataproc(value);
@@ -527,8 +528,8 @@ public class GeneradorDocumentosService {
         for(DataDocumentosMallasFolders folders : dto.getDataDocumentosMallas().getFolders()){
             String folder = folders.getFolder();
             String[] partesFolder = folder.split("-");
-            String uuaaFolder = "";
-            String periodicidadFolder = "";
+            String uuaaFolder;
+            String periodicidadFolder;
             if(folder.length() == 15){
                 uuaaFolder = "P" + partesFolder[1].substring(2, 5);
                 periodicidadFolder = partesFolder[1].substring(5, 8);
