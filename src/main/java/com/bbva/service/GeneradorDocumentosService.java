@@ -236,7 +236,6 @@ public class GeneradorDocumentosService {
         for (int j = 0; j < jobNodes.getLength(); j++) {
             Element jobElement = (Element) jobNodes.item(j);
             String jobName = jobElement.getAttribute("JOBNAME");
-
             NodeList variableNodes = jobElement.getElementsByTagName("VARIABLE");
             for (int k = 0; k < variableNodes.getLength(); k++) {
                 Element variableElement = (Element) variableNodes.item(k);
