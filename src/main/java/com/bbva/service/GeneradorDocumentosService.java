@@ -35,7 +35,7 @@ public class GeneradorDocumentosService {
     private static final String FOLDER = "FOLDER";
     private static final String JOB = "JOB";
     private static final String JOBNAME = "JOBNAME";
-    private static final String Error = "ERROR DOCUMENTOSSERVICE: ";
+    private static final String ERROR = "ERROR DOCUMENTOSSERVICE: ";
 
     public byte[] getDocumentoBytes(String documentoBase64) {
         return Base64.getDecoder().decode(documentoBase64);
@@ -65,7 +65,7 @@ public class GeneradorDocumentosService {
             documentWrite.write(outputStream);
             return outputStream.toByteArray();
         } catch (IOException e) {
-            LOGGER.info(Error + e.getMessage());
+            LOGGER.info(ERROR + e.getMessage());
         }
         return documentoBytes;
     }
@@ -238,7 +238,7 @@ public class GeneradorDocumentosService {
                 result.put(folderName, jobsMap);
             }
         } catch (Exception e) {
-            LOGGER.info(Error + e.getMessage());
+            LOGGER.info(ERROR + e.getMessage());
         }
         return result;
     }
@@ -273,7 +273,7 @@ public class GeneradorDocumentosService {
             DocumentBuilder builder = factory.newDocumentBuilder();
             return builder.parse(new InputSource(new StringReader(xml)));
         } catch (Exception e) {
-            LOGGER.info(Error + e.getMessage());
+            LOGGER.info(ERROR + e.getMessage());
         }
         return null;
     }
@@ -408,11 +408,11 @@ public class GeneradorDocumentosService {
                     nombreJobDataproc.setCellValue(getJobDataproc(jobName,doc));
                     Cell folder = row.getCell(columnaInicio+3);
                     folder.setCellValue(dto.getDataDocumentosMallas().getFolders().get(i).getFolder());
-                    Cell folio = row.getCell(columnaInicio + 4);
-                    Cell id = row.getCell(columnaInicio + 5);
+                    //Cell folio = row.getCell(columnaInicio + 4);
+                    //Cell id = row.getCell(columnaInicio + 5);
                     Cell sdaTool = row.getCell(columnaInicio + 6);
                     sdaTool.setCellValue(dto.getSdatool()+" - "+dto.getProjectDescription());
-                    Cell tablero = row.getCell(columnaInicio + 7);
+                    //Cell tablero = row.getCell(columnaInicio + 7);
                     Cell sm = row.getCell(columnaInicio + 8);
                     sm.setCellValue(smParticipant.isEmpty() ? "" : smParticipant.get(0).getParticipantName());
                     Cell registroDev = row.getCell(columnaInicio + 9);
@@ -431,7 +431,7 @@ public class GeneradorDocumentosService {
 
             return outputStream.toByteArray();
         } catch (Exception e) {
-            LOGGER.info(Error + e.getMessage());
+            LOGGER.info(ERROR + e);
         }
         return documentoBytes;
     }
