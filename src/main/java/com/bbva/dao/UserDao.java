@@ -244,21 +244,18 @@ public class UserDao {
 
                     role.Role = menuList.stream().map(RolMenu::getRoleName)
                             .findFirst().orElse(null);
-                    var groupMenuUniquesSub = groupMenuUniques.stream().map(
-                            t -> {
-                                var subMenu = groupSubMenuParents.stream()
-                                        .filter(w -> w.getMenuParent() == t.getID())
-                                        .map(w -> new ValidateRoleMenuDtoResponse(w.getMenuId(), w.getMenuDesc(), w.getMenuIcon(), w.getMenuUrl(), w.getMenuOrder(),
-                                                menuList.stream()
-                                                        .filter(f -> w.getMenuId() == f.getMenuParent())
-                                                        .map(f -> {
-                                                            return new ValidateRoleMenuDtoResponse(f.getMenuId(), f.getMenuDesc(), f.getMenuIcon(), f.getMenuUrl(), f.getMenuOrder(),null);
-                                                        }).toList()))
-                                        .toList();
-                                        t.setOptions(subMenu);
-                                return t;
-                            }
-                    ).toList();
+                    var groupMenuUniquesSub = groupMenuUniques.stream().map(t -> {
+                        var subMenu = groupSubMenuParents.stream()
+                                .filter(w -> w.getMenuParent() == t.getID())
+                                .map(w -> new ValidateRoleMenuDtoResponse(w.getMenuId(), w.getMenuDesc(), w.getMenuIcon(), w.getMenuUrl(), w.getMenuOrder(),
+                                        menuList.stream()
+                                                .filter(f -> w.getMenuId() == f.getMenuParent())
+                                                .map(f -> new ValidateRoleMenuDtoResponse(f.getMenuId(), f.getMenuDesc(), f.getMenuIcon(), f.getMenuUrl(), f.getMenuOrder(), null))
+                                                .toList()))
+                                .toList();
+                        t.setOptions(subMenu);
+                        return t;
+                    }).toList();
                     menus.addAll(groupMenuUniquesSub);
 
                     role.Menus = menus.stream().sorted(Comparator.comparing(ValidateRoleMenuDtoResponse::getOrder))
