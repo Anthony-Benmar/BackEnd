@@ -253,8 +253,8 @@ public class UserDao {
                                                         .filter(f -> w.getMenuId() == f.getMenuParent())
                                                         .map(f -> {
                                                             return new ValidateRoleMenuDtoResponse(f.getMenuId(), f.getMenuDesc(), f.getMenuIcon(), f.getMenuUrl(), f.getMenuOrder(),null);
-                                                        }).collect(Collectors.toList())))
-                                        .collect(Collectors.toList());
+                                                        }).toList()))
+                                        .toList();
                                         t.setOptions(subMenu);
                                 return t;
                             }

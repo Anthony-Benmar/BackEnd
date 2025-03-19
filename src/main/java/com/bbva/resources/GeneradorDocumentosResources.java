@@ -17,7 +17,7 @@ public class GeneradorDocumentosResources {
     @Path("/c204Mallas")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces("application/vnd.openxmlformats-officedocument.wordprocessingml.document")
-    public Response generarC204MallasDocumento(GeneradorDocumentosMallasRequest dto) throws Exception {
+    public Response generarC204MallasDocumento(GeneradorDocumentosMallasRequest dto) {
         
         byte[] documentoModificado = generadorDocumentosService.generarC204MallasDocumento(dto);
         String nombreDocumento = generadorDocumentosService.generarC204MallasNombre(dto);
@@ -32,7 +32,7 @@ public class GeneradorDocumentosResources {
     @Path("/p110Mallas")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces("application/vnd.openxmlformats-officedocument.wordprocessingml.document")
-    public Response generarP110MallasDocumento(GeneradorDocumentosMallasRequest dto) throws Exception {
+    public Response generarP110MallasDocumento(GeneradorDocumentosMallasRequest dto) {
 
         byte[] documentoModificado = generadorDocumentosService.generarP110MallasDocumento(dto);
         String nombreDocumento = generadorDocumentosService.generarP110MallasNombre(dto);
