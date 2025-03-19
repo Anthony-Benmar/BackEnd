@@ -408,11 +408,8 @@ public class GeneradorDocumentosService {
                     nombreJobDataproc.setCellValue(getJobDataproc(jobName,doc));
                     Cell folder = row.getCell(columnaInicio+3);
                     folder.setCellValue(dto.getDataDocumentosMallas().getFolders().get(i).getFolder());
-                    //Cell folio = row.getCell(columnaInicio + 4);
-                    //Cell id = row.getCell(columnaInicio + 5);
                     Cell sdaTool = row.getCell(columnaInicio + 6);
                     sdaTool.setCellValue(dto.getSdatool()+" - "+dto.getProjectDescription());
-                    //Cell tablero = row.getCell(columnaInicio + 7);
                     Cell sm = row.getCell(columnaInicio + 8);
                     sm.setCellValue(smParticipant.isEmpty() ? "" : smParticipant.get(0).getParticipantName());
                     Cell registroDev = row.getCell(columnaInicio + 9);
