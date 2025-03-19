@@ -11,6 +11,7 @@ import javax.ws.rs.core.Response;
 @Produces(MediaType.APPLICATION_JSON)
 public class GeneradorDocumentosResources {
     private GeneradorDocumentosService generadorDocumentosService = new GeneradorDocumentosService();
+    private final String contentDisposition = "Content-Disposition";
 
     @POST
     @Path("/c204Mallas")
@@ -22,8 +23,8 @@ public class GeneradorDocumentosResources {
         String nombreDocumento = generadorDocumentosService.generarC204MallasNombre(dto);
         
         return Response.ok(documentoModificado)
-                .header("Content-Disposition", "attachment; filename=\"C204 - MALLA - "+nombreDocumento+".docx\"")
-                .header("Access-Control-Expose-Headers", "Content-Disposition")
+                .header(contentDisposition, "attachment; filename=\"C204 - MALLA - "+nombreDocumento+".docx\"")
+                .header("Access-Control-Expose-Headers", contentDisposition)
                 .build();
     }
 
@@ -37,8 +38,8 @@ public class GeneradorDocumentosResources {
         String nombreDocumento = generadorDocumentosService.generarP110MallasNombre(dto);
 
         return Response.ok(documentoModificado)
-                .header("Content-Disposition", "attachment; filename=\"P110-Plantilla_Seguimiento de Mallas_"+nombreDocumento+"_v1.xlsx\"")
-                .header("Access-Control-Expose-Headers", "Content-Disposition")
+                .header(contentDisposition, "attachment; filename=\"P110-Plantilla_Seguimiento de Mallas_"+nombreDocumento+"_v1.xlsx\"")
+                .header("Access-Control-Expose-Headers", contentDisposition)
                 .build();
     }
 }
