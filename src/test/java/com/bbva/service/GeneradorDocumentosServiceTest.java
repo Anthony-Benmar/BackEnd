@@ -67,8 +67,8 @@ public class GeneradorDocumentosServiceTest {
         request.setSdatool("SDATOOL-47281");
         request.setProjectDescription("Marcaje 3.0");
         request.setUserName("clinton.huamani");
-        request.setEmployeeId("P031611");
-        request.setToken("BBDC-NjcxNzExMTQ3OTcwOnKQfEc7wGwL4nqdRxBRSpAPNPAv");
+        request.setEmployeeId("P01234");
+        request.setToken("sadf");
         request.setName("ANTHONY WILFREDO AMBROSIO GARCIA");
         
         DataDocumentosMallas dataDocumentosMallas = new DataDocumentosMallas();

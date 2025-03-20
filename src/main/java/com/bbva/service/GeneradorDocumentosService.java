@@ -1,7 +1,5 @@
 package com.bbva.service;
 
-
-import com.bbva.dao.GovernmentDao;
 import com.bbva.dao.ProjectDao;
 import com.bbva.dto.jira.request.*;
 import com.bbva.dto.project.request.InsertProjectParticipantDTO;
