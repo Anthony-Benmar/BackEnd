@@ -1,6 +1,7 @@
 package com.bbva.service;
 
 
+import com.bbva.dao.GovernmentDao;
 import com.bbva.dao.ProjectDao;
 import com.bbva.dto.jira.request.*;
 import com.bbva.dto.project.request.InsertProjectParticipantDTO;
@@ -36,6 +37,12 @@ public class GeneradorDocumentosService {
     private static final String JOB = "JOB";
     private static final String JOBNAME = "JOBNAME";
     private static final String ERROR = "ERROR DOCUMENTOSSERVICE: ";
+    private final ProjectDao projectDao;
+
+
+    public GeneradorDocumentosService(ProjectDao projectDao) {
+        this.projectDao = projectDao;
+    }
 
     public byte[] getDocumentoBytes(String documentoBase64) {
         return Base64.getDecoder().decode(documentoBase64);
@@ -43,7 +50,6 @@ public class GeneradorDocumentosService {
 
     public byte[] generarC204MallasDocumento(GeneradorDocumentosMallasRequest dto) {
         byte[] documentoBytes = getDocumentoBytes(C204MALLAS_BASE64);
-        ProjectDao projectDao = new ProjectDao();
         List<InsertProjectParticipantDTO> projectParticipant = projectDao.getProjectParticipants(dto.getProjectId());
         List<InsertProjectParticipantDTO> smParticipant = projectParticipant.stream()
                 .filter(t -> t.getProjectRolType().equals(1) || t.getProjectRolType().equals(2))
@@ -377,7 +383,6 @@ public class GeneradorDocumentosService {
     }
 
     public byte[] generarP110MallasDocumento(GeneradorDocumentosMallasRequest dto){
-        ProjectDao projectDao = new ProjectDao();
         byte[] documentoBytes = getDocumentoBytes(P110MALLAS_BASE64);
         List<InsertProjectParticipantDTO> projectParticipant = projectDao.getProjectParticipants(dto.getProjectId());
         List<InsertProjectParticipantDTO> smParticipant = projectParticipant.stream()

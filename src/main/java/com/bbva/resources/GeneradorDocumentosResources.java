@@ -1,5 +1,6 @@
 package com.bbva.resources;
 
+import com.bbva.dao.ProjectDao;
 import com.bbva.dto.jira.request.GeneradorDocumentosMallasRequest;
 import com.bbva.service.GeneradorDocumentosService;
 
@@ -10,7 +11,8 @@ import javax.ws.rs.core.Response;
 @Path("/generadorDocumentos")
 @Produces(MediaType.APPLICATION_JSON)
 public class GeneradorDocumentosResources {
-    private GeneradorDocumentosService generadorDocumentosService = new GeneradorDocumentosService();
+    private ProjectDao projectDao = new ProjectDao();
+    private GeneradorDocumentosService generadorDocumentosService = new GeneradorDocumentosService(projectDao);
     private static final String CONTENTDISPOSITION = "Content-Disposition";
 
     @POST
