@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
@@ -44,7 +45,7 @@ public class GeneradorDocumentosServiceTest {
     }
 
     @Test
-    void testgenerarP110MallasDocumento() {
+    void testGenerarP110MallasDocumento() {
         GeneradorDocumentosMallasRequest dtoMock = crearGeneradorDocumentosMallasRequest();
         List<InsertProjectParticipantDTO> mockParticipants = new ArrayList<>();
         mockParticipants.add(crearParticipante(1, "John Doe", "johndoe", "johndoe@example.com", 123, 7));
@@ -58,6 +59,20 @@ public class GeneradorDocumentosServiceTest {
 
         assertNotNull(result);
         verify(projectDaoMock, times(1)).getProjectParticipants(319);
+    }
+
+    @Test
+    void testGenerarC204MallasNombre() {
+        GeneradorDocumentosMallasRequest dtoMock = crearGeneradorDocumentosMallasRequest();
+        String resultado = generadorDocumentosService.generarC204MallasNombre(dtoMock);
+        assertEquals("CR-PEBILDIA-T05", resultado, "Los nombres de los folders no coinciden");
+    }
+
+    @Test
+    void testGenerarP110MallasNombre() {
+        GeneradorDocumentosMallasRequest dtoMock = crearGeneradorDocumentosMallasRequest();
+        String resultado = generadorDocumentosService.generarP110MallasNombre(dtoMock);
+        assertEquals("PBIL_Diaria", resultado, "Los nombres de los folders no coinciden");
     }
 
 
