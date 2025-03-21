@@ -1786,7 +1786,7 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
         JsonObject fields = jiraTicketResult.getAsJsonObject("fields");
         if (fields.has("customfield_18001")){
             String itemType = fields.getAsJsonObject("customfield_18001").get("value").getAsString();
-            if(itemType.equals("Data - Dataproc")){
+            if(itemType.equals("Data - Dataproc") || itemType.equals("DATIO (Dataproc)")){
                 message = "Se encontró Tech Stack correcto Data - Dataproc";
                 isValid = true;
             }

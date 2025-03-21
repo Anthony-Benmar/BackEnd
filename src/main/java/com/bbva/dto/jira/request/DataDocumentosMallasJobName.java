@@ -5,16 +5,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.Locale;
-
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
-public class JiraValidatorByUrlRequest {
-    private String urlJira;
-    private String userName;
-    private String name;
-    private String token;
-    private String timestamp;
+public class DataDocumentosMallasJobName {
+    private String jobName;
+    private String estado;
 }
