@@ -482,53 +482,38 @@ public class DocumentGeneratorService {
         return "";
     }
 
-    private String typeClasificationJobs(String uuaa, String jobName, String jobNameDataproc){
-        String typeClasification = "";
-        int jobGlobal = 1;
-        if (uuaa.startsWith("P")) {
-            jobGlobal = 0;
-        }
-        String jobNameType = jobName.substring(4 + jobGlobal, 5 + jobGlobal);
-        switch (jobNameType) {
-            case "C":
-                if(!jobNameDataproc.isEmpty()){
-                    String[] partsJobNameDataproc = jobNameDataproc.split("-");
-                    if (partsJobNameDataproc.length > 0) {
-                        String jobNameDataprocType = partsJobNameDataproc[2];
-                        String jobNameDataprocOperation = partsJobNameDataproc[3];
-                        if (jobNameDataprocType.equals("krb")) {
-                            typeClasification = "Ingesta";
-                        } else {
-                            if (jobNameDataprocOperation.equals("out")) {
-                                typeClasification = "Operativización";
-                            } else {
-                                typeClasification = "Procesamiento";
-                            }
-                        }
-                    }
-                }
-                else{
-                    typeClasification = "Procesamiento";
-                }
-                break;
-            case "V":
-                typeClasification = "Calidad";
-                break;
-            case "T":
-                typeClasification = "Transmisión (CONNECT_DIRECT, DATAX)";
-                break;
-            case "W":
-                typeClasification = "Filewatcher (ctmfw, epsilon-watch)";
-                break;
-            case "D":
-                typeClasification = "HDFS (LS, CP, MV, RM)";
-                break;
-            default:
-                typeClasification = "Dummy (Bifurcador, Timer, Activador)";
-                break;
-        }
+    private String typeClasificationJobs(String uuaa, String jobName, String jobNameDataproc) {
+        int jobGlobal = uuaa.startsWith("P") ? 0 : 1;
+        String jobNameType = extractJobNameType(jobName, jobGlobal);
 
-        return typeClasification;
+        return switch (jobNameType) {
+            case "C" -> classifyDataprocJob(jobNameDataproc);
+            case "V" -> "Calidad";
+            case "T" -> "Transmisión (CONNECT_DIRECT, DATAX)";
+            case "W" -> "Filewatcher (ctmfw, epsilon-watch)";
+            case "D" -> "HDFS (LS, CP, MV, RM)";
+            default -> "Dummy (Bifurcador, Timer, Activador)";
+        };
+    }
+
+    private String extractJobNameType(String jobName, int jobGlobal) {
+        return jobName.substring(4 + jobGlobal, 5 + jobGlobal);
+    }
+
+    private String classifyDataprocJob(String jobNameDataproc) {
+        if (jobNameDataproc.isEmpty()) {
+            return "Procesamiento";
+        }
+        String[] parts = jobNameDataproc.split("-");
+        if (parts.length > 3) {
+            String jobType = parts[2];
+            String operation = parts[3];
+            if ("krb".equals(jobType)) {
+                return "Ingesta";
+            }
+            return "out".equals(operation) ? "Operativización" : "Procesamiento";
+        }
+        return "Procesamiento";
     }
 
     public String generateNameMeshTracking(DocumentGeneratorMeshRequest dto) {

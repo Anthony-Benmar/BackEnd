@@ -84,6 +84,8 @@ public class JiraValidatorConstantes {
     public static final String ISWARNING = "isWarning";
     public static final String HELPMESSAGE = "helpMessage";
     public static final String GROUP = "group";
+    public static final String C204 = "C204";
+    public static final String P110 = "P110";
 
     static {
         Map<String, List<String>> mapDevTypes = new HashMap<>();
@@ -104,20 +106,20 @@ public class JiraValidatorConstantes {
         DEVELOPS_TYPES = Collections.unmodifiableMap(mapDevTypes);
 
         Map<String, List<String>> mapAttachByDevTypes = new HashMap<>();
-        mapAttachByDevTypes.put(MALLAS, new ArrayList<>(List.of("C204","P110")));
-        mapAttachByDevTypes.put("prs", new ArrayList<>(List.of("C204")));
-        mapAttachByDevTypes.put(HAMMURABI, new ArrayList<>(List.of("C204","RC")));
-        mapAttachByDevTypes.put(HOST, new ArrayList<>(List.of("C204","P110")));
-        mapAttachByDevTypes.put(MIGRATIONTOOL, new ArrayList<>(List.of("C204")));
-        mapAttachByDevTypes.put(SMARTCLEANER, new ArrayList<>(List.of("C204")));
-        mapAttachByDevTypes.put(INGESTA, new ArrayList<>(List.of("C204")));
-        mapAttachByDevTypes.put(PROCESAMIENTO, new ArrayList<>(List.of("C204")));
-        mapAttachByDevTypes.put(OPERATIVIZACION, new ArrayList<>(List.of("C204")));
+        mapAttachByDevTypes.put(MALLAS, new ArrayList<>(List.of(C204,P110)));
+        mapAttachByDevTypes.put("prs", new ArrayList<>(List.of(C204)));
+        mapAttachByDevTypes.put(HAMMURABI, new ArrayList<>(List.of(C204,"RC")));
+        mapAttachByDevTypes.put(HOST, new ArrayList<>(List.of(C204,P110)));
+        mapAttachByDevTypes.put(MIGRATIONTOOL, new ArrayList<>(List.of(C204)));
+        mapAttachByDevTypes.put(SMARTCLEANER, new ArrayList<>(List.of(C204)));
+        mapAttachByDevTypes.put(INGESTA, new ArrayList<>(List.of(C204)));
+        mapAttachByDevTypes.put(PROCESAMIENTO, new ArrayList<>(List.of(C204)));
+        mapAttachByDevTypes.put(OPERATIVIZACION, new ArrayList<>(List.of(C204)));
         mapAttachByDevTypes.put(PRODUCTIVIZACION, new ArrayList<>(List.of("")));
-        mapAttachByDevTypes.put(SCAFFOLDER, new ArrayList<>(List.of("C204")));
-        mapAttachByDevTypes.put(JSON_GLOBAL, new ArrayList<>(List.of("C204")));
-        mapAttachByDevTypes.put(TERADATA, new ArrayList<>(List.of("C204")));
-        mapAttachByDevTypes.put(SPARKCOMPACTOR, new ArrayList<>(List.of("C204")));
+        mapAttachByDevTypes.put(SCAFFOLDER, new ArrayList<>(List.of(C204)));
+        mapAttachByDevTypes.put(JSON_GLOBAL, new ArrayList<>(List.of(C204)));
+        mapAttachByDevTypes.put(TERADATA, new ArrayList<>(List.of(C204)));
+        mapAttachByDevTypes.put(SPARKCOMPACTOR, new ArrayList<>(List.of(C204)));
 
         ATTACHS_BY_DEVELOP_TYPES = Collections.unmodifiableMap(mapAttachByDevTypes);
 
@@ -223,7 +225,7 @@ public class JiraValidatorConstantes {
                 "validateEmailContractor", true,
                 "advertenciaReadyToVerify", true,
                 "advertenciaEstadoInicial", false,
-                "status", new ArrayList<>(List.of("Accepted", "Ready To Verify")),
+                "status", new ArrayList<>(List.of("Accepted", READY_TO_VERIFY)),
                 ITEMS, new ArrayList<>(List.of(P110_AT,"[VB][AT]","[C204][AT]")),
                 "rol", new ArrayList<>(List.of("1","2"))
                 )));
@@ -233,7 +235,7 @@ public class JiraValidatorConstantes {
                 "validateEmailContractor", true,
                 "advertenciaReadyToVerify", true,
                 "advertenciaEstadoInicial", false,
-                "status", new ArrayList<>(List.of("Accepted", "Ready To Verify")),
+                "status", new ArrayList<>(List.of("Accepted", READY_TO_VERIFY)),
                 ITEMS, new ArrayList<>(List.of(C204_PO,"[VB][PO]")),
                 "rol", new ArrayList<>(List.of("5","8"))
                 )));
@@ -243,8 +245,8 @@ public class JiraValidatorConstantes {
                 "validateEmailContractor", true,
                 "advertenciaReadyToVerify", true,
                 "advertenciaEstadoInicial", false,
-                "status", new ArrayList<>(List.of("Accepted", "Ready To Verify")),
-                ITEMS, new ArrayList<>(List.of("[VB][SO]")),
+                "status", new ArrayList<>(List.of("Accepted", READY_TO_VERIFY)),
+                ITEMS, new ArrayList<>(List.of(VB_SO)),
                 "rol", new ArrayList<>(List.of("9","10"))
                 )));
         mapSubtasksTipoOwner.put("km", new HashMap<>(Map.of(
@@ -253,8 +255,8 @@ public class JiraValidatorConstantes {
                 "validateEmailContractor", true,
                 "advertenciaReadyToVerify", true,
                 "advertenciaEstadoInicial", false,
-                "status", new ArrayList<>(List.of("Accepted", "Ready To Verify")),
-                ITEMS, new ArrayList<>(List.of("[VB][KM]")),
+                "status", new ArrayList<>(List.of("Accepted", READY_TO_VERIFY)),
+                ITEMS, new ArrayList<>(List.of(VB_KM)),
                 "rol", new ArrayList<>(List.of("13","14"))
                 )));
         mapSubtasksTipoOwner.put("gc", new HashMap<>(Map.of(
@@ -263,7 +265,7 @@ public class JiraValidatorConstantes {
                 "validateEmailContractor", true,
                 "advertenciaReadyToVerify", false,
                 "advertenciaEstadoInicial", true,
-                "status", new ArrayList<>(List.of("Accepted", "Ready To Verify")),
+                "status", new ArrayList<>(List.of("Accepted", READY_TO_VERIFY)),
                 ITEMS, new ArrayList<>(List.of("[P110][GC]"))
                 )));
         mapSubtasksTipoOwner.put("qa", new HashMap<>(Map.of(

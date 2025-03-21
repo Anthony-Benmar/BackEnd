@@ -28,7 +28,7 @@ class DocumentGeneratorResourcesTest {
     }
 
     @Test
-    void testGenerarC204MallasDocumento() {
+    void testGenerateDocumentMeshCases() {
         DocumentGeneratorMeshRequest mockRequest = new DocumentGeneratorMeshRequest();
         byte[] documentoMock = Base64.getDecoder().decode("VGhpcyBpcyBhIHRlc3Q=");
         when(documentGeneratorServiceMock.generateDocumentMeshCases(mockRequest)).thenReturn(documentoMock);
@@ -44,7 +44,7 @@ class DocumentGeneratorResourcesTest {
     }
 
     @Test
-    void testGenerarP110MallasDocumento() {
+    void testGenerateDocumentMeshTracking() {
         DocumentGeneratorMeshRequest mockRequest = new DocumentGeneratorMeshRequest();
         byte[] documentoMock = Base64.getDecoder().decode("VGhpcyBpcyBhIHRlc3Q=");
         when(documentGeneratorServiceMock.generateDocumentMeshTracking(mockRequest)).thenReturn(documentoMock);
