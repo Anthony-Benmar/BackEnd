@@ -9,7 +9,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @Getter
 @Setter
-public class DataDocumentosMallasJobName {
+public class DataDocumentMeshJobName {
     private String jobName;
-    private String estado;
+    private String state;
 }
