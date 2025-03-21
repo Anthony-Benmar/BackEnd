@@ -9,7 +9,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @Getter
 @Setter
-public class GeneradorDocumentosMallasRequest {
+public class DocumentGeneratorMeshRequest {
     private int projectId;
     private String projectDescription;
     private String sdatool;
@@ -17,5 +17,5 @@ public class GeneradorDocumentosMallasRequest {
     private String employeeId;
     private String name;
     private String token;
-    private DataDocumentosMallas dataDocumentosMallas;
+    private DataDocumentMesh dataDocumentMesh;
 }

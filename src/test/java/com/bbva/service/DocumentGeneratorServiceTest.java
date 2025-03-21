@@ -1,10 +1,10 @@
 package com.bbva.service;
 
 import com.bbva.dao.ProjectDao;
-import com.bbva.dto.jira.request.DataDocumentosMallas;
-import com.bbva.dto.jira.request.DataDocumentosMallasFolders;
-import com.bbva.dto.jira.request.DataDocumentosMallasJobName;
-import com.bbva.dto.jira.request.GeneradorDocumentosMallasRequest;
+import com.bbva.dto.jira.request.DataDocumentMesh;
+import com.bbva.dto.jira.request.DataDocumentMeshFolder;
+import com.bbva.dto.jira.request.DataDocumentMeshJobName;
+import com.bbva.dto.jira.request.DocumentGeneratorMeshRequest;
 import com.bbva.dto.project.request.InsertProjectParticipantDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,67 +17,66 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
-class GeneradorDocumentosServiceTest {
-    private GeneradorDocumentosService generadorDocumentosService;
+class DocumentGeneratorServiceTest {
+    private DocumentGeneratorService documentGeneratorService;
     private ProjectDao projectDaoMock;
 
     @BeforeEach
     void setUp() {
         projectDaoMock = mock(ProjectDao.class);
-        generadorDocumentosService = new GeneradorDocumentosService(projectDaoMock);
+        documentGeneratorService = new DocumentGeneratorService(projectDaoMock);
     }
 
     @Test
-    void testGenerarC204MallasDocumento() {
-        GeneradorDocumentosMallasRequest dtoMock = crearGeneradorDocumentosMallasRequest();
+    void testGenerateDocumentMeshCases() {
+        DocumentGeneratorMeshRequest dtoMock = createDocumentGeneratorMeshRequest();
         List<InsertProjectParticipantDTO> mockParticipants = new ArrayList<>();
-        mockParticipants.add(crearParticipante(1, "John Doe", "johndoe", "johndoe@example.com", 123, 7));
-        mockParticipants.add(crearParticipante(2, "Jane Smith", "janesmith", "janesmith@example.com", 123, 8));
-        mockParticipants.add(crearParticipante(3, "Mike Brown", "mikebrown", "mikebrown@example.com", 123, 5));
-        mockParticipants.add(crearParticipante(4, "Sara Connor", "saraconnor", "saraconnor@example.com", 123, 6));
+        mockParticipants.add(createParticipant(1, "John Doe", "johndoe", "johndoe@example.com", 123, 7));
+        mockParticipants.add(createParticipant(2, "Jane Smith", "janesmith", "janesmith@example.com", 123, 8));
+        mockParticipants.add(createParticipant(3, "Mike Brown", "mikebrown", "mikebrown@example.com", 123, 5));
+        mockParticipants.add(createParticipant(4, "Sara Connor", "saraconnor", "saraconnor@example.com", 123, 6));
 
         when(projectDaoMock.getProjectParticipants(319)).thenReturn(mockParticipants);
 
-        byte[] result = generadorDocumentosService.generarC204MallasDocumento(dtoMock);
+        byte[] result = documentGeneratorService.generateDocumentMeshCases(dtoMock);
 
         assertNotNull(result);
         verify(projectDaoMock, times(1)).getProjectParticipants(319);
     }
 
     @Test
-    void testGenerarP110MallasDocumento() {
-        GeneradorDocumentosMallasRequest dtoMock = crearGeneradorDocumentosMallasRequest();
+    void testGenerateDocumentMeshTracking() {
+        DocumentGeneratorMeshRequest dtoMock = createDocumentGeneratorMeshRequest();
         List<InsertProjectParticipantDTO> mockParticipants = new ArrayList<>();
-        mockParticipants.add(crearParticipante(1, "John Doe", "johndoe", "johndoe@example.com", 123, 7));
-        mockParticipants.add(crearParticipante(2, "Jane Smith", "janesmith", "janesmith@example.com", 123, 8));
-        mockParticipants.add(crearParticipante(3, "Mike Brown", "mikebrown", "mikebrown@example.com", 123, 5));
-        mockParticipants.add(crearParticipante(4, "Sara Connor", "saraconnor", "saraconnor@example.com", 123, 6));
+        mockParticipants.add(createParticipant(1, "John Doe", "johndoe", "johndoe@example.com", 123, 7));
+        mockParticipants.add(createParticipant(2, "Jane Smith", "janesmith", "janesmith@example.com", 123, 8));
+        mockParticipants.add(createParticipant(3, "Mike Brown", "mikebrown", "mikebrown@example.com", 123, 5));
+        mockParticipants.add(createParticipant(4, "Sara Connor", "saraconnor", "saraconnor@example.com", 123, 6));
 
         when(projectDaoMock.getProjectParticipants(319)).thenReturn(mockParticipants);
 
-        byte[] result = generadorDocumentosService.generarP110MallasDocumento(dtoMock);
+        byte[] result = documentGeneratorService.generateDocumentMeshTracking(dtoMock);
 
         assertNotNull(result);
         verify(projectDaoMock, times(1)).getProjectParticipants(319);
     }
 
     @Test
-    void testGenerarC204MallasNombre() {
-        GeneradorDocumentosMallasRequest dtoMock = crearGeneradorDocumentosMallasRequest();
-        String resultado = generadorDocumentosService.generarC204MallasNombre(dtoMock);
-        assertEquals("CR-PEBILDIA-T05", resultado, "Los nombres de los folders no coinciden");
+    void testGenerateNameMeshCases() {
+        DocumentGeneratorMeshRequest dtoMock = createDocumentGeneratorMeshRequest();
+        String result = documentGeneratorService.generateNameMeshCases(dtoMock);
+        assertEquals("CR-PEBILDIA-T05", result, "Los nombres de los folders no coinciden");
     }
 
     @Test
-    void testGenerarP110MallasNombre() {
-        GeneradorDocumentosMallasRequest dtoMock = crearGeneradorDocumentosMallasRequest();
-        String resultado = generadorDocumentosService.generarP110MallasNombre(dtoMock);
-        assertEquals("PBIL_Diaria", resultado, "Los nombres de los folders no coinciden");
+    void testGenerateNameMeshTracking() {
+        DocumentGeneratorMeshRequest dtoMock = createDocumentGeneratorMeshRequest();
+        String result = documentGeneratorService.generateNameMeshTracking(dtoMock);
+        assertEquals("PBIL_Diaria", result, "Los nombres de los folders no coinciden");
     }
 
-
-    private GeneradorDocumentosMallasRequest crearGeneradorDocumentosMallasRequest() {
-        GeneradorDocumentosMallasRequest request = new GeneradorDocumentosMallasRequest();
+    private DocumentGeneratorMeshRequest createDocumentGeneratorMeshRequest() {
+        DocumentGeneratorMeshRequest request = new DocumentGeneratorMeshRequest();
         request.setProjectId(319);
         request.setSdatool("SDATOOL-47281");
         request.setProjectDescription("Marcaje 3.0");
@@ -86,37 +85,33 @@ class GeneradorDocumentosServiceTest {
         request.setToken("sadf");
         request.setName("ANTHONY WILFREDO AMBROSIO GARCIA");
         
-        DataDocumentosMallas dataDocumentosMallas = new DataDocumentosMallas();
-        List<DataDocumentosMallasFolders> folders = new ArrayList<>();
-
-        DataDocumentosMallasFolders folder = getDataDocumentosMallasFolders();
-
+        DataDocumentMesh dataDocumentMesh = new DataDocumentMesh();
+        List<DataDocumentMeshFolder> folders = new ArrayList<>();
+        DataDocumentMeshFolder folder = getDataDocumentMeshFolder();
         folders.add(folder);
-
-        dataDocumentosMallas.setFolders(folders);
-
-        request.setDataDocumentosMallas(dataDocumentosMallas);
+        dataDocumentMesh.setFolderList(folders);
+        request.setDataDocumentMesh(dataDocumentMesh);
 
         return request;
     }
 
-    private static DataDocumentosMallasFolders getDataDocumentosMallasFolders() {
-        DataDocumentosMallasFolders folder = new DataDocumentosMallasFolders();
-        folder.setFolder("CR-PEBILDIA-T05");
+    private static DataDocumentMeshFolder getDataDocumentMeshFolder() {
+        DataDocumentMeshFolder folder = new DataDocumentMeshFolder();
+        folder.setFolderName("CR-PEBILDIA-T05");
 
-        List<DataDocumentosMallasJobName> jobnames = new ArrayList<>();
-        DataDocumentosMallasJobName jobName1 = new DataDocumentosMallasJobName();
+        List<DataDocumentMeshJobName> jobnames = new ArrayList<>();
+        DataDocumentMeshJobName jobName1 = new DataDocumentMeshJobName();
         jobName1.setJobName("PBILCP0082");
-        jobName1.setEstado("nuevo");
+        jobName1.setState("nuevo");
 
-        DataDocumentosMallasJobName jobName2 = new DataDocumentosMallasJobName();
+        DataDocumentMeshJobName jobName2 = new DataDocumentMeshJobName();
         jobName2.setJobName("PBILDP0010");
-        jobName2.setEstado("modificado");
+        jobName2.setState("modificado");
 
         jobnames.add(jobName1);
         jobnames.add(jobName2);
 
-        folder.setJobnames(jobnames);
+        folder.setJobNames(jobnames);
         folder.setXml("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                 + "<!--Exported at 03-12-2024 11:40:35-->\n"
                 + "<DEFTABLE xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"Folder.xsd\">\n"
@@ -142,20 +137,20 @@ class GeneradorDocumentosServiceTest {
         return folder;
     }
 
-    public static InsertProjectParticipantDTO crearParticipante(Integer id, String name, String user,
+    public static InsertProjectParticipantDTO createParticipant(Integer id, String name, String user,
                                                                 String email, Integer projectId,
                                                                 Integer rolType) {
-        InsertProjectParticipantDTO participante = new InsertProjectParticipantDTO();
-        participante.projectParticipantId = id;
-        participante.participantName = name;
-        participante.participantUser = user;
-        participante.participantEmail = email;
-        participante.projectId = projectId;
-        participante.projectRolType = rolType;
-        participante.piId = 101;
-        participante.createAuditDate = new Date();
-        participante.createAuditUser = "testUser";
-        participante.updateAuditDate = new Date();
-        return participante;
+        InsertProjectParticipantDTO participant = new InsertProjectParticipantDTO();
+        participant.projectParticipantId = id;
+        participant.participantName = name;
+        participant.participantUser = user;
+        participant.participantEmail = email;
+        participant.projectId = projectId;
+        participant.projectRolType = rolType;
+        participant.piId = 101;
+        participant.createAuditDate = new Date();
+        participant.createAuditUser = "testUser";
+        participant.updateAuditDate = new Date();
+        return participant;
     }
 }

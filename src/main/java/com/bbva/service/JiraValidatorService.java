@@ -13,32 +13,20 @@ import com.bbva.entities.jiravalidator.JiraValidatorLogEntity;
 import com.bbva.util.ApiJiraMet.JiraValidationMethods;
 import com.bbva.util.ApiJiraName;
 import com.google.gson.*;
-import org.apache.http.client.CookieStore;
-import org.apache.http.impl.client.BasicCookieStore;
-import java.net.http.HttpClient;
+
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
 
 public class JiraValidatorService {
     private static final Logger LOGGER = Logger.getLogger(JiraValidatorService.class.getName());
     private JiraApiService jiraApiService;
-    private final JiraValidatorLogDao jiraValidatorLogDao = new JiraValidatorLogDao();;
-    private String jiraPADCode;
-    private List<String> validPADList = Arrays.asList("pad3", "pad5");
-    private String boxClassesBorder;
-    private String tipoDesarrollo;
-    private String tipoDesarrolloFormulario;
-    private final String ticketVisibleLabel = "Ticket";
-    private HttpClient httpClient;
-    private CookieStore cookieStore = new BasicCookieStore();
-
-    private JiraValidationMethods validationUrlJira;
-    private List<InfoJiraProject> infoJiraProjectList;
+    private final JiraValidatorLogDao jiraValidatorLogDao = new JiraValidatorLogDao();
+    private static final String GROUP_TICKET = "Ticket";
+    private static final String GROUP_FEATURE_LINK = "Feature Link";
+    private static final String GROUP_PR = "PR";
 
     public IDataResult<JiraResponseDTO> getValidatorByUrl(JiraValidatorByUrlRequest dto) throws Exception {
         JiraResponseDTO jiraResponseDTO = new JiraResponseDTO();
@@ -52,10 +40,9 @@ public class JiraValidatorService {
         int errorCount = 0;
         int warningCount = 0;
         this.jiraApiService = new JiraApiService();
-        this.httpClient = HttpClient.newHttpClient();
-        this.infoJiraProjectList = InfoJiraProjectDao.getInstance().list();
+        List<InfoJiraProject> infoJiraProjectList = InfoJiraProjectDao.getInstance().list();
         String acceptanceCriteriaGroup = "Criterio de Aceptacion";
-        String prGroup="PR";
+
         List<String> teamBackLogTicketIdRLB = List.of("6037769"//CS
                 ,"6037765"//RIC
                 ,"6037763"//RIESGOS
@@ -63,7 +50,6 @@ public class JiraValidatorService {
                 ,"6037755"//FIN
         );
 
-        var isValidUrl = validateJiraFormatURL(dto.getUrlJira());
         var issuesMetadada = getMetadataIssues(dto);
         var jsonResponse = JsonParser.parseString(issuesMetadada).getAsJsonObject();
         var jiraTicketResult = jsonResponse.getAsJsonArray("issues").get(0).getAsJsonObject();
@@ -74,80 +60,80 @@ public class JiraValidatorService {
             throw new HandledException("500", "no existe datos del ticket jira");
         }
 
-        ArrayList<Map<String, Object>> result_final = new ArrayList<>();
+        ArrayList<Map<String, Object>> resultFinal = new ArrayList<>();
         int ruleIdCounter = 1;
 
         var instancesRules = new JiraValidationMethods(dto.getUrlJira(), jiraTicketResult);
-        this.infoJiraProjectList = this.infoJiraProjectList.stream().filter(obj -> obj.getTeamBackLogId() != null)
+        infoJiraProjectList = infoJiraProjectList.stream().filter(obj -> obj.getTeamBackLogId() != null)
                 .collect(Collectors.toList());
 
-        // var result_29 = instancesRules.getValidatorDocumentAttachByDevType(tipoDesarrollo);
-        var result_1 = instancesRules.getValidatorValidateSummaryHUTType("Validar el tipo de desarrollo en el summary", "Ticket");
-        var tipoDesarrollo = result_1.get("tipoDesarrolloSummary").toString();
-        var result_2 = instancesRules.getValidatorIssueType(tipoDesarrollo,"Validar que el Issue type sea Story o Dependency", "Ticket");
-        var result_3 = instancesRules.getValidationFixVersion(tipoDesarrollo,"Validar que se tenga Fix Version (Solo Mallas/HOST)","Ticket");
-        var result_4 = instancesRules.getValidationLabels(tipoDesarrollo,"Validar que se tengan los labels correctos", "Ticket");
-        var result_5 = instancesRules.getValidationBoardProject(dto, "Validar el Tablero del proyecto", "Feature Link","Feature Link",infoJiraProjectList);
-        var result_6 = instancesRules.getValidationTeamAssigned(tipoDesarrollo,true,"Validar que el equipo asignado sea el correcto", "Ticket");
-        var result_7 = instancesRules.getValidationInitialTeam("Validar si se creo en el tablero de DQA", "Tablero");
-        var result_8 = instancesRules.getValidationFeatureLink("Se valida el tenga un Feature Link asignado", "Feature Link");
-        var result_9 = instancesRules.getValidationFeatureLinkStatus(dto, "Validar el estado Jira del Feature Link", "Feature Link");
-        var result_10 = instancesRules.getValidationFeatureLinkProgramIncrement(dto, "Validar que el Feature Link tenga el Program Increment asignado y correcto (Q Actual)", "Feature Link");
-        var result_11 = instancesRules.getValidationFeatureLinkRLB(dto,tipoDesarrollo,"Validar que el Feature Link tenga INC PRB o PB como label, excepto para evolutivos", "Feature Link");
-        var result_12 = instancesRules.getValidationItemType("Validar Item Type sea Technical", "Ticket");
-        var result_13 = instancesRules.getValidationTechStack("Validar Tech Stack sea Data - Dataproc", "Ticket");
-        var result_14 = instancesRules.getValidationAcceptanceCriteria(dto,teamBackLogTicketIdRLB,tipoDesarrollo,"Validar el criterio de aceptacion, segun el tipo de desarrollo debe ser similar a la plantilla", acceptanceCriteriaGroup, infoJiraProjectList);
-        var result_15 = instancesRules.getValidationValidateImpactLabel("Validar que se tengan los Impact Label correctos (Solo Mallas/HOST)","Ticket", tipoDesarrollo);
-        var result_16 = instancesRules.getValidationValidateAttachment(tipoDesarrollo,"Validar la existencia de los adjuntos", "Attachment");
-        var result_17 = instancesRules.getValidationDependency(teamBackLogTicketIdRLB,"Validar que exista una Dependencia asignada correctamente y comprometida (Comentario HUD Comprometida)","Dependencia");
-        var result_18 = instancesRules.getValidationDependencyFeatureVsHUTFeature(teamBackLogTicketIdRLB, dto,"Validar que el ticket tenga el mismo feature link que la dependencia","Dependencia", infoJiraProjectList);
-        var result_19 = instancesRules.getValidationDependencyComment(teamBackLogTicketIdRLB, dto,"Validar que la dependencia cuente con un comentario comprometido de QE o QE temporal","Dependencia", infoJiraProjectList);
-        var result_20 = instancesRules.getValidationValidateSubTask(tipoDesarrollo,"Validar la existencia de las subtareas", "Subtask");
-        var result_21 = instancesRules.getValidationValidateSubTaskStatus(tipoDesarrollo,"Se valida que la subtarea tenga el Status correcto", "Subtask");
-        var result_22 = instancesRules.getValidationValidateSubtaskPerson(dto,tipoDesarrollo,"Validar que la subtarea tenga el VoBo de la persona en el tablero de Lideres","Subtask",infoJiraProjectList);
-        var result_23 = instancesRules.getValidationValidateSubTaskValidateContractor(dto,tipoDesarrollo,"Se valida la subtarea: El email debe pertenecer a un Usuario de Negocio Interno BBVA", "Subtarea");
-        var result_24 = instancesRules.getValidationAlpha(tipoDesarrollo,"Validar que la UUAA corresponda al Dominio de ALPHA", "Subtask");
-        var result_25 = instancesRules.getValidationValidateJIRAStatus(tipoDesarrollo,"Validar el Status de Ticket JIRA","Ticket");
-        var result_26 = instancesRules.getValidationPR(tipoDesarrollo, "Validar que se tenga una PR asociada", prGroup);
-        var result_27 = instancesRules.getValidationPRBranch(tipoDesarrollo,"Validar que esté asociado a la rama correcta", prGroup);
-        var result_28 = instancesRules.getValidationProductivizacionIssueLink(tipoDesarrollo, "Validar que el ticket de deployado como isChild (scaffolder)", "Ticket");
-        var result_29 = instancesRules.getValidatorValidateHUTType(teamBackLogTicketIdRLB,"Detectar el tipo de Ticket Integracion", tipoDesarrollo, "Ticket");
-        var result_30 = instancesRules.getValidationIFRS9("Validar los bloqueo IFRS9 en las solicitudes", "Ticket");
-        var result_31 = instancesRules.getValidationURLJIRA("Validar que sea PAD3 o PAD5", "Ticket");
-        var result_32 = instancesRules.getValidationFeatureLinkPAD3("Validar que el Feature Link, se recomienda que sea PAD3", "Feature Link");
+        // var result29 = instancesRules.getValidatorDocumentAttachByDevType(tipoDesarrollo);
+        var result1 = instancesRules.getValidatorValidateSummaryHUTType("Validar el tipo de desarrollo en el summary", GROUP_TICKET);
+        var tipoDesarrollo = result1.get("tipoDesarrolloSummary").toString();
+        var result2 = instancesRules.getValidatorIssueType(tipoDesarrollo,"Validar que el Issue type sea Story o Dependency", GROUP_TICKET);
+        var result3 = instancesRules.getValidationFixVersion(tipoDesarrollo,"Validar que se tenga Fix Version (Solo Mallas/HOST)",GROUP_TICKET);
+        var result4 = instancesRules.getValidationLabels(tipoDesarrollo,"Validar que se tengan los labels correctos", GROUP_TICKET);
+        var result5 = instancesRules.getValidationBoardProject(dto, "Validar el Tablero del proyecto", GROUP_FEATURE_LINK,GROUP_FEATURE_LINK, infoJiraProjectList);
+        var result6 = instancesRules.getValidationTeamAssigned(tipoDesarrollo,true,"Validar que el equipo asignado sea el correcto", GROUP_TICKET);
+        var result7 = instancesRules.getValidationInitialTeam("Validar si se creo en el tablero de DQA", "Tablero");
+        var result8 = instancesRules.getValidationFeatureLink("Se valida el tenga un Feature Link asignado", GROUP_FEATURE_LINK);
+        var result9 = instancesRules.getValidationFeatureLinkStatus(dto, "Validar el estado Jira del Feature Link", GROUP_FEATURE_LINK);
+        var result10 = instancesRules.getValidationFeatureLinkProgramIncrement(dto, "Validar que el Feature Link tenga el Program Increment asignado y correcto (Q Actual)", GROUP_FEATURE_LINK);
+        var result11 = instancesRules.getValidationFeatureLinkRLB(dto,tipoDesarrollo,"Validar que el Feature Link tenga INC PRB o PB como label, excepto para evolutivos", GROUP_FEATURE_LINK);
+        var result12 = instancesRules.getValidationItemType("Validar Item Type sea Technical", GROUP_TICKET);
+        var result13 = instancesRules.getValidationTechStack("Validar Tech Stack sea Data - Dataproc", GROUP_TICKET);
+        var result14 = instancesRules.getValidationAcceptanceCriteria(dto,teamBackLogTicketIdRLB,tipoDesarrollo,"Validar el criterio de aceptacion, segun el tipo de desarrollo debe ser similar a la plantilla", acceptanceCriteriaGroup, infoJiraProjectList);
+        var result15 = instancesRules.getValidationValidateImpactLabel("Validar que se tengan los Impact Label correctos (Solo Mallas/HOST)",GROUP_TICKET, tipoDesarrollo);
+        var result16 = instancesRules.getValidationValidateAttachment(tipoDesarrollo,"Validar la existencia de los adjuntos", "Attachment");
+        var result17 = instancesRules.getValidationDependency(teamBackLogTicketIdRLB,"Validar que exista una Dependencia asignada correctamente y comprometida (Comentario HUD Comprometida)","Dependencia");
+        var result18 = instancesRules.getValidationDependencyFeatureVsHUTFeature(teamBackLogTicketIdRLB, dto,"Validar que el ticket tenga el mismo feature link que la dependencia","Dependencia", infoJiraProjectList);
+        var result19 = instancesRules.getValidationDependencyComment(teamBackLogTicketIdRLB, dto,"Validar que la dependencia cuente con un comentario comprometido de QE o QE temporal","Dependencia", infoJiraProjectList);
+        var result20 = instancesRules.getValidationValidateSubTask(tipoDesarrollo,"Validar la existencia de las subtareas", "Subtask");
+        var result21 = instancesRules.getValidationValidateSubTaskStatus(tipoDesarrollo,"Se valida que la subtarea tenga el Status correcto", "Subtask");
+        var result22 = instancesRules.getValidationValidateSubtaskPerson(dto,tipoDesarrollo,"Validar que la subtarea tenga el VoBo de la persona en el tablero de Lideres","Subtask", infoJiraProjectList);
+        var result23 = instancesRules.getValidationValidateSubTaskValidateContractor(dto,tipoDesarrollo,"Se valida la subtarea: El email debe pertenecer a un Usuario de Negocio Interno BBVA", "Subtarea");
+        var result24 = instancesRules.getValidationAlpha(tipoDesarrollo,"Validar que la UUAA corresponda al Dominio de ALPHA", "Subtask");
+        var result25 = instancesRules.getValidationValidateJIRAStatus(tipoDesarrollo,"Validar el Status de Ticket JIRA",GROUP_TICKET);
+        var result26 = instancesRules.getValidationPR(tipoDesarrollo, "Validar que se tenga una PR asociada", GROUP_PR);
+        var result27 = instancesRules.getValidationPRBranch(tipoDesarrollo,"Validar que esté asociado a la rama correcta", GROUP_PR);
+        var result28 = instancesRules.getValidationProductivizacionIssueLink(tipoDesarrollo, "Validar que el ticket de deployado como isChild (scaffolder)", GROUP_TICKET);
+        var result29 = instancesRules.getValidatorValidateHUTType(teamBackLogTicketIdRLB,"Detectar el tipo de Ticket Integracion", tipoDesarrollo, GROUP_TICKET);
+        var result30 = instancesRules.getValidationIFRS9("Validar los bloqueo IFRS9 en las solicitudes", GROUP_TICKET);
+        var result31 = instancesRules.getValidationURLJIRA("Validar que sea PAD3 o PAD5", GROUP_TICKET);
+        var result32 = instancesRules.getValidationFeatureLinkPAD3("Validar que el Feature Link, se recomienda que sea PAD3", GROUP_FEATURE_LINK);
 
-        result_final.add(result_1);
-        result_final.add(result_2);
-        result_final.add(result_3);
-        result_final.add(result_4);
-        result_final.add(result_5);
-        result_final.add(result_6);
-        result_final.add(result_7);
-        result_final.add(result_8);
-        result_final.add(result_9);
-        result_final.add(result_10);
-        result_final.add(result_11);
-        result_final.add(result_12);
-        result_final.add(result_13);
-        result_final.add(result_14);
-        result_final.add(result_15);
-        result_final.add(result_16);
-        result_final.add(result_17);
-        result_final.add(result_18);
-        result_final.add(result_19);
-        result_final.add(result_20);
-        result_final.add(result_21);
-        result_final.add(result_22);
-        result_final.add(result_23);
-        result_final.add(result_24);
-        result_final.add(result_25);
-        result_final.add(result_26);
-        result_final.add(result_27);
-        result_final.add(result_28);
-        result_final.add(result_29);
-        result_final.add(result_30);
-        result_final.add(result_31);
-        result_final.add(result_32);
+        resultFinal.add(result1);
+        resultFinal.add(result2);
+        resultFinal.add(result3);
+        resultFinal.add(result4);
+        resultFinal.add(result5);
+        resultFinal.add(result6);
+        resultFinal.add(result7);
+        resultFinal.add(result8);
+        resultFinal.add(result9);
+        resultFinal.add(result10);
+        resultFinal.add(result11);
+        resultFinal.add(result12);
+        resultFinal.add(result13);
+        resultFinal.add(result14);
+        resultFinal.add(result15);
+        resultFinal.add(result16);
+        resultFinal.add(result17);
+        resultFinal.add(result18);
+        resultFinal.add(result19);
+        resultFinal.add(result20);
+        resultFinal.add(result21);
+        resultFinal.add(result22);
+        resultFinal.add(result23);
+        resultFinal.add(result24);
+        resultFinal.add(result25);
+        resultFinal.add(result26);
+        resultFinal.add(result27);
+        resultFinal.add(result28);
+        resultFinal.add(result29);
+        resultFinal.add(result30);
+        resultFinal.add(result31);
+        resultFinal.add(result32);
 
         JiraValidatorLogEntity logEntity = JiraValidatorLogEntity.builder()
                 .nombre(dto.getName())
@@ -155,7 +141,7 @@ public class JiraValidatorService {
                 .fecha(LocalDateTime.now())
                 .ticket(dto.getUrlJira()).build();
 
-        for (Map<String, Object> result : result_final) {
+        for (Map<String, Object> result : resultFinal) {
             JiraMessageResponseDTO message = new JiraMessageResponseDTO();
             message.setRuleId(ruleIdCounter++);
             String reglaEstado = (boolean)result.get("isValid") ? "OK" : "NOT OK";
@@ -394,16 +380,9 @@ public class JiraValidatorService {
                 prMap.put("reviewers", reviewersList);
                 prs.add(prMap);
             }
-            //Transformar la lista de objetos Java a una representación JSON en forma de cadena
         }
         Gson gson = new Gson();
         return gson.toJson(prs);
     }
 
-    public boolean validateJiraFormatURL(String jiraURL) {
-        String regexPattern = "^(?:https://jira.globaldevtools.bbva.com/(?:browse/)?(?:plugins/servlet/mobile#issue/)?)?([a-zA-Z0-9]+-[a-zA-Z0-9]+)$";
-        Pattern pattern = Pattern.compile(regexPattern);
-        Matcher matcher = pattern.matcher(jiraURL.toLowerCase());
-        return matcher.matches();
-    }
 }

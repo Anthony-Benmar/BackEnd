@@ -11,6 +11,8 @@ import java.util.List;
 @NoArgsConstructor
 @Getter
 @Setter
-public class DataDocumentosMallas {
-    private List<DataDocumentosMallasFolders> folders;
+public class DataDocumentMeshFolder {
+    private String folderName;
+    private String xml;
+    private List<DataDocumentMeshJobName> jobNames;
 }
