@@ -62,8 +62,9 @@ public interface ProjectMapper {
     List<ProjectEntity> readonly(@Param("list") int[] listId);
 
     @Select({"<script>" +
-            "SELECT project_id, status_id, 'APROBADO' status_name, start_date " +
-            "FROM project_status WHERE project_id = #{projectId} order by start_date desc;" +
+            "SELECT ps.project_id, ps.status_id, c.element_name as status_name, ps.start_date " +
+            "FROM project_status ps JOIN catalog c ON (c.catalog_id = 1033 and  ps.status_id = c.element_id) " +
+            "WHERE ps.project_id = #{projectId} order by ps.start_date desc;" +
             "</script>"})
     @Results({
             @Result(property = "projectId", column = "project_id"),
