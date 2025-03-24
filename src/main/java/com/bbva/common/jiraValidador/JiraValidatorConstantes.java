@@ -274,7 +274,7 @@ public class JiraValidatorConstantes {
                 "validateEmailContractor", false,
                 "advertenciaReadyToVerify", false,
                 "advertenciaEstadoInicial", true,
-                "status", new ArrayList<>(List.of("Ready")),
+                "status", new ArrayList<>(List.of(READY)),
                 ITEMS, new ArrayList<>(List.of(C204_QA, "[VB][QA]"))
                 )));
     SUBTASKS_TYPE_OWNER = Collections.unmodifiableMap(mapSubtasksTipoOwner);

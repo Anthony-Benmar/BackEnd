@@ -149,7 +149,7 @@ public class JiraValidationMethods {
     }
 
     public Map<String, Object> getValidatorIssueType(String tipoDesarrollo,String helpMessage, String group) {
-        var issueType = jiraTicketResult.getAsJsonObject(FIELDS).getAsJsonObject(ISSUETYPE).get("name").getAsString();
+        String issueType = jiraTicketResult.getAsJsonObject(FIELDS).getAsJsonObject(ISSUETYPE).get("name").getAsString();
 
         String message;
         boolean isValid;
@@ -167,8 +167,6 @@ public class JiraValidationMethods {
     }
 
     public Map<String, Object> getValidatorValidateHUTType(List<String> teamBackLogTicketIdRLB, String helpMessage, String tipoDesarrollo, String group) {
-        String message;
-        boolean isValid;
         boolean isWarning = false;
 
         JsonArray issuelinks = jiraTicketResult
@@ -178,14 +176,14 @@ public class JiraValidationMethods {
         String name = null;
         String statusCategory = null;
 
-        if (tipoDesarrollo.equalsIgnoreCase("ingesta")) {
+        if (tipoDesarrollo.equalsIgnoreCase(INGESTA)) {
             if(teamBackLogTicketIdRLB.contains(teamBackLogId)){
                 return buildValidationResult(MSG_RULE_INVALID, true, isWarning, helpMessage, group);
             } else {
                 for (JsonElement issueLinkElement : issuelinks) {
                     JsonObject issueLink = issueLinkElement.getAsJsonObject();
                     String inward = issueLink.getAsJsonObject("type").get(INWARD).getAsString();
-                    if (inward.equalsIgnoreCase("is child item")) {
+                    if (inward.equalsIgnoreCase(IS_CHILD_ITEM_OF)) {
                         if (issueLink.has(INWARD_ISSUE)) {
                             JsonObject inwardIssue = issueLink.getAsJsonObject(INWARD_ISSUE);
                             if (inwardIssue.has(FIELDS)) {
@@ -199,29 +197,22 @@ public class JiraValidationMethods {
                             }
                         }
                     } else {
-                        message = "No es ticket de integración";
-                        isValid = true;
+                        return buildValidationResult("No es ticket de integración", true, isWarning, helpMessage, group);
                     }
                 }
                 if (name != null && name.equals(STORY)) {
                     if (statusCategory != null && statusCategory.equals(DEPLOYED)) {
-                        message = "Ticket de integración con tickets deployados";
-                        isValid = true;
+                        return buildValidationResult("Ticket de integración sin tickets deployados", true, isWarning, helpMessage, group);
                     } else {
-                        message = "Ticket de integración sin tickets deployados";
-                        isValid = false;
+                        return buildValidationResult("Ticket de integración sin tickets deployados", false, isWarning, helpMessage, group);
                     }
                 } else {
-                    message = "No es ticket de integración";
-                    isValid = true;
+                    return buildValidationResult("No es ticket de integración", true, isWarning, helpMessage, group);
                 }
             }
         } else {
-            isValid = true;
-            message = MSG_RULE_INVALID;
+            return buildValidationResult(MSG_RULE_INVALID, true, isWarning, helpMessage, group);
         }
-
-        return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
 
     public String multiReplace(String text, Map<String, String> replacements) {
