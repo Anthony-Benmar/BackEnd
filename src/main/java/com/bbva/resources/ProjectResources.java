@@ -6,6 +6,7 @@ import com.bbva.dto.map_dependency.response.MapDependencyListByProjectResponse;
 import com.bbva.dto.project.request.*;
 import com.bbva.dto.project.response.*;
 import com.bbva.entities.common.PeriodPEntity;
+import com.bbva.entities.project.ProjectStatusEntity;
 import com.bbva.service.ProjectService;
 import com.bbva.dto.feature.response.featureDtoResponse;
 
@@ -243,16 +244,6 @@ public class ProjectResources {
     }
 
     @GET
-    @Path("/info/{projectId}/participants")
-    @Produces(MediaType.APPLICATION_JSON)
-    public IDataResult<List<InsertProjectParticipantDTO>> getProjectParticipants(@Context HttpServletRequest request,
-                                                                   @PathParam("projectId") int projectId)
-            throws ExecutionException, InterruptedException
-    {
-        return projectService.getProjectParticipants(projectId);
-    }
-
-    @GET
     @Path("/calendar")
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<List<SelectCalendarDTO>> getCalendar()
@@ -279,5 +270,25 @@ public class ProjectResources {
             throws ExecutionException, InterruptedException
     {
         return projectService.getFeaturesByProject(sdatoolId);
+    }
+
+    @GET
+    @Path("/info/{projectId}/status-tracking")
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<List<ProjectStatusEntity>> getProjectStatusTracking(@Context HttpServletRequest request,
+                                                                         @PathParam("projectId") int projectId)
+            throws ExecutionException, InterruptedException
+    {
+        return projectService.getProjectStatusTracking(projectId);
+    }
+
+    @GET
+    @Path("/info/{projectId}/participants")
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<List<InsertProjectParticipantDTO>> getProjectParticipants(@Context HttpServletRequest request,
+                                                                                 @PathParam("projectId") int projectId)
+            throws ExecutionException, InterruptedException
+    {
+        return projectService.getProjectParticipants(projectId);
     }
 }

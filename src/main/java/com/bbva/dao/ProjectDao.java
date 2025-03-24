@@ -17,6 +17,7 @@ import com.bbva.entities.feature.JiraFeatureEntity;
 import com.bbva.entities.project.ProjectFilterEntity;
 import com.bbva.entities.project.ProjectPortafolioEntity;
 import com.bbva.entities.project.ProjectPortafolioFilterEntity;
+import com.bbva.entities.project.ProjectStatusEntity;
 import com.bbva.util.JSONUtils;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -501,6 +502,22 @@ public class ProjectDao {
         try (SqlSession session = sqlSessionFactory.openSession()) {
             ProjectMapper mapper = session.getMapper(ProjectMapper.class);
             return mapper.getFeaturesByProject(sdatoolId, featureKey);
+        }
+    }
+
+    public List<ProjectStatusEntity> getProjectStatusTracking(int projectId) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        List<ProjectStatusEntity> projectStatusesList;
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ProjectMapper mapper = session.getMapper(ProjectMapper.class);
+            projectStatusesList = mapper.getProjectStatusTracking(projectId);
+
+            for (ProjectStatusEntity item : projectStatusesList) {
+                if (item.getStartDate() != null) {
+                    item.setStartDateStr(convertDateToString(item.getStartDate(), "dd/MM/yyyy HH:mm:ss"));
+                }
+            }
+            return mapper.getProjectStatusTracking(projectId);
         }
     }
 }
