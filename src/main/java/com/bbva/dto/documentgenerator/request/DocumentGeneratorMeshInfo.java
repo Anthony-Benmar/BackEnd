@@ -1,4 +1,4 @@
-package com.bbva.dto.jira.request;
+package com.bbva.dto.documentgenerator.request;
 
 import com.bbva.dto.project.request.InsertProjectParticipantDTO;
 import lombok.AllArgsConstructor;

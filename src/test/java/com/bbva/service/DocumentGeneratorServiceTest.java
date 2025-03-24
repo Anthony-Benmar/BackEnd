@@ -1,10 +1,10 @@
 package com.bbva.service;
 
 import com.bbva.dao.ProjectDao;
-import com.bbva.dto.jira.request.DataDocumentMesh;
-import com.bbva.dto.jira.request.DataDocumentMeshFolder;
-import com.bbva.dto.jira.request.DataDocumentMeshJobName;
-import com.bbva.dto.jira.request.DocumentGeneratorMeshRequest;
+import com.bbva.dto.documentgenerator.request.DataDocumentMesh;
+import com.bbva.dto.documentgenerator.request.DataDocumentMeshFolder;
+import com.bbva.dto.documentgenerator.request.DataDocumentMeshJobName;
+import com.bbva.dto.documentgenerator.request.DocumentGeneratorMeshRequest;
 import com.bbva.dto.project.request.InsertProjectParticipantDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

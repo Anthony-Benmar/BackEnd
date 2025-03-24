@@ -1,7 +1,7 @@
 package com.bbva.service;
 
 import com.bbva.dao.ProjectDao;
-import com.bbva.dto.jira.request.*;
+import com.bbva.dto.documentgenerator.request.*;
 import com.bbva.dto.project.request.InsertProjectParticipantDTO;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;

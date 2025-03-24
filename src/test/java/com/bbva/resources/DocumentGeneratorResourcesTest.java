@@ -1,6 +1,6 @@
 package com.bbva.resources;
 
-import com.bbva.dto.jira.request.DocumentGeneratorMeshRequest;
+import com.bbva.dto.documentgenerator.request.DocumentGeneratorMeshRequest;
 import com.bbva.service.DocumentGeneratorService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

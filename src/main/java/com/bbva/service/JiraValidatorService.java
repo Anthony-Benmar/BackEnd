@@ -13,6 +13,9 @@ import com.bbva.entities.jiravalidator.JiraValidatorLogEntity;
 import com.bbva.util.ApiJiraMet.JiraValidationMethods;
 import com.bbva.util.ApiJiraName;
 import com.google.gson.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -143,170 +146,12 @@ public class JiraValidatorService {
         for (Map<String, Object> result : resultFinal) {
             JiraMessageResponseDTO message = new JiraMessageResponseDTO();
             message.setRuleId(ruleIdCounter++);
-            String reglaEstado = (boolean)result.get("isValid") ? "OK" : "NOT OK";
-            switch (message.getRuleId()) {
-                case 1:
-                    message.setRule("Validacion Summary HUT Type:");
-                    message.setOrder(1);
-                    logEntity.setRegla1(reglaEstado);
-                    break;
-                case 2:
-                    message.setRule("Validacion Issue Type:");
-                    message.setOrder(2);
-                    logEntity.setRegla2(reglaEstado);
-                    break;
-                case 3:
-                    message.setRule("Validacion Fix Version:");
-                    message.setOrder(3);
-                    logEntity.setRegla3(reglaEstado);
-                    break;
-                case 4:
-                    message.setRule("Validacion Labels:");
-                    message.setOrder(4);
-                    logEntity.setRegla4(reglaEstado);
-                    break;
-                case 5:
-                    message.setRule("Validacion Tablero Proyecto:");
-                    message.setOrder(5);
-                    logEntity.setRegla5(reglaEstado);
-                    break;
-                case 6:
-                    message.setRule("Validacion Asignacion a Tablero de DQA:");
-                    message.setOrder(6);
-                    logEntity.setRegla6(reglaEstado);
-                    break;
-                case 7:
-                    message.setRule("Validacion Tablero DQA:");
-                    message.setOrder(7);
-                    logEntity.setRegla7(reglaEstado);
-                    break;
-                case 8:
-                    message.setRule("Validacion Feature Link:");
-                    message.setOrder(8);
-                    logEntity.setRegla8(reglaEstado);
-                    break;
-                case 9:
-                    message.setRule("Validacion Feature Link Status:");
-                    message.setOrder(9);
-                    logEntity.setRegla9(reglaEstado);
-                    break;
-                case 10:
-                    message.setRule("Validacion Feature Link Program Increment:");
-                    message.setOrder(10);
-                    logEntity.setRegla10(reglaEstado);
-                    break;
-                case 11:
-                    message.setRule("Validacion Feature Link Incidencia/problema:");
-                    message.setOrder(11);
-                    logEntity.setRegla11(reglaEstado);
-                    break;
-                case 12:
-                    message.setRule("Validacion Item Type:");
-                    message.setOrder(12);
-                    logEntity.setRegla12(reglaEstado);
-                    break;
-                case 13:
-                    message.setRule("Validacion Tech Stack:");
-                    message.setOrder(13);
-                    logEntity.setRegla13(reglaEstado);
-                    break;
-                case 14:
-                    message.setRule("Validacion Acceptance Criteria:");
-                    message.setOrder(14);
-                    logEntity.setRegla14(reglaEstado);
-                    break;
-                case 15:
-                    message.setRule("Validacion Impact Label:");
-                    message.setOrder(15);
-                    logEntity.setRegla15(reglaEstado);
-                    break;
-                case 16:
-                    message.setRule("Validacion documentos adjuntos:");
-                    message.setOrder(16);
-                    logEntity.setRegla16(reglaEstado);
-                    break;
-                case 17:
-                    message.setRule("Validacion Dependencias:");
-                    message.setOrder(17);
-                    logEntity.setRegla17(reglaEstado);
-                    break;
-                case 18:
-                    message.setRule("Validacion Dependencias - Feature Dependencia vs Ticket: ");
-                    message.setOrder(18);
-                    logEntity.setRegla18(reglaEstado);
-                    break;
-                case 19:
-                    message.setRule("Validacion Dependencias - Comprometida por QE: ");
-                    message.setOrder(19);
-                    logEntity.setRegla19(reglaEstado);
-                    break;
-                case 20:
-                    message.setRule("Validacion Subtareas:");
-                    message.setOrder(20);
-                    logEntity.setRegla20(reglaEstado);
-                    break;
-                case 21:
-                    message.setRule("Validacion Subtareas Status:");
-                    message.setOrder(21);
-                    logEntity.setRegla21(reglaEstado);
-                    break;
-                case 22:
-                    message.setRule("Validacion Subtareas VoBo:");
-                    message.setOrder(22);
-                    logEntity.setRegla22(reglaEstado);
-                    break;
-                case 23:
-                    message.setRule("Validacion Subtareas Contractor:");
-                    message.setOrder(23);
-                    logEntity.setRegla23(reglaEstado);
-                    break;
-                case 24:
-                    message.setRule("Validacion Subtarea Alpha:");
-                    message.setOrder(24);
-                    logEntity.setRegla24(reglaEstado);
-                    break;
-                case 25:
-                    message.setRule("Validacion Status JIRA:");
-                    message.setOrder(25);
-                    logEntity.setRegla25(reglaEstado);
-                    break;
-                case 26:
-                    message.setRule("Validacion PR:");
-                    message.setOrder(26);
-                    logEntity.setRegla26(reglaEstado);
-                    break;
-                case 27:
-                    message.setRule("Validacion PR Rama Destino:");
-                    message.setOrder(27);
-                    logEntity.setRegla27(reglaEstado);
-                    break;
-                case 28:
-                    message.setRule("Validacion de productivizacion:");
-                    message.setOrder(28);
-                    logEntity.setRegla28(reglaEstado);
-                    break;
-                case 29:
-                    message.setRule("Validacion ticket de integracion:");
-                    message.setOrder(29);
-                    logEntity.setRegla29(reglaEstado);
-                    break;
-                case 30:
-                    message.setRule("Advertencia IFRS9: Se alerta sobre la fecha de los bloqueos correspondientes a IFRS9");
-                    message.setOrder(30);
-                    logEntity.setRegla30(reglaEstado);
-                    break;
-                case 31:
-                    message.setRule("Validacion Feature Link PAD3:");
-                    message.setVisible(false);
-                    break;
-                case 32:
-                    message.setRule("Validacion URL JIRA:");
-                    message.setVisible(false);
-                    break;
-                default:
-                    message.setRule("Regla desconocida");
-                    break;
-            }
+            RuleConfig config = reglasConfig.getOrDefault(message.getRuleId(), new RuleConfig("Regla desconocida", 0));
+            message.setOrder(config.getOrder());
+            String ruleStatus = (boolean)result.get("isValid") ? "OK" : "NOT OK";
+            actualizarLogEntity(logEntity, message.getRuleId(), ruleStatus);
+
+            message.setVisible(config.isVisible());
             message.setMessage((String) result.get("message"));
             if ((Boolean) result.get("isWarning")) {
                 message.setStatus("warning");
@@ -384,4 +229,58 @@ public class JiraValidatorService {
         return gson.toJson(prs);
     }
 
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    private static class RuleConfig {
+        private final Integer order;
+        private final String ruleMessage;
+        private final boolean visible;
+
+        public RuleConfig(String ruleMessage, Integer order) {
+            this(order, ruleMessage, true);
+        }
+    }
+    
+    private static final Map<Integer, RuleConfig> reglasConfig =  Map.ofEntries(
+            Map.entry( 1, new RuleConfig("Validacion Summary HUT Type:", 1)),
+            Map.entry(2, new RuleConfig("Validacion Issue Type:", 2)),
+            Map.entry(3, new RuleConfig("Validacion Fix Version:", 3)),
+            Map.entry(4, new RuleConfig("Validacion Labels:", 4)),
+            Map.entry( 5, new RuleConfig("Validacion Tablero Proyecto:", 5)),
+            Map.entry(6, new RuleConfig("Validacion Asignacion a Tablero de DQA:", 6)),
+            Map.entry(7, new RuleConfig("Validacion Tablero DQA:", 7)),
+            Map.entry(8, new RuleConfig("Validacion Feature Link:", 8)),
+            Map.entry(9, new RuleConfig("Validacion Feature Link Status:", 9)),
+            Map.entry(10, new RuleConfig("Validacion Feature Link Program Increment:", 10)),
+            Map.entry(11, new RuleConfig("Validacion Feature Link Incidencia/problema:", 11)),
+            Map.entry(12, new RuleConfig("Validacion Item Type:", 12)),
+            Map.entry(13, new RuleConfig("Validacion Tech Stack:", 13)),
+            Map.entry(14, new RuleConfig("Validacion Acceptance Criteria:", 14)),
+            Map.entry(15, new RuleConfig("Validacion Impact Label:", 15)),
+            Map.entry(16, new RuleConfig("Validacion documentos adjuntos:", 16)),
+            Map.entry(17, new RuleConfig("Validacion Dependencias:", 17)),
+            Map.entry(18, new RuleConfig("Validacion Dependencias - Feature Dependencia vs Ticket:", 18)),
+            Map.entry(19, new RuleConfig("Validacion Dependencias - Comprometida por QE:", 19)),
+            Map.entry(20, new RuleConfig("Validacion Subtareas:", 20)),
+            Map.entry(21, new RuleConfig("Validacion Subtareas Status:", 21)),
+            Map.entry(22, new RuleConfig("Validacion Subtareas VoBo:", 22)),
+            Map.entry(23, new RuleConfig("Validacion Subtareas Contractor:", 23)),
+            Map.entry(24, new RuleConfig("Validacion Subtarea Alpha:", 24)),
+            Map.entry(25, new RuleConfig("Validacion Status JIRA:", 25)),
+            Map.entry(26, new RuleConfig("Validacion PR:", 26)),
+            Map.entry(27, new RuleConfig("Validacion PR Rama Destino:", 27)),
+            Map.entry(28, new RuleConfig("Validacion de productivizacion:", 28)),
+            Map.entry(29, new RuleConfig("Validacion ticket de integracion:", 29))
+    );
+
+    private void actualizarLogEntity(JiraValidatorLogEntity logEntity, int ruleId, String reglaEstado) {
+        try {
+            logEntity.getClass()
+                    .getMethod("setRegla" + ruleId, String.class)
+                    .invoke(logEntity, reglaEstado);
+        } catch (Exception e) {
+            System.err.println("Error al actualizar logEntity: " + e.getMessage());
+        }
+    }
 }

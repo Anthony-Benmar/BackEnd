@@ -1,7 +1,7 @@
 package com.bbva.resources;
 
 import com.bbva.dao.ProjectDao;
-import com.bbva.dto.jira.request.DocumentGeneratorMeshRequest;
+import com.bbva.dto.documentgenerator.request.DocumentGeneratorMeshRequest;
 import com.bbva.service.DocumentGeneratorService;
 
 import javax.ws.rs.*;
