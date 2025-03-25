@@ -28,7 +28,7 @@ import static com.bbva.common.jiraValidador.JiraValidatorConstantes.*;
 
 public class JiraValidatorService {
     private static final Logger LOGGER = Logger.getLogger(JiraValidatorService.class.getName());
-    private JiraApiService jiraApiService;
+    private final JiraApiService jiraApiService = new JiraApiService();
     private final JiraValidatorLogDao jiraValidatorLogDao = new JiraValidatorLogDao();
     private static final String GROUP_TICKET = "Ticket";
     private static final String GROUP_FEATURE_LINK = "Feature Link";
@@ -54,7 +54,6 @@ public class JiraValidatorService {
         int successCount = 0;
         int errorCount = 0;
         int warningCount = 0;
-        this.jiraApiService = new JiraApiService();
         List<InfoJiraProject> infoJiraProjectList = InfoJiraProjectDao.getInstance().list();
         String acceptanceCriteriaGroup = "Criterio de Aceptacion";
 
@@ -314,7 +313,7 @@ public class JiraValidatorService {
         }
         String url = buildJiraQueryUrl(jiraIssues);
         try{
-            String response = new JiraApiService().GetJiraAsync(dto.getUserName(), dto.getToken(), url);
+            String response = this.jiraApiService.GetJiraAsync(dto.getUserName(), dto.getToken(), url);
             result = JsonParser.parseString(response).getAsJsonObject();
         } catch (Exception e) {
             LOGGER.info("ERROR CONSULTA JIRA LINK " + url + ": " + e.getMessage());
@@ -324,7 +323,7 @@ public class JiraValidatorService {
 
     private String buildJiraQueryUrl(List<String> jiraIssues) {
         String query = KEY_IN + String.join(",", jiraIssues) + ")";
-        return ApiJiraName.URL_API_JIRA_SQL + query + new JiraApiService().getQuerySuffixURL();
+        return ApiJiraName.URL_API_JIRA_SQL + query + this.jiraApiService.getQuerySuffixURL();
     }
 
     public String getTeamBackLogId(String tipoDesarrollo, JsonObject jiraTicketResult) throws ParseException {

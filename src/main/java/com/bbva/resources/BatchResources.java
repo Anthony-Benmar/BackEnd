@@ -32,8 +32,7 @@ public class BatchResources {
             @PathParam("jobName") String jobName,
             @PathParam("quantity") Integer quantity
     ){
-        IDataResult<List<StatusJobExecutionDTO>>  result = batchService.getStatusJobExecution(jobName, quantity);
-        return result;
+        return batchService.getStatusJobExecution(jobName, quantity);
     }
 
     @POST
@@ -41,8 +40,7 @@ public class BatchResources {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult saveJobExecutionStatus(List<InsertJobExecutionStatusRequest> request){
-        IDataResult result = batchService.saveJobExecutionStatus(request);
-        return result;
+        return batchService.saveJobExecutionStatus(request);
     }
 
     @POST
@@ -50,8 +48,7 @@ public class BatchResources {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult saveJobExecutionActive(List<InsertJobExecutionActiveRequest> request){
-        IDataResult result = batchService.saveJobExecutionActive(request);
-        return result;
+        return batchService.saveJobExecutionActive(request);
     }
 
     @GET
@@ -88,8 +85,7 @@ public class BatchResources {
         dto.setSdatoolId(sdatoolId);
         dto.setDomain(domain);
         dto.setIsTypified(isTypified);
-        IDataResult<JobExecutionFilterResponseDTO>  result = batchService.filter(dto);
-        return result;
+        return batchService.filter(dto);
     }
 
     @POST
@@ -97,8 +93,7 @@ public class BatchResources {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<InsertReliabilityIncidenceDTO> insertReliabilityIncidence(InsertReliabilityIncidenceDTO request){
-        IDataResult<InsertReliabilityIncidenceDTO>  result = batchService.insertReliabilityIncidence(request);
-        return result;
+        return batchService.insertReliabilityIncidence(request);
     }
 
     @GET
@@ -106,8 +101,7 @@ public class BatchResources {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<InsertAJIFJobExecutionResponseDTO> createAJIFJobExecution(List<InsertJobExecutionStatusRequest> requests) {
-        IDataResult<InsertAJIFJobExecutionResponseDTO> result = batchService.insertAJIFJobExecution(requests);
-        return result;
+        return batchService.insertAJIFJobExecution(requests);
     }
 
     @POST
@@ -115,9 +109,8 @@ public class BatchResources {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<JobExecutionByIdDTO> getJobExecutionById(JobExecutionByIdRequest request){
-        IDataResult<JobExecutionByIdDTO>  result = batchService.getJobExecutionById(request.getFolder(),
+        return batchService.getJobExecutionById(request.getFolder(),
                 request.getOrderId(), request.getJobName(), request.getRunCounter());
-        return result;
     }
 
     @GET
@@ -125,8 +118,7 @@ public class BatchResources {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<BatchIssuesActionFilterDtoResponse> filterIssueAction(BatchIssuesActionFilterDtoRequest dto){
-        IDataResult<BatchIssuesActionFilterDtoResponse>  result = batchService.filterIssueAction(dto);
-        return result;
+        return batchService.filterIssueAction(dto);
     }
 
 
