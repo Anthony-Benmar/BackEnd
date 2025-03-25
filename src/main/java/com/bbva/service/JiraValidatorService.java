@@ -5,6 +5,7 @@ import com.bbva.core.abstracts.IDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dao.InfoJiraProjectDao;
 import com.bbva.dao.JiraValidatorLogDao;
+import com.bbva.dao.ProjectDao;
 import com.bbva.dto.jira.request.JiraValidatorByUrlRequest;
 import com.bbva.dto.jira.response.JiraMessageResponseDTO;
 import com.bbva.dto.jira.response.JiraResponseDTO;
@@ -28,8 +29,8 @@ import static com.bbva.common.jiraValidador.JiraValidatorConstantes.*;
 
 public class JiraValidatorService {
     private static final Logger LOGGER = Logger.getLogger(JiraValidatorService.class.getName());
-    private final JiraApiService jiraApiService = new JiraApiService();
-    private final JiraValidatorLogDao jiraValidatorLogDao = new JiraValidatorLogDao();
+    private final JiraApiService jiraApiService;
+    private final JiraValidatorLogDao jiraValidatorLogDao;
     private static final String GROUP_TICKET = "Ticket";
     private static final String GROUP_FEATURE_LINK = "Feature Link";
     private static final String GROUP_PR = "PR";
@@ -42,6 +43,11 @@ public class JiraValidatorService {
             ,"6037905"//ENG
             ,"6037755"//FIN
     );
+
+    public JiraValidatorService(JiraApiService jiraApiService, JiraValidatorLogDao jiraValidatorLogDao) {
+        this.jiraApiService = jiraApiService;
+        this.jiraValidatorLogDao = jiraValidatorLogDao;
+    }
 
     public IDataResult<JiraResponseDTO> getValidatorByUrl(JiraValidatorByUrlRequest dto) throws Exception {
         JiraResponseDTO jiraResponseDTO = new JiraResponseDTO();

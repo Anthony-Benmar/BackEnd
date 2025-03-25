@@ -87,7 +87,7 @@ public class JiraValidationMethods {
     }
 
     public Map<String, Object> getValidatorIssueType(String tipoDesarrollo,String helpMessage, String group) {
-        String issueType = jiraTicketResult.getAsJsonObject(FIELDS).getAsJsonObject(ISSUETYPE).get(NAME).getAsString();
+        String issueType = extractIssueType(jiraTicketResult);
 
         String message;
         boolean isValid;
@@ -348,11 +348,11 @@ public class JiraValidationMethods {
 
         SubTaskStatusResult statusResult = validateSubTaskStatus(subTasks, results);
 
-        String message = statusResult.hasBadStatuses
+        String message = statusResult.hasBadStatus
                 ? "Subtareas sin estado Accepted: " + String.join(", ", statusResult.badSubTaskLabels)
                 : "Todas las subtareas tienen el estado Aceptado"+ String.join(", ", results);
 
-        boolean isValid = !statusResult.hasBadStatuses;
+        boolean isValid = !statusResult.hasBadStatus;
 
         return buildValidationResult(message, isValid, false, helpMessage, group);
     }
@@ -397,7 +397,7 @@ public class JiraValidationMethods {
     private SubTaskStatusResult validateSubTaskStatus(JsonArray subTasks, List<String> validLabels) {
         List<JsonObject> validSubTasks = new ArrayList<>();
         List<String> badSubTaskLabels = new ArrayList<>();
-        boolean hasBadStatuses = false;
+        boolean hasBadStatus = false;
 
         for (JsonElement subTask : subTasks) {
             String subTaskLabel = extractLabel(subTask.getAsJsonObject());
@@ -405,11 +405,11 @@ public class JiraValidationMethods {
 
             if (validLabels.contains(subTaskLabel) && !subTaskStatus.equalsIgnoreCase(ACCEPTED) && !subTaskStatus.equalsIgnoreCase(DISCARDED)) {
                 badSubTaskLabels.add(subTaskLabel);
-                hasBadStatuses = true;
+                hasBadStatus = true;
             }
         }
 
-        return new SubTaskStatusResult(validSubTasks, badSubTaskLabels, hasBadStatuses);
+        return new SubTaskStatusResult(validSubTasks, badSubTaskLabels, hasBadStatus);
     }
 
     private String generateMessageForSubTasks(String tipoDesarrollo, SubTaskResult result, List<String> foundSpecialLabel, List<String> aditionalSpecialSubtask, List<String> requiredSubTasks) {
@@ -455,12 +455,12 @@ public class JiraValidationMethods {
     private static class SubTaskStatusResult {
         List<JsonObject> validSubTasks;
         List<String> badSubTaskLabels;
-        boolean hasBadStatuses;
+        boolean hasBadStatus;
 
-        SubTaskStatusResult(List<JsonObject> validSubTasks, List<String> badSubTaskLabels, boolean hasBadStatuses) {
+        SubTaskStatusResult(List<JsonObject> validSubTasks, List<String> badSubTaskLabels, boolean hasBadStatus) {
             this.validSubTasks = validSubTasks;
             this.badSubTaskLabels = badSubTaskLabels;
-            this.hasBadStatuses = hasBadStatuses;
+            this.hasBadStatus = hasBadStatus;
         }
     }
 
@@ -617,6 +617,14 @@ public class JiraValidationMethods {
                 .get(NAME)
                 .getAsString();
     }
+
+    private String extractIssueType(JsonElement subTask) {
+        return subTask.getAsJsonObject()
+                .getAsJsonObject(FIELDS)
+                .getAsJsonObject(ISSUETYPE)
+                .get(NAME)
+                .getAsString();
+        }
 
     private void validateVoBoAndProjects(
             String teamBackLogId, List<InfoJiraProject> infoJiraProjectList, String subtaskLabel,
@@ -793,38 +801,32 @@ public class JiraValidationMethods {
                 .replace("{1}", "(SDATOOL-\\d{5}|SDATOOL\\s+\\d{5})(.*?)\\s*,")+"?";
     }
 
-    public Map<String, Object> getValidationTeamAssigned(String tipoDesarrollo, boolean validacionEnvioFormulario, String helpMessage, String group) {
-        String message = "";
-        boolean isValid = false;
+    public Map<String, Object> getValidationTeamAssigned(
+            String tipoDesarrollo, boolean validacionEnvioFormulario, String helpMessage, String group) {
+        String message;
+        boolean isValid;
         boolean isWarning = false;
 
         String jiraTicketStatus = extractStatus(jiraTicketResult);
+        String issueType = extractIssueType(jiraTicketResult);
+        String currentTeamFieldLabel = getCurrentTeamFieldLabel(issueType);
 
-        Map<String, String> storyMap = new HashMap<>();
-        storyMap.put(LABEL, TEAM_BACKLOG);
-        storyMap.put(FIELD, "teamId");
-        Map<String, Map<String, String>> teamFieldLabelByIssueType = new HashMap<>();
-        teamFieldLabelByIssueType.put("Historia", storyMap);
-        teamFieldLabelByIssueType.put(STORY, storyMap);
-        teamFieldLabelByIssueType.put(DEPENDENCY, storyMap);
-        String issueType = jiraTicketResult.getAsJsonObject(FIELDS)
-                .getAsJsonObject(ISSUETYPE)
-                .get(NAME).getAsString();
+        JsonArray histories = jiraTicketResult.getAsJsonObject(CHANGELOG).getAsJsonArray(HISTORIES);
+        message = processHistories(histories, currentTeamFieldLabel, tipoDesarrollo, validacionEnvioFormulario, jiraTicketStatus);
 
-        String currentTeamFieldLabel = (teamFieldLabelByIssueType.containsKey(issueType)) ? teamFieldLabelByIssueType.get(issueType).get(LABEL) : "";
+        isValid = message.contains("Asignado a Tablero de DQA");
 
-        List<String> estadosExtraMallasHost = Arrays.asList(READY, TEST, READY_TO_VERIFY);
-        List<String> statusTableroDQA = new ArrayList<>();
-        statusTableroDQA.add(READY);
-        statusTableroDQA.add(IN_PROGRESS);
-        statusTableroDQA.add(TEST);
-        statusTableroDQA.add(READY_TO_VERIFY);
-        statusTableroDQA.add(READY_TO_DEPLOY);
-        statusTableroDQA.add(DEPLOYED);
-        statusTableroDQA.add(ACCEPTED);
-        statusTableroDQA.replaceAll(String::toLowerCase);
+        return buildValidationResult(message, isValid, isWarning, helpMessage, group);
+    }
 
-        JsonArray histories = this.jiraTicketResult.getAsJsonObject(CHANGELOG).getAsJsonArray(HISTORIES);
+    private String processHistories(
+            JsonArray histories, String currentTeamFieldLabel, String tipoDesarrollo,
+            boolean validacionEnvioFormulario, String jiraTicketStatus) {
+
+        List<String> estadosExtraMallasHost = List.of(READY, TEST, READY_TO_VERIFY);
+        List<String> statusTableroDQA = Stream.of(
+                READY, IN_PROGRESS, TEST, READY_TO_VERIFY, READY_TO_DEPLOY, DEPLOYED, ACCEPTED
+        ).map(String::toLowerCase).toList();
 
         for (JsonElement historyElement : histories) {
             JsonObject history = historyElement.getAsJsonObject();
@@ -835,40 +837,48 @@ public class JiraValidationMethods {
                     JsonObject item = itemElement.getAsJsonObject();
 
                     if (item.has(FIELD) && item.get(FIELD).getAsString().equals(currentTeamFieldLabel)) {
-                        String from = item.get("from").getAsString();
                         String to = item.get("to").getAsString();
-
-                        HashMap<String, String> currentTeam = new HashMap<>();
-                        currentTeam.put("from", from);
-                        currentTeam.put("id", to);
-
-                        if (currentTeam.get("id").equals(teamBackLogDQAId)) {
+                        if (to.equals(teamBackLogDQAId)) {
                             this.isInTableroDQA = true;
-                            message = "Asignado a Tablero de DQA";
-                            isValid = true;
-                        } else {
-                            message = "No está en el Tablero de DQA";
-                            statusTableroDQA.replaceAll(String::toLowerCase);
-                            if (statusTableroDQA.contains( jiraTicketStatus.trim().toLowerCase())) {
-                                if (validacionEnvioFormulario) {
-                                    StringBuilder sb = new StringBuilder(message);
-                                    sb.append("Atención: No olvidar que para regresar el ticket a DQA, se debe cambiar el estado del ticket y la Subtarea DQA");
-
-                                    if (tipoDesarrollo.equals(MALLAS) || tipoDesarrollo.equals("HOST")) {
-                                        sb.append(String.join(", ", estadosExtraMallasHost));
-                                    } else {
-                                        sb.append(READY);
-                                    }
-                                    message = sb.toString();
-                                }
-                                isValid = false;
-                            }
+                            return "Asignado a Tablero de DQA";
+                        } else if (statusTableroDQA.contains(jiraTicketStatus.trim().toLowerCase())) {
+                            return buildWarningMessage(tipoDesarrollo, validacionEnvioFormulario, estadosExtraMallasHost);
                         }
                     }
                 }
             }
         }
-        return buildValidationResult(message, isValid, isWarning, helpMessage, group);
+        return "No está en el Tablero de DQA";
+    }
+
+    private String buildWarningMessage(
+            String tipoDesarrollo, boolean validacionEnvioFormulario, List<String> estadosExtraMallasHost) {
+
+        StringBuilder sb = new StringBuilder("No está en el Tablero de DQA. ");
+        if (validacionEnvioFormulario) {
+            sb.append("Atención: No olvidar que para regresar el ticket a DQA, se debe cambiar el estado del ticket y la Subtarea DQA. ");
+            if (tipoDesarrollo.equalsIgnoreCase(MALLAS) || tipoDesarrollo.equalsIgnoreCase("HOST")) {
+                sb.append(String.join(", ", estadosExtraMallasHost));
+            } else {
+                sb.append(READY);
+            }
+        }
+        return sb.toString();
+    }
+
+    private String getCurrentTeamFieldLabel(String issueType) {
+        Map<String, String> storyMap = Map.of(
+                LABEL, TEAM_BACKLOG,
+                FIELD, "teamId"
+        );
+
+        Map<String, Map<String, String>> teamFieldLabelByIssueType = Map.of(
+                "Historia", storyMap,
+                STORY, storyMap,
+                DEPENDENCY, storyMap
+        );
+
+        return teamFieldLabelByIssueType.getOrDefault(issueType, Map.of()).getOrDefault(LABEL, "");
     }
 
     public Map<String, Object> getValidationValidateJIRAStatus(String tipoDesarrollo, String helpMessage, String group) {
@@ -948,7 +958,7 @@ public class JiraValidationMethods {
         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
 
-    public Map<String, Object> getValidationFeatureLinkProgramIncrement(String helpMessage, String group){
+    public Map<String, Object> getValidationFeatureLinkProgramIncrement(String helpMessage, String group) {
         String message;
         boolean isValid;
         boolean isWarning = false;
@@ -956,57 +966,70 @@ public class JiraValidationMethods {
         if (!(boolean) validationFeatureResult.get(ISVALID)) {
             return validationFeatureResult;
         }
-        JsonArray programIncrement = null;
+
+        JsonArray programIncrement = extractProgramIncrement(featureLinkResult);
+
+        if (programIncrement == null || programIncrement.isEmpty()) {
+            message = handleMissingProgramIncrement();
+            isValid = message.contains("tipo de incidencia");
+            isWarning = isValid;
+        } else {
+            message = handleProgramIncrementValidation(programIncrement, extractStatus(jiraTicketResult));
+            isValid = !message.contains("Atención");
+        }
+
+        return buildValidationResult(message, isValid, isWarning, helpMessage, group);
+    }
+
+    private JsonArray extractProgramIncrement(JsonObject featureLinkResult) {
         if (featureLinkResult.has(ISSUES) &&
                 !featureLinkResult.getAsJsonArray(ISSUES).isEmpty() &&
                 featureLinkResult.getAsJsonArray(ISSUES)
                         .get(0).getAsJsonObject().getAsJsonObject(FIELDS)
                         .has(CUSTOMFIELD_10264)) {
-
-            programIncrement = featureLinkResult
+            return featureLinkResult
                     .getAsJsonArray(ISSUES)
                     .get(0).getAsJsonObject()
                     .getAsJsonObject(FIELDS)
                     .get(CUSTOMFIELD_10264)
                     .getAsJsonArray();
         }
-
-        if (programIncrement == null || programIncrement.isJsonNull() || programIncrement.isEmpty()) {
-            message = "Sin Program Increment";
-            String tipoIncidencia = jiraTicketResult.get(FIELDS)
-                    .getAsJsonObject()
-                    .get(ISSUETYPE)
-                    .getAsJsonObject()
-                    .get(NAME)
-                    .getAsString();
-            isValid = !tipoIncidencia.isEmpty();
-            if (isValid) {
-                message = "Sin Program Increment, pero con tipo de incidencia: " + tipoIncidencia;
-                isWarning = true;
-            }
-        } else {
-            message = "Con Program Increment " + programIncrement;
-            isValid = true;
-            String jiraTicketStatus = extractStatus(jiraTicketResult);
-
-            boolean containsCurrentQ = false;
-            for (JsonElement element : programIncrement) {
-                if (element.getAsString().equals(currentQ)) {
-                    containsCurrentQ = true;
-                    break;
-                }
-            }
-
-            if (!jiraTicketStatus.equals(DEPLOYED) && !containsCurrentQ) {
-                message += " Atención: El Program Increment debe contener al Q actual (En este caso " + currentQ + ") cuando el ticket este en revisión, " + MSG_COORDINATION_MESSAGE;
-                isValid = false;
-            }
-        }
-        return buildValidationResult(message, isValid, isWarning, helpMessage, group);
+        return null;
     }
 
-    public Map<String, Object> getValidationFeatureLinkRLB(String teamBackLogId,List<String> teamBackLogTicketIdRLB, String helpMessage, String group){
-        String message = "";
+    private String handleMissingProgramIncrement() {
+        String tipoIncidencia = extractIssueType(jiraTicketResult);
+        if (!tipoIncidencia.isEmpty()) {
+            return "Sin Program Increment, pero con tipo de incidencia: " + tipoIncidencia;
+        }
+        return "Sin Program Increment";
+    }
+
+    private String handleProgramIncrementValidation(JsonArray programIncrement, String jiraTicketStatus) {
+        StringBuilder message = new StringBuilder("Con Program Increment " + programIncrement);
+        boolean containsCurrentQ = programIncrementContainsCurrentQ(programIncrement);
+
+        if (!jiraTicketStatus.equals(DEPLOYED) && !containsCurrentQ) {
+            message.append(" Atención: El Program Increment debe contener al Q actual (En este caso ")
+                    .append(currentQ).append(") cuando el ticket este en revisión, ")
+                    .append(MSG_COORDINATION_MESSAGE);
+        }
+
+        return message.toString();
+    }
+
+    private boolean programIncrementContainsCurrentQ(JsonArray programIncrement) {
+        for (JsonElement element : programIncrement) {
+            if (element.getAsString().equals(currentQ)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public Map<String, Object> getValidationFeatureLinkRLB(
+            String teamBackLogId, List<String> teamBackLogTicketIdRLB, String helpMessage, String group) {
+        String message;
         boolean isValid;
         boolean isWarning = false;
         List<String> validStatus = List.of("INC", "PRB", "PB");
@@ -1015,46 +1038,57 @@ public class JiraValidationMethods {
         if (!(boolean) validationFeatureResult.get(ISVALID)) {
             return validationFeatureResult;
         }
-        if(!teamBackLogTicketIdRLB.contains(teamBackLogId)){
-            return buildValidationResult(MSG_RULE_INVALID, true,isWarning,helpMessage,group);
+
+        if (!teamBackLogTicketIdRLB.contains(teamBackLogId)) {
+            return buildValidationResult(MSG_RULE_INVALID, true, isWarning, helpMessage, group);
         }
-        JsonArray featureLinkLabels = null;
+
+        JsonArray featureLinkLabels = extractFeatureLinkLabels(featureLinkResult);
+
+        if (featureLinkLabels == null || featureLinkLabels.isEmpty()) {
+            message = "El ticket no es una incidencia o problema o no contiene los labels identificadores "
+                    + String.join(",", validStatus) + ".";
+            isValid = true;
+        } else {
+            boolean containsValidStatus = checkLabels(featureLinkLabels, validStatus);
+            if (containsValidStatus) {
+                message = "El ticket es una incidencia o problema, contiene los labels correspondientes.";
+                isValid = true;
+            } else {
+                message = "El ticket debe corresponder a un evolutivo o solicitud interna para no llevar los labels correspondientes.";
+                isValid = true;
+                isWarning = true;
+            }
+        }
+
+        return buildValidationResult(message, isValid, isWarning, helpMessage, group);
+    }
+
+    private JsonArray extractFeatureLinkLabels(JsonObject featureLinkResult) {
         if (featureLinkResult.has(ISSUES) &&
                 !featureLinkResult.getAsJsonArray(ISSUES).isEmpty() &&
                 featureLinkResult.getAsJsonArray(ISSUES)
                         .get(0).getAsJsonObject().getAsJsonObject(FIELDS)
                         .has(LABELS)) {
-            featureLinkLabels = featureLinkResult
+            return featureLinkResult
                     .getAsJsonArray(ISSUES)
                     .get(0).getAsJsonObject()
                     .getAsJsonObject(FIELDS)
                     .getAsJsonArray(LABELS);
         }
-        if (featureLinkLabels == null || featureLinkLabels.isJsonNull() || featureLinkLabels.isEmpty()) {
-            message += "El ticket no es una incidencia o problema o no contiene los labels identificadores "+String.join(",", validStatus)+".";
-            isValid = true;
-        }else {
-            boolean containsValidStatus = false;
-            for (int i = 0; i < featureLinkLabels.size(); i++) {
-                String label = featureLinkLabels.get(i).getAsString();
-                for (String status : validStatus) {
-                    if (label.startsWith(status)) {
-                        containsValidStatus = true;
-                        break;
-                    }
+        return null;
+    }
+
+    private boolean checkLabels(JsonArray featureLinkLabels, List<String> validStatus) {
+        for (JsonElement labelElement : featureLinkLabels) {
+            String label = labelElement.getAsString();
+            for (String status : validStatus) {
+                if (label.startsWith(status)) {
+                    return true;
                 }
-                if (containsValidStatus) break;
-            }
-            if (containsValidStatus) {
-                message += "El ticket es una incidencia o problema, contiene los labels correspondientes";
-                isValid = true;
-            } else {
-                message += "El ticket debe corresponder a un evolutivo o solicitud interna para no llevar los labels correspondientes";
-                isValid = true;
-                isWarning = true;
             }
         }
-        return buildValidationResult(message, isValid, isWarning, helpMessage, group);
+        return false;
     }
 
     public Map<String, Object> getValidationIFRS9(String helpMessage, String group) {
@@ -1103,60 +1137,38 @@ public class JiraValidationMethods {
         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
 
-    public Map<String, Object> getValidationValidateImpactLabel(String helpMessage, String group, String tipoDesarrollo) {
+    public Map<String, Object> getValidationValidateImpactLabel(
+            String helpMessage, String group, String tipoDesarrollo) {
+
         String message;
         boolean isValid = false;
         boolean isWarning = false;
-        if (tipoDesarrollo.equals("HOST") || tipoDesarrollo.equals(MALLAS)) {
-            List<String> jiraTicketImpactLabelList = new ArrayList<>();
-            JsonElement impactLabelElement;
+
+        if (tipoDesarrollo.equalsIgnoreCase(HOST) || tipoDesarrollo.equalsIgnoreCase(MALLAS)) {
             JsonObject fieldsObject = jiraTicketResult.getAsJsonObject(FIELDS);
 
-            if (fieldsObject.has("customfield_10267")) {
-                impactLabelElement = fieldsObject.get("customfield_10267");
-
-                if (impactLabelElement != null && impactLabelElement.isJsonArray()) {
-                    JsonArray impactLabelArray = impactLabelElement.getAsJsonArray();
-                    for (JsonElement element : impactLabelArray) {
-                        jiraTicketImpactLabelList.add(element.getAsString());
-                    }
-                }
-            }
-            else {
+            List<String> jiraTicketImpactLabelList = extractImpactLabels(fieldsObject);
+            if (jiraTicketImpactLabelList.isEmpty()) {
                 message = "No se tiene Impact Label definidos";
                 return buildValidationResult(message, isValid, isWarning, helpMessage, group);
             }
 
-            List<String> validImpactLabel = Arrays.asList("AppsInternos", "Datio");
-            List<String> validImpactLabelListHost = Arrays.asList("DataHub", "Host", "Plataforma_InformacionalP11");
-            List<String> validImpactLabelFinalList = tipoDesarrollo.equals("HOST") ? validImpactLabelListHost : validImpactLabel;
-            List<String> impactLabelNotExistsList = new ArrayList<>();
+            List<String> validImpactLabels = tipoDesarrollo.equalsIgnoreCase("HOST")
+                    ? List.of("DataHub", "Host", "Plataforma_InformacionalP11")
+                    : List.of("AppsInternos", "Datio");
 
-            for (String impactLabel : validImpactLabelFinalList) {
-                if (!jiraTicketImpactLabelList.contains(impactLabel)) {
-                    impactLabelNotExistsList.add(impactLabel);
-                }
-            }
+            List<String> impactLabelsNotFound = getMissingLabels(validImpactLabels, jiraTicketImpactLabelList);
 
-            if (impactLabelNotExistsList.isEmpty()) {
-                message = "Todos los Impact Label requeridos fueron encontrados: " + String.join(", ",validImpactLabelFinalList);
-                isValid = true;
-            } else {
-                message = "Falta Impact Label: " + ", " + impactLabelNotExistsList;
-                if (!jiraTicketImpactLabelList.isEmpty()) {
-                    message += " Se tiene: " + ", " + jiraTicketImpactLabelList;
-                } else {
-                    message += " No se tiene Impact Label definidos";
-                }
-            }
-        }
-        else{
+            message = generateImpactLabelMessage(validImpactLabels, jiraTicketImpactLabelList, impactLabelsNotFound);
+            isValid = impactLabelsNotFound.isEmpty();
+        } else {
             message = MSG_RULE_INVALID;
             isValid = true;
         }
 
         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
+
 
     public Map<String, Object> getValidationFixVersion(String tipoDesarrollo, String helpMessage, String group) {
         String message;
@@ -1229,56 +1241,100 @@ public class JiraValidationMethods {
         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
 
-    public Map<String, Object> getValidationProductivizacionIssueLink(String tipoDesarrollo, String helpMessage, String group){
-        String message = "";
+    private List<String> extractImpactLabels(JsonObject fieldsObject) {
+        List<String> impactLabels = new ArrayList<>();
+        if (fieldsObject.has("customfield_10267")) {
+            JsonElement impactLabelElement = fieldsObject.get("customfield_10267");
+            if (impactLabelElement != null && impactLabelElement.isJsonArray()) {
+                JsonArray impactLabelArray = impactLabelElement.getAsJsonArray();
+                for (JsonElement element : impactLabelArray) {
+                    impactLabels.add(element.getAsString());
+                }
+            }
+        }
+        return impactLabels;
+    }
+
+    private List<String> getMissingLabels(List<String> validImpactLabels, List<String> jiraTicketImpactLabelList) {
+        List<String> impactLabelsNotFound = new ArrayList<>();
+        for (String label : validImpactLabels) {
+            if (!jiraTicketImpactLabelList.contains(label)) {
+                impactLabelsNotFound.add(label);
+            }
+        }
+        return impactLabelsNotFound;
+    }
+
+    private String generateImpactLabelMessage(
+            List<String> validImpactLabels, List<String> jiraTicketImpactLabelList, List<String> impactLabelsNotFound) {
+        if (impactLabelsNotFound.isEmpty()) {
+            return "Todos los Impact Label requeridos fueron encontrados: " + String.join(", ", validImpactLabels);
+        }
+        StringBuilder messageBuilder = new StringBuilder();
+        messageBuilder.append("Falta Impact Label: ").append(String.join(", ", impactLabelsNotFound));
+        if (!jiraTicketImpactLabelList.isEmpty()) {
+            messageBuilder.append(" Se tiene: ").append(String.join(", ", jiraTicketImpactLabelList));
+        } else {
+            messageBuilder.append(" No se tiene Impact Label definidos");
+        }
+        return messageBuilder.toString();
+    }
+
+    public Map<String, Object> getValidationProductivizacionIssueLink(
+            String tipoDesarrollo, String helpMessage, String group) {
+        String message;
         boolean isValid = false;
         boolean isWarning = false;
 
-        JsonArray issuelinks = jiraTicketResult
-                .getAsJsonObject(FIELDS)
-                .getAsJsonArray(ISSUELINKS);
-
-        String name;
-        String statusCategory;
-
-        JsonArray issueLinkStory = new JsonArray();
-        if (tipoDesarrollo.equalsIgnoreCase("productivizacion")) {
-            for (JsonElement issueLinkElement : issuelinks) {
-                String type  = issueLinkElement.getAsJsonObject().getAsJsonObject(TYPE).get(INWARD).getAsString();
-                JsonElement inwardIssue = issueLinkElement
-                        .getAsJsonObject()
-                        .getAsJsonObject(INWARD_ISSUE);
-                if (type.equals(IS_CHILD_ITEM_OF) && inwardIssue != null) {
-                    name = inwardIssue
-                            .getAsJsonObject()
-                            .getAsJsonObject(FIELDS).getAsJsonObject(ISSUETYPE).get(NAME).getAsString();
-                    if(name.equals(STORY)){
-                        issueLinkStory.add(issueLinkElement);
-                    }
-                }
-            }
-
-            if (!issueLinkStory.isEmpty()) {
-                for (JsonElement issueLinkElement : issueLinkStory) {
-                    statusCategory = extractStatus(issueLinkElement.getAsJsonObject()
-                            .getAsJsonObject(INWARD_ISSUE)).toLowerCase();
-                    if (statusCategory.equalsIgnoreCase(DEPLOYED)) {
-                        message = "Todos los tickets asociados se encuentran deployados";
-                        isValid = true;
-                    } else {
-                        message = "No todos los tickets asociados se encuentran deployados";
-                        break;
-                    }
-                }
-            } else{
-                message = "No se encontraron tickets asociados de tipo Story";
-            }
-        } else {
+        if (!tipoDesarrollo.equalsIgnoreCase("productivizacion")) {
             isValid = true;
             message = MSG_RULE_INVALID;
+            return buildValidationResult(message, isValid, isWarning, helpMessage, group);
+        }
+
+        JsonArray issueLinkStory = extractStoriesFromIssueLinks(
+                jiraTicketResult.getAsJsonObject(FIELDS).getAsJsonArray(ISSUELINKS)
+        );
+
+        if (issueLinkStory.isEmpty()) {
+            message = "No se encontraron tickets asociados de tipo Story";
+        } else {
+            message = validateStoryStatus(issueLinkStory);
+            isValid = !message.contains("No todos los tickets");
         }
 
         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
+    }
+
+    private JsonArray extractStoriesFromIssueLinks(JsonArray issuelinks) {
+        JsonArray issueLinkStory = new JsonArray();
+        for (JsonElement issueLinkElement : issuelinks) {
+            JsonObject issueLinkObject = issueLinkElement.getAsJsonObject();
+            String type = issueLinkObject.getAsJsonObject(TYPE).get(INWARD).getAsString();
+            JsonElement inwardIssue = issueLinkObject.getAsJsonObject(INWARD_ISSUE);
+
+            if (type.equals(IS_CHILD_ITEM_OF) && inwardIssue != null) {
+                String name = extractIssueType(inwardIssue);
+                if (name.equals(STORY)) {
+                    issueLinkStory.add(issueLinkElement);
+                }
+            }
+        }
+
+        return issueLinkStory;
+    }
+
+    private String validateStoryStatus(JsonArray issueLinkStory) {
+        for (JsonElement issueLinkElement : issueLinkStory) {
+            String statusCategory = extractStatus(
+                    issueLinkElement.getAsJsonObject().getAsJsonObject(INWARD_ISSUE)
+            ).toLowerCase();
+
+            if (!statusCategory.equalsIgnoreCase(DEPLOYED)) {
+                return "No todos los tickets asociados se encuentran deployados";
+            }
+        }
+        return "Todos los tickets asociados se encuentran deployados";
     }
 
     public Map<String, Object> getValidationLabels(String tipoDesarrollo, String helpMessage, String group){
@@ -1315,35 +1371,21 @@ public class JiraValidationMethods {
         boolean isValid = false;
         boolean isWarning = false;
 
-        String extractedContent = "";
-        JsonArray changelog = jiraTicketResult
-                .getAsJsonObject(CHANGELOG)
-                .getAsJsonArray(HISTORIES);
-
+        JsonArray changelog = jiraTicketResult.getAsJsonObject(CHANGELOG).getAsJsonArray(HISTORIES);
         Date oldestDate = new SimpleDateFormat("yyyy-MM-dd").parse("9999-12-31");
-        String from;
-        String fromString;
+        String extractedContent;
+
         for (JsonElement history : changelog) {
             JsonObject historyObj = history.getAsJsonObject();
-            String created = historyObj.get(CREATED).getAsString();
-            Date createdDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").parse(created);
+            Date createdDate = extractCreatedDate(historyObj);
 
             if (createdDate.before(oldestDate)) {
                 JsonArray items = historyObj.getAsJsonArray(ITEMS);
-                String field = items.get(0).getAsJsonObject().get(FIELD).getAsString();
-                if (field.equals(TEAM_BACKLOG)) {
-                    if (items.get(0).getAsJsonObject().get("fromString").isJsonNull()) {
-                        from = "";
-                        fromString = "";
-                    } else {
-                        from = items.get(0).getAsJsonObject().get("from").getAsString();
-                        fromString = items.get(0).getAsJsonObject().get("fromString").getAsString();
-                    }
-                    Pattern pattern = Pattern.compile("<span style=\"color: #fff\">(.*?)</span>");
-                    Matcher matcher = pattern.matcher(fromString);
-                    if (matcher.find()) {
-                        extractedContent = matcher.group(1);
-                    }
+                if (isTeamBacklogField(items)) {
+                    String from = extractFieldValue(items, "from");
+                    String fromString = extractFieldValue(items, "fromString");
+                    extractedContent = extractContentFrom(fromString);
+
                     if (from.equals(teamBackLogDQAId)) {
                         isValid = false;
                         message = "Se creó en tablero DQA.";
@@ -1355,133 +1397,181 @@ public class JiraValidationMethods {
                 }
             }
         }
+
         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
 
-    public Map<String, Object> getValidationDependency(String teamBackLogId,List<String> teamBackLogTicketIdRLB,String helpMessage, String group) {
-        String message;
+    private Date extractCreatedDate(JsonObject historyObj) throws ParseException {
+        String created = historyObj.get(CREATED).getAsString();
+        return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").parse(created);
+    }
+
+    private boolean isTeamBacklogField(JsonArray items) {
+        String field = items.get(0).getAsJsonObject().get(FIELD).getAsString();
+        return TEAM_BACKLOG.equals(field);
+    }
+
+    private String extractFieldValue(JsonArray items, String fieldKey) {
+        JsonObject item = items.get(0).getAsJsonObject();
+        return item.has(fieldKey) && !item.get(fieldKey).isJsonNull()
+                ? item.get(fieldKey).getAsString()
+                : "";
+    }
+
+    private String extractContentFrom(String fromString) {
+        Pattern pattern = Pattern.compile("<span style=\"color: #fff\">(.*?)</span>");
+        Matcher matcher = pattern.matcher(fromString);
+        return matcher.find() ? matcher.group(1) : "";
+    }
+
+    public Map<String, Object> getValidationDependency(
+            String teamBackLogId, List<String> teamBackLogTicketIdRLB, String helpMessage, String group) {
+
+        String message = "";
         boolean isValid = false;
         boolean isWarning = false;
 
-        String statusDependencyTicket;
-
-        JsonArray issueLinks = jiraTicketResult
-                .getAsJsonObject(FIELDS)
-                .getAsJsonArray(ISSUELINKS);
-
-        if(teamBackLogTicketIdRLB.contains(teamBackLogId)){
-            message = "Proviene del tabero RLB, por lo tanto, no tiene una dependencia asociada.";
+        if (teamBackLogTicketIdRLB.contains(teamBackLogId)) {
+            message = "Proviene del tablero RLB, por lo tanto, no tiene una dependencia asociada.";
             isValid = true;
-        } else {
-            if (issueLinks == null || issueLinks.isEmpty()) {
-                message = MSG_RULE_NODEPENDENCY;
-                return buildValidationResult(message, isValid, isWarning, helpMessage, group);
-            } else {
-                List<String> statusDependencyCollection = new ArrayList<>();
-                List<String> dependencyPadCollection = new ArrayList<>();
-                for (JsonElement issueLinkElement : issueLinks) {
-                    String type = issueLinkElement.getAsJsonObject().getAsJsonObject(TYPE).get(INWARD).getAsString();
-                    JsonElement inwardIssue = issueLinkElement
-                            .getAsJsonObject()
-                            .getAsJsonObject(INWARD_ISSUE);
-                    if (type.equals(IS_CHILD_ITEM_OF) && inwardIssue != null) {
-                        String issuetype = inwardIssue.getAsJsonObject().getAsJsonObject(FIELDS).getAsJsonObject(ISSUETYPE).get(NAME).getAsString();
-                        if (issuetype.equalsIgnoreCase(DEPENDENCY)) {
-                            statusDependencyTicket = extractStatus(inwardIssue.getAsJsonObject()).toLowerCase();
-                            statusDependencyCollection.add(statusDependencyTicket);
-                            dependencyPadCollection
-                                    .add(issueLinkElement
-                                            .getAsJsonObject()
-                                            .getAsJsonObject(INWARD_ISSUE)
-                                            .get("key").getAsString());
-                        }
-                    }
-                }
-                if (statusDependencyCollection.isEmpty()) {
-                    message = MSG_RULE_NODEPENDENCY;
-                    return buildValidationResult(message, isValid, isWarning, helpMessage, group);
-                }
-
-                boolean allInProgress = statusDependencyCollection.stream().allMatch(status -> status.equalsIgnoreCase(IN_PROGRESS));
-
-                if (allInProgress) {
-                    isValid = true;
-                    message = "Todas las dependencias se encuentran en el estado que corresponde: "+ IN_PROGRESS;
-                } else {
-                    isWarning = true;
-                    StringBuilder urlMessage = new StringBuilder("Las siguientes dependencias: ");
-                    for (int i = 0; i < statusDependencyCollection.size(); i++) {
-                        if (!statusDependencyCollection.get(i).equals(IN_PROGRESS)) {
-                            urlMessage.append(ApiJiraName.URL_API_BROWSE).append(dependencyPadCollection.get(i)).append(", ");
-                        }
-                    }
-                    urlMessage.setLength(urlMessage.length() - 2);
-                    urlMessage.append(" no se encuentran en el estado correspondiente (In Progress).");
-                    message = urlMessage.toString();
-                }
-            }
+            return buildValidationResult(message, isValid, isWarning, helpMessage, group);
         }
+        JsonArray issueLinks = jiraTicketResult.getAsJsonObject(FIELDS).getAsJsonArray(ISSUELINKS);
+        if (issueLinks == null || issueLinks.isEmpty()) {
+            message = MSG_RULE_NODEPENDENCY;
+            return buildValidationResult(message, isValid, isWarning, helpMessage, group);
+        }
+
+        List<String> statusDependencyCollection = new ArrayList<>();
+        List<String> dependencyPadCollection = new ArrayList<>();
+        extractDependencyData(issueLinks, statusDependencyCollection, dependencyPadCollection);
+
+        if (statusDependencyCollection.isEmpty()) {
+            message = MSG_RULE_NODEPENDENCY;
+            return buildValidationResult(message, isValid, isWarning, helpMessage, group);
+        }
+        if (areAllDependenciesInProgress(statusDependencyCollection)) {
+            isValid = true;
+            message = "Todas las dependencias se encuentran en el estado que corresponde: " + IN_PROGRESS;
+        } else {
+            isWarning = true;
+            message = buildWarningMessage(statusDependencyCollection, dependencyPadCollection);
+        }
+
         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
 
-    public Map<String, Object> getValidationDependencyFeatureVsHUTFeature(String teamBackLogId,List<String> teamBackLogTicketIdRLB, JiraValidatorByUrlRequest dto, String helpMessage, String group) {
-        boolean isValid = true;
-        String message = "Todas las dependencias tienen el mismo feature link";
-        boolean isWarning = false;
-        String isChildPadName;
-        JsonArray issueLinks = jiraTicketResult
-                .getAsJsonObject(FIELDS)
-                .getAsJsonArray(ISSUELINKS);
+    private void extractDependencyData(
+            JsonArray issueLinks, List<String> statusDependencyCollection, List<String> dependencyPadCollection) {
+        for (JsonElement issueLinkElement : issueLinks) {
+            JsonObject issueLinkObject = issueLinkElement.getAsJsonObject();
+            String type = issueLinkObject.getAsJsonObject(TYPE).get(INWARD).getAsString();
+            JsonElement inwardIssue = issueLinkObject.getAsJsonObject(INWARD_ISSUE);
 
-        if(teamBackLogTicketIdRLB.contains(teamBackLogId)){
-            message = "Proviene del tabero RLB, por lo que no tiene dependencia asociada y, en consecuencia, esta regla no es aplicable.";
-        } else {
-            if (issueLinks == null || issueLinks.isEmpty()) {
-                isValid = false;
-                message = MSG_RULE_NODEPENDENCY;
-                return buildValidationResult(message, isValid, isWarning, helpMessage, group);
-            } else {
-                List<String> isChildPadNameCollection = new ArrayList<>();
-                for (JsonElement issueLinkElement : issueLinks) {
-                    String type = issueLinkElement.getAsJsonObject().getAsJsonObject(TYPE).get(INWARD).getAsString();
-                    JsonElement inwardIssue = issueLinkElement
-                            .getAsJsonObject()
-                            .getAsJsonObject(INWARD_ISSUE);
-                    if (type.equals(IS_CHILD_ITEM_OF) && inwardIssue != null) {
-                        String issuetype = inwardIssue.getAsJsonObject().getAsJsonObject(FIELDS).getAsJsonObject(ISSUETYPE).get(NAME).getAsString();
-                        if (issuetype.equalsIgnoreCase(DEPENDENCY)) {
-                            isChildPadName = issueLinkElement
-                                    .getAsJsonObject()
-                                    .getAsJsonObject(INWARD_ISSUE)
-                                    .get("key").getAsString();
-                            isChildPadNameCollection.add(isChildPadName);
-                        }
-                    }
-                }
+            if (type.equals(IS_CHILD_ITEM_OF) && inwardIssue != null) {
+                String issueType = extractIssueType(inwardIssue);
+                if (issueType.equalsIgnoreCase(DEPENDENCY)) {
+                    String statusDependencyTicket = extractStatus(inwardIssue.getAsJsonObject()).toLowerCase();
+                    statusDependencyCollection.add(statusDependencyTicket);
 
-                try {
-                    for (String isChildPad : isChildPadNameCollection) {
-                        var query = KEY_IN + isChildPad + ")";
-                        var url = ApiJiraName.URL_API_JIRA_SQL + query + new JiraApiService().getQuerySuffixURL();
-                        var response = new JiraApiService().GetJiraAsync(dto.getUserName(), dto.getToken(), url);
-                        JsonObject metaData = JsonParser.parseString(response).getAsJsonObject();
-                        String isChildFeatureLink = metaData
-                                .getAsJsonArray(ISSUES)
-                                .get(0).getAsJsonObject()
-                                .getAsJsonObject(FIELDS)
-                                .get(CUSTOMFIELD_10004).getAsString();
-                        if (!isChildFeatureLink.equals(featureLinkCode)) {
-                            isValid = false;
-                            message = "No todas las dependencias tienen el mismo features link";
-                            break;
-                        }
-                    }
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
+                    String dependencyKey = inwardIssue.getAsJsonObject().get("key").getAsString();
+                    dependencyPadCollection.add(dependencyKey);
                 }
             }
         }
+    }
+
+    private boolean areAllDependenciesInProgress(List<String> statusDependencyCollection) {
+        return statusDependencyCollection.stream()
+                .allMatch(status -> status.equalsIgnoreCase(IN_PROGRESS));
+    }
+
+    private String buildWarningMessage(List<String> statusDependencyCollection, List<String> dependencyPadCollection) {
+        StringBuilder urlMessage = new StringBuilder("Las siguientes dependencias: ");
+        for (int i = 0; i < statusDependencyCollection.size(); i++) {
+            if (!statusDependencyCollection.get(i).equalsIgnoreCase(IN_PROGRESS)) {
+                urlMessage.append(ApiJiraName.URL_API_BROWSE)
+                        .append(dependencyPadCollection.get(i))
+                        .append(", ");
+            }
+        }
+        urlMessage.setLength(urlMessage.length() - 2);
+        urlMessage.append(" no se encuentran en el estado correspondiente (In Progress).");
+        return urlMessage.toString();
+    }
+
+    public Map<String, Object> getValidationDependencyFeatureVsHUTFeature(
+            String teamBackLogId, List<String> teamBackLogTicketIdRLB, JiraValidatorByUrlRequest dto,
+            String helpMessage, String group) {
+        boolean isValid = true;
+        boolean isWarning = false;
+        String message = "Todas las dependencias tienen el mismo feature link";
+
+        if (teamBackLogTicketIdRLB.contains(teamBackLogId)) {
+            message = "Proviene del tabero RLB, por lo que no tiene dependencia asociada y, en consecuencia, esta regla no es aplicable.";
+            return buildValidationResult(message, isValid, isWarning, helpMessage, group);
+        }
+
+        JsonArray issueLinks = jiraTicketResult.getAsJsonObject(FIELDS).getAsJsonArray(ISSUELINKS);
+        if (issueLinks == null || issueLinks.isEmpty()) {
+            isValid = false;
+            message = MSG_RULE_NODEPENDENCY;
+            return buildValidationResult(message, isValid, isWarning, helpMessage, group);
+        }
+
+        List<String> isChildPadNameCollection = extractDependencyKeys(issueLinks);
+
+        try {
+            if (!validateFeatureLinks(isChildPadNameCollection, dto)) {
+                isValid = false;
+                message = "No todas las dependencias tienen el mismo features link";
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
+    }
+
+    private List<String> extractDependencyKeys(JsonArray issueLinks) {
+        List<String> isChildPadNameCollection = new ArrayList<>();
+
+        for (JsonElement issueLinkElement : issueLinks) {
+            JsonObject issueLinkObject = issueLinkElement.getAsJsonObject();
+            String type = issueLinkObject.getAsJsonObject(TYPE).get(INWARD).getAsString();
+            JsonElement inwardIssue = issueLinkObject.getAsJsonObject(INWARD_ISSUE);
+
+            if (type.equals(IS_CHILD_ITEM_OF) && inwardIssue != null) {
+                String issueType = extractIssueType(inwardIssue);
+                if (issueType.equalsIgnoreCase(DEPENDENCY)) {
+                    String isChildPadName = inwardIssue.getAsJsonObject().get("key").getAsString();
+                    isChildPadNameCollection.add(isChildPadName);
+                }
+            }
+        }
+
+        return isChildPadNameCollection;
+    }
+
+    private boolean validateFeatureLinks(List<String> isChildPadNameCollection, JiraValidatorByUrlRequest dto) throws Exception {
+        for (String isChildPad : isChildPadNameCollection) {
+            var query = KEY_IN + isChildPad + ")";
+            var url = ApiJiraName.URL_API_JIRA_SQL + query + new JiraApiService().getQuerySuffixURL();
+            var response = new JiraApiService().GetJiraAsync(dto.getUserName(), dto.getToken(), url);
+            JsonObject metaData = JsonParser.parseString(response).getAsJsonObject();
+
+            String isChildFeatureLink = metaData
+                    .getAsJsonArray(ISSUES)
+                    .get(0).getAsJsonObject()
+                    .getAsJsonObject(FIELDS)
+                    .get(CUSTOMFIELD_10004).getAsString();
+
+            if (!isChildFeatureLink.equals(featureLinkCode)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
 
@@ -1530,61 +1620,69 @@ public class JiraValidationMethods {
         }
         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
+
     public Map<String, Object> getValidationAlpha(String tipoDesarrollo, String helpMessage, String group) {
-        String message = "";
+        String message;
         boolean isValid = false;
         boolean isWarning = false;
-        String alphaVoBo = "[VB][ALPHA]";
-        List<String> alphaUuaas = List.of("KLIM", "KFUL", "ATAU", "KSKR",
-                "KMOL", "KAGE", "KSAN", "W1BD", "KCOL");
-        JsonArray atachments = jiraTicketResult
-                .getAsJsonObject(FIELDS).get(ATTACHMENT).getAsJsonArray();
-        List<String> atachmentFilenameList = new ArrayList<>();
-        List<String> matchedUuaas;
-        if (tipoDesarrollo.equalsIgnoreCase(MALLAS)) {
-            for (JsonElement attachment : atachments){
-                String filename = attachment.getAsJsonObject().get("filename").getAsString();
-                atachmentFilenameList.add(filename);
-            }
-            if(!atachmentFilenameList.isEmpty()){
-                matchedUuaas = alphaUuaas.stream()
-                        .filter(uuaa -> atachmentFilenameList.stream().anyMatch(fileName -> fileName.contains(uuaa)))
-                        .collect(Collectors.toList());
-                if(matchedUuaas.isEmpty()){
-                    message = "No se encontro UUAA bajo dominio de Alpha ";
-                    isValid = true;
-                }
-                else {
-                    JsonArray subTasks = jiraTicketResult
-                            .getAsJsonObject(FIELDS)
-                            .getAsJsonArray(SUBTASKS);
-                    for (JsonElement subTask: subTasks) {
-                        String subTaskLabel = extractLabel(subTask.getAsJsonObject());
-                        if (subTaskLabel.equals(alphaVoBo)) {
-                            String statusSubtask = extractStatus(subTask.getAsJsonObject());
-                            if (statusSubtask.equals(ACCEPTED)) {
-                                message = MSG_UUAA+String.join(", ", matchedUuaas)+" bajo dominio de Alpha y Subtarea en estado Accepted";
-                                isValid = true;
-                            }else{
-                                message = MSG_UUAA+String.join(", ", matchedUuaas)+" bajo dominio de Alpha y Subtarea en estado incorrecto "+statusSubtask;
-                            }
-                            break;
-                        }
-                        else{
-                            message = MSG_UUAA+String.join(", ", matchedUuaas)+" bajo dominio de Alpha sin Subtarea";
-                        }
-                    }
-                }
-            }
-            else {
-                message = "No se pudo Validar Alpha por no tener adjuntos.";
-            }
 
-        } else {
+        String alphaVoBo = "[VB][ALPHA]";
+        List<String> alphaUuaas = List.of("KLIM", "KFUL", "ATAU", "KSKR", "KMOL", "KAGE", "KSAN", "W1BD", "KCOL");
+
+        if (!tipoDesarrollo.equalsIgnoreCase(MALLAS)) {
             message = MSG_RULE_INVALID;
             isValid = true;
+            return buildValidationResult(message, isValid, isWarning, helpMessage, group);
         }
+        List<String> attachmentFilenameList = extractAttachmentFilenames(jiraTicketResult);
+        if (attachmentFilenameList.isEmpty()) {
+            message = "No se pudo Validar Alpha por no tener adjuntos.";
+            return buildValidationResult(message, isValid, isWarning, helpMessage, group);
+        }
+        List<String> matchedUuaas = findMatchedUuaas(attachmentFilenameList, alphaUuaas);
+        if (matchedUuaas.isEmpty()) {
+            message = "No se encontró UUAA bajo dominio de Alpha.";
+            isValid = true;
+            return buildValidationResult(message, isValid, isWarning, helpMessage, group);
+        }
+        message = validateAlphaSubtasks(matchedUuaas, jiraTicketResult, alphaVoBo);
+        isValid = message.contains("estado Accepted");
         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
+    }
+
+    private List<String> extractAttachmentFilenames(JsonObject jiraTicketResult) {
+        List<String> attachmentFilenameList = new ArrayList<>();
+        JsonArray attachments = jiraTicketResult.getAsJsonObject(FIELDS).getAsJsonArray(ATTACHMENT);
+
+        for (JsonElement attachment : attachments) {
+            String filename = attachment.getAsJsonObject().get("filename").getAsString();
+            attachmentFilenameList.add(filename);
+        }
+        return attachmentFilenameList;
+    }
+
+    private List<String> findMatchedUuaas(List<String> attachmentFilenameList, List<String> alphaUuaas) {
+        return alphaUuaas.stream()
+                .filter(uuaa -> attachmentFilenameList.stream().anyMatch(fileName -> fileName.contains(uuaa)))
+                .collect(Collectors.toList());
+    }
+
+    private String validateAlphaSubtasks(List<String> matchedUuaas, JsonObject jiraTicketResult, String alphaVoBo) {
+        JsonArray subTasks = jiraTicketResult.getAsJsonObject(FIELDS).getAsJsonArray(SUBTASKS);
+        for (JsonElement subTask : subTasks) {
+            String subTaskLabel = extractLabel(subTask.getAsJsonObject());
+            if (subTaskLabel.equals(alphaVoBo)) {
+                String statusSubtask = extractStatus(subTask.getAsJsonObject());
+                if (statusSubtask.equals(ACCEPTED)) {
+                    return MSG_UUAA + String.join(", ", matchedUuaas) +
+                            " bajo dominio de Alpha y Subtarea en estado Accepted.";
+                } else {
+                    return MSG_UUAA + String.join(", ", matchedUuaas) +
+                            " bajo dominio de Alpha y Subtarea en estado incorrecto " + statusSubtask + ".";
+                }
+            }
+        }
+        return MSG_UUAA + String.join(", ", matchedUuaas) + " bajo dominio de Alpha sin Subtarea.";
     }
 
     public Map<String, Object> getValidationItemType(String helpMessage, String group) {
@@ -1632,115 +1730,122 @@ public class JiraValidationMethods {
         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
 
-    public Map<String, Object> getValidationDependencyComment(String teamBackLogId, List<String> teamBackLogTicketIdRLB, JiraValidatorByUrlRequest dto, String helpMessage, String group, List<InfoJiraProject> infoJiraProjectList) {
-        boolean isValid = true;
-        String message = "";
+    public Map<String, Object> getValidationDependencyComment(
+            String teamBackLogId, List<String> teamBackLogTicketIdRLB, JiraValidatorByUrlRequest dto,
+            String helpMessage, String group, List<InfoJiraProject> infoJiraProjectList) {
+        boolean isValid;
         boolean isWarning = false;
-        List<String> rolIdQE = new ArrayList<>(List.of("11","12")); //QE Y QE TEMPORAL
-        String isChildPadName;
-        JsonArray issueLinks = jiraTicketResult
-                .getAsJsonObject(FIELDS)
-                .getAsJsonArray(ISSUELINKS);
-        if (issueLinks == null || issueLinks.isEmpty()){
-            isValid = false;
-            message = MSG_RULE_NODEPENDENCY;
-            return buildValidationResult(message, isValid, isWarning, helpMessage, group);
+        String message;
+
+        JsonArray issueLinks = jiraTicketResult.getAsJsonObject(FIELDS).getAsJsonArray(ISSUELINKS);
+        if (issueLinks == null || issueLinks.isEmpty()) {
+            return buildValidationResult(MSG_RULE_NODEPENDENCY, false, isWarning, helpMessage, group);
         }
-        else {
-            if(teamBackLogTicketIdRLB.contains(teamBackLogId)){
-                message = "Esta regla no es válida para RLB.";
-                return buildValidationResult(message, isValid, isWarning, helpMessage, group);
-            }
-            List<String> isChildPadNameCollection = new ArrayList<>();
-            for (JsonElement issueLinkElement : issueLinks) {
-                String type  = issueLinkElement.getAsJsonObject().getAsJsonObject(TYPE).get(INWARD).getAsString();
-                JsonElement inwardIssue = issueLinkElement
-                        .getAsJsonObject()
-                        .getAsJsonObject(INWARD_ISSUE);
-                if(type.equals(IS_CHILD_ITEM_OF) && inwardIssue != null) {
-                    String issuetype = inwardIssue.getAsJsonObject().getAsJsonObject(FIELDS).getAsJsonObject(ISSUETYPE).get(NAME).getAsString();
-                    if(issuetype.equalsIgnoreCase(DEPENDENCY)) {
-                        isChildPadName = issueLinkElement
-                                .getAsJsonObject()
-                                .getAsJsonObject(INWARD_ISSUE)
-                                .get("key").getAsString();
-                        isChildPadNameCollection.add(isChildPadName);
-                    }
-                }
-            }
-
-            if (isChildPadNameCollection.isEmpty()){
-                isValid = false;
-                message = "Ticket no cuenta con Dependencia Asociada de Type \"Dependency\" o su asociación no es \"is child item of\".";
-                return buildValidationResult(message, isValid, isWarning, helpMessage, group);
-            }
-
-            try {
-                for (String isChildPad : isChildPadNameCollection) {
-                    var query = KEY_IN + isChildPad + ")";
-                    var url = ApiJiraName.URL_API_JIRA_SQL + query + new JiraApiService().getQuerySuffixURL();
-                    var response = new JiraApiService().GetJiraAsync(dto.getUserName(), dto.getToken(), url);
-                    JsonObject metaData = JsonParser.parseString(response).getAsJsonObject();
-
-                    JsonArray comments = metaData
-                            .getAsJsonArray(ISSUES)
-                            .get(0).getAsJsonObject()
-                            .getAsJsonObject(FIELDS)
-                            .getAsJsonObject("comment")
-                            .getAsJsonArray("comments");
-                    if (comments.isEmpty()){
-                        isValid = false;
-                        message = "Dependencia Asociada no tiene comentarios";
-                        return buildValidationResult(message, isValid, isWarning, helpMessage, group);
-                    }
-                    for (JsonElement comment : comments){
-                        String authorEmailAddress = comment.getAsJsonObject()
-                                .getAsJsonObject("author").get(EMAIL_ADDRESS).getAsString();
-                        String comentario = comment.getAsJsonObject()
-                                .get("body").getAsString();
-                        String patron = "comprometid";
-                        Pattern pattern = Pattern.compile(patron, Pattern.CASE_INSENSITIVE);
-                        Matcher matcher = pattern.matcher(comentario);
-                        if (matcher.find()){
-                            List<InfoJiraProject> infoJiraProjectListFiltered = infoJiraProjectList.stream().filter(project
-                                    -> project.getTeamBackLogId().equals(teamBackLogId)
-                                    && project.getParticipantEmail().equals(authorEmailAddress)
-                                    && rolIdQE.contains(project.getProjectRolType())
-                            ).toList();
-
-                            List<String> personsRolIdQE = infoJiraProjectList.stream()
-                                    .filter(project ->  rolIdQE.contains(project.getProjectRolType()))
-                                    .map(InfoJiraProject::getParticipantEmail)
-                                    .distinct()
-                                    .toList();
-
-                            if(infoJiraProjectListFiltered.isEmpty()){
-                                if (personsRolIdQE.contains(authorEmailAddress)){
-                                    isWarning = true;
-                                    message = "Dependencia cuenta con comentario \"Comprometido\", QE o del QE temporal "+authorEmailAddress+" pero no está asociado al proyecto";
-                                }
-                                else {
-                                    isWarning = true;
-                                    message = "Dependencia cuenta con comentario \"Comprometido\", pero no de algún QE o del QE temporal";
-                                }
-                            }
-                            else {
-                                message = "Dependencia cuenta con comentario \"Comprometido\", del QE o del QE temporal "+ authorEmailAddress+" asociado al proyecto";
-                            }
-                            break;
-                        }
-                        else {
-                            isValid = false;
-                            message = "Dependencia no cuenta con ningun comentario \"Comprometido\"";
-                        }
-
-                    }
-                }
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+        if (teamBackLogTicketIdRLB.contains(teamBackLogId)) {
+            return buildValidationResult("Esta regla no es válida para RLB.", true, isWarning, helpMessage, group);
         }
+        List<String> isChildPadNameCollection = extractDependencies(issueLinks);
+        if (isChildPadNameCollection.isEmpty()) {
+            return buildValidationResult(
+                    "Ticket no cuenta con Dependencia Asociada de Type \"Dependency\" o su asociación no es \"is child item of\".",
+                    false, isWarning, helpMessage, group
+            );
+        }
+        try {
+            message = validateDependencyComments(isChildPadNameCollection, dto, teamBackLogId, infoJiraProjectList);
+            isValid = !message.contains("no cuenta con");
+            isWarning = message.contains("pero no está asociado");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
 
+    private List<String> extractDependencies(JsonArray issueLinks) {
+        List<String> isChildPadNameCollection = new ArrayList<>();
+        for (JsonElement issueLinkElement : issueLinks) {
+            JsonObject issueLinkObject = issueLinkElement.getAsJsonObject();
+            String type = issueLinkObject.getAsJsonObject(TYPE).get(INWARD).getAsString();
+            JsonElement inwardIssue = issueLinkObject.getAsJsonObject(INWARD_ISSUE);
+
+            if (type.equals(IS_CHILD_ITEM_OF) && inwardIssue != null) {
+                String issueType = extractIssueType(inwardIssue);
+                if (issueType.equalsIgnoreCase(DEPENDENCY)) {
+                    String isChildPadName = inwardIssue.getAsJsonObject().get("key").getAsString();
+                    isChildPadNameCollection.add(isChildPadName);
+                }
+            }
+        }
+        return isChildPadNameCollection;
+    }
+
+    private String validateDependencyComments(
+            List<String> isChildPadNameCollection, JiraValidatorByUrlRequest dto,
+            String teamBackLogId, List<InfoJiraProject> infoJiraProjectList) throws Exception {
+        List<String> rolIdQE = List.of("11", "12"); // QE y QE Temporal
+        for (String isChildPad : isChildPadNameCollection) {
+            JsonArray comments = fetchDependencyComments(isChildPad, dto);
+            if (comments.isEmpty()) {
+                return "Dependencia Asociada no tiene comentarios.";
+            }
+            for (JsonElement comment : comments) {
+                String authorEmailAddress = comment.getAsJsonObject().getAsJsonObject("author").get(EMAIL_ADDRESS).getAsString();
+                String comentario = comment.getAsJsonObject().get("body").getAsString();
+                if (containsComprometido(comentario)) {
+                    return evaluateCommentAuthor(authorEmailAddress, teamBackLogId, infoJiraProjectList, rolIdQE);
+                }
+            }
+        }
+        return "Dependencia no cuenta con ningún comentario \"Comprometido\".";
+    }
+
+    private boolean containsComprometido(String comentario) {
+        String patron = "comprometid";
+        Pattern pattern = Pattern.compile(patron, Pattern.CASE_INSENSITIVE);
+        Matcher matcher = pattern.matcher(comentario);
+        return matcher.find();
+    }
+
+    private String evaluateCommentAuthor(
+            String authorEmailAddress, String teamBackLogId,
+            List<InfoJiraProject> infoJiraProjectList, List<String> rolIdQE) {
+
+        List<InfoJiraProject> filteredProjects = infoJiraProjectList.stream()
+                .filter(project -> project.getTeamBackLogId().equals(teamBackLogId)
+                        && project.getParticipantEmail().equals(authorEmailAddress)
+                        && rolIdQE.contains(project.getProjectRolType()))
+                .toList();
+
+        List<String> personsRolIdQE = infoJiraProjectList.stream()
+                .filter(project -> rolIdQE.contains(project.getProjectRolType()))
+                .map(InfoJiraProject::getParticipantEmail)
+                .distinct()
+                .toList();
+
+        if (filteredProjects.isEmpty()) {
+            if (personsRolIdQE.contains(authorEmailAddress)) {
+                return "Dependencia cuenta con comentario \"Comprometido\", QE o del QE temporal " + authorEmailAddress
+                        + " pero no está asociado al proyecto.";
+            } else {
+                return "Dependencia cuenta con comentario \"Comprometido\", pero no de algún QE o del QE temporal.";
+            }
+        } else {
+            return "Dependencia cuenta con comentario \"Comprometido\", del QE o del QE temporal " + authorEmailAddress
+                    + " asociado al proyecto.";
+        }
+    }
+
+    private JsonArray fetchDependencyComments(String isChildPad, JiraValidatorByUrlRequest dto) throws Exception {
+        var query = KEY_IN + isChildPad + ")";
+        var url = ApiJiraName.URL_API_JIRA_SQL + query + new JiraApiService().getQuerySuffixURL();
+        var response = new JiraApiService().GetJiraAsync(dto.getUserName(), dto.getToken(), url);
+        JsonObject metaData = JsonParser.parseString(response).getAsJsonObject();
+        return metaData
+                .getAsJsonArray(ISSUES)
+                .get(0).getAsJsonObject()
+                .getAsJsonObject(FIELDS)
+                .getAsJsonObject("comment")
+                .getAsJsonArray("comments");
+    }
 }

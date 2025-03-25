@@ -25,7 +25,7 @@ import java.util.*;
 import java.util.logging.Logger;
 
 public class JiraApiService {
-    private static final Logger LOGGER = Logger.getLogger(JiraValidatorService.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(JiraApiService.class.getName());
     private JiraApiService jiraApiService;
     private boolean isValidURL;
     private List<Map<String, Object>> jiraTicketResult;
