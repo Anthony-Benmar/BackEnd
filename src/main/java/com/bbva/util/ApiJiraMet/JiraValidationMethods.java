@@ -97,24 +97,19 @@ public class JiraValidationMethods {
         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
 
-    public Map<String, Object> getValidatorValidateHUTType(
+    public Map<String, Object> getValidatorHUTIntegration(
             String teamBackLogId, List<String> teamBackLogTicketIdRLB, String helpMessage,
             String tipoDesarrollo, String group) {
-
         boolean isWarning = false;
-
         if (!tipoDesarrollo.equalsIgnoreCase(INGESTA)) {
             return buildValidationResult(MSG_RULE_INVALID, true, isWarning, helpMessage, group);
         }
-
         if (teamBackLogTicketIdRLB.contains(teamBackLogId)) {
             return buildValidationResult(MSG_RULE_INVALID, true, isWarning, helpMessage, group);
         }
-
         JsonArray issuelinks = jiraTicketResult.getAsJsonObject(FIELDS).getAsJsonArray(ISSUELINKS);
         String name = getIssueTypeName(issuelinks);
         String statusCategory = getIssueStatusCategory(issuelinks);
-
         if (name == null || !name.equals(STORY)) {
             return buildValidationResult("No es ticket de integración", true, isWarning, helpMessage, group);
         }

@@ -119,7 +119,7 @@ public class JiraValidatorService {
         var result26 = instancesRules.getValidationPR(tipoDesarrollo, "Validar que se tenga una PR asociada", GROUP_PR);
         var result27 = instancesRules.getValidationPRBranch("Validar que esté asociado a la rama correcta", GROUP_PR);
         var result28 = instancesRules.getValidationProductivizacionIssueLink(tipoDesarrollo, "Validar que el ticket de deployado como isChild (scaffolder)", GROUP_TICKET);
-        var result29 = instancesRules.getValidatorValidateHUTType(teamBacklogId,TEAM_BACKLOG_RLB_ID,"Detectar el tipo de Ticket Integracion", tipoDesarrollo, GROUP_TICKET);
+        var result29 = instancesRules.getValidatorHUTIntegration(teamBacklogId,TEAM_BACKLOG_RLB_ID,"Detectar el tipo de Ticket Integracion", tipoDesarrollo, GROUP_TICKET);
         var result30 = instancesRules.getValidationIFRS9("Validar los bloqueo IFRS9 en las solicitudes", GROUP_TICKET);
 
         resultFinal.add(result1);
@@ -232,8 +232,7 @@ public class JiraValidatorService {
                     .getAsJsonArray("detail")
                     .get(0).getAsJsonObject()
                     .getAsJsonArray("pullRequests");
-
-
+            
             for(JsonElement pr : detailPR){
                 JsonObject prDetail = pr.getAsJsonObject();
                 List<Map<String,Object>> reviewersList = new ArrayList<>();
