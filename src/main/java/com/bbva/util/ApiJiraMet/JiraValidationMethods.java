@@ -711,8 +711,8 @@ public class JiraValidationMethods {
     public Map<String, Object> getValidationAcceptanceCriteria(String teamBackLogTicketId,
             List<String> teamBackLogTicketIdRLB, String tipoDesarrollo, String helpMessage, String group) {
 
-        String message = "";
-        boolean isValid = false;
+        String message;
+        boolean isValid;
         boolean isWarning = false;
 
         Map<String, Object> validAcceptanceCriteriaObject = CRITERIA_BY_DEVELOP_TYPES.get(tipoDesarrollo);
@@ -1220,14 +1220,13 @@ public class JiraValidationMethods {
         if (new HashSet<>(foundAttachments).containsAll(requiredAttachments)) {
             message = "Todos los adjuntos requeridos fueron encontrados: " + String.join(", ", requiredAttachments);
             isValid = true;
-            return buildValidationResult(message, isValid, isWarning, helpMessage, group);
         } else {
             List<String> missingAttachments = new ArrayList<>(requiredAttachments);
             missingAttachments.removeAll(foundAttachments);
             message = "Faltan los siguientes adjuntos: " + String.join(", ", missingAttachments);
             isValid = false;
-            return buildValidationResult(message, isValid, isWarning, helpMessage, group);
         }
+        return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
 
     public Map<String, Object> getValidationProductivizacionIssueLink(String tipoDesarrollo, String helpMessage, String group){
@@ -1566,11 +1565,10 @@ public class JiraValidationMethods {
                             if (statusSubtask.equals(ACCEPTED)) {
                                 message = MSG_UUAA+String.join(", ", matchedUuaas)+" bajo dominio de Alpha y Subtarea en estado Accepted";
                                 isValid = true;
-                                break;
                             }else{
                                 message = MSG_UUAA+String.join(", ", matchedUuaas)+" bajo dominio de Alpha y Subtarea en estado incorrecto "+statusSubtask;
-                                break;
                             }
+                            break;
                         }
                         else{
                             message = MSG_UUAA+String.join(", ", matchedUuaas)+" bajo dominio de Alpha sin Subtarea";
