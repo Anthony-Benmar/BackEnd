@@ -46,6 +46,9 @@ public class JiraValidatorConstantes {
     public static final String CREATED = "created";
     public static final String ITEMS = "items";
     public static final String CUSTOMFIELD_10004 = "customfield_10004";
+    public static final String CUSTOMFIELD_10264 = "customfield_10264";
+    public static final String CUSTOMFIELD_13300 = "customfield_13300";
+    public static final String CUSTOMFIELD_13301 = "customfield_13301";
     public static final String MSG_RULE_INVALID = "Esta regla no es válida para este tipo de desarrollo.";
     public static final String INWARD = "inward";
     public static final String STATUS = "status";
@@ -78,7 +81,7 @@ public class JiraValidatorConstantes {
     public static final String IS_CHILD_ITEM_OF = "is child item of";
     public static final String MSG_RULE_NODEPENDENCY = "Ticket no cuenta con Dependencia Asociada.";
     public static final String MSG_UUAA = "Se encontro UUAAs ";
-    public static final String MSG_COORDINATION_MESSAGE = "de ser necesario coordinar con el <strong>SM / QE</strong>";
+    public static final String MSG_COORDINATION_MESSAGE = "de ser necesario coordinar con el SM / QE";
     public static final String MESSAGE = "message";
     public static final String ISVALID = "isValid";
     public static final String ISWARNING = "isWarning";
@@ -86,6 +89,8 @@ public class JiraValidatorConstantes {
     public static final String GROUP = "group";
     public static final String C204 = "C204";
     public static final String P110 = "P110";
+    public static final String NAME = "name";
+    public static final String TYPE = "type";
 
     static {
         Map<String, List<String>> mapDevTypes = new HashMap<>();
@@ -225,7 +230,7 @@ public class JiraValidatorConstantes {
                 "validateEmailContractor", true,
                 "advertenciaReadyToVerify", true,
                 "advertenciaEstadoInicial", false,
-                "status", new ArrayList<>(List.of("Accepted", READY_TO_VERIFY)),
+                STATUS, new ArrayList<>(List.of(ACCEPTED, READY_TO_VERIFY)),
                 ITEMS, new ArrayList<>(List.of(P110_AT,"[VB][AT]","[C204][AT]")),
                 "rol", new ArrayList<>(List.of("1","2"))
                 )));
@@ -235,7 +240,7 @@ public class JiraValidatorConstantes {
                 "validateEmailContractor", true,
                 "advertenciaReadyToVerify", true,
                 "advertenciaEstadoInicial", false,
-                "status", new ArrayList<>(List.of("Accepted", READY_TO_VERIFY)),
+                STATUS, new ArrayList<>(List.of(ACCEPTED, READY_TO_VERIFY)),
                 ITEMS, new ArrayList<>(List.of(C204_PO,"[VB][PO]")),
                 "rol", new ArrayList<>(List.of("5","8"))
                 )));
@@ -245,7 +250,7 @@ public class JiraValidatorConstantes {
                 "validateEmailContractor", true,
                 "advertenciaReadyToVerify", true,
                 "advertenciaEstadoInicial", false,
-                "status", new ArrayList<>(List.of("Accepted", READY_TO_VERIFY)),
+                STATUS, new ArrayList<>(List.of(ACCEPTED, READY_TO_VERIFY)),
                 ITEMS, new ArrayList<>(List.of(VB_SO)),
                 "rol", new ArrayList<>(List.of("9","10"))
                 )));
@@ -255,7 +260,7 @@ public class JiraValidatorConstantes {
                 "validateEmailContractor", true,
                 "advertenciaReadyToVerify", true,
                 "advertenciaEstadoInicial", false,
-                "status", new ArrayList<>(List.of("Accepted", READY_TO_VERIFY)),
+                STATUS, new ArrayList<>(List.of(ACCEPTED, READY_TO_VERIFY)),
                 ITEMS, new ArrayList<>(List.of(VB_KM)),
                 "rol", new ArrayList<>(List.of("13","14"))
                 )));
@@ -265,7 +270,7 @@ public class JiraValidatorConstantes {
                 "validateEmailContractor", true,
                 "advertenciaReadyToVerify", false,
                 "advertenciaEstadoInicial", true,
-                "status", new ArrayList<>(List.of("Accepted", READY_TO_VERIFY)),
+                STATUS, new ArrayList<>(List.of(ACCEPTED, READY_TO_VERIFY)),
                 ITEMS, new ArrayList<>(List.of("[P110][GC]"))
                 )));
         mapSubtasksTipoOwner.put("qa", new HashMap<>(Map.of(
@@ -274,7 +279,7 @@ public class JiraValidatorConstantes {
                 "validateEmailContractor", false,
                 "advertenciaReadyToVerify", false,
                 "advertenciaEstadoInicial", true,
-                "status", new ArrayList<>(List.of(READY)),
+                STATUS, new ArrayList<>(List.of(READY)),
                 ITEMS, new ArrayList<>(List.of(C204_QA, "[VB][QA]"))
                 )));
     SUBTASKS_TYPE_OWNER = Collections.unmodifiableMap(mapSubtasksTipoOwner);

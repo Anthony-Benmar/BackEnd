@@ -501,8 +501,9 @@ public class DocumentGeneratorService {
     }
 
     private String classifyDataprocJob(String jobNameDataproc) {
+        String proc = "Procesamiento";
         if (jobNameDataproc.isEmpty()) {
-            return "Procesamiento";
+            return proc;
         }
         String[] parts = jobNameDataproc.split("-");
         if (parts.length > 3) {
@@ -511,9 +512,9 @@ public class DocumentGeneratorService {
             if ("krb".equals(jobType)) {
                 return "Ingesta";
             }
-            return "out".equals(operation) ? "Operativización" : "Procesamiento";
+            return "out".equals(operation) ? "Operativización" : proc;
         }
-        return "Procesamiento";
+        return proc;
     }
 
     public String generateNameMeshTracking(DocumentGeneratorMeshRequest dto) {

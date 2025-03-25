@@ -1,6 +1,5 @@
 package com.bbva.util.ApiJiraMet;
 
-import com.bbva.common.jiraValidador.JiraValidatorConstantes;
 import com.bbva.dao.InfoJiraProjectDao;
 import com.bbva.dto.jira.request.JiraValidatorByUrlRequest;
 import com.bbva.entities.jiravalidator.InfoJiraProject;
@@ -21,6 +20,7 @@ import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -28,89 +28,29 @@ import java.util.stream.Collectors;
 import static com.bbva.common.jiraValidador.JiraValidatorConstantes.*;
 
 public class JiraValidationMethods {
+    private static final Logger LOGGER = Logger.getLogger(JiraValidationMethods.class.getName());
     private final String jiraCode;
     private final List<String> validPAD = Arrays.asList("pad3", "pad5");
     private final JsonObject jiraTicketResult;
     private boolean isInTableroDQA;
     private final boolean isEnviadoFormulario;
-    private final String featureLink;
-    private final List<String> impactLabel;
+    private final String featureLinkCode;
+    private final JsonObject featureLinkResult;
     private final String currentQ;
-    private final String teamBackLogId;
     private final String teamBackLogDQAId = "2461905";
 
-    public JiraValidationMethods(String jiraCode, JsonObject jiraTicketResult) throws ParseException {
+    public JiraValidationMethods(String jiraCode, JsonObject jiraTicketResult, String featureLinkCode, JsonObject featureLinkResult) throws ParseException {
         this.jiraCode = jiraCode;
         this.jiraTicketResult = jiraTicketResult;
+        this.featureLinkCode = featureLinkCode;
+        this.featureLinkResult = featureLinkResult;
         this.isInTableroDQA = false;
         this.isEnviadoFormulario = false;
-        JsonElement featureLinkElement = this.jiraTicketResult.get(FIELDS).getAsJsonObject().get(CUSTOMFIELD_10004);
-        this.featureLink = featureLinkElement.isJsonNull() ? null : featureLinkElement.getAsString();
-        JsonElement impactLabelElement = this.jiraTicketResult.get(FIELDS).getAsJsonObject().get("customfield_10267");
-        this.impactLabel = convertJsonElementToList(impactLabelElement);
-        this.teamBackLogId = getTeamBackLogId();
         this.currentQ = getCurrentQ();
     }
 
     public String getCurrentQ(){
         return InfoJiraProjectDao.getInstance().currentQ();
-    }
-
-    public String getTeamBackLogId() throws ParseException {
-        String teamBackLogId = null;
-        Date oldestDate = new SimpleDateFormat("yyyy-MM-dd").parse("9999-12-31");
-        JsonArray changelog = jiraTicketResult
-                .getAsJsonObject(CHANGELOG)
-                .getAsJsonArray(HISTORIES);
-        for (JsonElement history : changelog) {
-            JsonObject historyObj = history.getAsJsonObject();
-            String created = historyObj.get(CREATED).getAsString();
-            Date createdDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").parse(created);
-            if (createdDate.before(oldestDate)) {
-                JsonArray items = historyObj.getAsJsonArray(ITEMS);
-                String field = items.get(0).getAsJsonObject().get(FIELD).getAsString();
-                if (field.equals(TEAM_BACKLOG) && items.get(0).getAsJsonObject().get("to").getAsString().equals(teamBackLogDQAId)) {
-                    teamBackLogId = items.get(0).getAsJsonObject().get("from").getAsString();
-                    oldestDate = createdDate;
-                }
-            }
-        }
-        if (teamBackLogId == null){
-            teamBackLogId = jiraTicketResult.getAsJsonObject(FIELDS)
-                    .getAsJsonArray("customfield_13300").get(0).getAsString();
-        }
-        return teamBackLogId;
-    }
-
-    private List<String> convertJsonElementToList(JsonElement element) {
-        if (element != null && !element.isJsonNull() && element.isJsonArray()) {
-            JsonArray jsonArray = element.getAsJsonArray();
-            List<String> resultList = new ArrayList<>();
-            jsonArray.forEach(jsonElem -> resultList.add(jsonElem.getAsString()));
-            return resultList;
-        } else {
-            return null;
-        }
-    }
-
-    public Map<String, Object> getValidationURLJIRA(String helpMessage, String group) {
-        String message;
-        boolean isValid;
-        boolean isWarning = false;
-
-        String[] jiraCodeParts = this.jiraCode.split("-");
-        String jiraPADCode = jiraCodeParts[0].toUpperCase();
-        jiraPADCode = jiraPADCode.toLowerCase();
-        System.out.println(jiraPADCode);
-        if (jiraPADCode.contains(this.validPAD.get(0)) || jiraPADCode.contains(this.validPAD.get(1))) {
-            message = "Se encontró " + jiraPADCode;
-            isValid = true;
-        } else {
-            message = "No se encontró " + String.join(" o ", this.validPAD);
-            isValid = false;
-        }
-
-        return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
 
     public Map<String, Object> getValidatorValidateSummaryHUTType(String helpMessage, String group) {
@@ -120,7 +60,7 @@ public class JiraValidationMethods {
         String tipoDesarrolloSummary = "";
         String summaryComparacion = jiraTicketResult.get(FIELDS).getAsJsonObject().get(SUMMARY).toString().toLowerCase();
 
-        for (Map.Entry<String, List<String>> entry : JiraValidatorConstantes.DEVELOPS_TYPES.entrySet()) {
+        for (Map.Entry<String, List<String>> entry : DEVELOPS_TYPES.entrySet()) {
             String tipoDesarrolloKey = entry.getKey();
             List<String> tipoDesarrolloItem = entry.getValue();
 
@@ -149,7 +89,7 @@ public class JiraValidationMethods {
     }
 
     public Map<String, Object> getValidatorIssueType(String tipoDesarrollo,String helpMessage, String group) {
-        String issueType = jiraTicketResult.getAsJsonObject(FIELDS).getAsJsonObject(ISSUETYPE).get("name").getAsString();
+        String issueType = jiraTicketResult.getAsJsonObject(FIELDS).getAsJsonObject(ISSUETYPE).get(NAME).getAsString();
 
         String message;
         boolean isValid;
@@ -166,7 +106,7 @@ public class JiraValidationMethods {
         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
 
-    public Map<String, Object> getValidatorValidateHUTType(List<String> teamBackLogTicketIdRLB, String helpMessage, String tipoDesarrollo, String group) {
+    public Map<String, Object> getValidatorValidateHUTType(String teamBackLogId, List<String> teamBackLogTicketIdRLB, String helpMessage, String tipoDesarrollo, String group) {
         boolean isWarning = false;
 
         JsonArray issuelinks = jiraTicketResult
@@ -182,7 +122,7 @@ public class JiraValidationMethods {
             } else {
                 for (JsonElement issueLinkElement : issuelinks) {
                     JsonObject issueLink = issueLinkElement.getAsJsonObject();
-                    String inward = issueLink.getAsJsonObject("type").get(INWARD).getAsString();
+                    String inward = issueLink.getAsJsonObject(TYPE).get(INWARD).getAsString();
                     if (inward.equalsIgnoreCase(IS_CHILD_ITEM_OF)) {
                         if (issueLink.has(INWARD_ISSUE)) {
                             JsonObject inwardIssue = issueLink.getAsJsonObject(INWARD_ISSUE);
@@ -191,8 +131,8 @@ public class JiraValidationMethods {
                                 if (fields.has(ISSUETYPE) && fields.has(STATUS)) {
                                     JsonObject issuetype = fields.getAsJsonObject(ISSUETYPE);
                                     JsonObject status = fields.getAsJsonObject(STATUS);
-                                    statusCategory = status.get("name").getAsString();
-                                    name = issuetype.get("name").getAsString();
+                                    statusCategory = status.get(NAME).getAsString();
+                                    name = issuetype.get(NAME).getAsString();
                                 }
                             }
                         }
@@ -215,90 +155,80 @@ public class JiraValidationMethods {
         }
     }
 
-    public String multiReplace(String text, Map<String, String> replacements) {
-        if (text == null) {
-            text = "";
-        }
-        for (Map.Entry<String, String> entry : replacements.entrySet()) {
-            text = text.replace(entry.getKey(), entry.getValue());
-        }
-        return text;
-    }
-
     private Map<String, Object> buildValidationResult(String message, boolean isValid, boolean isWarning, String helpMessage, String group) {
-        Map<String, Object> resultMap = new HashMap<>();
-        resultMap.put(MESSAGE, message);
-        resultMap.put(ISVALID, isValid);
-        resultMap.put(ISWARNING, isWarning);
-        resultMap.put(HELPMESSAGE, helpMessage);
-        resultMap.put(GROUP, group);
-        return resultMap;
+        return Map.of(
+                MESSAGE, message,
+                ISVALID, isValid,
+                ISWARNING, isWarning,
+                HELPMESSAGE, helpMessage,
+                GROUP, group
+        );
     }
 
-public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMessage, String group) {
-    String message = "";
-    boolean isValid;
-    boolean isWarning = false;
-    List<String> prsStatusException = new ArrayList<>(List.of("DECLINED"));
-    List<String> prsStatusWarning = new ArrayList<>(List.of("MERGED"));
-    Map<String, String> prException = new HashMap<>();
-    Map<String, String> prWarning = new HashMap<>();
-    Map<String, String> prValid = new HashMap<>();
-    JsonObject jiraTicketResultPrs = jiraTicketResult
-            .getAsJsonObject(FIELDS);
+    public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMessage, String group) {
+        String message = "";
+        boolean isValid;
+        boolean isWarning = false;
+        List<String> prsStatusException = new ArrayList<>(List.of("DECLINED"));
+        List<String> prsStatusWarning = new ArrayList<>(List.of("MERGED"));
+        Map<String, String> prException = new HashMap<>();
+        Map<String, String> prWarning = new HashMap<>();
+        Map<String, String> prValid = new HashMap<>();
+        JsonObject jiraTicketResultPrs = jiraTicketResult
+                .getAsJsonObject(FIELDS);
 
-    List<String> tipoDesarrolloPRs = Arrays.asList("Procesamiento","MigrationTool",
-            "Hammurabi", "Ingesta", "Scaffolder", "Operativizacion",
-            "Teradata", "SmartCleaner","SparkCompactor", "JSON Global");
+        List<String> tipoDesarrolloPRs = Arrays.asList("Procesamiento","MigrationTool",
+                "Hammurabi", "Ingesta", "Scaffolder", "Operativizacion",
+                "Teradata", "SmartCleaner","SparkCompactor", "JSON Global");
 
-    tipoDesarrolloPRs.replaceAll(String::toLowerCase);
+        tipoDesarrolloPRs.replaceAll(String::toLowerCase);
 
-    if (jiraTicketResultPrs.get("prs") != null) {
-        int cantidadPRs = jiraTicketResultPrs.get("prs").getAsJsonArray().size();
-        if (cantidadPRs > 0) {
-            for (JsonElement prObj : jiraTicketResultPrs.get("prs").getAsJsonArray()) {
-                String status = jiraTicketResultPrs.get("prs").getAsJsonArray().get(0).getAsJsonObject().get(STATUS).getAsString();
-                if (prsStatusException.contains(status)){
-                    prException.put(prObj.getAsJsonObject().get("url").getAsString(), prObj.getAsJsonObject().get(STATUS).getAsString());
-                } else if (prsStatusWarning.contains(status)) {
-                    prWarning.put(prObj.getAsJsonObject().get("url").getAsString(), prObj.getAsJsonObject().get(STATUS).getAsString());
-                }else{
-                    prValid.put(prObj.getAsJsonObject().get("url").getAsString(), prObj.getAsJsonObject().get(STATUS).getAsString());
+        if (jiraTicketResultPrs.get("prs") != null) {
+            int cantidadPRs = jiraTicketResultPrs.get("prs").getAsJsonArray().size();
+            if (cantidadPRs > 0) {
+                for (JsonElement prObj : jiraTicketResultPrs.get("prs").getAsJsonArray()) {
+                    String status = jiraTicketResultPrs.get("prs").getAsJsonArray().get(0).getAsJsonObject().get(STATUS).getAsString();
+                    if (prsStatusException.contains(status)){
+                        prException.put(prObj.getAsJsonObject().get("url").getAsString(), prObj.getAsJsonObject().get(STATUS).getAsString());
+                    } else if (prsStatusWarning.contains(status)) {
+                        prWarning.put(prObj.getAsJsonObject().get("url").getAsString(), prObj.getAsJsonObject().get(STATUS).getAsString());
+                    }else{
+                        prValid.put(prObj.getAsJsonObject().get("url").getAsString(), prObj.getAsJsonObject().get(STATUS).getAsString());
+                    }
                 }
             }
         }
-    }
-    int cantidadPrsValidas = prValid.size();
-    int cantidadPrsWarning = prWarning.size();
-    if (tipoDesarrollo.equals("PRs") || tipoDesarrollo.equals(MALLAS) || tipoDesarrolloPRs.contains(tipoDesarrollo)) {
-        if (cantidadPrsValidas == 1) {
-            message = "Con PR asociada: " + prValid.keySet();
-            isValid = true;
-        } else if (cantidadPrsValidas > 1) {
-            message = "Se encontraron " + cantidadPrsValidas + " PRs asociadas: " + prValid.keySet();
-            isValid = false;
-            message += " Atención: No se puede tener más de una PR asociada.";
+        int cantidadPrsValidas = prValid.size();
+        int cantidadPrsWarning = prWarning.size();
+        if (tipoDesarrollo.equals("PRs") || tipoDesarrollo.equals(MALLAS) || tipoDesarrolloPRs.contains(tipoDesarrollo)) {
+            if (cantidadPrsValidas == 1) {
+                message = "Con PR asociada: " + prValid.keySet();
+                isValid = true;
+            } else if (cantidadPrsValidas > 1) {
+                message = "Se encontraron " + cantidadPrsValidas + " PRs asociadas: " + prValid.keySet();
+                isValid = false;
+                message += " Atención: No se puede tener más de una PR asociada.";
+            } else {
+                message = "No se detectó una PR valida asociada.";
+                isValid = false;
+                message += " Atención: Si la PR fue asociada correctamente, falta dar permisos de acceso a los QEs.";
+            }
+            if (cantidadPrsWarning>0){
+                isWarning = true;
+                message += " Atención: Se encontraron " + cantidadPrsWarning + " PRs asociadas en MERGED: " + prWarning.keySet();
+            }
         } else {
-            message = "No se detectó una PR valida asociada.";
-            isValid = false;
-            message += " Atención: Si la PR fue asociada correctamente, falta dar permisos de acceso a los QEs.";
+            if (cantidadPrsValidas == 0) {
+                message = "Sin PR asociada.";
+                isValid = true;
+            } else {
+                message = "No se debe asociar una PR a este Tipo de Desarrollo.";
+                isValid = false;
+            }
         }
-        if (cantidadPrsWarning>0){
-            isWarning = true;
-            message += " Atención: Se encontraron " + cantidadPrsWarning + " PRs asociadas en MERGED: " + prWarning.keySet();
-        }
-    } else {
-        if (cantidadPrsValidas == 0) {
-            message = "Sin PR asociada.";
-            isValid = true;
-        } else {
-            message = "No se debe asociar una PR a este Tipo de Desarrollo.";
-            isValid = false;
-        }
+        return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
-    return buildValidationResult(message, isValid, isWarning, helpMessage, group);
-}
-    public Map<String, Object> getValidationPRBranch(String tipoDesarrollo, String helpMessage, String group) {
+    public Map<String, Object> getValidationPRBranch(String helpMessage, String group) {
         String message = "";
         boolean isValid = false;
         boolean isWarning = false;
@@ -323,13 +253,11 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
                         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
                     }
                     else{
-                        isValid = false;
                         message = "No se encontró PR branch Asociada correcta: "+branch+ ". Solo son validas"+String.join(",",validBranches);
                     }
                 }
             }
             else {
-                isValid = false;
                 message = "No se encontraron PRs asociadas";
             }
         }
@@ -362,7 +290,7 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
                     .get(SUMMARY).getAsString();
 
             results.forEach(result -> {
-                if (statusSubTask.contains(result.toString())){
+                if (statusSubTask.contains(result)){
                     subTaskCollection.add(subtask.getAsJsonObject());
                 }
             });
@@ -374,7 +302,7 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
                 String status = subTaskElement.getAsJsonObject()
                         .getAsJsonObject(FIELDS)
                         .getAsJsonObject(STATUS)
-                        .get("name").getAsString();
+                        .get(NAME).getAsString();
                 if (!status.equalsIgnoreCase(ACCEPTED) && !status.equalsIgnoreCase(DISCARDED)){
                     subTaskCollectionBadStatus.add(subTaskElement);
                     subTaskLabelBadStatus.add(subTaskElement.getAsJsonObject().getAsJsonObject(FIELDS).get(SUMMARY).getAsString());
@@ -392,8 +320,8 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
 
-    public Map<String, Object> getValidationValidateSubtaskPerson(JiraValidatorByUrlRequest dto,String tipoDesarrollo, String helpMessage, String group, List<InfoJiraProject> infoJiraProjectList) {
-        String message="Todas Las subtareas tienen el VoBo de la persona asociada al proyecto";
+    public Map<String, Object> getValidationValidateSubtaskPerson(String teamBackLogId,JiraValidatorByUrlRequest dto,String tipoDesarrollo, String helpMessage, String group, List<InfoJiraProject> infoJiraProjectList) {
+        String message;
         boolean isValid = false;
         boolean isWarning = false;
         List<String> messsageBadList = new ArrayList<>();
@@ -405,7 +333,7 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
         JsonArray subTasks = jiraTicketResult
                 .getAsJsonObject(FIELDS)
                 .getAsJsonArray(SUBTASKS);
-        if(subTasks.size()==0){
+        if(subTasks.isEmpty()){
             message = "HU no cuenta con subtareas asociadas";
             return buildValidationResult(message, isValid, isWarning, helpMessage, group);
         }
@@ -427,16 +355,15 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
                 String subtaskStatus = subtask.getAsJsonObject()
                         .getAsJsonObject(FIELDS)
                         .getAsJsonObject(STATUS)
-                        .getAsJsonPrimitive("name")
+                        .getAsJsonPrimitive(NAME)
                         .getAsString();
                 if(subtaskStatus.equals(DISCARDED)){
                     continue;
                 }
                 String codeJiraSubTask = subtask.getAsJsonObject().get("key").getAsString();
-                var tickets = List.of(codeJiraSubTask);
-                var query = KEY_IN + String.join(",", tickets) + ")";
+                var query = KEY_IN + String.join(",",  List.of(codeJiraSubTask)) + ")";
 
-                JsonObject metaData = null;
+                JsonObject metaData;
                 String response = null;
                 var url = ApiJiraName.URL_API_JIRA_SQL + query + new JiraApiService().getQuerySuffixURL();
                 try {
@@ -507,7 +434,7 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
                         projectsFiltrados = infoJiraProjectList.stream().filter(
                                 project -> ((List<String>) entry.getValue().get("rol")).contains(project.getProjectRolType())
                                         && project.getTeamBackLogId().equals(teamBackLogId)
-                        ).collect(Collectors.toList());
+                        ).toList();
                     }
                 }
                 if (projectsFiltrados.isEmpty()){
@@ -558,14 +485,14 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
             String subtaskStatus = subtask.getAsJsonObject()
                     .getAsJsonObject(FIELDS)
                     .getAsJsonObject(STATUS)
-                    .getAsJsonPrimitive("name")
+                    .getAsJsonPrimitive(NAME)
                     .getAsString();
             if(subtaskStatus.equals(DISCARDED)){
                 continue;
             }
             String codeJiraSubTask = subtask.getAsJsonObject().get("key").getAsString();
             var query = KEY_IN + String.join(",", codeJiraSubTask) + ")";
-            JsonObject metaData = null;
+            JsonObject metaData;
             try {
                 var url = ApiJiraName.URL_API_JIRA_SQL + query + new JiraApiService().getQuerySuffixURL();
                 var response = new JiraApiService().GetJiraAsync(dto.getUserName(),dto.getToken(),url);
@@ -604,8 +531,8 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
         return buildValidationResult(message.get(), isValid.get(), isWarning, helpMessage, group);
     }
 
-    public Map<String, Object> getValidationAcceptanceCriteria(JiraValidatorByUrlRequest dto, List<String> teamBackLogTicketIdRLB,String tipoDesarrollo, String helpMessage, String group, List<InfoJiraProject> infoJiraProjectList) {
-        String message = "";
+    public Map<String, Object> getValidationAcceptanceCriteria(List<String> teamBackLogTicketIdRLB,String tipoDesarrollo, String helpMessage, String group, List<InfoJiraProject> infoJiraProjectList) {
+        String message;
         boolean isValid = false;
         boolean isWarning = false;
         Map<String, Object> validAcceptanceCriteriaObject = CRITERIA_BY_DEVELOP_TYPES.get(tipoDesarrollo);
@@ -615,7 +542,7 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
                 .get("customfield_10260").getAsString();
 
         acceptanceCriteria = acceptanceCriteria.replaceAll("[\\s\\u00A0]+", " ").trim();
-        if(tipoDesarrollo.equalsIgnoreCase(MALLAS)){ //PR DE TIPO MALLAS
+        if(tipoDesarrollo.equalsIgnoreCase(MALLAS)){
             String teamBackLogTicketId = jiraTicketResult
                     .getAsJsonObject()
                     .getAsJsonObject(FIELDS)
@@ -645,16 +572,13 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
                             isValid = true;
                         } else {
                             message = MSG_RULE_CRITERIOFORMATO;
-                            isValid = false;
                         }
 
                     } else {
                         message = MSG_RULE_TIPODESARROLLO;
-                        isValid = false;
                     }
                 } else {
                     message = MSG_RULE_CRITEROACEPTACION;
-                    isValid = false;
                 }
             } else{
 
@@ -680,16 +604,12 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
                             isValid = true;
                         } else {
                             message = MSG_RULE_CRITERIOFORMATO;
-                            isValid = false;
                         }
-
                     } else {
                         message = MSG_RULE_TIPODESARROLLO;
-                        isValid = false;
                     }
                 } else {
                     message = MSG_RULE_CRITEROACEPTACION;
-                    isValid = false;
                 }
             }
 
@@ -704,16 +624,13 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
                         isValid = true;
                     } else {
                         message = MSG_RULE_CRITERIOFORMATO;
-                        isValid = false;
                     }
 
                 } else {
                     message = MSG_RULE_TIPODESARROLLO;
-                    isValid = false;
                 }
             } else {
                 message = MSG_RULE_CRITEROACEPTACION;
-                isValid = false;
             }
 
         }
@@ -728,7 +645,7 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
         String jiraTicketStatus = jiraTicketResult
                 .getAsJsonObject(FIELDS)
                 .getAsJsonObject(STATUS)
-                .get("name").getAsString();
+                .get(NAME).getAsString();
 
         Map<String, String> storyMap = new HashMap<>();
         storyMap.put(LABEL, TEAM_BACKLOG);
@@ -742,7 +659,7 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
         teamFieldLabelByIssueType.put(DEPENDENCY, storyMap); //dependencyMap
         String issueType = jiraTicketResult.getAsJsonObject(FIELDS)
                 .getAsJsonObject(ISSUETYPE)
-                .get("name").getAsString();
+                .get(NAME).getAsString();
 
         String currentTeamFieldLabel = (teamFieldLabelByIssueType.containsKey(issueType)) ? teamFieldLabelByIssueType.get(issueType).get(LABEL) : "";
 
@@ -782,8 +699,7 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
                         } else {
                             message = "No está en el Tablero de DQA";
                             statusTableroDQA.replaceAll(String::toLowerCase);
-                            List<String> statusTableroDQANew = statusTableroDQA;
-                            if (statusTableroDQANew.contains( jiraTicketStatus.trim().toLowerCase())) {
+                            if (statusTableroDQA.contains( jiraTicketStatus.trim().toLowerCase())) {
                                 if (validacionEnvioFormulario) {
                                     StringBuilder sb = new StringBuilder(message);
                                     sb.append("Atención: No olvidar que para regresar el ticket a DQA, se debe cambiar el estado del ticket y la Subtarea DQA");
@@ -813,7 +729,7 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
         var jiraTicketStatus = jiraTicketResult
                 .getAsJsonObject(FIELDS)
                 .getAsJsonObject(STATUS)
-                .get("name").getAsString();
+                .get(NAME).getAsString();
         List<String> estadosExtraMallasHost = new ArrayList<>(Arrays.asList(READY, TEST, READY_TO_VERIFY));
         List<String> statusTableroDQA = new ArrayList<>(Arrays.asList(
                 READY,
@@ -829,18 +745,15 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
             statusTableroDQA.addAll(estadosExtraMallasHost);
         }
 
-        List<String> statusList = statusTableroDQA;
-
         message = String.format("Con estado %s", jiraTicketStatus);
 
-        if (statusList.contains(jiraTicketStatus)) {
+        if (statusTableroDQA.contains(jiraTicketStatus)) {
             isValid = true;
 
             List<String> listaEstados = new ArrayList<>(Arrays.asList(READY, DEPLOYED));
 
             if (!listaEstados.contains(jiraTicketStatus)) {
                 if (this.isInTableroDQA && this.isEnviadoFormulario) {
-                    isValid = true;
                     isWarning = true;
                     message += " Atención: Es posible que el %s se encuentre en revisión, recordar que el estado inicial de un %s por revisar es Ready";
                 } else {
@@ -856,101 +769,82 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
         boolean isValid;
         boolean isWarning = false;
 
-        if (featureLink == null || featureLink.isBlank()) {
+        if (featureLinkCode == null || featureLinkCode.isBlank()) {
             message = MSG_RULE_NOFEATURE;
             isValid = false;
         } else {
-            message = ApiJiraName.URL_API_BROWSE + featureLink + " asociado correctamente";
+            message = ApiJiraName.URL_API_BROWSE + featureLinkCode + " asociado correctamente";
             isValid = true;
         }
         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
 
-    public Map<String, Object> getValidationFeatureLinkPAD3(String helpMessage, String group) {
+
+    public Map<String, Object> getValidationFeatureLinkStatus(String helpMessage, String group) {
         String message;
-        boolean isValid;
-        boolean isWarning = false;
-
-        if (featureLink == null || featureLink.isBlank()) {
-            message = MSG_RULE_NOFEATURE;
-            isValid = false;
-        } else {
-
-            if (featureLink.startsWith("PAD3-")) {
-                message = "Feature Link asociado correctamente: " + featureLink;
-                isValid = true;
-            } else {
-                message = "Feature Link no comienza con 'PAD3-': " + featureLink;
-                isValid = false;
-            }
-        }
-
-        return buildValidationResult(message, isValid, isWarning, helpMessage, group);
-
-    }
-
-    public Map<String, Object> getValidationFeatureLinkStatus(JiraValidatorByUrlRequest dto, String helpMessage, String group) {
-        String message = "";
         boolean isValid = false;
         boolean isWarning = false;
-        JsonObject metaData = null;
-        List<String> validStatuses = Arrays.asList(IN_PROGRESS);
-        if (featureLink == null || featureLink.isBlank()) {
-            message = MSG_RULE_NOFEATURE;
-            isValid = false;
-        } else {
-            var query = KEY_IN + String.join(",", featureLink) + ")";
-            try {
-                var url = ApiJiraName.URL_API_JIRA_SQL + query + new JiraApiService().getQuerySuffixURL();
-                var response = new JiraApiService().GetJiraAsync(dto.getUserName(), dto.getToken(), url);
-                metaData = JsonParser.parseString(response).getAsJsonObject();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-            String featureLinkStatus = metaData
-                    .getAsJsonArray(ISSUES)
-                    .get(0).getAsJsonObject()
-                    .getAsJsonObject(FIELDS)
-                    .getAsJsonObject(STATUS)
-                    .get("name").getAsString();
-
-            if (validStatuses.contains(featureLinkStatus)) {
-                message = "Con estado " + featureLinkStatus;
-                isValid = true;
-            } else {
-                message = "Con estado " + featureLinkStatus;
-            }
+        List<String> validStatus = List.of(IN_PROGRESS);
+        Map<String, Object> validationFeatureResult = getValidationFeatureLink(helpMessage, group);
+        if (!(boolean) validationFeatureResult.get(ISVALID)) {
+            return validationFeatureResult;
         }
+        String featureLinkStatus = featureLinkResult
+                .getAsJsonArray(ISSUES)
+                .get(0).getAsJsonObject()
+                .getAsJsonObject(FIELDS)
+                .getAsJsonObject(STATUS)
+                .get(NAME).getAsString();
+
+        if (validStatus.contains(featureLinkStatus)) {
+            isValid = true;
+        }
+        message = "Con estado " + featureLinkStatus;
+
         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
 
     public Map<String, Object> getValidationFeatureLinkProgramIncrement(JiraValidatorByUrlRequest dto, String helpMessage, String group){
-        String message = "";
-        boolean isValid = false;
+        String message;
+        boolean isValid;
         boolean isWarning = false;
-        JsonObject metaData = null;
-        if (featureLink == null || featureLink.isBlank()) {
-            message = MSG_RULE_NOFEATURE;
-            isValid = false;
-        } else {
-            var query = KEY_IN + String.join(",", featureLink) + ")";
+        Map<String, Object> validationFeatureResult = getValidationFeatureLink(helpMessage, group);
+        if (!(boolean) validationFeatureResult.get(ISVALID)) {
+            return validationFeatureResult;
+        }
+        JsonArray programIncrement = null;
+        if (featureLinkResult.has(ISSUES) &&
+                !featureLinkResult.getAsJsonArray(ISSUES).isEmpty() &&
+                featureLinkResult.getAsJsonArray(ISSUES)
+                        .get(0).getAsJsonObject().getAsJsonObject(FIELDS)
+                        .has(CUSTOMFIELD_10264)) {
 
-            try {
-                var url = ApiJiraName.URL_API_JIRA_SQL + query + new JiraApiService().getQuerySuffixURL();
-                var response = new JiraApiService().GetJiraAsync(dto.getUserName(), dto.getToken(), url);
-                metaData = JsonParser.parseString(response).getAsJsonObject();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-
-            JsonArray programIncrement = metaData
+            programIncrement = featureLinkResult
                     .getAsJsonArray(ISSUES)
                     .get(0).getAsJsonObject()
                     .getAsJsonObject(FIELDS)
-                    .get("customfield_10264")
+                    .get(CUSTOMFIELD_10264)
                     .getAsJsonArray();
+        }
 
-            String jiraTicketStatus = jiraTicketResult.get(FIELDS).getAsJsonObject().get(STATUS).getAsJsonObject().get("name").getAsString();
+        if (programIncrement == null || programIncrement.isJsonNull() || programIncrement.isEmpty()) {
+            message = "Sin Program Increment";
+            String tipoIncidencia = jiraTicketResult.get(FIELDS)
+                    .getAsJsonObject()
+                    .get(ISSUETYPE)
+                    .getAsJsonObject()
+                    .get(NAME)
+                    .getAsString();
+            isValid = !tipoIncidencia.isEmpty();
+            if (isValid) {
+                message = "Sin Program Increment, pero con tipo de incidencia: " + tipoIncidencia;
+                isWarning = true;
+            }
+        } else {
+            message = "Con Program Increment " + programIncrement;
+            isValid = true;
+            String jiraTicketStatus = jiraTicketResult.get(FIELDS)
+                    .getAsJsonObject().get(STATUS).getAsJsonObject().get(NAME).getAsString();
 
             boolean containsCurrentQ = false;
             for (JsonElement element : programIncrement) {
@@ -960,94 +854,63 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
                 }
             }
 
-            if (programIncrement.isEmpty() || programIncrement.isJsonNull()) {
-                message = "Sin Program Increment";
-
-                String tipoIncidencia = this.jiraTicketResult.get(FIELDS).getAsJsonObject().get(ISSUETYPE).getAsJsonObject().get("name").getAsString();
-                isValid = !tipoIncidencia.isEmpty();
-                if (isValid) {
-                    message = "Sin Program Increment, pero con tipo de incidencia: " + tipoIncidencia;
-                    isWarning = true;
-                }
-            } else {
-                message = "Con Program Increment " + programIncrement;
-                isValid = true;
-
-                if (!jiraTicketStatus.equals(DEPLOYED) && !containsCurrentQ) {
-                        message += " Atención: El Program Increment debe contener al Q actual (En este caso " + currentQ + ") cuando el ticket este en revisión, " + MSG_COORDINATION_MESSAGE;
-                        isValid = false;
-                }
+            if (!jiraTicketStatus.equals(DEPLOYED) && !containsCurrentQ) {
+                message += " Atención: El Program Increment debe contener al Q actual (En este caso " + currentQ + ") cuando el ticket este en revisión, " + MSG_COORDINATION_MESSAGE;
+                isValid = false;
             }
         }
         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
 
-    public Map<String, Object> getValidationFeatureLinkRLB(JiraValidatorByUrlRequest dto,String tipoDesarrollo, String helpMessage, String group){
+    public Map<String, Object> getValidationFeatureLinkRLB(String teamBackLogId,List<String> teamBackLogTicketIdRLB, JiraValidatorByUrlRequest dto, String tipoDesarrollo, String helpMessage, String group){
         String message = "";
-        boolean isValid = false;
+        boolean isValid;
         boolean isWarning = false;
-        List<String> teamBackLogTicketIdRLB = List.of("6037769","6037765","6037905","4403027","7912651","2461914");
+        List<String> validStatus = List.of("INC", "PRB", "PB");
 
-        if(tipoDesarrollo.equalsIgnoreCase(MALLAS)||tipoDesarrollo.equalsIgnoreCase("host")){ // PR DE TIPO MALLAS
-            String teamBackLogTicketId = jiraTicketResult
-                    .getAsJsonObject()
-                    .getAsJsonObject(FIELDS)
-                    .get("customfield_13301").getAsString();
-
-            if(teamBackLogTicketIdRLB.contains(teamBackLogTicketId)){
-                JsonObject metaData = null;
-                List<String> validStatuses = Arrays.asList("INC", "PRB", "PB");
-
-                if (featureLink == null || featureLink.isBlank()) {
-                    message = MSG_RULE_NOFEATURE;
-                    isValid = false;
-                } else {
-                    var query = KEY_IN + String.join(",", featureLink) + ")";
-                    try {
-                        var url = ApiJiraName.URL_API_JIRA_SQL + query + new JiraApiService().getQuerySuffixURL();
-                        var response = new JiraApiService().GetJiraAsync(dto.getUserName(), dto.getToken(), url);
-                        metaData = JsonParser.parseString(response).getAsJsonObject();
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                    JsonArray featureLinkLabels = metaData
-                            .getAsJsonArray(ISSUES)
-                            .get(0).getAsJsonObject()
-                            .getAsJsonObject(FIELDS)
-                            .getAsJsonArray(LABELS);
-
-                    boolean containsValidStatus = false;
-
-                    for (int i = 0; i < featureLinkLabels.size(); i++) {
-                        String label = featureLinkLabels.get(i).getAsString();
-                        for (String status : validStatuses) {
-                            if (label.startsWith(status)) {
-                                containsValidStatus = true;
-                                break;
-                            }
-                        }
-                        if (containsValidStatus) break;
-                    }
-
-                    if (containsValidStatus) {
-                        message += "El ticket es una incidencia o problema, contiene los labels correspondientes";
-                        isValid = true;
-                    } else {
-                        message += "El ticket debe corresponder a un evolutivo o solicitud interna para no llevar los labels correspondientes";
-                        isValid = true;
-                        isWarning = true;
-                    }
-
-                }
-            }else{
-                message += "El ticket no es una incidencia o problema.";
-                isValid = true;
-            }
-        }else{
-            message = MSG_RULE_INVALID;
-            isValid = true;
+        Map<String, Object> validationFeatureResult = getValidationFeatureLink(helpMessage, group);
+        if (!(boolean) validationFeatureResult.get(ISVALID)) {
+            return validationFeatureResult;
         }
-
+        if(!teamBackLogTicketIdRLB.contains(teamBackLogId)){
+            return buildValidationResult(MSG_RULE_INVALID, true,isWarning,helpMessage,group);
+        }
+        JsonArray featureLinkLabels = null;
+        if (featureLinkResult.has(ISSUES) &&
+                !featureLinkResult.getAsJsonArray(ISSUES).isEmpty() &&
+                featureLinkResult.getAsJsonArray(ISSUES)
+                        .get(0).getAsJsonObject().getAsJsonObject(FIELDS)
+                        .has(LABELS)) {
+            featureLinkLabels = featureLinkResult
+                    .getAsJsonArray(ISSUES)
+                    .get(0).getAsJsonObject()
+                    .getAsJsonObject(FIELDS)
+                    .getAsJsonArray(LABELS);
+        }
+        if (featureLinkLabels == null || featureLinkLabels.isJsonNull() || featureLinkLabels.isEmpty()) {
+            message += "El ticket no es una incidencia o problema o no contiene los labels identificadores "+String.join(",", validStatus)+".";
+            isValid = true;
+        }else {
+            boolean containsValidStatus = false;
+            for (int i = 0; i < featureLinkLabels.size(); i++) {
+                String label = featureLinkLabels.get(i).getAsString();
+                for (String status : validStatus) {
+                    if (label.startsWith(status)) {
+                        containsValidStatus = true;
+                        break;
+                    }
+                }
+                if (containsValidStatus) break;
+            }
+            if (containsValidStatus) {
+                message += "El ticket es una incidencia o problema, contiene los labels correspondientes";
+                isValid = true;
+            } else {
+                message += "El ticket debe corresponder a un evolutivo o solicitud interna para no llevar los labels correspondientes";
+                isValid = true;
+                isWarning = true;
+            }
+        }
         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
 
@@ -1098,127 +961,145 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
     }
 
     public Map<String, Object> getValidationValidateSubTask(String tipoDesarrollo, String helpMessage, String group) {
-        String message = "";
+        String message;
         boolean isValid = false;
         boolean isWarning = false;
-        boolean aditionalLabel = false;
+
         List<String> aditionalSpecialSubtask = List.of(VB_KM, VB_SO);
         List<String> aditionalSpecialLabels = List.of("datioRutaCritica", "JobsHuerfanos");
-        JsonArray labels = jiraTicketResult
-                .getAsJsonObject(FIELDS)
-                .getAsJsonArray(LABELS);
 
-        List<String> requiredSubTasks = JiraValidatorConstantes.SUBTASKS_BY_DEVELOP_TYPES.get(tipoDesarrollo);
+        JsonArray labels = jiraTicketResult.getAsJsonObject(FIELDS).getAsJsonArray(LABELS);
+        List<String> foundSpecialLabel = extractMatchingLabels(labels, aditionalSpecialLabels);
 
-        JsonArray subTasks = jiraTicketResult
-                .getAsJsonObject(FIELDS)
-                .getAsJsonArray(SUBTASKS);
+        List<String> requiredSubTasks = SUBTASKS_BY_DEVELOP_TYPES.getOrDefault(tipoDesarrollo, List.of());
+        JsonArray subTasks = jiraTicketResult.getAsJsonObject(FIELDS).getAsJsonArray(SUBTASKS);
+        SubTaskValidationResult subTaskResult = validateSubTasks(subTasks, requiredSubTasks, foundSpecialLabel, aditionalSpecialSubtask);
 
-        List<String> foundSubTasks = new ArrayList<>();
-        List<String> additionalSubTasks = new ArrayList<>();
-        List<String> foundSpecialLabel = new ArrayList<>();
-        List<String> foundSpecialSubtasks = new ArrayList<>();
-
-        for (JsonElement label : labels){
-            if (aditionalSpecialLabels.contains(label.getAsString())){
-                foundSpecialLabel.add(label.getAsString());
-            }
-        }
-
-        for (JsonElement subTask : subTasks) {
-            String subTaskLabel = subTask.getAsJsonObject().get(FIELDS).getAsJsonObject().get(SUMMARY).getAsString();
-            if (requiredSubTasks.contains(subTaskLabel)) {
-                foundSubTasks.add(subTaskLabel);
-            }else {
-                additionalSubTasks.add(subTaskLabel);
-                if(!foundSpecialLabel.isEmpty() || aditionalSpecialSubtask.contains(subTaskLabel)){
-                    foundSpecialSubtasks.add(subTaskLabel);
-                }
-            }
-        }
-
-        if (foundSubTasks.containsAll(requiredSubTasks)) {
-            message = "Todas las subtareas requeridas fueron encontradas.";
-            isValid = true;
-            if (!additionalSubTasks.isEmpty()) {
-                message += " Tambien se encontraron subtareas adicionales: " + String.join(", ", additionalSubTasks)+ ". ";
-                if (tipoDesarrollo.equals(MALLAS)){
-                    if(!foundSpecialLabel.isEmpty() && foundSpecialSubtasks.isEmpty()){
-                        message += MSG_RULE_NOSUBTAREA + String.join(", ", aditionalSpecialSubtask);
-                        isValid = false;
-                    }
-                    else if(foundSpecialLabel.isEmpty() && !foundSpecialSubtasks.isEmpty()) {
-                        message += "Se recomienda validar las subtareas adicionales: " + String.join(", ", aditionalSpecialSubtask)
-                                + " para casos de jobs eliminados, huerfanos, ruta critica, puede estar pendiente el label correspondiente.";
-                        isValid = true;
-                        isWarning = true;
-                    }
-                }
-                else {
-                    if(!foundSpecialLabel.isEmpty() && foundSpecialSubtasks.isEmpty()){
-                        message += MSG_RULE_NOSUBTAREA + String.join(", ", aditionalSpecialSubtask);
-                        isValid = false;
-                    }
-                    else if(foundSpecialLabel.isEmpty() && !foundSpecialSubtasks.isEmpty()) {
-                        message += MSG_RULE_RECOMENDATIONSUBTAREA + String.join(", ", aditionalSpecialSubtask)
-                                + " para casos de jobs ruta critica, puede estar pendiente el label correspondiente.";
-                        isValid = true;
-                        isWarning = true;
-                    }
-                }
-            }
+        if (subTaskResult.foundSubTasks.containsAll(requiredSubTasks)) {
+            message = buildValidSubTasksMessage(subTaskResult, tipoDesarrollo, foundSpecialLabel, aditionalSpecialSubtask);
+            isValid = subTaskResult.isValid;
+            isWarning = subTaskResult.isWarning;
         } else {
             List<String> missingSubTasks = new ArrayList<>(requiredSubTasks);
-            missingSubTasks.removeAll(foundSubTasks);
-
-            message = "Faltan las siguientes subtareas: " + String.join(", ", missingSubTasks);
-            if (!additionalSubTasks.isEmpty()) {
-                message += " Además, se encontraron subtareas adicionales: " + String.join(", ", additionalSubTasks);
-                if (tipoDesarrollo.equals(MALLAS)){
-                    if(!foundSpecialLabel.isEmpty() && foundSpecialSubtasks.isEmpty()){
-                        message += MSG_RULE_NOSUBTAREA + String.join(", ", aditionalSpecialSubtask);
-                        isValid = false;
-                    }
-                    else if(foundSpecialLabel.isEmpty() && !foundSpecialSubtasks.isEmpty()) {
-                        message += MSG_RULE_RECOMENDATIONSUBTAREA + String.join(", ", aditionalSpecialSubtask)
-                                + " para casos de jobs eliminados, huerfanos, ruta critica, puede estar pendiente el label correspondiente.";
-                        isValid = true;
-                        isWarning = true;
-                    }
-                }
-                else {
-                    if(!foundSpecialLabel.isEmpty() && foundSpecialSubtasks.isEmpty()){
-                        message += MSG_RULE_NOSUBTAREA + String.join(", ", aditionalSpecialSubtask);
-                        isValid = false;
-                    }
-                    else if(foundSpecialLabel.isEmpty() && !foundSpecialSubtasks.isEmpty()) {
-                        message += MSG_RULE_RECOMENDATIONSUBTAREA + String.join(", ", aditionalSpecialSubtask)
-                                + " para casos de jobs ruta critica, puede estar pendiente el label correspondiente.";
-                        isValid = true;
-                        isWarning = true;
-                    }
-                }
-            }
+            missingSubTasks.removeAll(subTaskResult.foundSubTasks);
+            message = buildMissingSubTasksMessage(missingSubTasks, subTaskResult, tipoDesarrollo, foundSpecialLabel, aditionalSpecialSubtask);
+            isValid = subTaskResult.isValid;
+            isWarning = subTaskResult.isWarning;
         }
 
         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
 
+    private List<String> extractMatchingLabels(JsonArray labels, List<String> aditionalSpecialLabels) {
+        List<String> foundSpecialLabel = new ArrayList<>();
+        for (JsonElement label : labels) {
+            String labelString = label.getAsString();
+            if (aditionalSpecialLabels.contains(labelString)) {
+                foundSpecialLabel.add(labelString);
+            }
+        }
+        return foundSpecialLabel;
+    }
+
+    private SubTaskValidationResult validateSubTasks(JsonArray subTasks, List<String> requiredSubTasks, List<String> foundSpecialLabel, List<String> aditionalSpecialSubtask) {
+        List<String> foundSubTasks = new ArrayList<>();
+        List<String> additionalSubTasks = new ArrayList<>();
+        List<String> foundSpecialSubtasks = new ArrayList<>();
+
+        for (JsonElement subTask : subTasks) {
+            String subTaskLabel = subTask.getAsJsonObject().get(FIELDS).getAsJsonObject().get(SUMMARY).getAsString();
+            if (requiredSubTasks.contains(subTaskLabel)) {
+                foundSubTasks.add(subTaskLabel);
+            } else {
+                additionalSubTasks.add(subTaskLabel);
+                if (!foundSpecialLabel.isEmpty() || aditionalSpecialSubtask.contains(subTaskLabel)) {
+                    foundSpecialSubtasks.add(subTaskLabel);
+                }
+            }
+        }
+
+        return new SubTaskValidationResult(foundSubTasks, additionalSubTasks, foundSpecialSubtasks);
+    }
+
+    private String buildValidSubTasksMessage(SubTaskValidationResult result, String tipoDesarrollo, List<String> foundSpecialLabel, List<String> aditionalSpecialSubtask) {
+        String message = "Todas las subtareas requeridas fueron encontradas.";
+        if (!result.additionalSubTasks.isEmpty()) {
+            message += " También se encontraron subtareas adicionales: " + String.join(", ", result.additionalSubTasks) + ". ";
+            message += handleSpecialSubTasks(tipoDesarrollo, foundSpecialLabel, result.foundSpecialSubtasks, aditionalSpecialSubtask);
+        }
+        return message;
+    }
+
+    private String buildMissingSubTasksMessage(List<String> missingSubTasks, SubTaskValidationResult result, String tipoDesarrollo, List<String> foundSpecialLabel, List<String> aditionalSpecialSubtask) {
+        String message = "Faltan las siguientes subtareas: " + String.join(", ", missingSubTasks);
+        if (!result.additionalSubTasks.isEmpty()) {
+            message += " Además, se encontraron subtareas adicionales: " + String.join(", ", result.additionalSubTasks);
+            message += handleSpecialSubTasks(tipoDesarrollo, foundSpecialLabel, result.foundSpecialSubtasks, aditionalSpecialSubtask);
+        }
+        return message;
+    }
+
+    private String handleSpecialSubTasks(String tipoDesarrollo, List<String> foundSpecialLabel, List<String> foundSpecialSubtasks, List<String> aditionalSpecialSubtask) {
+        if (tipoDesarrollo.equals(MALLAS)) {
+            if (!foundSpecialLabel.isEmpty() && foundSpecialSubtasks.isEmpty()) {
+                return MSG_RULE_NOSUBTAREA + String.join(", ", aditionalSpecialSubtask);
+            } else if (foundSpecialLabel.isEmpty() && !foundSpecialSubtasks.isEmpty()) {
+                return "Se recomienda validar las subtareas adicionales: " + String.join(", ", aditionalSpecialSubtask)
+                        + " para casos de jobs eliminados, huérfanos, ruta crítica. Puede estar pendiente el label correspondiente.";
+            }
+        } else {
+            if (!foundSpecialLabel.isEmpty() && foundSpecialSubtasks.isEmpty()) {
+                return MSG_RULE_NOSUBTAREA + String.join(", ", aditionalSpecialSubtask);
+            } else if (foundSpecialLabel.isEmpty() && !foundSpecialSubtasks.isEmpty()) {
+                return MSG_RULE_RECOMENDATIONSUBTAREA + String.join(", ", aditionalSpecialSubtask)
+                        + " para casos de jobs de ruta crítica. Puede estar pendiente el label correspondiente.";
+            }
+        }
+        return "";
+    }
+
+    private static class SubTaskValidationResult {
+        List<String> foundSubTasks;
+        List<String> additionalSubTasks;
+        List<String> foundSpecialSubtasks;
+        boolean isValid = true;
+        boolean isWarning = false;
+
+        SubTaskValidationResult(List<String> foundSubTasks, List<String> additionalSubTasks, List<String> foundSpecialSubtasks) {
+            this.foundSubTasks = foundSubTasks;
+            this.additionalSubTasks = additionalSubTasks;
+            this.foundSpecialSubtasks = foundSpecialSubtasks;
+        }
+    }
+
     public Map<String, Object> getValidationValidateImpactLabel(String helpMessage, String group, String tipoDesarrollo) {
-        String message = "";
+        String message;
         boolean isValid = false;
         boolean isWarning = false;
         if (tipoDesarrollo.equals("HOST") || tipoDesarrollo.equals(MALLAS)) {
+            List<String> jiraTicketImpactLabelList = new ArrayList<>();
+            JsonElement impactLabelElement;
+            JsonObject fieldsObject = jiraTicketResult.getAsJsonObject(FIELDS);
+
+            if (fieldsObject.has("customfield_10267")) {
+                impactLabelElement = fieldsObject.get("customfield_10267");
+
+                if (impactLabelElement != null && impactLabelElement.isJsonArray()) {
+                    JsonArray impactLabelArray = impactLabelElement.getAsJsonArray();
+                    for (JsonElement element : impactLabelArray) {
+                        jiraTicketImpactLabelList.add(element.getAsString());
+                    }
+                }
+            }
+            else {
+                message = "No se tiene Impact Label definidos";
+                return buildValidationResult(message, isValid, isWarning, helpMessage, group);
+            }
+
             List<String> validImpactLabel = Arrays.asList("AppsInternos", "Datio");
             List<String> validImpactLabelListHost = Arrays.asList("DataHub", "Host", "Plataforma_InformacionalP11");
-
             List<String> validImpactLabelFinalList = tipoDesarrollo.equals("HOST") ? validImpactLabelListHost : validImpactLabel;
-
             List<String> impactLabelNotExistsList = new ArrayList<>();
-
-
-            List<String> jiraTicketImpactLabelList = impactLabel == null ? new ArrayList<>() : this.impactLabel;
-
 
             for (String impactLabel : validImpactLabelFinalList) {
                 if (!jiraTicketImpactLabelList.contains(impactLabel)) {
@@ -1236,7 +1117,6 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
                 } else {
                     message += " No se tiene Impact Label definidos";
                 }
-                isValid = false;
             }
         }
         else{
@@ -1262,7 +1142,7 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
 
                 List<String> fixVersionsUrlLinkList = new ArrayList<>();
                 for (JsonElement fixVersion : fixVersions) {
-                    String fixVersionName = fixVersion.getAsJsonObject().get("name").getAsString();
+                    String fixVersionName = fixVersion.getAsJsonObject().get(NAME).getAsString();
                     String fixVersionUrl = fixVersionURLPrefix + fixVersionName;
                     fixVersionsUrlLinkList.add(fixVersionUrl);
                 }
@@ -1286,7 +1166,7 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
         String message = "";
         boolean isValid;
         boolean isWarning = false;
-        List<String> requiredAttachments = JiraValidatorConstantes.ATTACHS_BY_DEVELOP_TYPES.get(tipoDesarrollo.toLowerCase());
+        List<String> requiredAttachments = ATTACHS_BY_DEVELOP_TYPES.get(tipoDesarrollo.toLowerCase());
         JsonArray attachments = jiraTicketResult
                 .getAsJsonObject(FIELDS)
                 .getAsJsonArray(ATTACHMENT);
@@ -1334,14 +1214,14 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
        JsonArray issueLinkStory = new JsonArray();
        if (tipoDesarrollo.equalsIgnoreCase("productivizacion")) {
            for (JsonElement issueLinkElement : issuelinks) {
-               String type  = issueLinkElement.getAsJsonObject().getAsJsonObject("type").get(INWARD).getAsString();
+               String type  = issueLinkElement.getAsJsonObject().getAsJsonObject(TYPE).get(INWARD).getAsString();
                JsonElement inwardIssue = issueLinkElement
                        .getAsJsonObject()
                        .getAsJsonObject(INWARD_ISSUE);
                if (type.equals(IS_CHILD_ITEM_OF) && inwardIssue != null) {
                    name = inwardIssue
                            .getAsJsonObject()
-                           .getAsJsonObject(FIELDS).getAsJsonObject(ISSUETYPE).get("name").getAsString();
+                           .getAsJsonObject(FIELDS).getAsJsonObject(ISSUETYPE).get(NAME).getAsString();
                    if(name.equals(STORY)){
                        issueLinkStory.add(issueLinkElement);
                    }
@@ -1354,7 +1234,7 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
                            .getAsJsonObject(INWARD_ISSUE)
                            .getAsJsonObject(FIELDS)
                            .getAsJsonObject(STATUS)
-                           .get("name").getAsString().toLowerCase();
+                           .get(NAME).getAsString().toLowerCase();
                    if (statusCategory.equalsIgnoreCase(DEPLOYED)) {
                        message = "Todos los tickets asociados se encuentran deployados";
                        isValid = true;
@@ -1394,14 +1274,13 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
         if (foundLabels.containsAll(requiredLabels)) {
             message = "Todas las etiquetas correspondientes fueron encontradas.";
             isValid = true;
-            return buildValidationResult(message, isValid, isWarning, helpMessage, group);
         } else {
             List<String> missingLabels = new ArrayList<>(requiredLabels);
             missingLabels.removeAll(foundLabels);
             message = "Faltan las siguientes etiquetas: " + String.join(", ", missingLabels);
             isValid = false;
-            return buildValidationResult(message, isValid, isWarning, helpMessage, group);
         }
+       return buildValidationResult(message, isValid, isWarning, helpMessage, group);
    }
 
     public Map<String, Object> getValidationInitialTeam(String helpMessage, String group) throws ParseException {
@@ -1452,12 +1331,22 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
 
-    public Map<String, Object> getValidationDependency(List<String> teamBackLogTicketIdRLB,String helpMessage, String group) {
-        String message = "";
+    private Map<String, Object> validateDependencyLink(String helpMessage, String group){
+        JsonArray issueLinks = jiraTicketResult
+                .getAsJsonObject(FIELDS)
+                .getAsJsonArray(ISSUELINKS);
+        if (issueLinks == null || issueLinks.isEmpty()) {
+            return buildValidationResult(MSG_RULE_NODEPENDENCY, false, false, helpMessage, group);
+        }
+        return Map.of();
+    }
+
+    public Map<String, Object> getValidationDependency(String teamBackLogId,List<String> teamBackLogTicketIdRLB,String helpMessage, String group) {
+        String message;
         boolean isValid = false;
         boolean isWarning = false;
 
-        String statusDependencyTicket = "";
+        String statusDependencyTicket;
 
         JsonArray issueLinks = jiraTicketResult
                 .getAsJsonObject(FIELDS)
@@ -1474,17 +1363,17 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
                 List<String> statusDependencyCollection = new ArrayList<>();
                 List<String> dependencyPadCollection = new ArrayList<>();
                 for (JsonElement issueLinkElement : issueLinks) {
-                    String type = issueLinkElement.getAsJsonObject().getAsJsonObject("type").get(INWARD).getAsString();
+                    String type = issueLinkElement.getAsJsonObject().getAsJsonObject(TYPE).get(INWARD).getAsString();
                     JsonElement inwardIssue = issueLinkElement
                             .getAsJsonObject()
                             .getAsJsonObject(INWARD_ISSUE);
                     if (type.equals(IS_CHILD_ITEM_OF) && inwardIssue != null) {
-                        String issuetype = inwardIssue.getAsJsonObject().getAsJsonObject(FIELDS).getAsJsonObject(ISSUETYPE).get("name").getAsString();
+                        String issuetype = inwardIssue.getAsJsonObject().getAsJsonObject(FIELDS).getAsJsonObject(ISSUETYPE).get(NAME).getAsString();
                         if (issuetype.equalsIgnoreCase(DEPENDENCY)) {
                             statusDependencyTicket = inwardIssue.getAsJsonObject()
                                     .getAsJsonObject(FIELDS)
                                     .getAsJsonObject(STATUS)
-                                    .get("name").getAsString().toLowerCase();
+                                    .get(NAME).getAsString().toLowerCase();
                             statusDependencyCollection.add(statusDependencyTicket);
                             dependencyPadCollection
                                     .add(issueLinkElement
@@ -1495,7 +1384,6 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
                     }
                 }
                 if (statusDependencyCollection.isEmpty()) {
-                    isValid = false;
                     message = MSG_RULE_NODEPENDENCY;
                     return buildValidationResult(message, isValid, isWarning, helpMessage, group);
                 }
@@ -1506,7 +1394,6 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
                     isValid = true;
                     message = "Todas las dependencias se encuentran en el estado que corresponde.";
                 } else {
-                    isValid = false;
                     isWarning = true;
                     StringBuilder urlMessage = new StringBuilder("Las siguientes dependencias: ");
                     for (int i = 0; i < statusDependencyCollection.size(); i++) {
@@ -1523,7 +1410,7 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
 
-    public Map<String, Object> getValidationDependencyFeatureVsHUTFeature(List<String> teamBackLogTicketIdRLB, JiraValidatorByUrlRequest dto, String helpMessage, String group, List<InfoJiraProject> infoJiraProjectList) {
+    public Map<String, Object> getValidationDependencyFeatureVsHUTFeature(String teamBackLogId,List<String> teamBackLogTicketIdRLB, JiraValidatorByUrlRequest dto, String helpMessage, String group, List<InfoJiraProject> infoJiraProjectList) {
         boolean isValid = true;
         String message = "Todas las dependencias tienen el mismo feature link";
         boolean isWarning = false;
@@ -1542,12 +1429,12 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
             } else {
                 List<String> isChildPadNameCollection = new ArrayList<>();
                 for (JsonElement issueLinkElement : issueLinks) {
-                    String type = issueLinkElement.getAsJsonObject().getAsJsonObject("type").get(INWARD).getAsString();
+                    String type = issueLinkElement.getAsJsonObject().getAsJsonObject(TYPE).get(INWARD).getAsString();
                     JsonElement inwardIssue = issueLinkElement
                             .getAsJsonObject()
                             .getAsJsonObject(INWARD_ISSUE);
                     if (type.equals(IS_CHILD_ITEM_OF) && inwardIssue != null) {
-                        String issuetype = inwardIssue.getAsJsonObject().getAsJsonObject(FIELDS).getAsJsonObject(ISSUETYPE).get("name").getAsString();
+                        String issuetype = inwardIssue.getAsJsonObject().getAsJsonObject(FIELDS).getAsJsonObject(ISSUETYPE).get(NAME).getAsString();
                         if (issuetype.equalsIgnoreCase(DEPENDENCY)) {
                             isChildPadName = issueLinkElement
                                     .getAsJsonObject()
@@ -1569,7 +1456,7 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
                                 .get(0).getAsJsonObject()
                                 .getAsJsonObject(FIELDS)
                                 .get(CUSTOMFIELD_10004).getAsString();
-                        if (!isChildFeatureLink.equals(featureLink)) {
+                        if (!isChildFeatureLink.equals(featureLinkCode)) {
                             isValid = false;
                             message = "No todas las dependencias tienen el mismo features link";
                             break;
@@ -1584,48 +1471,52 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
     }
 
 
-    public Map<String, Object> getValidationBoardProject(JiraValidatorByUrlRequest dto, String helpMessage, String feature_link, String group,List<InfoJiraProject> infoJiraProjectList) {
-        AtomicReference<String> message = new AtomicReference<>("El tablero es valido");
-        AtomicBoolean isValid = new AtomicBoolean(true);
+    public Map<String, Object> getValidationBoardProject(String teamBackLogId,JiraValidatorByUrlRequest dto, String helpMessage, String feature_link, String group,List<InfoJiraProject> infoJiraProjectList) {
+        String message = "El tablero es valido";
+        boolean isValid = false;
         boolean isWarning = false;
         String summaryTicket =  jiraTicketResult.getAsJsonObject()
                 .getAsJsonObject(FIELDS)
                 .get(SUMMARY).getAsString();
-        var query = KEY_IN + String.join(",", featureLink) + ")";
-        JsonObject metaData = null;
-        try {
-            var url = ApiJiraName.URL_API_JIRA_SQL + query + new JiraApiService().getQuerySuffixURL();
-            var response = new JiraApiService().GetJiraAsync(dto.getUserName(), dto.getToken(), url);
-            metaData = JsonParser.parseString(response).getAsJsonObject();
-        } catch (Exception e) {
-            System.out.println("Se produjo un error al validar el proyecto: " + e.getMessage());
+        String teamBackLogFeatureId = "";
+
+        Map<String, Object> validationFeatureResult = getValidationFeatureLink(helpMessage, group);
+        if (!(boolean) validationFeatureResult.get(ISVALID)) {
+            return validationFeatureResult;
         }
-        if (metaData != null) {
-            String teamBackLogFeatureId = metaData
+
+        if (featureLinkResult.has(ISSUES) &&
+                !featureLinkResult.getAsJsonArray(ISSUES).isEmpty() &&
+                featureLinkResult.getAsJsonArray(ISSUES)
+                        .get(0).getAsJsonObject().getAsJsonObject(FIELDS)
+                        .has(CUSTOMFIELD_13300)) {
+
+            teamBackLogFeatureId = featureLinkResult
                     .getAsJsonArray(ISSUES)
                     .get(0).getAsJsonObject()
                     .getAsJsonObject(FIELDS)
-                    .getAsJsonArray("customfield_13300").get(0).getAsString();
-            if (!teamBackLogFeatureId.equals(teamBackLogId)){
-                message.set("El tablero del Ticket es distinto al tablero del Feature");
-                isValid.set(false);
-            }
+                    .getAsJsonArray(CUSTOMFIELD_13300).get(0).getAsString();
         }
+
+        if (!teamBackLogFeatureId.equals(teamBackLogId)){
+            message = "El tablero del Ticket es distinto al tablero del Feature";
+            return buildValidationResult(message, false, false, helpMessage, group);
+        }
+
         List<InfoJiraProject> projectFiltrado = infoJiraProjectList.stream().filter(project -> project.getTeamBackLogId() != null
-                && project.getTeamBackLogId().equals(teamBackLogId)).collect(Collectors.toList());
+                && project.getTeamBackLogId().equals(teamBackLogId)).toList();
+
         if (!projectFiltrado.isEmpty()) {
             String tableroNombre = projectFiltrado.get(0).getTeamBackLogName().trim();
             if (!summaryTicket.toLowerCase().contains(tableroNombre.toLowerCase())) {
-                message.set("El tablero del Ticket es distinto al mencionado en el summary");
+                message="El tablero del Ticket es distinto al mencionado en el summary";
                 isWarning = true;
-                isValid.set(false);
             }
         }
         else {
-            message.set("El tablero no se ha encontrado como válido para los proyectos habilitados del Q");
-            isValid.set(false);
+            message = "El tablero no se ha encontrado como válido para los proyectos habilitados del Q";
         }
-        return buildValidationResult(message.get(), isValid.get(), isWarning, helpMessage, group);
+        return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
     public Map<String, Object> getValidationAlpha(String tipoDesarrollo, String helpMessage, String group) {
         String message = "";
@@ -1637,7 +1528,7 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
         JsonArray atachments = jiraTicketResult
                 .getAsJsonObject(FIELDS).get(ATTACHMENT).getAsJsonArray();
         List<String> atachmentFilenameList = new ArrayList<>();
-        List<String> matchedUuaas = new ArrayList<>();
+        List<String> matchedUuaas;
         if (tipoDesarrollo.equalsIgnoreCase(MALLAS)) {
             for (JsonElement attachment : atachments){
                 String filename = attachment.getAsJsonObject().get("filename").getAsString();
@@ -1658,7 +1549,7 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
                     for (JsonElement subTask: subTasks) {
                         String subTaskLabel = subTask.getAsJsonObject().get(FIELDS).getAsJsonObject().get(SUMMARY).getAsString();
                         if (subTaskLabel.equals(alphaVoBo)) {
-                            String statusSubtask = subTask.getAsJsonObject().getAsJsonObject(FIELDS).getAsJsonObject(STATUS).get("name").getAsString();
+                            String statusSubtask = subTask.getAsJsonObject().getAsJsonObject(FIELDS).getAsJsonObject(STATUS).get(NAME).getAsString();
                             if (statusSubtask.equals(ACCEPTED)) {
                                 message = MSG_UUAA+String.join(", ", matchedUuaas)+" bajo dominio de Alpha y Subtarea en estado Accepted";
                                 isValid = true;
@@ -1672,7 +1563,6 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
                             message = MSG_UUAA+String.join(", ", matchedUuaas)+" bajo dominio de Alpha sin Subtarea";
                         }
                     }
-
                 }
             }
             else {
@@ -1710,7 +1600,7 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
     }
 
     public Map<String, Object> getValidationTechStack(String helpMessage, String group) {
-        String message = "";
+        String message;
         boolean isValid = false;
         boolean isWarning = false;
 
@@ -1731,12 +1621,12 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
 
-    public Map<String, Object> getValidationDependencyComment(List<String> teamBackLogTicketIdRLB, JiraValidatorByUrlRequest dto, String helpMessage, String group, List<InfoJiraProject> infoJiraProjectList) {
+    public Map<String, Object> getValidationDependencyComment(String teamBackLogId, List<String> teamBackLogTicketIdRLB, JiraValidatorByUrlRequest dto, String helpMessage, String group, List<InfoJiraProject> infoJiraProjectList) {
         boolean isValid = true;
         String message = "";
         boolean isWarning = false;
         List<String> rolIdQE = new ArrayList<>(List.of("11","12")); //QE Y QE TEMPORAL
-        String isChildPadName ="";
+        String isChildPadName;
         JsonArray issueLinks = jiraTicketResult
                 .getAsJsonObject(FIELDS)
                 .getAsJsonArray(ISSUELINKS);
@@ -1752,12 +1642,12 @@ public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMes
             }
             List<String> isChildPadNameCollection = new ArrayList<>();
             for (JsonElement issueLinkElement : issueLinks) {
-                String type  = issueLinkElement.getAsJsonObject().getAsJsonObject("type").get(INWARD).getAsString();
+                String type  = issueLinkElement.getAsJsonObject().getAsJsonObject(TYPE).get(INWARD).getAsString();
                 JsonElement inwardIssue = issueLinkElement
                         .getAsJsonObject()
                         .getAsJsonObject(INWARD_ISSUE);
                 if(type.equals(IS_CHILD_ITEM_OF) && inwardIssue != null) {
-                    String issuetype = inwardIssue.getAsJsonObject().getAsJsonObject(FIELDS).getAsJsonObject(ISSUETYPE).get("name").getAsString();
+                    String issuetype = inwardIssue.getAsJsonObject().getAsJsonObject(FIELDS).getAsJsonObject(ISSUETYPE).get(NAME).getAsString();
                     if(issuetype.equalsIgnoreCase(DEPENDENCY)) {
                         isChildPadName = issueLinkElement
                                 .getAsJsonObject()

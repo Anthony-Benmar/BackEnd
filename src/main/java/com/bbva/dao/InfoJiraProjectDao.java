@@ -41,7 +41,7 @@ public class InfoJiraProjectDao {
     }
 
     public String currentQ(){
-        String currentQ = "";
+        String currentQ;
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         try (SqlSession session = sqlSessionFactory.openSession()) {
             InfoJiraProjectMapper mapper = session.getMapper(InfoJiraProjectMapper.class);
