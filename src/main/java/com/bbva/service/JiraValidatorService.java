@@ -232,7 +232,7 @@ public class JiraValidatorService {
                     .getAsJsonArray("detail")
                     .get(0).getAsJsonObject()
                     .getAsJsonArray("pullRequests");
-            
+
             for(JsonElement pr : detailPR){
                 JsonObject prDetail = pr.getAsJsonObject();
                 List<Map<String,Object>> reviewersList = new ArrayList<>();
