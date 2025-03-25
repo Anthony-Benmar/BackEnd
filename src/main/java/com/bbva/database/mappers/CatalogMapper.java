@@ -22,7 +22,7 @@ public interface CatalogMapper {
 
     @Select({"<script>" +
             "SELECT period_id,period_order,period_status FROM data_period " +
-            "ORDER BY period_order DESC" +
+            "where period_status = 1" +
             "</script>"})
     List<PeriodEntity> listAllPeriods();
 
