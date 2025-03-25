@@ -122,8 +122,7 @@ public class JiraValidationMethods {
         if (name == null || !name.equals(STORY)) {
             return buildValidationResult("No es ticket de integración", true, isWarning, helpMessage, group);
         }
-
-        if (statusCategory != null && statusCategory.equals(DEPLOYED)) {
+        else if (statusCategory != null && statusCategory.equals(DEPLOYED)) {
             return buildValidationResult("Ticket de integración sin tickets deployados", true, isWarning, helpMessage, group);
         }
 
@@ -752,7 +751,6 @@ public class JiraValidationMethods {
         String expectedPattern = ((String) validAcceptanceCriteriaObject.get(TEXTO))
                 .replace("{0}", "[A-Za-z\\s-/.\\&]+")
                 .replaceAll("\\s+", "\\\\s+")
-                .replace("\\.", "\\\\.")
                 .replace("{1}", "(SDATOOL-\\d{5}|SDATOOL\\s+\\d{5})(.*?)\\s*,") + "?";
 
         Pattern pattern = Pattern.compile(expectedPattern);
@@ -826,31 +824,50 @@ public class JiraValidationMethods {
             boolean validacionEnvioFormulario, String jiraTicketStatus) {
 
         List<String> estadosExtraMallasHost = List.of(READY, TEST, READY_TO_VERIFY);
-        List<String> statusTableroDQA = Stream.of(
-                READY, IN_PROGRESS, TEST, READY_TO_VERIFY, READY_TO_DEPLOY, DEPLOYED, ACCEPTED
-        ).map(String::toLowerCase).toList();
+        List<String> statusTableroDQA = prepareStatusTableroDQA();
 
         for (JsonElement historyElement : histories) {
             JsonObject history = historyElement.getAsJsonObject();
 
             if (history.has(ITEMS)) {
                 JsonArray items = history.getAsJsonArray(ITEMS);
-                for (JsonElement itemElement : items) {
-                    JsonObject item = itemElement.getAsJsonObject();
+                String result = processItems(items, currentTeamFieldLabel, statusTableroDQA, jiraTicketStatus,
+                        tipoDesarrollo, validacionEnvioFormulario, estadosExtraMallasHost);
 
-                    if (item.has(FIELD) && item.get(FIELD).getAsString().equals(currentTeamFieldLabel)) {
-                        String to = item.get("to").getAsString();
-                        if (to.equals(teamBackLogDQAId)) {
-                            this.isInTableroDQA = true;
-                            return "Asignado a Tablero de DQA";
-                        } else if (statusTableroDQA.contains(jiraTicketStatus.trim().toLowerCase())) {
-                            return buildWarningMessage(tipoDesarrollo, validacionEnvioFormulario, estadosExtraMallasHost);
-                        }
-                    }
+                if (result != null) {
+                    return result;
                 }
             }
         }
         return "No está en el Tablero de DQA";
+    }
+
+    private List<String> prepareStatusTableroDQA() {
+        return Stream.of(
+                READY, IN_PROGRESS, TEST, READY_TO_VERIFY, READY_TO_DEPLOY, DEPLOYED, ACCEPTED
+        ).map(String::toLowerCase).toList();
+    }
+
+    private String processItems(
+            JsonArray items, String currentTeamFieldLabel, List<String> statusTableroDQA,
+            String jiraTicketStatus, String tipoDesarrollo, boolean validacionEnvioFormulario,
+            List<String> estadosExtraMallasHost) {
+
+        for (JsonElement itemElement : items) {
+            JsonObject item = itemElement.getAsJsonObject();
+
+            if (item.has(FIELD) && item.get(FIELD).getAsString().equals(currentTeamFieldLabel)) {
+                String to = item.get("to").getAsString();
+
+                if (to.equals(teamBackLogDQAId)) {
+                    this.isInTableroDQA = true;
+                    return "Asignado a Tablero de DQA";
+                } else if (statusTableroDQA.contains(jiraTicketStatus.trim().toLowerCase())) {
+                    return buildWarningMessage(tipoDesarrollo, validacionEnvioFormulario, estadosExtraMallasHost);
+                }
+            }
+        }
+        return null;
     }
 
     private String buildWarningMessage(

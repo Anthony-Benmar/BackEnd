@@ -327,9 +327,9 @@ public class JiraValidatorService {
         return result;
     }
 
-    private String buildJiraQueryUrl(List<String> jiraIssues) {
+    public String buildJiraQueryUrl(List<String> jiraIssues) {
         String query = KEY_IN + String.join(",", jiraIssues) + ")";
-        return ApiJiraName.URL_API_JIRA_SQL + query + this.jiraApiService.getQuerySuffixURL();
+        return ApiJiraName.URL_API_JIRA_SQL + query + jiraApiService.getQuerySuffixURL();
     }
 
     public String getTeamBackLogId(String tipoDesarrollo, JsonObject jiraTicketResult) throws ParseException {
@@ -376,8 +376,6 @@ public class JiraValidatorService {
                 JsonObject metadata = getMetadataIssues(dto, List.of(subtaskKey));
                 if (metadata != null && !metadata.isJsonNull()) {
                     subtaskMetadataMap.put(subtaskKey, metadata);
-                } else {
-                    LOGGER.info(String.format("METADATA NULA O INVALIDA PARA SUBTAREA %s", subtaskKey));
                 }
             } catch (Exception e) {
                 LOGGER.info("ERROR CONSULTA JIRA LINK PARA SUBTAREA " + subtaskKey + ": " + e.getMessage());
