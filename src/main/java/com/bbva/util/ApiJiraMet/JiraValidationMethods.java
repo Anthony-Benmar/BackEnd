@@ -265,199 +265,352 @@ public class JiraValidationMethods {
         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
 
-    public Map<String, Object> getValidationValidateSubTaskStatus(String tipoDesarrollo,String helpMessage, String group) {
-        String message = "";
-        boolean isValid = false;
-        boolean isWarning = false;
-        List<String> results = new ArrayList<>(SUBTASKS_BY_DEVELOP_TYPES.get(tipoDesarrollo));
-        results.addAll(List.of(VB_KM, VB_SO));
-        if(tipoDesarrollo.equalsIgnoreCase(MALLAS) || tipoDesarrollo.equalsIgnoreCase("host")) {
-            results.add("[VB][DEV]");
-        }
-        results.removeIf(subtask -> subtask.contains("QA"));
+    public Map<String, Object> getValidationValidateSubTask(String tipoDesarrollo, String helpMessage, String group) {
+        List<String> aditionalSpecialSubtask = List.of(VB_KM, VB_SO);
+        List<String> aditionalSpecialLabels = List.of("datioRutaCritica", "JobsHuerfanos");
+        List<String> requiredSubTasks = SUBTASKS_BY_DEVELOP_TYPES.get(tipoDesarrollo);
 
-        List<JsonObject> subTaskCollection = new ArrayList<>();
-        JsonArray subTaskCollectionBadStatus = new JsonArray();
-        List<String> subTaskLabelBadStatus = new ArrayList<>();
+        JsonArray labels = jiraTicketResult.getAsJsonObject(FIELDS).getAsJsonArray(LABELS);
+        JsonArray subTasks = jiraTicketResult.getAsJsonObject(FIELDS).getAsJsonArray(SUBTASKS);
 
-        JsonArray subTasks = jiraTicketResult
-                .getAsJsonObject(FIELDS)
-                .getAsJsonArray(SUBTASKS);
+        List<String> foundSpecialLabel = extractMatchingLabels(labels, aditionalSpecialLabels);
+        SubTaskResult subTaskResult = processSubTasks(subTasks, requiredSubTasks, foundSpecialLabel, aditionalSpecialSubtask);
 
-        subTasks.forEach(subtask -> {
-            String statusSubTask =subtask.getAsJsonObject()
-                    .getAsJsonObject(FIELDS)
-                    .get(SUMMARY).getAsString();
+        String message = generateMessageForSubTasks(tipoDesarrollo, subTaskResult, foundSpecialLabel, aditionalSpecialSubtask,requiredSubTasks);
 
-            results.forEach(result -> {
-                if (statusSubTask.contains(result)){
-                    subTaskCollection.add(subtask.getAsJsonObject());
-                }
-            });
-        });
-        if (subTaskCollection.isEmpty()){
-            message = "No se encontraron subtareas asociadas";
-        }else {
-            for(JsonElement subTaskElement : subTaskCollection) {
-                String status = subTaskElement.getAsJsonObject()
-                        .getAsJsonObject(FIELDS)
-                        .getAsJsonObject(STATUS)
-                        .get(NAME).getAsString();
-                if (!status.equalsIgnoreCase(ACCEPTED) && !status.equalsIgnoreCase(DISCARDED)){
-                    subTaskCollectionBadStatus.add(subTaskElement);
-                    subTaskLabelBadStatus.add(subTaskElement.getAsJsonObject().getAsJsonObject(FIELDS).get(SUMMARY).getAsString());
-                }
-            }
-            if(!subTaskCollectionBadStatus.isEmpty()){
-                message = "Subtareas sin estado Accepted: " + String.join(",",subTaskLabelBadStatus);
-            }
-            else{
-                isValid = true;
-                message = "Todas las subtareas tienen el estado Aceptado";
-            }
-        }
+        boolean isValid = subTaskResult.foundSubTasks.containsAll(requiredSubTasks) && !subTaskResult.hasMissingTasks;
+        boolean isWarning = subTaskResult.hasWarnings;
 
         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
 
-    public Map<String, Object> getValidationValidateSubtaskPerson(String teamBackLogId,JiraValidatorByUrlRequest dto,String tipoDesarrollo, String helpMessage, String group, List<InfoJiraProject> infoJiraProjectList) {
-        String message;
-        boolean isValid = false;
-        boolean isWarning = false;
-        List<String> messsageBadList = new ArrayList<>();
-        List<String> messsageGoodList = new ArrayList<>();
+    public Map<String, Object> getValidationValidateSubTaskStatus(String tipoDesarrollo, String helpMessage, String group) {
         List<String> results = new ArrayList<>(SUBTASKS_BY_DEVELOP_TYPES.get(tipoDesarrollo));
         results.addAll(List.of(VB_KM, VB_SO));
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+        if (tipoDesarrollo.equalsIgnoreCase(MALLAS) || tipoDesarrollo.equalsIgnoreCase("host")) {
+            results.add("[VB][DEV]");
+        }
+        results.removeIf(subtask -> subtask.contains("QA"));
 
-        JsonArray subTasks = jiraTicketResult
-                .getAsJsonObject(FIELDS)
-                .getAsJsonArray(SUBTASKS);
-        if(subTasks.isEmpty()){
-            message = "HU no cuenta con subtareas asociadas";
-            return buildValidationResult(message, isValid, isWarning, helpMessage, group);
+        JsonArray subTasks = jiraTicketResult.getAsJsonObject(FIELDS).getAsJsonArray(SUBTASKS);
+
+        SubTaskStatusResult statusResult = validateSubTaskStatus(subTasks, results);
+
+        String message = statusResult.hasBadStatuses
+                ? "Subtareas sin estado Accepted: " + String.join(",", statusResult.badSubTaskLabels)
+                : "Todas las subtareas tienen el estado Aceptado";
+
+        boolean isValid = !statusResult.hasBadStatuses;
+
+        return buildValidationResult(message, isValid, false, helpMessage, group);
+    }
+
+    private List<String> extractMatchingLabels(JsonArray labels, List<String> specialLabels) {
+        List<String> matchingLabels = new ArrayList<>();
+        for (JsonElement label : labels) {
+            String labelString = label.getAsString();
+            if (specialLabels.contains(labelString)) {
+                matchingLabels.add(labelString);
+            }
+        }
+        return matchingLabels;
+    }
+
+    private SubTaskResult processSubTasks(JsonArray subTasks, List<String> requiredSubTasks, List<String> foundSpecialLabel, List<String> aditionalSpecialSubtask) {
+        List<String> foundSubTasks = new ArrayList<>();
+        List<String> additionalSubTasks = new ArrayList<>();
+        List<String> foundSpecialSubtasks = new ArrayList<>();
+        boolean hasWarnings = false;
+        boolean hasMissingTasks = false;
+
+        for (JsonElement subTask : subTasks) {
+            String subTaskLabel = subTask.getAsJsonObject().get(FIELDS).getAsJsonObject().get(SUMMARY).getAsString();
+            if (requiredSubTasks.contains(subTaskLabel)) {
+                foundSubTasks.add(subTaskLabel);
+            } else {
+                additionalSubTasks.add(subTaskLabel);
+                if (!foundSpecialLabel.isEmpty() || aditionalSpecialSubtask.contains(subTaskLabel)) {
+                    foundSpecialSubtasks.add(subTaskLabel);
+                }
+            }
         }
 
-        if(teamBackLogId == null || teamBackLogId.isEmpty()){
-            message = "HU sin Team BackLog";
-            return buildValidationResult(message, isValid, isWarning, helpMessage, group);
+        if (!foundSubTasks.containsAll(requiredSubTasks)) {
+            hasMissingTasks = true;
+        }
+
+        return new SubTaskResult(foundSubTasks, additionalSubTasks, foundSpecialSubtasks, hasWarnings, hasMissingTasks);
+    }
+
+    private SubTaskStatusResult validateSubTaskStatus(JsonArray subTasks, List<String> validLabels) {
+        List<JsonObject> validSubTasks = new ArrayList<>();
+        List<String> badSubTaskLabels = new ArrayList<>();
+        boolean hasBadStatuses = false;
+
+        for (JsonElement subTask : subTasks) {
+            String subTaskLabel = subTask.getAsJsonObject().get(FIELDS).getAsJsonObject().get(SUMMARY).getAsString();
+            String status = subTask.getAsJsonObject().getAsJsonObject(FIELDS).getAsJsonObject(STATUS).get(NAME).getAsString();
+
+            if (validLabels.contains(subTaskLabel) && !status.equalsIgnoreCase(ACCEPTED) && !status.equalsIgnoreCase(DISCARDED)) {
+                badSubTaskLabels.add(subTaskLabel);
+                hasBadStatuses = true;
+            }
+        }
+
+        return new SubTaskStatusResult(validSubTasks, badSubTaskLabels, hasBadStatuses);
+    }
+
+    private String generateMessageForSubTasks(String tipoDesarrollo, SubTaskResult result, List<String> foundSpecialLabel, List<String> aditionalSpecialSubtask, List<String> requiredSubTasks) {
+        StringBuilder message = new StringBuilder();
+
+        if (result.foundSubTasks.containsAll(requiredSubTasks)) {
+            message.append("Todas las subtareas requeridas fueron encontradas. ");
+            if (!result.additionalSubTasks.isEmpty()) {
+                message.append("También se encontraron subtareas adicionales: ").append(String.join(", ", result.additionalSubTasks)).append(". ");
+                if (tipoDesarrollo.equals(MALLAS)) {
+                    if (!foundSpecialLabel.isEmpty() && result.foundSpecialSubtasks.isEmpty()) {
+                        message.append(MSG_RULE_NOSUBTAREA).append(String.join(", ", aditionalSpecialSubtask));
+                    } else if (foundSpecialLabel.isEmpty() && !result.foundSpecialSubtasks.isEmpty()) {
+                        message.append("Se recomienda validar las subtareas adicionales: ").append(String.join(", ", aditionalSpecialSubtask)).append(" para casos especiales.");
+                    }
+                }
+            }
         } else {
-            for(JsonElement subtask : subTasks){
-                LocalDateTime maxDate = null;
-                JsonObject maxHistory = null;
-                String subtaskLabel = subtask.getAsJsonObject()
-                        .getAsJsonObject(FIELDS)
-                        .get(SUMMARY).getAsString();
-
-                if(subtaskLabel.contains("QA") || subtaskLabel.contains("DEV")|| subtaskLabel.contains("GC")){
-                    continue;
-                }
-                String subtaskStatus = subtask.getAsJsonObject()
-                        .getAsJsonObject(FIELDS)
-                        .getAsJsonObject(STATUS)
-                        .getAsJsonPrimitive(NAME)
-                        .getAsString();
-                if(subtaskStatus.equals(DISCARDED)){
-                    continue;
-                }
-                String codeJiraSubTask = subtask.getAsJsonObject().get("key").getAsString();
-                var query = KEY_IN + String.join(",",  List.of(codeJiraSubTask)) + ")";
-
-                JsonObject metaData;
-                String response = null;
-                var url = ApiJiraName.URL_API_JIRA_SQL + query + new JiraApiService().getQuerySuffixURL();
-                try {
-                    response = new JiraApiService().GetJiraAsync(dto.getUserName(), dto.getToken(), url);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                metaData = JsonParser.parseString(response).getAsJsonObject();
-
-                String subtaskAsignee = metaData
-                        .getAsJsonArray(ISSUES)
-                        .get(0).getAsJsonObject()
-                        .getAsJsonObject(FIELDS)
-                        .getAsJsonObject("assignee")
-                        .get(EMAIL_ADDRESS).getAsString();
-                if (subtaskAsignee == null || subtaskAsignee.isBlank()) {
-                    messsageBadList.add(MSG_SUBTAREA+ subtaskLabel +" sin asignación");
-                    continue;
-                }
-                JsonArray historiesSubstask =
-                        metaData.getAsJsonObject().getAsJsonArray(ISSUES)
-                                .get(0).getAsJsonObject()
-                                .getAsJsonObject(CHANGELOG)
-                                .getAsJsonArray(HISTORIES);
-                for (int i = 0; i < historiesSubstask.size(); i++) {
-                    JsonObject history = historiesSubstask.get(i).getAsJsonObject();
-                    String createdDate = history.get(CREATED).getAsString();
-                    LocalDateTime historyDate = LocalDateTime.parse(createdDate, formatter);
-                    JsonArray itemsHistory = history.getAsJsonArray(ITEMS);
-
-                    if (itemsHistory != null && !itemsHistory.isEmpty()) {
-                        boolean hasMatchingItem = false;
-
-                        for (JsonElement itemElement : itemsHistory) {
-                            JsonElement itemToString = itemElement.getAsJsonObject().get("toString");
-                            if(itemToString != null && !itemToString.isJsonNull()) {
-                                String toString = itemToString.getAsString();
-                                if (ACCEPTED.equals(toString)) {
-                                    hasMatchingItem = true;
-                                    break;
-                                }
-                            }
-                        }
-
-                        if (hasMatchingItem) {
-                            if (maxDate == null || historyDate.isAfter(maxDate)) {
-                                maxDate = historyDate;
-                                maxHistory = history;
-                            }
-                        }
-                    }
-                }
-                if (maxHistory == null){
-                    messsageBadList.add(MSG_SUBTAREA+ subtaskLabel +" no tiene estado Accepted");
-                    continue;
-                }
-
-                String voboPerson = maxHistory.getAsJsonObject("author").get(EMAIL_ADDRESS).getAsString();
-                if (!voboPerson.equalsIgnoreCase(subtaskAsignee)){
-                    messsageBadList.add(MSG_SUBTAREA+ subtaskLabel +" VoBo de "+ voboPerson +" no es el mismo asignado en la subtarea");
-                    continue;
-                }
-                List<InfoJiraProject> projectsFiltrados = new ArrayList<>();
-                for (Map.Entry<String, Map<String, Object>> entry : SUBTASKS_TYPE_OWNER.entrySet()) {
-                    List<String> items = (List<String>) entry.getValue().get(ITEMS);
-                    if (items != null && items.contains(subtaskLabel) &&
-                            (boolean) entry.getValue().get("validateEmailFromLideres")) {
-                        projectsFiltrados = infoJiraProjectList.stream().filter(
-                                project -> ((List<String>) entry.getValue().get("rol")).contains(project.getProjectRolType())
-                                        && project.getTeamBackLogId().equals(teamBackLogId)
-                        ).toList();
-                    }
-                }
-                if (projectsFiltrados.isEmpty()){
-                    messsageBadList.add("No se encontró persona para este rol para "+ subtaskLabel +" en SIDE");
-                }else{
-                    boolean existeVoboPerson = projectsFiltrados.stream()
-                            .anyMatch(obj -> obj.getParticipantEmail().equals(voboPerson));
-                    if (existeVoboPerson){
-                        messsageGoodList.add(voboPerson + " para "+ subtaskLabel + " es valida");
-                    }
-                }
-            }
-            if(messsageBadList.isEmpty() && messsageGoodList.isEmpty()){
-                messsageBadList.add("No se encontraron subtareas asociadas");
-            }
+            List<String> missingSubTasks = new ArrayList<>(requiredSubTasks);
+            missingSubTasks.removeAll(result.foundSubTasks);
+            message.append("Faltan las siguientes subtareas: ").append(String.join(", ", missingSubTasks)).append(". ");
         }
-        if (messsageBadList.isEmpty() && !messsageGoodList.isEmpty()){
+
+        return message.toString();
+    }
+
+    private static class SubTaskResult {
+        List<String> foundSubTasks;
+        List<String> additionalSubTasks;
+        List<String> foundSpecialSubtasks;
+        boolean hasWarnings;
+        boolean hasMissingTasks;
+
+        SubTaskResult(List<String> foundSubTasks, List<String> additionalSubTasks, List<String> foundSpecialSubtasks, boolean hasWarnings, boolean hasMissingTasks) {
+            this.foundSubTasks = foundSubTasks;
+            this.additionalSubTasks = additionalSubTasks;
+            this.foundSpecialSubtasks = foundSpecialSubtasks;
+            this.hasWarnings = hasWarnings;
+            this.hasMissingTasks = hasMissingTasks;
+        }
+    }
+
+    private static class SubTaskStatusResult {
+        List<JsonObject> validSubTasks;
+        List<String> badSubTaskLabels;
+        boolean hasBadStatuses;
+
+        SubTaskStatusResult(List<JsonObject> validSubTasks, List<String> badSubTaskLabels, boolean hasBadStatuses) {
+            this.validSubTasks = validSubTasks;
+            this.badSubTaskLabels = badSubTaskLabels;
+            this.hasBadStatuses = hasBadStatuses;
+        }
+    }
+
+    public Map<String, Object> getValidationValidateSubtaskPerson(
+            String teamBackLogId, JiraValidatorByUrlRequest dto, String helpMessage,
+            String group, List<InfoJiraProject> infoJiraProjectList) {
+
+        List<String> messageBadList = new ArrayList<>();
+        List<String> messageGoodList = new ArrayList<>();
+        boolean isValid = false;
+
+        if (teamBackLogId == null || teamBackLogId.isEmpty()) {
+            return buildValidationResult("HU sin Team BackLog", false, false, helpMessage, group);
+        }
+
+        JsonArray subTasks = jiraTicketResult.getAsJsonObject(FIELDS).getAsJsonArray(SUBTASKS);
+        if (subTasks.isEmpty()) {
+            return buildValidationResult("HU no cuenta con subtareas asociadas", false, false, helpMessage, group);
+        }
+
+        processSubtasks(subTasks, teamBackLogId, dto, infoJiraProjectList, messageBadList, messageGoodList);
+
+        if (messageBadList.isEmpty() && messageGoodList.isEmpty()) {
+            messageBadList.add("No se encontraron subtareas asociadas");
+        }
+
+        if (messageBadList.isEmpty() && !messageGoodList.isEmpty()) {
             isValid = true;
         }
-        messsageGoodList.addAll(messsageBadList);
-        message = String.join(". ",messsageGoodList);
 
-        return buildValidationResult(message, isValid, isWarning, helpMessage, group);
+        String message = String.join(". ", mergeMessageLists(messageGoodList, messageBadList));
+        return buildValidationResult(message, isValid, false, helpMessage, group);
+    }
+    private void processSubtasks(
+            JsonArray subTasks, String teamBackLogId, JiraValidatorByUrlRequest dto,
+            List<InfoJiraProject> infoJiraProjectList, List<String> messageBadList, List<String> messageGoodList) {
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+
+        for (JsonElement subTask : subTasks) {
+            String subtaskLabel = extractSubtaskLabel(subTask);
+            if (shouldSkipSubtask(subtaskLabel, subTask)) {
+                continue;
+            }
+
+            JsonObject metaDataSubtask = validateSubtaskAssignment(subTask, dto, messageBadList);
+            if (metaDataSubtask == null) {
+                continue;
+            }
+
+            JsonObject maxHistory = validateSubtaskHistory(metaDataSubtask, messageBadList, subtaskLabel);
+            if (maxHistory == null) {
+                continue;
+            }
+            String subtaskAssignee = metaDataSubtask.getAsJsonArray(ISSUES)
+                    .get(0).getAsJsonObject()
+                    .getAsJsonObject(FIELDS)
+                    .getAsJsonObject(ASSIGNEE)
+                    .get(EMAIL_ADDRESS)
+                    .getAsString();
+
+            validateVoBoAndProjects(teamBackLogId, infoJiraProjectList, subtaskLabel, subtaskAssignee,
+                    maxHistory, messageBadList, messageGoodList);
+        }
+    }
+
+    private List<String> mergeMessageLists(List<String> goodMessages, List<String> badMessages) {
+        List<String> mergedMessages = new ArrayList<>();
+        mergedMessages.addAll(goodMessages);
+        mergedMessages.addAll(badMessages);
+        return mergedMessages;
+    }
+
+    private boolean containsAcceptedStatus(JsonArray itemsHistory) {
+        if (itemsHistory == null || itemsHistory.isEmpty()) {
+            return false;
+        }
+
+        for (JsonElement itemElement : itemsHistory) {
+            JsonElement itemToString = itemElement.getAsJsonObject().get("toString");
+            if (itemToString != null && !itemToString.isJsonNull() &&
+                    ACCEPTED.equalsIgnoreCase(itemToString.getAsString())) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private boolean shouldSkipSubtask(String subtaskLabel, JsonElement subTask) {
+        if (subtaskLabel.contains("QA") || subtaskLabel.contains("DEV") || subtaskLabel.contains("GC")) {
+            return true;
+        }
+        String subtaskStatus = subTask.getAsJsonObject()
+                .getAsJsonObject(FIELDS)
+                .getAsJsonObject(STATUS)
+                .get(NAME)
+                .getAsString();
+        return DISCARDED.equalsIgnoreCase(subtaskStatus);
+    }
+
+    private JsonObject validateSubtaskAssignment(JsonElement subTask, JiraValidatorByUrlRequest dto, List<String> messageBadList) {
+        String codeJiraSubTask = subTask.getAsJsonObject().get("key").getAsString();
+        String query = KEY_IN + String.join(",", List.of(codeJiraSubTask)) + ")";
+        String url = ApiJiraName.URL_API_JIRA_SQL + query + new JiraApiService().getQuerySuffixURL();
+        try {
+            String response = new JiraApiService().GetJiraAsync(dto.getUserName(), dto.getToken(), url);
+            JsonObject metaData = JsonParser.parseString(response).getAsJsonObject();
+
+            String subtaskAssignee = metaData.getAsJsonArray(ISSUES)
+                    .get(0).getAsJsonObject()
+                    .getAsJsonObject(FIELDS)
+                    .getAsJsonObject(ASSIGNEE)
+                    .get(EMAIL_ADDRESS)
+                    .getAsString();
+
+            if (subtaskAssignee == null || subtaskAssignee.isBlank()) {
+                messageBadList.add(MSG_SUBTAREA + extractSubtaskLabel(subTask) + " sin asignación");
+                return null;
+            }
+            return metaData;
+        } catch (Exception e) {
+            e.printStackTrace();
+            messageBadList.add("Error al obtener metadata para " + extractSubtaskLabel(subTask));
+            return null;
+        }
+    }
+
+
+    private JsonObject validateSubtaskHistory(JsonObject metaData, List<String> messageBadList, String subtaskLabel) {
+        LocalDateTime maxDate = null;
+        JsonObject maxHistory = null;
+
+        JsonArray historiesSubtask = metaData.getAsJsonArray(ISSUES)
+                .get(0).getAsJsonObject()
+                .getAsJsonObject(CHANGELOG)
+                .getAsJsonArray(HISTORIES);
+
+        for (JsonElement historyElement : historiesSubtask) {
+            JsonObject history = historyElement.getAsJsonObject();
+            LocalDateTime historyDate = LocalDateTime.parse(history.get(CREATED).getAsString(), DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ"));
+            JsonArray itemsHistory = history.getAsJsonArray(ITEMS);
+
+            if (containsAcceptedStatus(itemsHistory)) {
+                if (maxDate == null || historyDate.isAfter(maxDate)) {
+                    maxDate = historyDate;
+                    maxHistory = history;
+                }
+            }
+        }
+
+        if (maxHistory == null) {
+            messageBadList.add(MSG_SUBTAREA + subtaskLabel + " no tiene estado Accepted");
+        }
+
+        return maxHistory;
+    }
+
+    private String extractSubtaskLabel(JsonElement subTask) {
+        return subTask.getAsJsonObject()
+                .getAsJsonObject(FIELDS)
+                .get(SUMMARY)
+                .getAsString();
+    }
+
+    private void validateVoBoAndProjects(
+            String teamBackLogId, List<InfoJiraProject> infoJiraProjectList, String subtaskLabel,
+            String subtaskAssignee, JsonObject maxHistory, List<String> messageBadList, List<String> messageGoodList) {
+
+        String voboPerson = maxHistory.getAsJsonObject("author").get(EMAIL_ADDRESS).getAsString();
+
+        if (!voboPerson.equalsIgnoreCase(subtaskAssignee)) {
+            messageBadList.add(MSG_SUBTAREA + subtaskLabel + " VoBo de " + voboPerson + " no es el mismo asignado en la subtarea");
+            return;
+        }
+
+        List<InfoJiraProject> filteredProjects = filterProjectsForSubtask(infoJiraProjectList, teamBackLogId, subtaskLabel);
+        if (filteredProjects.isEmpty()) {
+            messageBadList.add("No se encontró persona para este rol para " + subtaskLabel + " en SIDE");
+        } else if (existsVoBoPersonInProjects(filteredProjects, voboPerson)) {
+            messageGoodList.add(voboPerson + " para " + subtaskLabel + " es válida");
+        }
+    }
+    private boolean existsVoBoPersonInProjects(List<InfoJiraProject> projects, String voboPerson) {
+        return projects.stream()
+                .anyMatch(project -> project.getParticipantEmail().equalsIgnoreCase(voboPerson));
+    }
+
+    private List<InfoJiraProject> filterProjectsForSubtask(List<InfoJiraProject> infoJiraProjectList, String teamBackLogId, String subtaskLabel) {
+        return infoJiraProjectList.stream()
+                .filter(project -> {
+                    Map<String, Object> subTaskTypeOwner = SUBTASKS_TYPE_OWNER.get(subtaskLabel);
+                    if (subTaskTypeOwner != null) {
+                        List<String> roles = (List<String>) subTaskTypeOwner.get("rol");
+                        boolean validateEmail = (boolean) subTaskTypeOwner.getOrDefault("validateEmailFromLideres", false);
+                        return roles.contains(project.getProjectRolType()) &&
+                                validateEmail &&
+                                project.getTeamBackLogId().equals(teamBackLogId);
+                    }
+                    return false;
+                })
+                .toList();
     }
 
     public Map<String, Object> getValidationValidateSubTaskValidateContractor(JiraValidatorByUrlRequest dto,String tipoDesarrollo, String helpMessage, String group) {
@@ -505,7 +658,7 @@ public class JiraValidationMethods {
                     .getAsJsonArray(ISSUES)
                     .get(0).getAsJsonObject()
                     .getAsJsonObject(FIELDS)
-                    .getAsJsonObject("assignee");
+                    .getAsJsonObject(ASSIGNEE);
             String asigneeEmail = assignee.get(EMAIL_ADDRESS).getAsString();
             if(!asigneeEmail.isBlank()){
                 if (asigneeEmail.contains(".contractor")) {
@@ -548,7 +701,7 @@ public class JiraValidationMethods {
                     .getAsJsonObject(FIELDS)
                     .get("customfield_13301").getAsString();
 
-            if(teamBackLogTicketIdRLB.contains(teamBackLogTicketId)){ //TICKET RELIABILITY
+            if(teamBackLogTicketIdRLB.contains(teamBackLogTicketId)){
                 if (!acceptanceCriteria.isEmpty()) {
                     if (validAcceptanceCriteriaObject != null) {
 
@@ -656,7 +809,7 @@ public class JiraValidationMethods {
         Map<String, Map<String, String>> teamFieldLabelByIssueType = new HashMap<>();
         teamFieldLabelByIssueType.put("Historia", storyMap);
         teamFieldLabelByIssueType.put(STORY, storyMap);
-        teamFieldLabelByIssueType.put(DEPENDENCY, storyMap); //dependencyMap
+        teamFieldLabelByIssueType.put(DEPENDENCY, storyMap);
         String issueType = jiraTicketResult.getAsJsonObject(FIELDS)
                 .getAsJsonObject(ISSUETYPE)
                 .get(NAME).getAsString();
@@ -960,118 +1113,6 @@ public class JiraValidationMethods {
         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
 
-    public Map<String, Object> getValidationValidateSubTask(String tipoDesarrollo, String helpMessage, String group) {
-        String message;
-        boolean isValid = false;
-        boolean isWarning = false;
-
-        List<String> aditionalSpecialSubtask = List.of(VB_KM, VB_SO);
-        List<String> aditionalSpecialLabels = List.of("datioRutaCritica", "JobsHuerfanos");
-
-        JsonArray labels = jiraTicketResult.getAsJsonObject(FIELDS).getAsJsonArray(LABELS);
-        List<String> foundSpecialLabel = extractMatchingLabels(labels, aditionalSpecialLabels);
-
-        List<String> requiredSubTasks = SUBTASKS_BY_DEVELOP_TYPES.getOrDefault(tipoDesarrollo, List.of());
-        JsonArray subTasks = jiraTicketResult.getAsJsonObject(FIELDS).getAsJsonArray(SUBTASKS);
-        SubTaskValidationResult subTaskResult = validateSubTasks(subTasks, requiredSubTasks, foundSpecialLabel, aditionalSpecialSubtask);
-
-        if (subTaskResult.foundSubTasks.containsAll(requiredSubTasks)) {
-            message = buildValidSubTasksMessage(subTaskResult, tipoDesarrollo, foundSpecialLabel, aditionalSpecialSubtask);
-            isValid = subTaskResult.isValid;
-            isWarning = subTaskResult.isWarning;
-        } else {
-            List<String> missingSubTasks = new ArrayList<>(requiredSubTasks);
-            missingSubTasks.removeAll(subTaskResult.foundSubTasks);
-            message = buildMissingSubTasksMessage(missingSubTasks, subTaskResult, tipoDesarrollo, foundSpecialLabel, aditionalSpecialSubtask);
-            isValid = subTaskResult.isValid;
-            isWarning = subTaskResult.isWarning;
-        }
-
-        return buildValidationResult(message, isValid, isWarning, helpMessage, group);
-    }
-
-    private List<String> extractMatchingLabels(JsonArray labels, List<String> aditionalSpecialLabels) {
-        List<String> foundSpecialLabel = new ArrayList<>();
-        for (JsonElement label : labels) {
-            String labelString = label.getAsString();
-            if (aditionalSpecialLabels.contains(labelString)) {
-                foundSpecialLabel.add(labelString);
-            }
-        }
-        return foundSpecialLabel;
-    }
-
-    private SubTaskValidationResult validateSubTasks(JsonArray subTasks, List<String> requiredSubTasks, List<String> foundSpecialLabel, List<String> aditionalSpecialSubtask) {
-        List<String> foundSubTasks = new ArrayList<>();
-        List<String> additionalSubTasks = new ArrayList<>();
-        List<String> foundSpecialSubtasks = new ArrayList<>();
-
-        for (JsonElement subTask : subTasks) {
-            String subTaskLabel = subTask.getAsJsonObject().get(FIELDS).getAsJsonObject().get(SUMMARY).getAsString();
-            if (requiredSubTasks.contains(subTaskLabel)) {
-                foundSubTasks.add(subTaskLabel);
-            } else {
-                additionalSubTasks.add(subTaskLabel);
-                if (!foundSpecialLabel.isEmpty() || aditionalSpecialSubtask.contains(subTaskLabel)) {
-                    foundSpecialSubtasks.add(subTaskLabel);
-                }
-            }
-        }
-
-        return new SubTaskValidationResult(foundSubTasks, additionalSubTasks, foundSpecialSubtasks);
-    }
-
-    private String buildValidSubTasksMessage(SubTaskValidationResult result, String tipoDesarrollo, List<String> foundSpecialLabel, List<String> aditionalSpecialSubtask) {
-        String message = "Todas las subtareas requeridas fueron encontradas.";
-        if (!result.additionalSubTasks.isEmpty()) {
-            message += " También se encontraron subtareas adicionales: " + String.join(", ", result.additionalSubTasks) + ". ";
-            message += handleSpecialSubTasks(tipoDesarrollo, foundSpecialLabel, result.foundSpecialSubtasks, aditionalSpecialSubtask);
-        }
-        return message;
-    }
-
-    private String buildMissingSubTasksMessage(List<String> missingSubTasks, SubTaskValidationResult result, String tipoDesarrollo, List<String> foundSpecialLabel, List<String> aditionalSpecialSubtask) {
-        String message = "Faltan las siguientes subtareas: " + String.join(", ", missingSubTasks);
-        if (!result.additionalSubTasks.isEmpty()) {
-            message += " Además, se encontraron subtareas adicionales: " + String.join(", ", result.additionalSubTasks);
-            message += handleSpecialSubTasks(tipoDesarrollo, foundSpecialLabel, result.foundSpecialSubtasks, aditionalSpecialSubtask);
-        }
-        return message;
-    }
-
-    private String handleSpecialSubTasks(String tipoDesarrollo, List<String> foundSpecialLabel, List<String> foundSpecialSubtasks, List<String> aditionalSpecialSubtask) {
-        if (tipoDesarrollo.equals(MALLAS)) {
-            if (!foundSpecialLabel.isEmpty() && foundSpecialSubtasks.isEmpty()) {
-                return MSG_RULE_NOSUBTAREA + String.join(", ", aditionalSpecialSubtask);
-            } else if (foundSpecialLabel.isEmpty() && !foundSpecialSubtasks.isEmpty()) {
-                return "Se recomienda validar las subtareas adicionales: " + String.join(", ", aditionalSpecialSubtask)
-                        + " para casos de jobs eliminados, huérfanos, ruta crítica. Puede estar pendiente el label correspondiente.";
-            }
-        } else {
-            if (!foundSpecialLabel.isEmpty() && foundSpecialSubtasks.isEmpty()) {
-                return MSG_RULE_NOSUBTAREA + String.join(", ", aditionalSpecialSubtask);
-            } else if (foundSpecialLabel.isEmpty() && !foundSpecialSubtasks.isEmpty()) {
-                return MSG_RULE_RECOMENDATIONSUBTAREA + String.join(", ", aditionalSpecialSubtask)
-                        + " para casos de jobs de ruta crítica. Puede estar pendiente el label correspondiente.";
-            }
-        }
-        return "";
-    }
-
-    private static class SubTaskValidationResult {
-        List<String> foundSubTasks;
-        List<String> additionalSubTasks;
-        List<String> foundSpecialSubtasks;
-        boolean isValid = true;
-        boolean isWarning = false;
-
-        SubTaskValidationResult(List<String> foundSubTasks, List<String> additionalSubTasks, List<String> foundSpecialSubtasks) {
-            this.foundSubTasks = foundSubTasks;
-            this.additionalSubTasks = additionalSubTasks;
-            this.foundSpecialSubtasks = foundSpecialSubtasks;
-        }
-    }
-
     public Map<String, Object> getValidationValidateImpactLabel(String helpMessage, String group, String tipoDesarrollo) {
         String message;
         boolean isValid = false;
@@ -1154,10 +1195,10 @@ public class JiraValidationMethods {
                 isValid = false;
             }
         }
-         else{
-                message = MSG_RULE_INVALID;
-                isValid = true;
-            }
+        else{
+            message = MSG_RULE_INVALID;
+            isValid = true;
+        }
 
         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
@@ -1197,64 +1238,64 @@ public class JiraValidationMethods {
             isValid = false;
             return buildValidationResult(message, isValid, isWarning, helpMessage, group);
         }
-   }
+    }
 
-   public Map<String, Object> getValidationProductivizacionIssueLink(String tipoDesarrollo, String helpMessage, String group){
+    public Map<String, Object> getValidationProductivizacionIssueLink(String tipoDesarrollo, String helpMessage, String group){
         String message = "";
         boolean isValid = false;
         boolean isWarning = false;
 
-       JsonArray issuelinks = jiraTicketResult
-               .getAsJsonObject(FIELDS)
-               .getAsJsonArray(ISSUELINKS);
+        JsonArray issuelinks = jiraTicketResult
+                .getAsJsonObject(FIELDS)
+                .getAsJsonArray(ISSUELINKS);
 
-       String name = null;
-       String statusCategory = null;
+        String name = null;
+        String statusCategory = null;
 
-       JsonArray issueLinkStory = new JsonArray();
-       if (tipoDesarrollo.equalsIgnoreCase("productivizacion")) {
-           for (JsonElement issueLinkElement : issuelinks) {
-               String type  = issueLinkElement.getAsJsonObject().getAsJsonObject(TYPE).get(INWARD).getAsString();
-               JsonElement inwardIssue = issueLinkElement
-                       .getAsJsonObject()
-                       .getAsJsonObject(INWARD_ISSUE);
-               if (type.equals(IS_CHILD_ITEM_OF) && inwardIssue != null) {
-                   name = inwardIssue
-                           .getAsJsonObject()
-                           .getAsJsonObject(FIELDS).getAsJsonObject(ISSUETYPE).get(NAME).getAsString();
-                   if(name.equals(STORY)){
-                       issueLinkStory.add(issueLinkElement);
-                   }
-               }
-           }
+        JsonArray issueLinkStory = new JsonArray();
+        if (tipoDesarrollo.equalsIgnoreCase("productivizacion")) {
+            for (JsonElement issueLinkElement : issuelinks) {
+                String type  = issueLinkElement.getAsJsonObject().getAsJsonObject(TYPE).get(INWARD).getAsString();
+                JsonElement inwardIssue = issueLinkElement
+                        .getAsJsonObject()
+                        .getAsJsonObject(INWARD_ISSUE);
+                if (type.equals(IS_CHILD_ITEM_OF) && inwardIssue != null) {
+                    name = inwardIssue
+                            .getAsJsonObject()
+                            .getAsJsonObject(FIELDS).getAsJsonObject(ISSUETYPE).get(NAME).getAsString();
+                    if(name.equals(STORY)){
+                        issueLinkStory.add(issueLinkElement);
+                    }
+                }
+            }
 
-           if (!issueLinkStory.isEmpty()) {
-               for (JsonElement issueLinkElement : issueLinkStory) {
-                   statusCategory = issueLinkElement.getAsJsonObject()
-                           .getAsJsonObject(INWARD_ISSUE)
-                           .getAsJsonObject(FIELDS)
-                           .getAsJsonObject(STATUS)
-                           .get(NAME).getAsString().toLowerCase();
-                   if (statusCategory.equalsIgnoreCase(DEPLOYED)) {
-                       message = "Todos los tickets asociados se encuentran deployados";
-                       isValid = true;
-                   } else {
-                       message = "No todos los tickets asociados se encuentran deployados";
-                       break;
-                   }
-               }
-           } else{
-               message = "No se encontraron tickets asociados de tipo Story";
-           }
-       } else {
-           isValid = true;
-           message = MSG_RULE_INVALID;
-       }
+            if (!issueLinkStory.isEmpty()) {
+                for (JsonElement issueLinkElement : issueLinkStory) {
+                    statusCategory = issueLinkElement.getAsJsonObject()
+                            .getAsJsonObject(INWARD_ISSUE)
+                            .getAsJsonObject(FIELDS)
+                            .getAsJsonObject(STATUS)
+                            .get(NAME).getAsString().toLowerCase();
+                    if (statusCategory.equalsIgnoreCase(DEPLOYED)) {
+                        message = "Todos los tickets asociados se encuentran deployados";
+                        isValid = true;
+                    } else {
+                        message = "No todos los tickets asociados se encuentran deployados";
+                        break;
+                    }
+                }
+            } else{
+                message = "No se encontraron tickets asociados de tipo Story";
+            }
+        } else {
+            isValid = true;
+            message = MSG_RULE_INVALID;
+        }
 
-       return buildValidationResult(message, isValid, isWarning, helpMessage, group);
-   }
+        return buildValidationResult(message, isValid, isWarning, helpMessage, group);
+    }
 
-   public Map<String, Object> getValidationLabels(String tipoDesarrollo, String helpMessage, String group){
+    public Map<String, Object> getValidationLabels(String tipoDesarrollo, String helpMessage, String group){
         String message = "";
         boolean isValid;
         boolean isWarning = false;
@@ -1280,8 +1321,8 @@ public class JiraValidationMethods {
             message = "Faltan las siguientes etiquetas: " + String.join(", ", missingLabels);
             isValid = false;
         }
-       return buildValidationResult(message, isValid, isWarning, helpMessage, group);
-   }
+        return buildValidationResult(message, isValid, isWarning, helpMessage, group);
+    }
 
     public Map<String, Object> getValidationInitialTeam(String helpMessage, String group) throws ParseException {
         String message = "";
@@ -1401,7 +1442,7 @@ public class JiraValidationMethods {
                             urlMessage.append(ApiJiraName.URL_API_BROWSE).append(dependencyPadCollection.get(i)).append(", ");
                         }
                     }
-                    urlMessage.setLength(urlMessage.length() - 2); // Remove trailing comma and space
+                    urlMessage.setLength(urlMessage.length() - 2);
                     urlMessage.append(" no se encuentran en el estado correspondiente (In Progress).");
                     message = urlMessage.toString();
                 }

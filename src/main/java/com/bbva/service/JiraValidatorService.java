@@ -102,7 +102,7 @@ public class JiraValidatorService {
         var result19 = instancesRules.getValidationDependencyComment(teamBacklogId, TEAM_BACKLOG_RLB_ID, dto,"Validar que la dependencia cuente con un comentario comprometido de QE o QE temporal",GROUP_DEPENDENCY, infoJiraProjectList);
         var result20 = instancesRules.getValidationValidateSubTask(tipoDesarrollo,"Validar la existencia de las subtareas", GROUP_SUBTASK);
         var result21 = instancesRules.getValidationValidateSubTaskStatus(tipoDesarrollo,"Se valida que la subtarea tenga el Status correcto", GROUP_SUBTASK);
-        var result22 = instancesRules.getValidationValidateSubtaskPerson(teamBacklogId, dto,tipoDesarrollo,"Validar que la subtarea tenga el VoBo de la persona en el tablero de Lideres",GROUP_SUBTASK, infoJiraProjectList);
+        var result22 = instancesRules.getValidationValidateSubtaskPerson(teamBacklogId, dto,"Validar que la subtarea tenga el VoBo de la persona en el tablero de Lideres",GROUP_SUBTASK, infoJiraProjectList);
         var result23 = instancesRules.getValidationValidateSubTaskValidateContractor(dto,tipoDesarrollo,"Se valida la subtarea: El email debe pertenecer a un Usuario de Negocio Interno BBVA", "Subtarea");
         var result24 = instancesRules.getValidationAlpha(tipoDesarrollo,"Validar que la UUAA corresponda al Dominio de ALPHA", GROUP_SUBTASK);
         var result25 = instancesRules.getValidationValidateJIRAStatus(tipoDesarrollo,"Validar el Status de Ticket JIRA",GROUP_TICKET);

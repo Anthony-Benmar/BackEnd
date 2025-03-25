@@ -91,6 +91,7 @@ public class JiraValidatorConstantes {
     public static final String P110 = "P110";
     public static final String NAME = "name";
     public static final String TYPE = "type";
+    public static final String ASSIGNEE = "assignee";
 
     static {
         Map<String, List<String>> mapDevTypes = new HashMap<>();
