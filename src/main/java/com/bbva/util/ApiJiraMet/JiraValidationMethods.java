@@ -1,6 +1,5 @@
 package com.bbva.util.ApiJiraMet;
 
-import com.bbva.dao.InfoJiraProjectDao;
 import com.bbva.dto.jira.request.JiraValidatorByUrlRequest;
 import com.bbva.entities.jiravalidator.InfoJiraProject;
 import com.bbva.service.JiraApiService;
@@ -634,19 +633,21 @@ public class JiraValidationMethods {
     }
 
     private List<InfoJiraProject> filterProjectsForSubtask(List<InfoJiraProject> infoJiraProjectList, String teamBackLogId, String subtaskLabel) {
-        return infoJiraProjectList.stream()
-                .filter(project -> {
-                    Map<String, Object> subTaskTypeOwner = SUBTASKS_TYPE_OWNER.get(subtaskLabel);
-                    if (subTaskTypeOwner != null) {
-                        List<String> roles = (List<String>) subTaskTypeOwner.get("rol");
-                        boolean validateEmail = (boolean) subTaskTypeOwner.getOrDefault("validateEmailFromLideres", false);
-                        return roles.contains(project.getProjectRolType()) &&
-                                validateEmail &&
-                                project.getTeamBackLogId().equals(teamBackLogId);
-                    }
-                    return false;
-                })
-                .toList();
+        List<InfoJiraProject> projectsFiltrados = new ArrayList<>();
+
+        for (Map.Entry<String, Map<String, Object>> entry : SUBTASKS_TYPE_OWNER.entrySet()) {
+            List<String> items = (List<String>) entry.getValue().get("items");
+            boolean validateEmail = (boolean) entry.getValue().getOrDefault("validateEmailFromLideres", false);
+
+            if (items != null && items.contains(subtaskLabel) && validateEmail) {
+                projectsFiltrados.addAll(infoJiraProjectList.stream()
+                        .filter(project -> ((List<String>) entry.getValue().get("rol")).contains(project.getProjectRolType())
+                                && project.getTeamBackLogId().equals(teamBackLogId))
+                        .toList());
+            }
+        }
+
+        return projectsFiltrados;
     }
 
     public Map<String, Object> getValidationValidateSubTaskValidateContractor(Map<String, JsonObject> subtaskMetadataMap, String helpMessage, String group) {

@@ -86,8 +86,10 @@ public class JiraValidatorService {
         int ruleIdCounter = 1;
 
         var instancesRules = new JiraValidationMethods(dto.getUrlJira(), jiraTicketResult,featureLink,featureLinkMetadataJsonObject,currentQ);
-        infoJiraProjectList = infoJiraProjectList.stream().filter(obj -> obj.getTeamBackLogId() != null)
-                .collect(Collectors.toList());
+        if (!infoJiraProjectList.isEmpty()) {
+            infoJiraProjectList = infoJiraProjectList.stream().filter(obj -> obj.getTeamBackLogId() != null)
+                    .collect(Collectors.toList());
+        }
 
         var result1 = instancesRules.getValidatorValidateSummaryHUTType("Validar el tipo de desarrollo en el summary", GROUP_TICKET);
         var tipoDesarrollo = result1.get("tipoDesarrolloSummary").toString();
