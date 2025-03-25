@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.bbva.common.jiraValidador.JiraValidatorConstantes.*;
 
@@ -103,54 +104,73 @@ public class JiraValidationMethods {
         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
 
-    public Map<String, Object> getValidatorValidateHUTType(String teamBackLogId, List<String> teamBackLogTicketIdRLB, String helpMessage, String tipoDesarrollo, String group) {
+    public Map<String, Object> getValidatorValidateHUTType(
+            String teamBackLogId, List<String> teamBackLogTicketIdRLB, String helpMessage,
+            String tipoDesarrollo, String group) {
+
         boolean isWarning = false;
 
-        JsonArray issuelinks = jiraTicketResult
-                .getAsJsonObject(FIELDS)
-                .getAsJsonArray(ISSUELINKS);
-
-        String name = null;
-        String statusCategory = null;
-
-        if (tipoDesarrollo.equalsIgnoreCase(INGESTA)) {
-            if(teamBackLogTicketIdRLB.contains(teamBackLogId)){
-                return buildValidationResult(MSG_RULE_INVALID, true, isWarning, helpMessage, group);
-            } else {
-                for (JsonElement issueLinkElement : issuelinks) {
-                    JsonObject issueLink = issueLinkElement.getAsJsonObject();
-                    String inward = issueLink.getAsJsonObject(TYPE).get(INWARD).getAsString();
-                    if (inward.equalsIgnoreCase(IS_CHILD_ITEM_OF)) {
-                        if (issueLink.has(INWARD_ISSUE)) {
-                            JsonObject inwardIssue = issueLink.getAsJsonObject(INWARD_ISSUE);
-                            if (inwardIssue.has(FIELDS)) {
-                                JsonObject fields = inwardIssue.getAsJsonObject(FIELDS);
-                                if (fields.has(ISSUETYPE) && fields.has(STATUS)) {
-                                    JsonObject issuetype = fields.getAsJsonObject(ISSUETYPE);
-                                    JsonObject status = fields.getAsJsonObject(STATUS);
-                                    statusCategory = status.get(NAME).getAsString();
-                                    name = issuetype.get(NAME).getAsString();
-                                }
-                            }
-                        }
-                    } else {
-                        return buildValidationResult("No es ticket de integración", true, isWarning, helpMessage, group);
-                    }
-                }
-                if (name != null && name.equals(STORY)) {
-                    if (statusCategory != null && statusCategory.equals(DEPLOYED)) {
-                        return buildValidationResult("Ticket de integración sin tickets deployados", true, isWarning, helpMessage, group);
-                    } else {
-                        return buildValidationResult("Ticket de integración sin tickets deployados", false, isWarning, helpMessage, group);
-                    }
-                } else {
-                    return buildValidationResult("No es ticket de integración", true, isWarning, helpMessage, group);
-                }
-            }
-        } else {
+        if (!tipoDesarrollo.equalsIgnoreCase(INGESTA)) {
             return buildValidationResult(MSG_RULE_INVALID, true, isWarning, helpMessage, group);
         }
+
+        if (teamBackLogTicketIdRLB.contains(teamBackLogId)) {
+            return buildValidationResult(MSG_RULE_INVALID, true, isWarning, helpMessage, group);
+        }
+
+        JsonArray issuelinks = jiraTicketResult.getAsJsonObject(FIELDS).getAsJsonArray(ISSUELINKS);
+        String name = getIssueTypeName(issuelinks);
+        String statusCategory = getIssueStatusCategory(issuelinks);
+
+        if (name == null || !name.equals(STORY)) {
+            return buildValidationResult("No es ticket de integración", true, isWarning, helpMessage, group);
+        }
+
+        if (statusCategory != null && statusCategory.equals(DEPLOYED)) {
+            return buildValidationResult("Ticket de integración sin tickets deployados", true, isWarning, helpMessage, group);
+        }
+
+        return buildValidationResult("Ticket de integración sin tickets deployados", false, isWarning, helpMessage, group);
     }
+
+    private String getIssueTypeName(JsonArray issuelinks) {
+        for (JsonElement issueLinkElement : issuelinks) {
+            JsonObject issueLink = issueLinkElement.getAsJsonObject();
+            String inward = issueLink.getAsJsonObject(TYPE).get(INWARD).getAsString();
+
+            if (inward.equalsIgnoreCase(IS_CHILD_ITEM_OF) && issueLink.has(INWARD_ISSUE)) {
+                JsonObject inwardIssue = issueLink.getAsJsonObject(INWARD_ISSUE);
+                if (inwardIssue.has(FIELDS)) {
+                    JsonObject fields = inwardIssue.getAsJsonObject(FIELDS);
+                    if (fields.has(ISSUETYPE)) {
+                        JsonObject issuetype = fields.getAsJsonObject(ISSUETYPE);
+                        return issuetype.get(NAME).getAsString();
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    private String getIssueStatusCategory(JsonArray issuelinks) {
+        for (JsonElement issueLinkElement : issuelinks) {
+            JsonObject issueLink = issueLinkElement.getAsJsonObject();
+            String inward = issueLink.getAsJsonObject(TYPE).get(INWARD).getAsString();
+
+            if (inward.equalsIgnoreCase(IS_CHILD_ITEM_OF) && issueLink.has(INWARD_ISSUE)) {
+                JsonObject inwardIssue = issueLink.getAsJsonObject(INWARD_ISSUE);
+                if (inwardIssue.has(FIELDS)) {
+                    JsonObject fields = inwardIssue.getAsJsonObject(FIELDS);
+                    if (fields.has(STATUS)) {
+                        JsonObject status = fields.getAsJsonObject(STATUS);
+                        return status.get(NAME).getAsString();
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
 
     private Map<String, Object> buildValidationResult(String message, boolean isValid, boolean isWarning, String helpMessage, String group) {
         return Map.of(
@@ -166,54 +186,26 @@ public class JiraValidationMethods {
         String message;
         boolean isValid;
         boolean isWarning = false;
-        List<String> prsStatusException = new ArrayList<>(List.of("DECLINED"));
-        List<String> prsStatusWarning = new ArrayList<>(List.of("MERGED"));
-        Map<String, String> prException = new HashMap<>();
-        Map<String, String> prWarning = new HashMap<>();
-        Map<String, String> prValid = new HashMap<>();
-        JsonObject jiraTicketResultPrs = jiraTicketResult
-                .getAsJsonObject(FIELDS);
 
-        List<String> tipoDesarrolloPRs = Arrays.asList("Procesamiento","MigrationTool",
-                "Hammurabi", "Ingesta", "Scaffolder", "Operativizacion",
-                "Teradata", "SmartCleaner","SparkCompactor", "JSON Global");
+        List<String> prsStatusException = List.of("DECLINED");
+        List<String> prsStatusWarning = List.of("MERGED");
 
-        tipoDesarrolloPRs.replaceAll(String::toLowerCase);
+        JsonObject jiraTicketResultPrs = jiraTicketResult.getAsJsonObject(FIELDS);
 
-        if (jiraTicketResultPrs.get("prs") != null) {
-            int cantidadPRs = jiraTicketResultPrs.get("prs").getAsJsonArray().size();
-            if (cantidadPRs > 0) {
-                for (JsonElement prObj : jiraTicketResultPrs.get("prs").getAsJsonArray()) {
-                    String status = jiraTicketResultPrs.get("prs").getAsJsonArray().get(0).getAsJsonObject().get(STATUS).getAsString();
-                    if (prsStatusException.contains(status)){
-                        prException.put(prObj.getAsJsonObject().get("url").getAsString(), prObj.getAsJsonObject().get(STATUS).getAsString());
-                    } else if (prsStatusWarning.contains(status)) {
-                        prWarning.put(prObj.getAsJsonObject().get("url").getAsString(), prObj.getAsJsonObject().get(STATUS).getAsString());
-                    }else{
-                        prValid.put(prObj.getAsJsonObject().get("url").getAsString(), prObj.getAsJsonObject().get(STATUS).getAsString());
-                    }
-                }
-            }
-        }
+        Map<String, Map<String, String>> prsClassification = classifyPRs(jiraTicketResultPrs, prsStatusException, prsStatusWarning);
+
+        Map<String, String> prException = prsClassification.get("exception");
+        Map<String, String> prWarning = prsClassification.get("warning");
+        Map<String, String> prValid = prsClassification.get("valid");
+
         int cantidadPrsValidas = prValid.size();
         int cantidadPrsWarning = prWarning.size();
-        if (tipoDesarrollo.equals("PRs") || tipoDesarrollo.equals(MALLAS) || tipoDesarrolloPRs.contains(tipoDesarrollo)) {
-            if (cantidadPrsValidas == 1) {
-                message = "Con PR asociada: " + prValid.keySet();
-                isValid = true;
-            } else if (cantidadPrsValidas > 1) {
-                message = "Se encontraron " + cantidadPrsValidas + " PRs asociadas: " + prValid.keySet();
-                isValid = false;
-                message += " Atención: No se puede tener más de una PR asociada.";
-            } else {
-                message = "No se detectó una PR valida asociada.";
-                isValid = false;
-                message += " Atención: Si la PR fue asociada correctamente, falta dar permisos de acceso a los QEs.";
-            }
-            if (cantidadPrsWarning>0){
-                isWarning = true;
-                message += " Atención: Se encontraron " + cantidadPrsWarning + " PRs asociadas en MERGED: " + prWarning.keySet();
-            }
+
+        List<String> tipoDesarrolloPRs = getDevelopmentTypes();
+        if (isValidDevelopmentType(tipoDesarrollo, tipoDesarrolloPRs)) {
+            message = generateValidationMessage(cantidadPrsValidas, cantidadPrsWarning, prValid, prWarning);
+            isValid = cantidadPrsValidas == 1;
+            isWarning = cantidadPrsWarning > 0;
         } else {
             if (cantidadPrsValidas == 0) {
                 message = "Sin PR asociada.";
@@ -223,8 +215,71 @@ public class JiraValidationMethods {
                 isValid = false;
             }
         }
+
         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
+
+    private boolean isValidDevelopmentType(String tipoDesarrollo, List<String> tipoDesarrolloPRs) {
+        return tipoDesarrollo.equalsIgnoreCase("PRs") || tipoDesarrollo.equalsIgnoreCase(MALLAS) || tipoDesarrolloPRs.contains(tipoDesarrollo.toLowerCase());
+    }
+
+    private String generateValidationMessage(int cantidadPrsValidas, int cantidadPrsWarning, Map<String, String> prValid, Map<String, String> prWarning) {
+        StringBuilder message = new StringBuilder();
+
+        if (cantidadPrsValidas == 1) {
+            message.append("Con PR asociada: ").append(prValid.keySet());
+        } else if (cantidadPrsValidas > 1) {
+            message.append("Se encontraron ").append(cantidadPrsValidas).append(" PRs asociadas: ").append(prValid.keySet())
+                    .append(". Atención: No se puede tener más de una PR asociada.");
+        } else {
+            message.append("No se detectó una PR valida asociada.")
+                    .append(" Atención: Si la PR fue asociada correctamente, falta dar permisos de acceso a los QEs.");
+        }
+
+        if (cantidadPrsWarning > 0) {
+            message.append(" Atención: Se encontraron ").append(cantidadPrsWarning)
+                    .append(" PRs asociadas en MERGED: ").append(prWarning.keySet());
+        }
+
+        return message.toString();
+    }
+
+    private Map<String, Map<String, String>> classifyPRs(JsonObject jiraTicketResultPrs, List<String> prsStatusException, List<String> prsStatusWarning) {
+        Map<String, String> prException = new HashMap<>();
+        Map<String, String> prWarning = new HashMap<>();
+        Map<String, String> prValid = new HashMap<>();
+        Map<String, Map<String, String>> classification = new HashMap<>();
+
+        if (jiraTicketResultPrs.get("prs") != null) {
+            JsonArray prsArray = jiraTicketResultPrs.get("prs").getAsJsonArray();
+            for (JsonElement prObj : prsArray) {
+                JsonObject prJson = prObj.getAsJsonObject();
+                String status = prJson.get(STATUS).getAsString();
+                String url = prJson.get("url").getAsString();
+
+                if (prsStatusException.contains(status)) {
+                    prException.put(url, status);
+                } else if (prsStatusWarning.contains(status)) {
+                    prWarning.put(url, status);
+                } else {
+                    prValid.put(url, status);
+                }
+            }
+        }
+
+        classification.put("exception", prException);
+        classification.put("warning", prWarning);
+        classification.put("valid", prValid);
+        return classification;
+    }
+
+    private List<String> getDevelopmentTypes() {
+        return Stream.of("Procesamiento", "MigrationTool", "Hammurabi", "Ingesta", "Scaffolder", "Operativizacion",
+                        "Teradata", "SmartCleaner", "SparkCompactor", "JSON Global")
+                .map(String::toLowerCase)
+                .toList();
+    }
+
     public Map<String, Object> getValidationPRBranch(String helpMessage, String group) {
         String message = "";
         boolean isValid = false;
@@ -410,7 +465,7 @@ public class JiraValidationMethods {
     }
 
     public Map<String, Object> getValidationValidateSubtaskPerson(Map<String, JsonObject> subtaskMetadataMap,
-            String teamBackLogId, JiraValidatorByUrlRequest dto, String helpMessage,
+            String teamBackLogId, String helpMessage,
             String group, List<InfoJiraProject> infoJiraProjectList) {
 
         List<String> messageBadList = new ArrayList<>();
@@ -535,11 +590,9 @@ public class JiraValidationMethods {
             LocalDateTime historyDate = LocalDateTime.parse(history.get(CREATED).getAsString(), DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ"));
             JsonArray itemsHistory = history.getAsJsonArray(ITEMS);
 
-            if (containsAcceptedStatus(itemsHistory)) {
-                if (maxDate == null || historyDate.isAfter(maxDate)) {
-                    maxDate = historyDate;
-                    maxHistory = history;
-                }
+            if (containsAcceptedStatus(itemsHistory) && (maxDate == null || historyDate.isAfter(maxDate))) {
+                maxDate = historyDate;
+                maxHistory = history;
             }
         }
 
@@ -655,110 +708,89 @@ public class JiraValidationMethods {
         }
     }
 
-    public Map<String, Object> getValidationAcceptanceCriteria(List<String> teamBackLogTicketIdRLB,String tipoDesarrollo, String helpMessage, String group) {
-        String message;
+    public Map<String, Object> getValidationAcceptanceCriteria(String teamBackLogTicketId,
+            List<String> teamBackLogTicketIdRLB, String tipoDesarrollo, String helpMessage, String group) {
+
+        String message = "";
         boolean isValid = false;
         boolean isWarning = false;
-        Map<String, Object> validAcceptanceCriteriaObject = CRITERIA_BY_DEVELOP_TYPES.get(tipoDesarrollo);
 
+        Map<String, Object> validAcceptanceCriteriaObject = CRITERIA_BY_DEVELOP_TYPES.get(tipoDesarrollo);
+        String acceptanceCriteria = getAcceptanceCriteria();
+
+        if (tipoDesarrollo.equalsIgnoreCase(MALLAS)) {
+            boolean isTeamBackLogRLB = teamBackLogTicketIdRLB.contains(teamBackLogTicketId);
+
+            message = validateAcceptanceCriteria(acceptanceCriteria, validAcceptanceCriteriaObject, isTeamBackLogRLB);
+            isValid = message.startsWith(MSG_RULE_VALID);
+        } else {
+            message = validateAcceptanceCriteriaForOtherTypes(acceptanceCriteria, validAcceptanceCriteriaObject);
+            isValid = message.startsWith(MSG_RULE_VALID);
+        }
+
+        return buildValidationResult(message, isValid, isWarning, helpMessage, group);
+    }
+
+    private String getAcceptanceCriteria() {
         String acceptanceCriteria = jiraTicketResult
                 .getAsJsonObject(FIELDS)
-                .get("customfield_10260").getAsString();
+                .get("customfield_10260")
+                .getAsString();
 
-        acceptanceCriteria = acceptanceCriteria.replaceAll("[\\s\\u00A0]+", " ").trim();
-        if(tipoDesarrollo.equalsIgnoreCase(MALLAS)){
-            String teamBackLogTicketId = jiraTicketResult
-                    .getAsJsonObject()
-                    .getAsJsonObject(FIELDS)
-                    .get("customfield_13301").getAsString();
+        return acceptanceCriteria.replaceAll("[\\s\\u00A0]+", " ").trim();
+    }
 
-            if(teamBackLogTicketIdRLB.contains(teamBackLogTicketId)){
-                if (!acceptanceCriteria.isEmpty()) {
-                    if (validAcceptanceCriteriaObject != null) {
+    private String validateAcceptanceCriteria(
+            String acceptanceCriteria, Map<String, Object> validAcceptanceCriteriaObject, boolean isTeamBackLogRLB) {
 
-                        String expectedPattern = (String) validAcceptanceCriteriaObject.get(TEXTO);
-
-                        expectedPattern = expectedPattern
-                                .replace("{0}", "[A-Za-z\\s-/.\\&]+");
-
-                        String regexPattern = expectedPattern
-                                .replaceAll("\\s+", "\\\\s+")
-                                .replace("\\.", "\\\\.");
-                        regexPattern = regexPattern
-                                .replace("{1}", "(SDATOOL-\\d{5}|SDATOOL\\s+\\d{5})(.*?)\\s*,")+"?";
-
-
-                        Pattern pattern = Pattern.compile(regexPattern);
-                        Matcher matcher = pattern.matcher(acceptanceCriteria);
-
-                        if (matcher.matches()) {
-                            message = String.format(MSG_RULE_VALID, acceptanceCriteria);
-                            isValid = true;
-                        } else {
-                            message = MSG_RULE_CRITERIOFORMATO;
-                        }
-
-                    } else {
-                        message = MSG_RULE_TIPODESARROLLO;
-                    }
-                } else {
-                    message = MSG_RULE_CRITEROACEPTACION;
-                }
-            } else{
-
-                if (!acceptanceCriteria.isEmpty()) {
-                    if (validAcceptanceCriteriaObject != null) {
-                        String expectedPattern = (String) validAcceptanceCriteriaObject.get(TEXTO);
-
-                        expectedPattern = expectedPattern
-                                .replace("{0}", "[A-Za-z\\s-/.\\&]+");
-
-                        String regexPattern = expectedPattern
-                                .replaceAll("\\s+", "\\\\s+")
-                                .replaceAll("\\.", "\\\\.");
-                        regexPattern = regexPattern
-                                .replace("{1}", "(SDATOOL-\\d{5}|SDATOOL\\s+\\d{5})(.*?)\\s*,")+"?";
-
-
-                        Pattern pattern = Pattern.compile(regexPattern);
-                        Matcher matcher = pattern.matcher(acceptanceCriteria);
-
-                        if (matcher.matches()) {
-                            message = String.format(MSG_RULE_VALID, acceptanceCriteria);
-                            isValid = true;
-                        } else {
-                            message = MSG_RULE_CRITERIOFORMATO;
-                        }
-                    } else {
-                        message = MSG_RULE_TIPODESARROLLO;
-                    }
-                } else {
-                    message = MSG_RULE_CRITEROACEPTACION;
-                }
-            }
-
-        } else{
-            if (!acceptanceCriteria.isEmpty()) {
-                if (validAcceptanceCriteriaObject != null) {
-                    String expectedPattern = (String) validAcceptanceCriteriaObject.get(TEXTO);
-                    String[] palabras = expectedPattern.split("\\s+");
-
-                    if (palabras.length >= 11) {
-                        message = String.format(MSG_RULE_VALID, acceptanceCriteria);
-                        isValid = true;
-                    } else {
-                        message = MSG_RULE_CRITERIOFORMATO;
-                    }
-
-                } else {
-                    message = MSG_RULE_TIPODESARROLLO;
-                }
-            } else {
-                message = MSG_RULE_CRITEROACEPTACION;
-            }
-
+        if (acceptanceCriteria.isEmpty()) {
+            return MSG_RULE_CRITEROACEPTACION;
         }
-        return buildValidationResult(message, isValid, isWarning, helpMessage, group);
+
+        if (validAcceptanceCriteriaObject == null) {
+            return MSG_RULE_TIPODESARROLLO;
+        }
+
+        String expectedPattern = (String) validAcceptanceCriteriaObject.get(TEXTO);
+        String regexPattern = buildRegexPattern(expectedPattern);
+
+        Pattern pattern = Pattern.compile(regexPattern);
+        Matcher matcher = pattern.matcher(acceptanceCriteria);
+
+        if (matcher.matches()) {
+            return String.format(MSG_RULE_VALID, acceptanceCriteria);
+        }
+
+        return MSG_RULE_CRITERIOFORMATO;
+    }
+
+    private String validateAcceptanceCriteriaForOtherTypes(
+            String acceptanceCriteria, Map<String, Object> validAcceptanceCriteriaObject) {
+
+        if (acceptanceCriteria.isEmpty()) {
+            return MSG_RULE_CRITEROACEPTACION;
+        }
+
+        if (validAcceptanceCriteriaObject == null) {
+            return MSG_RULE_TIPODESARROLLO;
+        }
+
+        String expectedPattern = (String) validAcceptanceCriteriaObject.get(TEXTO);
+        String[] palabras = expectedPattern.split("\\s+");
+
+        if (palabras.length >= 11) {
+            return String.format(MSG_RULE_VALID, acceptanceCriteria);
+        }
+
+        return MSG_RULE_CRITERIOFORMATO;
+    }
+
+    private String buildRegexPattern(String expectedPattern) {
+        expectedPattern = expectedPattern.replace("{0}", "[A-Za-z\\s-/.\\&]+");
+        return expectedPattern
+                .replaceAll("\\s+", "\\\\s+")
+                .replace("\\.", "\\\\.")
+                .replace("{1}", "(SDATOOL-\\d{5}|SDATOOL\\s+\\d{5})(.*?)\\s*,")+"?";
     }
 
     public Map<String, Object> getValidationTeamAssigned(String tipoDesarrollo, boolean validacionEnvioFormulario, String helpMessage, String group) {
