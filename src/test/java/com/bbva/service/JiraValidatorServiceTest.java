@@ -126,7 +126,10 @@ class JiraValidatorServiceTest {
     }
 
     private List<InfoJiraProject> getInfoJiraProjectQuery(){
-        return List.of(new InfoJiraProject());
+        return List.of(new InfoJiraProject("SDATOOL-45035","Datos Locales","","naysha.arista@bbva.com","1","Scrum Master","7920415","Peru - PER DAT Local Ingestor Team 2"),
+                new InfoJiraProject("SDATOOL-45035","Datos Locales","","carlos.jimenez.aguilar@bbva.com","5","Product Owner","7920415","Peru - PER DAT Local Ingestor Team 2"),
+                new InfoJiraProject("SDATOOL-45035","Datos Locales","","humberto.begazo@bbva.com","1","Scrum Master","7920415","Peru - PER DAT Local Ingestor Team 2"),
+                new InfoJiraProject("SDATOOL-45035","Datos Locales","","anthony.leyton@bbva.com","5","Product Owner","7920415","Peru - PER DAT Local Ingestor Team 2"));
     }
 
     private String getResponseJiraQueryMalla(){
