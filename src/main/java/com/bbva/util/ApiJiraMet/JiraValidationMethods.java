@@ -35,17 +35,13 @@ public class JiraValidationMethods {
     private final String currentQ;
     private final String teamBackLogDQAId = "2461905";
 
-    public JiraValidationMethods(String jiraCode, JsonObject jiraTicketResult, String featureLinkCode, JsonObject featureLinkResult) {
+    public JiraValidationMethods(String jiraCode, JsonObject jiraTicketResult, String featureLinkCode, JsonObject featureLinkResult, String currentQ) {
         this.jiraCode = jiraCode;
         this.jiraTicketResult = jiraTicketResult;
         this.featureLinkCode = featureLinkCode;
         this.featureLinkResult = featureLinkResult;
         this.isInTableroDQA = false;
-        this.currentQ = getCurrentQ();
-    }
-
-    public String getCurrentQ(){
-        return InfoJiraProjectDao.getInstance().currentQ();
+        this.currentQ = currentQ;
     }
 
     public Map<String, Object> getValidatorValidateSummaryHUTType(String helpMessage, String group) {

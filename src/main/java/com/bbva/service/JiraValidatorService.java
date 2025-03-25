@@ -5,7 +5,6 @@ import com.bbva.core.abstracts.IDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dao.InfoJiraProjectDao;
 import com.bbva.dao.JiraValidatorLogDao;
-import com.bbva.dao.ProjectDao;
 import com.bbva.dto.jira.request.JiraValidatorByUrlRequest;
 import com.bbva.dto.jira.response.JiraMessageResponseDTO;
 import com.bbva.dto.jira.response.JiraResponseDTO;
@@ -31,6 +30,7 @@ public class JiraValidatorService {
     private static final Logger LOGGER = Logger.getLogger(JiraValidatorService.class.getName());
     private final JiraApiService jiraApiService;
     private final JiraValidatorLogDao jiraValidatorLogDao;
+    private final InfoJiraProjectDao infoJiraProjectDao;
     private static final String GROUP_TICKET = "Ticket";
     private static final String GROUP_FEATURE_LINK = "Feature Link";
     private static final String GROUP_PR = "PR";
@@ -44,9 +44,10 @@ public class JiraValidatorService {
             ,"6037755"//FIN
     );
 
-    public JiraValidatorService(JiraApiService jiraApiService, JiraValidatorLogDao jiraValidatorLogDao) {
+    public JiraValidatorService(JiraApiService jiraApiService, JiraValidatorLogDao jiraValidatorLogDao, InfoJiraProjectDao infoJiraProjectDao) {
         this.jiraApiService = jiraApiService;
         this.jiraValidatorLogDao = jiraValidatorLogDao;
+        this.infoJiraProjectDao = infoJiraProjectDao;
     }
 
     public IDataResult<JiraResponseDTO> getValidatorByUrl(JiraValidatorByUrlRequest dto) throws Exception {
@@ -60,7 +61,8 @@ public class JiraValidatorService {
         int successCount = 0;
         int errorCount = 0;
         int warningCount = 0;
-        List<InfoJiraProject> infoJiraProjectList = InfoJiraProjectDao.getInstance().list();
+        List<InfoJiraProject> infoJiraProjectList = infoJiraProjectDao.list();
+        String currentQ = infoJiraProjectDao.currentQ();
         String acceptanceCriteriaGroup = "Criterio de Aceptacion";
 
         JsonObject issueMetadataJsonObject = getMetadataIssues(dto, List.of(dto.getUrlJira()));
@@ -68,12 +70,11 @@ public class JiraValidatorService {
             throw new HandledException("500", "no existe datos del ticket jira");
         }
         JsonObject jiraTicketResult = issueMetadataJsonObject.getAsJsonArray(ISSUES).get(0).getAsJsonObject();
-        String prs = metadataPRs(jiraTicketResult, dto);
         
         String featureLink = getFeatureLink(jiraTicketResult);
-
         JsonObject featureLinkMetadataJsonObject = getMetadataIssues(dto, List.of(featureLink));
-        
+
+        String prs = metadataPRs(jiraTicketResult, dto);
         jiraTicketResult.getAsJsonObject(FIELDS).add("prs", JsonParser.parseString(prs).getAsJsonArray());
 
         JsonArray subTasks = jiraTicketResult
@@ -84,7 +85,7 @@ public class JiraValidatorService {
         ArrayList<Map<String, Object>> resultFinal = new ArrayList<>();
         int ruleIdCounter = 1;
 
-        var instancesRules = new JiraValidationMethods(dto.getUrlJira(), jiraTicketResult,featureLink,featureLinkMetadataJsonObject);
+        var instancesRules = new JiraValidationMethods(dto.getUrlJira(), jiraTicketResult,featureLink,featureLinkMetadataJsonObject,currentQ);
         infoJiraProjectList = infoJiraProjectList.stream().filter(obj -> obj.getTeamBackLogId() != null)
                 .collect(Collectors.toList());
 

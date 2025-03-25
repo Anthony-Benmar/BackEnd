@@ -1,9 +1,11 @@
 package com.bbva.service;
 
 import com.bbva.core.abstracts.IDataResult;
+import com.bbva.dao.InfoJiraProjectDao;
 import com.bbva.dao.JiraValidatorLogDao;
 import com.bbva.dto.jira.request.JiraValidatorByUrlRequest;
 import com.bbva.dto.jira.response.JiraResponseDTO;
+import com.bbva.entities.jiravalidator.InfoJiraProject;
 import com.bbva.entities.jiravalidator.JiraValidatorLogEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
 class JiraValidatorServiceTest {
+    private InfoJiraProjectDao infoJiraProjectDaoMock;
     private JiraApiService jiraApiServiceMock;
     private JiraValidatorLogDao jiraValidatorLogDaoMock;
     private JiraValidatorService jiraValidatorService;
@@ -22,7 +25,8 @@ class JiraValidatorServiceTest {
     void setUp() {
         jiraApiServiceMock = mock(JiraApiService.class);
         jiraValidatorLogDaoMock = mock(JiraValidatorLogDao.class);
-        jiraValidatorService = new JiraValidatorService(jiraApiServiceMock,jiraValidatorLogDaoMock);
+        infoJiraProjectDaoMock = mock(InfoJiraProjectDao.class);
+        jiraValidatorService = new JiraValidatorService(jiraApiServiceMock,jiraValidatorLogDaoMock,infoJiraProjectDaoMock);
     }
 
     @Test
@@ -61,7 +65,9 @@ class JiraValidatorServiceTest {
         when(jiraApiServiceMock.GetJiraAsync(requestMock.getUserName(),
                 requestMock.getToken(), urlDependency))
                 .thenReturn(getResponseDependencyQuery());
-
+        when(infoJiraProjectDaoMock.currentQ())
+                .thenReturn("2025-Q1");
+        when(infoJiraProjectDaoMock.list()).thenReturn(getInfoJiraProjectQuery());
         IDataResult<JiraResponseDTO> result = jiraValidatorService.getValidatorByUrl(requestMock);
         verify(jiraValidatorLogDaoMock, times(1)).insertJiraValidatorLog(any(JiraValidatorLogEntity.class));
         assertNotNull(result);
@@ -73,6 +79,10 @@ class JiraValidatorServiceTest {
         request.setUrlJira("DEDATIOEN4-11480");
         request.setToken("asd");
         return request;
+    }
+
+    private List<InfoJiraProject> getInfoJiraProjectQuery(){
+        return List.of(new InfoJiraProject());
     }
 
     private String getResponseJiraQuery(){

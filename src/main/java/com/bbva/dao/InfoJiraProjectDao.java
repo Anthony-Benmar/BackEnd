@@ -21,14 +21,11 @@ public class InfoJiraProjectDao {
         if (Objects.isNull(instance)) {
             instance = new InfoJiraProjectDao();
         }
-
         return instance;
     } 
 
     public List<InfoJiraProject> list() {
-        
         List<InfoJiraProject> infoJiraProjectList = null;
-
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         try (SqlSession session = sqlSessionFactory.openSession()) {
             InfoJiraProjectMapper mapper = session.getMapper(InfoJiraProjectMapper.class);
@@ -37,9 +34,7 @@ public class InfoJiraProjectDao {
         catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
         }
-
         return infoJiraProjectList;
-
     }
 
     public String currentQ(){
