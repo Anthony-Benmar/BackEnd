@@ -9,32 +9,10 @@ import static org.junit.jupiter.api.Assertions.*;
 class JiraValidatorLogEntityTest {
 
     @Test
-    void testJiraValidatorLogEntityBuilderAndGetters() {
+    void testJiraValidatorLogEntityBuilderAndGettersOne() {
         Long id = 1L;
         LocalDateTime fecha = LocalDateTime.now();
         String usuario = "testUser";
-        String nombre = "Test Name";
-        String ticket = "TICKET-123";
-        String regla1 = "Valid";
-        String regla2 = "No Valid";
-        String regla3 = "Valid";
-        String regla4 = "Valid";
-        String regla5 = "Valid";
-        String regla6 = "Valid";
-        String regla7 = "Valid";
-        String regla8 = "Valid";
-        String regla9 = "Valid";
-        String regla10 = "Valid";
-        String regla11 = "Valid";
-        String regla12 = "Valid";
-        String regla13 = "Valid";
-        String regla14 = "Valid";
-        String regla15 = "Valid";
-        String regla16 = "Valid";
-        String regla17 = "Valid";
-        String regla18 = "Valid";
-        String regla19 = "Valid";
-        String regla20 = "Valid";
         String regla21 = "Valid";
         String regla22 = "Valid";
         String regla23 = "Valid";
@@ -60,28 +38,6 @@ class JiraValidatorLogEntityTest {
                 .id(id)
                 .fecha(fecha)
                 .usuario(usuario)
-                .nombre(nombre)
-                .ticket(ticket)
-                .regla1(regla1)
-                .regla2(regla2)
-                .regla3(regla3)
-                .regla4(regla4)
-                .regla5(regla5)
-                .regla6(regla6)
-                .regla7(regla7)
-                .regla8(regla8)
-                .regla9(regla9)
-                .regla10(regla10)
-                .regla11(regla11)
-                .regla12(regla12)
-                .regla13(regla13)
-                .regla14(regla14)
-                .regla15(regla15)
-                .regla16(regla16)
-                .regla17(regla17)
-                .regla18(regla18)
-                .regla19(regla19)
-                .regla20(regla20)
                 .regla21(regla21)
                 .regla22(regla22)
                 .regla23(regla23)
@@ -108,6 +64,80 @@ class JiraValidatorLogEntityTest {
         assertEquals(id, entity.getId());
         assertEquals(fecha, entity.getFecha());
         assertEquals(usuario, entity.getUsuario());
+        assertEquals(regla21, entity.getRegla21());
+        assertEquals(regla22, entity.getRegla22());
+        assertEquals(regla23, entity.getRegla23());
+        assertEquals(regla24, entity.getRegla24());
+        assertEquals(regla25, entity.getRegla25());
+        assertEquals(regla26, entity.getRegla26());
+        assertEquals(regla27, entity.getRegla27());
+        assertEquals(regla28, entity.getRegla28());
+        assertEquals(regla29, entity.getRegla29());
+        assertEquals(regla30, entity.getRegla30());
+        assertEquals(regla31, entity.getRegla31());
+        assertEquals(regla32, entity.getRegla32());
+        assertEquals(regla33, entity.getRegla33());
+        assertEquals(regla34, entity.getRegla34());
+        assertEquals(regla35, entity.getRegla35());
+        assertEquals(regla36, entity.getRegla36());
+        assertEquals(regla37, entity.getRegla37());
+        assertEquals(regla38, entity.getRegla38());
+        assertEquals(regla39, entity.getRegla39());
+        assertEquals(regla40, entity.getRegla40());
+    }
+
+
+    @Test
+    void testJiraValidatorLogEntityBuilderAndGettersTwo() {
+        String nombre = "Test Name";
+        String ticket = "TICKET-123";
+        String regla1 = "Valid";
+        String regla2 = "No Valid";
+        String regla3 = "Valid";
+        String regla4 = "Valid";
+        String regla5 = "Valid";
+        String regla6 = "Valid";
+        String regla7 = "Valid";
+        String regla8 = "Valid";
+        String regla9 = "Valid";
+        String regla10 = "Valid";
+        String regla11 = "Valid";
+        String regla12 = "Valid";
+        String regla13 = "Valid";
+        String regla14 = "Valid";
+        String regla15 = "Valid";
+        String regla16 = "Valid";
+        String regla17 = "Valid";
+        String regla18 = "Valid";
+        String regla19 = "Valid";
+        String regla20 = "Valid";
+
+        JiraValidatorLogEntity entity = JiraValidatorLogEntity.builder()
+                .nombre(nombre)
+                .ticket(ticket)
+                .regla1(regla1)
+                .regla2(regla2)
+                .regla3(regla3)
+                .regla4(regla4)
+                .regla5(regla5)
+                .regla6(regla6)
+                .regla7(regla7)
+                .regla8(regla8)
+                .regla9(regla9)
+                .regla10(regla10)
+                .regla11(regla11)
+                .regla12(regla12)
+                .regla13(regla13)
+                .regla14(regla14)
+                .regla15(regla15)
+                .regla16(regla16)
+                .regla17(regla17)
+                .regla18(regla18)
+                .regla19(regla19)
+                .regla20(regla20)
+                .build();
+
+        assertNotNull(entity);
         assertEquals(nombre, entity.getNombre());
         assertEquals(ticket, entity.getTicket());
         assertEquals(regla1, entity.getRegla1());
@@ -130,26 +160,6 @@ class JiraValidatorLogEntityTest {
         assertEquals(regla18, entity.getRegla18());
         assertEquals(regla19, entity.getRegla19());
         assertEquals(regla20, entity.getRegla20());
-        assertEquals(regla21, entity.getRegla21());
-        assertEquals(regla22, entity.getRegla22());
-        assertEquals(regla23, entity.getRegla23());
-        assertEquals(regla24, entity.getRegla24());
-        assertEquals(regla25, entity.getRegla25());
-        assertEquals(regla26, entity.getRegla26());
-        assertEquals(regla27, entity.getRegla27());
-        assertEquals(regla28, entity.getRegla28());
-        assertEquals(regla29, entity.getRegla29());
-        assertEquals(regla30, entity.getRegla30());
-        assertEquals(regla31, entity.getRegla31());
-        assertEquals(regla32, entity.getRegla32());
-        assertEquals(regla33, entity.getRegla33());
-        assertEquals(regla34, entity.getRegla34());
-        assertEquals(regla35, entity.getRegla35());
-        assertEquals(regla36, entity.getRegla36());
-        assertEquals(regla37, entity.getRegla37());
-        assertEquals(regla38, entity.getRegla38());
-        assertEquals(regla39, entity.getRegla39());
-        assertEquals(regla40, entity.getRegla40());
     }
 
     @Test
