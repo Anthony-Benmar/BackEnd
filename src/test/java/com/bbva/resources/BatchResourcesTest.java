@@ -4,6 +4,7 @@ import com.bbva.core.abstracts.IDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dto.batch.request.InsertJobExecutionActiveRequest;
 import com.bbva.dto.batch.request.InsertJobExecutionStatusRequest;
+import com.bbva.entities.InsertEntity;
 import com.bbva.service.BatchService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

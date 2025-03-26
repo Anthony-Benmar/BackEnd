@@ -1,15 +1,19 @@
 package com.bbva.service;
 
 import com.bbva.core.abstracts.IDataResult;
+import com.bbva.core.results.DataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dao.BatchDao;
-import com.bbva.dto.batch.request.InsertJobExecutionActiveRequest;
-import com.bbva.dto.batch.request.InsertJobExecutionStatusRequest;
+import com.bbva.dto.batch.request.*;
+import com.bbva.dto.batch.response.InsertAJIFJobExecutionResponseDTO;
+import com.bbva.dto.batch.response.JobExecutionFilterResponseDTO;
+import com.bbva.entities.InsertEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -30,7 +34,7 @@ class BatchServiceTest {
     }
 
     @Test
-    void testGetLastJobExecutionStatusDate() throws Exception {
+    void testGetLastJobExecutionStatusDate() {
         when(batchDaoMock.getLastJobExecutionStatusDate()).thenReturn(getLastJobExecutionStatusDate());
         IDataResult<String> result = batchService.getLastJobExecutionStatusDate();
         assertNotNull(result);
@@ -70,6 +74,36 @@ class BatchServiceTest {
         IDataResult<Void> result = batchService.saveJobExecutionActive(requestList);
         assertEquals("No se pudo realizar el registro: Database error", result.message);
         assertEquals("500", result.status);
+    }
+
+    @Test
+    void testFilter() {
+        JobExecutionFilterRequestDTO request = new JobExecutionFilterRequestDTO();
+        when(batchDaoMock.filter(request)).thenReturn(getFilterResponseDto());
+        IDataResult<JobExecutionFilterResponseDTO> result = batchService.filter(request);
+        assertNotNull(result);
+        assertTrue(result.success);
+        assertEquals("Succesfull", result.message);
+    }
+
+    @Test
+    void testInsertReliabilityIncidence() {
+        InsertReliabilityIncidenceDTO request = new InsertReliabilityIncidenceDTO();
+        when(batchDaoMock.insertReliabilityIncidence(request)).thenReturn(getResponseInsertReliabilityIncidence());
+        IDataResult<InsertEntity> result = batchService.insertReliabilityIncidence(request);
+        assertNotNull(result);
+        assertTrue(result.success);
+        assertEquals("Job guardado correctamente", result.message);
+    }
+
+    @Test
+    void testInsertAJIFJobExecution() {
+        List<InsertAJIFJobExecutionRequest> request = new ArrayList<>();
+        when(batchDaoMock.insertAJIFJobExecutionRequest(request)).thenReturn(getResponseInsertAJIFJobExecution());
+        IDataResult<InsertAJIFJobExecutionResponseDTO> result = batchService.insertAJIFJobExecution(request);
+        assertNotNull(result);
+        assertTrue(result.success);
+        assertEquals("Succesfull", result.message);
     }
 
     private List<InsertJobExecutionStatusRequest> getInsertJobExecutionStatusRequestList(){
@@ -143,7 +177,16 @@ class BatchServiceTest {
         return "2024-10-17 14:35:44";
     }
 
-    private IDataResult<String> getResponseDto() {
-        return new SuccessDataResult<>("");
+    private JobExecutionFilterResponseDTO getFilterResponseDto() {
+        return new JobExecutionFilterResponseDTO();
     }
+
+    private InsertEntity getResponseInsertReliabilityIncidence(){
+        return new InsertEntity();
+    }
+
+    private DataResult<InsertAJIFJobExecutionResponseDTO> getResponseInsertAJIFJobExecution() {
+        return new SuccessDataResult<>(new InsertAJIFJobExecutionResponseDTO());
+    }
+
 }
