@@ -1,6 +1,9 @@
 package com.bbva.service;
 
+import com.bbva.core.abstracts.IDataResult;
+import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dao.BatchDao;
+import com.bbva.dto.batch.request.InsertJobExecutionActiveRequest;
 import com.bbva.dto.batch.request.InsertJobExecutionStatusRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,16 +32,44 @@ class BatchServiceTest {
     @Test
     void testGetLastJobExecutionStatusDate() throws Exception {
         when(batchDaoMock.getLastJobExecutionStatusDate()).thenReturn(getLastJobExecutionStatusDate());
-        String response = batchDaoMock.getLastJobExecutionStatusDate();
-        assertEquals(response, getLastJobExecutionStatusDate());
+        IDataResult<String> result = batchService.getLastJobExecutionStatusDate();
+        assertNotNull(result);
+        assertTrue(result.success);
+        assertEquals("Succesfull", result.message);
     }
 
     @Test
     void testSaveJobExecutionStatus() {
         List<InsertJobExecutionStatusRequest> requestList = getInsertJobExecutionStatusRequestList();
         doNothing().when(batchDaoMock).saveJobExecutionStatus(requestList);
-        batchDaoMock.saveJobExecutionStatus(requestList);
+        batchService.saveJobExecutionStatus(requestList);
         verify(batchDaoMock, times(1)).saveJobExecutionStatus(requestList);
+    }
+
+    @Test
+    void testSaveJobExecutionStatusError() {
+        List<InsertJobExecutionStatusRequest> requestList = getInsertJobExecutionStatusRequestList();
+        doThrow(new RuntimeException("Database error")).when(batchDaoMock).saveJobExecutionStatus(requestList);
+        IDataResult<Void> result = batchService.saveJobExecutionStatus(requestList);
+        assertEquals("No se pudo realizar el registro: Database error", result.message);
+        assertEquals("500", result.status);
+    }
+
+    @Test
+    void testSaveJobExecutionActive() {
+        List<InsertJobExecutionActiveRequest> requestList = getInsertJobExcecutionActiveRequestList();
+        doNothing().when(batchDaoMock).saveJobExecutionActive(requestList);
+        batchService.saveJobExecutionActive(requestList);
+        verify(batchDaoMock, times(1)).saveJobExecutionActive(requestList);
+    }
+
+    @Test
+    void testSaveJobExecutionActiveError() {
+        List<InsertJobExecutionActiveRequest> requestList = getInsertJobExcecutionActiveRequestList();
+        doThrow(new RuntimeException("Database error")).when(batchDaoMock).saveJobExecutionActive(requestList);
+        IDataResult<Void> result = batchService.saveJobExecutionActive(requestList);
+        assertEquals("No se pudo realizar el registro: Database error", result.message);
+        assertEquals("500", result.status);
     }
 
     private List<InsertJobExecutionStatusRequest> getInsertJobExecutionStatusRequestList(){
@@ -78,8 +109,41 @@ class BatchServiceTest {
                 request2);
     }
 
+    private List<InsertJobExecutionActiveRequest> getInsertJobExcecutionActiveRequestList(){
+        InsertJobExecutionActiveRequest request1 = new InsertJobExecutionActiveRequest();
+        request1.setOrderId("ORD001");
+        request1.setJobName("DataProcessingJob");
+        request1.setSchedtable("DailySchedule");
+        request1.setApplication("DataWarehouse");
+        request1.setSubApplication("ETLPipeline");
+        request1.setOdate("2025-03-26");
+        request1.setStartTime("10:00");
+        request1.setEndTime("10:30");
+        request1.setHost("ServerA");
+        request1.setRunAs("batchUser");
+        request1.setStatus("SUCCESS");
+
+        InsertJobExecutionActiveRequest request2 = new InsertJobExecutionActiveRequest();
+        request2.setOrderId("ORD002");
+        request2.setJobName("CleanupJob");
+        request2.setSchedtable("WeeklyCleanup");
+        request2.setApplication("DataPlatform");
+        request2.setSubApplication("CleanupModule");
+        request2.setOdate("2025-03-26");
+        request2.setStartTime("01:00");
+        request2.setEndTime("01:45");
+        request2.setHost("ServerB");
+        request2.setRunAs("adminUser");
+        request2.setStatus("FAILED");
+
+        return List.of(request1,request2);
+    }
+
     private String getLastJobExecutionStatusDate(){
         return "2024-10-17 14:35:44";
     }
 
+    private IDataResult<String> getResponseDto() {
+        return new SuccessDataResult<>("");
+    }
 }

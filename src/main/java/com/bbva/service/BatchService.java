@@ -34,7 +34,7 @@ public class BatchService {
             batchDao.saveJobExecutionStatus(request);
             return new SuccessDataResult<>(null);
         } catch (Exception e) {
-            return new ErrorDataResult<>(null,"500","No se pudo realizar el registro" + e.getMessage());
+            return new ErrorDataResult<>(null,"500","No se pudo realizar el registro: " + e.getMessage());
         }
     }
 

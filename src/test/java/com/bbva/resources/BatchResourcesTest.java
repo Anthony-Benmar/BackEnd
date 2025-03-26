@@ -2,6 +2,7 @@ package com.bbva.resources;
 
 import com.bbva.core.abstracts.IDataResult;
 import com.bbva.core.results.SuccessDataResult;
+import com.bbva.dto.batch.request.InsertJobExecutionActiveRequest;
 import com.bbva.dto.batch.request.InsertJobExecutionStatusRequest;
 import com.bbva.service.BatchService;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,9 +40,18 @@ class BatchResourcesTest {
     @Test
     void testSaveJobExecutionStatus() {
         List<InsertJobExecutionStatusRequest> requestList = getInsertJobExecutionStatusRequestList();
-        when(batchServiceMock.saveJobExecutionStatus(requestList))
-                .thenReturn(new SuccessDataResult<>(null));
-        IDataResult<Void> result = batchServiceMock.saveJobExecutionStatus(requestList);
+        when(batchServiceMock.saveJobExecutionStatus(requestList)).thenReturn(new SuccessDataResult<>(null));
+        IDataResult<Void> result = batchResources.saveJobExecutionStatus(requestList);
+        assertNotNull(result);
+        assertTrue(result.success);
+        assertEquals("Succesfull", result.message);
+    }
+
+    @Test
+    void testSaveJobExecutionActive() {
+        List<InsertJobExecutionActiveRequest> requestList = getInsertJobExcecutionActiveRequestList();
+        when(batchServiceMock.saveJobExecutionActive(requestList)).thenReturn(new SuccessDataResult<>(null));
+        IDataResult<Void> result = batchResources.saveJobExecutionActive(requestList);
         assertNotNull(result);
         assertTrue(result.success);
         assertEquals("Succesfull", result.message);
@@ -82,6 +92,36 @@ class BatchResourcesTest {
 
         return List.of(request1,
                 request2);
+    }
+
+    private List<InsertJobExecutionActiveRequest> getInsertJobExcecutionActiveRequestList(){
+        InsertJobExecutionActiveRequest request1 = new InsertJobExecutionActiveRequest();
+        request1.setOrderId("ORD001");
+        request1.setJobName("DataProcessingJob");
+        request1.setSchedtable("DailySchedule");
+        request1.setApplication("DataWarehouse");
+        request1.setSubApplication("ETLPipeline");
+        request1.setOdate("2025-03-26");
+        request1.setStartTime("10:00");
+        request1.setEndTime("10:30");
+        request1.setHost("ServerA");
+        request1.setRunAs("batchUser");
+        request1.setStatus("SUCCESS");
+
+        InsertJobExecutionActiveRequest request2 = new InsertJobExecutionActiveRequest();
+        request2.setOrderId("ORD002");
+        request2.setJobName("CleanupJob");
+        request2.setSchedtable("WeeklyCleanup");
+        request2.setApplication("DataPlatform");
+        request2.setSubApplication("CleanupModule");
+        request2.setOdate("2025-03-26");
+        request2.setStartTime("01:00");
+        request2.setEndTime("01:45");
+        request2.setHost("ServerB");
+        request2.setRunAs("adminUser");
+        request2.setStatus("FAILED");
+
+        return List.of(request1,request2);
     }
 
     private IDataResult<String> getResponseDto() {

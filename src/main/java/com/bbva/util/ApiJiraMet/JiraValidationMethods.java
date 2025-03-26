@@ -704,7 +704,7 @@ public class JiraValidationMethods {
     }
 
     public Map<String, Object> getValidationAcceptanceCriteria(
-            List<String> teamBackLogTicketIdRLB, String tipoDesarrollo,
+            String teamBackLogId,List<String> teamBackLogTicketIdRLB, String tipoDesarrollo,
             String helpMessage, String group) {
         String message;
         boolean isValid;
@@ -718,9 +718,7 @@ public class JiraValidationMethods {
                 .trim();
 
         if (tipoDesarrollo.equalsIgnoreCase(MALLAS)) {
-            String teamBackLogTicketId = jiraTicketResult.getAsJsonObject(FIELDS)
-                    .get("customfield_13301").getAsString();
-            boolean isTeamBackLogRLB = teamBackLogTicketIdRLB.contains(teamBackLogTicketId);
+            boolean isTeamBackLogRLB = teamBackLogTicketIdRLB.contains(teamBackLogId);
             if (isTeamBackLogRLB) {
                 message = validateAcceptanceCriteriaReliability(acceptanceCriteria, validAcceptanceCriteriaObject);
             } else {
@@ -729,7 +727,7 @@ public class JiraValidationMethods {
         } else {
             message = validateAcceptanceCriteriaForOtherTypes(acceptanceCriteria, validAcceptanceCriteriaObject);
         }
-        isValid = message.startsWith(MSG_RULE_VALID);
+        isValid = message.startsWith("Es válido: ");
 
         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
@@ -1000,7 +998,13 @@ public class JiraValidationMethods {
                 !featureLinkResult.getAsJsonArray(ISSUES).isEmpty() &&
                 featureLinkResult.getAsJsonArray(ISSUES)
                         .get(0).getAsJsonObject().getAsJsonObject(FIELDS)
-                        .has(CUSTOMFIELD_10264)) {
+                        .has(CUSTOMFIELD_10264) &&
+                !featureLinkResult
+                        .getAsJsonArray(ISSUES)
+                        .get(0).getAsJsonObject()
+                        .getAsJsonObject(FIELDS)
+                        .get(CUSTOMFIELD_10264).isJsonNull()
+        ) {
             return featureLinkResult
                     .getAsJsonArray(ISSUES)
                     .get(0).getAsJsonObject()

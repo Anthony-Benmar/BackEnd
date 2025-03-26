@@ -6,14 +6,14 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ProjectInfoFilterRequest {
-    private Integer page;
-    private Integer records_amount;
-    private Integer projectId;
-    private String sdatoolIdOrProjectName;
-    private String domainId;
-    private String statusType;
-    private String projectType;
-    private String wowType;
+    public Integer page;
+    public Integer records_amount;
+    public Integer projectId;
+    public String sdatoolIdOrProjectName;
+    public String domainId;
+    public String statusType;
+    public String projectType;
+    public String wowType;
     private String startQ;
     private String endQ;
 }

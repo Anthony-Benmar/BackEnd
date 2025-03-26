@@ -314,10 +314,10 @@ public class ProjectDao {
         recordsCount = (lista.size() > 0) ? (int) lista.stream().count() : 0;
         pagesAmount = dto.getRecords_amount() > 0 ? (int) Math.ceil(recordsCount.floatValue() / dto.getRecords_amount().floatValue()) : 1;
 
-        if (dto.getRecords_amount() > 0) {
+        if (dto.records_amount > 0) {
             lista = lista.stream()
-                    .skip(dto.getRecords_amount() * (dto.getPage() - 1))
-                    .limit(dto.getRecords_amount())
+                    .skip(dto.records_amount * (dto.page - 1))
+                    .limit(dto.records_amount)
                     .collect(Collectors.toList());
         }
 
