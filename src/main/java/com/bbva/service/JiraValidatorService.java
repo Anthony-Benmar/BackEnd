@@ -22,7 +22,6 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 import static com.bbva.common.jiraValidador.JiraValidatorConstantes.*;
 
@@ -88,7 +87,7 @@ public class JiraValidatorService {
         var instancesRules = new JiraValidationMethods(dto.getUrlJira(), jiraTicketResult,featureLink,featureLinkMetadataJsonObject,currentQ);
         if (!infoJiraProjectList.isEmpty()) {
             infoJiraProjectList = infoJiraProjectList.stream().filter(obj -> obj.getTeamBackLogId() != null)
-                    .collect(Collectors.toList());
+                    .toList();
         }
 
         var result1 = instancesRules.getValidatorValidateSummaryHUTType("Validar el tipo de desarrollo en el summary", GROUP_TICKET);
@@ -172,10 +171,10 @@ public class JiraValidatorService {
 
             message.setVisible(config.isVisible());
             message.setMessage((String) result.get("message"));
-            if ((Boolean) result.get("isWarning")) {
+            if (Boolean.TRUE.equals(result.get("isWarning"))) {
                 message.setStatus("warning");
                 warningCount++;
-            } else if ((Boolean) result.get("isValid")) {
+            } else if (Boolean.TRUE.equals(result.get("isValid"))) {
                 message.setStatus("success");
                 successCount++;
             } else {
@@ -187,7 +186,7 @@ public class JiraValidatorService {
 
         jiraResponseDTO.setData(messages.stream().filter(JiraMessageResponseDTO::getVisible)
                 .sorted(Comparator.comparing(JiraMessageResponseDTO::getOrder))
-                .collect(Collectors.toList()));
+                .toList());
         jiraResponseDTO.setSuccessCount(successCount);
         jiraResponseDTO.setErrorCount(errorCount);
         jiraResponseDTO.setWarningCount(warningCount);

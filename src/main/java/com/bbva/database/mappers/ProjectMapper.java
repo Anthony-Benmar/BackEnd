@@ -90,10 +90,10 @@ public interface ProjectMapper {
     boolean updateProject(ProjectPortafolioEntity project);
 
     @Select("CALL SP_UPDATE_PROJECT_INFO(" +
-             "#{sdatoolId}, #{projectName}, #{projectDesc}, #{portafolioCode}, #{regulatoryType}, #{ttvType}, #{domainId}, " +
-             "#{projectType}, #{categoryType}, #{classificationType}, #{startPiId}, #{endPiId}, #{finalStartPiId}, #{finalEndPiId}, " +
-             "#{wowType}, #{countryPriorityType}, #{statusType}, #{createAuditUser}, #{projectId})")
-     void updateProjectInfo(ProjectInfoDTO dto);
+            "#{sdatoolId}, #{projectName}, #{projectDesc}, #{portafolioCode}, #{regulatoryType}, #{ttvType}, #{domainId}, " +
+            "#{projectType}, #{categoryType}, #{classificationType}, #{startPiId}, #{endPiId}, #{finalStartPiId}, #{finalEndPiId}, " +
+            "#{wowType}, #{countryPriorityType}, #{statusType}, #{createAuditUser}, #{projectId})")
+    void updateProjectInfo(ProjectInfoDTO dto);
 
     @Delete("Delete from data_project WHERE project_id = #{projectId}")
     void deleteProject(@Param("projectId") int projectId);
@@ -139,10 +139,10 @@ public interface ProjectMapper {
                     "<foreach item='element' collection='listProjectDocuments' open='' separator=',' close=''>" +
                     "(" +
                     "#{element.projectId},",
-                    "#{element.documentType},",
-                    "#{element.documentUrl},",
-                    "now(),",
-                    "#{element.createAuditUser}" +
+            "#{element.documentType},",
+            "#{element.documentUrl},",
+            "now(),",
+            "#{element.createAuditUser}" +
                     ")" +
                     "</foreach>",
             "</script>"})
@@ -171,13 +171,13 @@ public interface ProjectMapper {
                     "<foreach item='element' collection='listProjectParticipants' open='' separator=',' close=''>" +
                     "(" +
                     "#{element.participantUser},",
-                    "#{element.participantName},",
-                    "#{element.participantEmail},",
-                    "#{element.projectId},",
-                    "#{element.projectRolType},",
-                    "#{element.piId},",
-                    "now(),",
-                    "#{element.createAuditUser}" +
+            "#{element.participantName},",
+            "#{element.participantEmail},",
+            "#{element.projectId},",
+            "#{element.projectRolType},",
+            "#{element.piId},",
+            "now(),",
+            "#{element.createAuditUser}" +
                     ")" +
                     "</foreach>",
             "</script>"})
@@ -247,19 +247,11 @@ public interface ProjectMapper {
             @Result(property = "updateAuditDate", column = "update_audit_date"),
             @Result(property = "updateAuditUser", column = "update_audit_user")
     })
-    List<ProjectInfoSelectResponse> projectInfoFilter(@Param("projectId") int projectId,
-                                                      @Param("sdatoolIdOrProjectName") String sdatoolId,
-                                                      @Param("domainId") String domainId,
-                                                      @Param("statusType") String statusType,
-                                                      @Param("projectType") String projectType,
-                                                      @Param("wowType") String wowType,
-                                                      @Param("startQ") String startQ,
-                                                      @Param("endQ") String endQ
-                                                      );
+    List<ProjectInfoSelectResponse> projectInfoFilter(@Param("dto") ProjectInfoFilterRequest dto);
+
     @Select("CALL SP_LIST_ALL_PROJECT_BY_DOMAIN(" +
             "#{projectId}," +
             "#{domainId})")
-
     @Results({ @Result(property = "projectId", column = "project_id"),
             @Result(property = "sdatoolId", column = "sdatool_id"),
             @Result(property = "projectName", column = "project_name"),
@@ -284,8 +276,8 @@ public interface ProjectMapper {
             @Result(property = "updateAuditUser", column = "update_audit_user") })
 
     List<ProjectInfoSelectAllByDomainDtoResponse> projectInfoFilterAllByDomain(@Param("projectId") int projectId,
-                                                                         @Param("domainId") int domainId);
-@Select("CALL SP_LIST_PROJECT_BY_DOMAIN(" +
+                                                                               @Param("domainId") int domainId);
+    @Select("CALL SP_LIST_PROJECT_BY_DOMAIN(" +
             "#{projectId}," +
             "#{domainId})")
 
@@ -295,7 +287,7 @@ public interface ProjectMapper {
             @Result(property = "domainId", column = "domain_id")
     })
     List<ProjectInfoSelectByDomainDtoResponse> projectInfoFilterByDomain(@Param("projectId") int projectId,
-                                                                               @Param("domainId") int domainId);
+                                                                         @Param("domainId") int domainId);
 
     @Delete("CALL SP_DELETE_DOCUMENT(#{projectId}, #{documentId}, #{updateAuditUser})")
     void deleteDocument(@Param("projectId") int projectId, @Param("documentId") int documentId, @Param("updateAuditUser") String updateAuditUser);

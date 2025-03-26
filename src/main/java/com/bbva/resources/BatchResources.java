@@ -3,6 +3,7 @@ package com.bbva.resources;
 import com.bbva.core.abstracts.IDataResult;
 import com.bbva.dto.batch.request.*;
 import com.bbva.dto.batch.response.*;
+import com.bbva.entities.InsertEntity;
 import com.bbva.service.BatchService;
 import com.bbva.util.Helper;
 
@@ -13,8 +14,8 @@ import java.util.List;
 @Path("/batch")
 @Produces(MediaType.APPLICATION_JSON)
 public class BatchResources {
-    private BatchService batchService = new BatchService();
-    private Helper helper = new Helper();
+    private final BatchService batchService = new BatchService();
+    private final Helper helper = new Helper();
 
     @GET
     @Path("/lastJobExecutionStatusDate")
@@ -39,7 +40,7 @@ public class BatchResources {
     @Path("/job_execution/status")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public IDataResult saveJobExecutionStatus(List<InsertJobExecutionStatusRequest> request){
+    public IDataResult<Void> saveJobExecutionStatus(List<InsertJobExecutionStatusRequest> request){
         return batchService.saveJobExecutionStatus(request);
     }
 
@@ -47,7 +48,7 @@ public class BatchResources {
     @Path("/job_execution/active")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public IDataResult saveJobExecutionActive(List<InsertJobExecutionActiveRequest> request){
+    public IDataResult<Void> saveJobExecutionActive(List<InsertJobExecutionActiveRequest> request){
         return batchService.saveJobExecutionActive(request);
     }
 
@@ -92,7 +93,7 @@ public class BatchResources {
     @Path("/reliability_incidence")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public IDataResult<InsertReliabilityIncidenceDTO> insertReliabilityIncidence(InsertReliabilityIncidenceDTO request){
+    public IDataResult<InsertEntity> insertReliabilityIncidence(InsertReliabilityIncidenceDTO request){
         return batchService.insertReliabilityIncidence(request);
     }
 

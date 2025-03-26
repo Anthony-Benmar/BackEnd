@@ -308,18 +308,16 @@ public class ProjectDao {
         var response = new ProjectInfoFilterResponse();
         try (SqlSession session = sqlSessionFactory.openSession()) {
             ProjectMapper projectMapper = session.getMapper(ProjectMapper.class);
-            lista = projectMapper.projectInfoFilter(dto.projectId, dto.sdatoolIdOrProjectName,
-                    dto.domainId, dto.statusType, dto.projectType, dto.wowType,
-                    dto.startQ, dto.endQ);
+            lista = projectMapper.projectInfoFilter(dto);
         }
 
         recordsCount = (lista.size() > 0) ? (int) lista.stream().count() : 0;
         pagesAmount = dto.getRecords_amount() > 0 ? (int) Math.ceil(recordsCount.floatValue() / dto.getRecords_amount().floatValue()) : 1;
 
-        if (dto.records_amount > 0) {
+        if (dto.getRecords_amount() > 0) {
             lista = lista.stream()
-                    .skip(dto.records_amount * (dto.page - 1))
-                    .limit(dto.records_amount)
+                    .skip(dto.getRecords_amount() * (dto.getPage() - 1))
+                    .limit(dto.getRecords_amount())
                     .collect(Collectors.toList());
         }
 
