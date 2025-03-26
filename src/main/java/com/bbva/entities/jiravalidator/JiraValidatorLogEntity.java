@@ -1,6 +1,5 @@
 package com.bbva.entities.jiravalidator;
 
-import com.bbva.entities.BaseEntity;
 import com.google.gson.annotations.SerializedName;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

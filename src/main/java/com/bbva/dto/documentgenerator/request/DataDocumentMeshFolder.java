@@ -1,4 +1,4 @@
-package com.bbva.dto.jira.request;
+package com.bbva.dto.documentgenerator.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,8 +11,8 @@ import java.util.List;
 @NoArgsConstructor
 @Getter
 @Setter
-public class DataDocumentosMallasFolders {
-    private String folder;
+public class DataDocumentMeshFolder {
+    private String folderName;
     private String xml;
-    private List<DataDocumentosMallasJobName> jobnames;
+    private List<DataDocumentMeshJobName> jobNames;
 }

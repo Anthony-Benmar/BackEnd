@@ -162,5 +162,6 @@ public class JiraApiService {
 
         return responseBodyString;
     }
+
 }
 

@@ -1,4 +1,4 @@
-package com.bbva.dto.jira.request;
+package com.bbva.dto.documentgenerator.request;
 
 import com.bbva.dto.project.request.InsertProjectParticipantDTO;
 import lombok.AllArgsConstructor;
@@ -13,11 +13,11 @@ import java.util.Map;
 @NoArgsConstructor
 @Getter
 @Setter
-public class GeneradorDocumentosMallasInfo {
+public class DocumentGeneratorMeshInfo {
     private List<InsertProjectParticipantDTO> smParticipant;
     private List<InsertProjectParticipantDTO> poParticipant;
     private List<Map.Entry<String, Map<String, String>>> listJobsDetail;
     private List<Map.Entry<String, Map<String, List<String>>>> listJobSummary;
-    private Map<String, String> descripcionMallas;
-    private Map<String, Map<String, Long>> conteoMallas;
+    private Map<String, String> meshDescription;
+    private Map<String, Map<String, Long>> meshCount;
 }
