@@ -5,8 +5,7 @@ import com.bbva.core.results.DataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dao.BatchDao;
 import com.bbva.dto.batch.request.*;
-import com.bbva.dto.batch.response.InsertAJIFJobExecutionResponseDTO;
-import com.bbva.dto.batch.response.JobExecutionFilterResponseDTO;
+import com.bbva.dto.batch.response.*;
 import com.bbva.entities.InsertEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -106,71 +105,62 @@ class BatchServiceTest {
         assertEquals("Succesfull", result.message);
     }
 
+    @Test
+    void testGetStatusJobExecution() {
+        String jobName = "";
+        Integer quantity = 1;
+        when(batchDaoMock.getStatusJobExecution(jobName,quantity)).thenReturn(getResponseGetStatusJobExecution());
+        IDataResult<List<StatusJobExecutionDTO>> result = batchService.getStatusJobExecution(jobName,quantity);
+        assertNotNull(result);
+        assertTrue(result.success);
+        assertEquals("Succesfull", result.message);
+    }
+
+    @Test
+    void testGetJobExecutionById() {
+        String folder = "";
+        String orderId = "";
+        String jobName = "";
+        Integer runCounter = 1;
+        when(batchDaoMock.getJobExecutionById(folder,orderId,jobName,runCounter)).thenReturn(getResponseGetJobExecutionById());
+        IDataResult<JobExecutionByIdDTO> result = batchService.getJobExecutionById(folder,orderId,jobName,runCounter);
+        assertNotNull(result);
+        assertTrue(result.success);
+        assertEquals("Succesfull", result.message);
+    }
+
+    @Test
+    void testGetJobExecutionByIdError() {
+        String folder = "";
+        String orderId = "";
+        String jobName = "";
+        IDataResult<JobExecutionByIdDTO> result = batchService.getJobExecutionById(folder,orderId,jobName, null);
+        assertNotNull(result);
+        assertEquals("500", result.status);
+        assertEquals("El campo runCounter es requerido", result.message);
+    }
+
+    @Test
+    void testFilterIssueAction() {
+        BatchIssuesActionFilterDtoRequest request = new BatchIssuesActionFilterDtoRequest();
+        when(batchDaoMock.filterIssueAction(request)).thenReturn(getResponseFilterIssueAction());
+        IDataResult<BatchIssuesActionFilterDtoResponse> result = batchService.filterIssueAction(request);
+        assertNotNull(result);
+        assertTrue(result.success);
+        assertEquals("Succesfull", result.message);
+    }
+
+    private List<StatusJobExecutionDTO> getResponseGetStatusJobExecution() {
+        return List.of(new StatusJobExecutionDTO(), new StatusJobExecutionDTO());
+    }
+
     private List<InsertJobExecutionStatusRequest> getInsertJobExecutionStatusRequestList(){
-        InsertJobExecutionStatusRequest request1 = new InsertJobExecutionStatusRequest();
-        request1.setJobName("JobA");
-        request1.setSchedtable("ScheduleTable1");
-        request1.setApplication("ApplicationX");
-        request1.setSubApplication("SubApplicationY");
-        request1.setRunAs("User1");
-        request1.setOrderId("ORD123");
-        request1.setOdate("2025-03-26");
-        request1.setStartTime("14:00");
-        request1.setEndTime("14:30");
-        request1.setRunTime("30");
-        request1.setRunCounter("1");
-        request1.setEndedStatus("SUCCESS");
-        request1.setHost("HostA");
-        request1.setCputime("5");
-
-        InsertJobExecutionStatusRequest request2 = new InsertJobExecutionStatusRequest();
-        request2.setJobName("JobB");
-        request2.setSchedtable("ScheduleTable2");
-        request2.setApplication("ApplicationY");
-        request2.setSubApplication("SubApplicationZ");
-        request2.setRunAs("User2");
-        request2.setOrderId("ORD456");
-        request2.setOdate("2025-03-26");
-        request2.setStartTime("15:00");
-        request2.setEndTime("15:45");
-        request2.setRunTime("45");
-        request2.setRunCounter("2");
-        request2.setEndedStatus("FAILED");
-        request2.setHost("HostB");
-        request2.setCputime("10");
-
-        return List.of(request1,
-                request2);
+        return List.of(new InsertJobExecutionStatusRequest(),
+                new InsertJobExecutionStatusRequest());
     }
 
     private List<InsertJobExecutionActiveRequest> getInsertJobExcecutionActiveRequestList(){
-        InsertJobExecutionActiveRequest request1 = new InsertJobExecutionActiveRequest();
-        request1.setOrderId("ORD001");
-        request1.setJobName("DataProcessingJob");
-        request1.setSchedtable("DailySchedule");
-        request1.setApplication("DataWarehouse");
-        request1.setSubApplication("ETLPipeline");
-        request1.setOdate("2025-03-26");
-        request1.setStartTime("10:00");
-        request1.setEndTime("10:30");
-        request1.setHost("ServerA");
-        request1.setRunAs("batchUser");
-        request1.setStatus("SUCCESS");
-
-        InsertJobExecutionActiveRequest request2 = new InsertJobExecutionActiveRequest();
-        request2.setOrderId("ORD002");
-        request2.setJobName("CleanupJob");
-        request2.setSchedtable("WeeklyCleanup");
-        request2.setApplication("DataPlatform");
-        request2.setSubApplication("CleanupModule");
-        request2.setOdate("2025-03-26");
-        request2.setStartTime("01:00");
-        request2.setEndTime("01:45");
-        request2.setHost("ServerB");
-        request2.setRunAs("adminUser");
-        request2.setStatus("FAILED");
-
-        return List.of(request1,request2);
+        return List.of(new InsertJobExecutionActiveRequest(),new InsertJobExecutionActiveRequest());
     }
 
     private String getLastJobExecutionStatusDate(){
@@ -189,4 +179,11 @@ class BatchServiceTest {
         return new SuccessDataResult<>(new InsertAJIFJobExecutionResponseDTO());
     }
 
+    private JobExecutionByIdDTO getResponseGetJobExecutionById() {
+        return new JobExecutionByIdDTO();
+    }
+
+    private BatchIssuesActionFilterDtoResponse getResponseFilterIssueAction() {
+        return new BatchIssuesActionFilterDtoResponse();
+    }
 }
