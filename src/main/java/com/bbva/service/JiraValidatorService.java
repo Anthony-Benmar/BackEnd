@@ -36,6 +36,7 @@ public class JiraValidatorService {
     private static final String GROUP_PR = "PR";
     private static final String GROUP_DEPENDENCY = "Dependencia";
     private static final String GROUP_SUBTASK = "Subtask";
+    private static final String GROUP_ACCEPTANCE_CRITERIA = "Criterio de Aceptacion";
     private static final String TEAM_BACKLOG_DQA_ID = "2461905";
     private static final List<String> TEAM_BACKLOG_RLB_ID = List.of("6037769"//CS
             ,"6037765"//RIC
@@ -63,7 +64,6 @@ public class JiraValidatorService {
         int warningCount = 0;
         List<InfoJiraProject> infoJiraProjectList = infoJiraProjectDao.list();
         String currentQ = infoJiraProjectDao.currentQ();
-        String acceptanceCriteriaGroup = "Criterio de Aceptacion";
 
         JsonObject issueMetadataJsonObject = getMetadataIssues(dto, List.of(dto.getUrlJira()));
         if (issueMetadataJsonObject.isEmpty()){
@@ -106,7 +106,7 @@ public class JiraValidatorService {
         var result11 = instancesRules.getValidationFeatureLinkRLB(teamBacklogId, TEAM_BACKLOG_RLB_ID,"Validar que el Feature Link tenga INC PRB o PB como label, excepto para evolutivos", GROUP_FEATURE_LINK);
         var result12 = instancesRules.getValidationItemType("Validar Item Type sea Technical", GROUP_TICKET);
         var result13 = instancesRules.getValidationTechStack("Validar Tech Stack sea Data - Dataproc", GROUP_TICKET);
-        var result14 = instancesRules.getValidationAcceptanceCriteria(TEAM_BACKLOG_RLB_ID,tipoDesarrollo,"Validar el criterio de aceptacion, segun el tipo de desarrollo debe ser similar a la plantilla", acceptanceCriteriaGroup);
+        var result14 = instancesRules.getValidationAcceptanceCriteria(TEAM_BACKLOG_RLB_ID,tipoDesarrollo,"Validar el criterio de aceptacion, segun el tipo de desarrollo debe ser similar a la plantilla", GROUP_ACCEPTANCE_CRITERIA);
         var result15 = instancesRules.getValidationValidateImpactLabel("Validar que se tengan los Impact Label correctos (Solo Mallas/HOST)",GROUP_TICKET, tipoDesarrollo);
         var result16 = instancesRules.getValidationValidateAttachment(tipoDesarrollo,"Validar la existencia de los adjuntos", "Attachment");
         var result17 = instancesRules.getValidationDependency(teamBacklogId, TEAM_BACKLOG_RLB_ID,"Validar que exista una Dependencia asignada correctamente y comprometida (Comentario HUD Comprometida)",GROUP_DEPENDENCY);
@@ -310,7 +310,7 @@ public class JiraValidatorService {
                     .getMethod("setRegla" + ruleId, String.class)
                     .invoke(logEntity, reglaEstado);
         } catch (Exception e) {
-            LOGGER.info("Error al actualizar logE   ntity: " + e.getMessage());
+            LOGGER.info("Error al actualizar logEntity: " + e.getMessage());
         }
     }
 
@@ -321,7 +321,7 @@ public class JiraValidatorService {
         }
         String url = buildJiraQueryUrl(jiraIssues);
         try{
-            String response = this.jiraApiService.GetJiraAsync(dto.getUserName(), dto.getToken(), url);
+            String response = jiraApiService.GetJiraAsync(dto.getUserName(), dto.getToken(), url);
             result = JsonParser.parseString(response).getAsJsonObject();
         } catch (Exception e) {
             LOGGER.info("ERROR CONSULTA JIRA LINK " + url + ": " + e.getMessage());

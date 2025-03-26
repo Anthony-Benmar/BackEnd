@@ -67,6 +67,7 @@ public class JiraValidatorConstantes {
     public static final String MSG_RULE_CRITERIOFORMATO = "Criterio de aceptación no cumple con el formato requerido";
     public static final String MSG_RULE_TIPODESARROLLO = "Tipo de desarrollo no encontrado en los criterios de aceptación";
     public static final String MSG_RULE_CRITEROACEPTACION = "Sin Criterio de Aceptación";
+    public static final String MSG_RULE_EXCEPTION_RLB = "Proviene del tabero RLB, por lo que no tiene dependencia asociada y, en consecuencia, esta regla no es aplicable.";
     public static final String LABEL = "label";
     public static final String DEPENDENCY = "Dependency";
     public static final String READY_TO_VERIFY = "Ready To Verify";

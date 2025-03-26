@@ -408,7 +408,7 @@ public class JiraValidationMethods {
                     if (!foundSpecialLabel.isEmpty() && result.foundSpecialSubtasks.isEmpty()) {
                         message.append(MSG_RULE_NOSUBTAREA).append(String.join(", ", aditionalSpecialSubtask));
                     } else if (foundSpecialLabel.isEmpty() && !result.foundSpecialSubtasks.isEmpty()) {
-                        message.append("Se recomienda validar las subtareas adicionales: ").append(String.join(", ", aditionalSpecialSubtask)).append(" para casos especiales.");
+                        message.append(MSG_RULE_RECOMENDATIONSUBTAREA).append(String.join(", ", aditionalSpecialSubtask)).append(" para casos especiales.");
                     }
                 }
             }
@@ -917,13 +917,11 @@ public class JiraValidationMethods {
 
         if (statusTableroDQA.contains(jiraTicketStatus)) {
             isValid = true;
-
             List<String> listaEstados = new ArrayList<>(Arrays.asList(READY, DEPLOYED));
-
             if (!listaEstados.contains(jiraTicketStatus)) {
                 if (this.isInTableroDQA) {
                     isWarning = true;
-                    message += " Atención: Es posible que el %s se encuentre en revisión, recordar que el estado inicial de un %s por revisar es Ready";
+                    message += " Atención: Es posible que el ticket se encuentre en revisión, recordar que el estado inicial de un ticket por revisar es Ready";
                 } else {
                     isValid = false;
                 }
@@ -1442,7 +1440,7 @@ public class JiraValidationMethods {
         boolean isWarning = false;
 
         if (teamBackLogTicketIdRLB.contains(teamBackLogId)) {
-            message = "Proviene del tablero RLB, por lo tanto, no tiene una dependencia asociada.";
+            message = MSG_RULE_EXCEPTION_RLB;
             isValid = true;
             return buildValidationResult(message, isValid, isWarning, helpMessage, group);
         }
@@ -1518,7 +1516,7 @@ public class JiraValidationMethods {
         String message = "Todas las dependencias tienen el mismo feature link";
 
         if (teamBackLogTicketIdRLB.contains(teamBackLogId)) {
-            message = "Proviene del tabero RLB, por lo que no tiene dependencia asociada y, en consecuencia, esta regla no es aplicable.";
+            message = MSG_RULE_EXCEPTION_RLB;
             return buildValidationResult(message, isValid, isWarning, helpMessage, group);
         }
 
@@ -1565,9 +1563,9 @@ public class JiraValidationMethods {
 
     private boolean validateFeatureLinks(List<String> isChildPadNameCollection, JiraValidatorByUrlRequest dto) throws Exception {
         for (String isChildPad : isChildPadNameCollection) {
-            var query = KEY_IN + isChildPad + ")";
-            var url = ApiJiraName.URL_API_JIRA_SQL + query + new JiraApiService().getQuerySuffixURL();
-            var response = new JiraApiService().GetJiraAsync(dto.getUserName(), dto.getToken(), url);
+            String query = KEY_IN + isChildPad + ")";
+            String url = ApiJiraName.URL_API_JIRA_SQL + query + new JiraApiService().getQuerySuffixURL();
+            String response = new JiraApiService().GetJiraAsync(dto.getUserName(), dto.getToken(), url);
             JsonObject metaData = JsonParser.parseString(response).getAsJsonObject();
 
             String isChildFeatureLink = metaData
@@ -1746,11 +1744,11 @@ public class JiraValidationMethods {
         String message = "";
 
         JsonArray issueLinks = jiraTicketResult.getAsJsonObject(FIELDS).getAsJsonArray(ISSUELINKS);
+        if (teamBackLogTicketIdRLB.contains(teamBackLogId)) {
+            return buildValidationResult(MSG_RULE_EXCEPTION_RLB, true, isWarning, helpMessage, group);
+        }
         if (issueLinks == null || issueLinks.isEmpty()) {
             return buildValidationResult(MSG_RULE_NODEPENDENCY, false, isWarning, helpMessage, group);
-        }
-        if (teamBackLogTicketIdRLB.contains(teamBackLogId)) {
-            return buildValidationResult("Esta regla no es válida para RLB.", true, isWarning, helpMessage, group);
         }
         List<String> isChildPadNameCollection = extractDependencyKeys(issueLinks);
         if (isChildPadNameCollection.isEmpty()) {
@@ -1827,9 +1825,9 @@ public class JiraValidationMethods {
     }
 
     private JsonArray fetchDependencyComments(String isChildPad, JiraValidatorByUrlRequest dto) throws Exception {
-        var query = KEY_IN + isChildPad + ")";
-        var url = ApiJiraName.URL_API_JIRA_SQL + query + new JiraApiService().getQuerySuffixURL();
-        var response = new JiraApiService().GetJiraAsync(dto.getUserName(), dto.getToken(), url);
+        String query = KEY_IN + isChildPad + ")";
+        String url = ApiJiraName.URL_API_JIRA_SQL + query + new JiraApiService().getQuerySuffixURL();
+        String response = new JiraApiService().GetJiraAsync(dto.getUserName(), dto.getToken(), url);
         JsonObject metaData = JsonParser.parseString(response).getAsJsonObject();
         return metaData
                 .getAsJsonArray(ISSUES)
