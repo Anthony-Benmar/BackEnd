@@ -306,7 +306,6 @@ public class JiraValidationMethods {
         List<String> aditionalSpecialSubtask = List.of(VB_KM, VB_SO);
         List<String> aditionalSpecialLabels = List.of("datioRutaCritica", "JobsHuerfanos");
         List<String> requiredSubTasks = SUBTASKS_BY_DEVELOP_TYPES.get(tipoDesarrollo);
-
         JsonArray labels = jiraTicketResult.getAsJsonObject(FIELDS).getAsJsonArray(LABELS);
         JsonArray subTasks = jiraTicketResult.getAsJsonObject(FIELDS).getAsJsonArray(SUBTASKS);
 
@@ -324,9 +323,6 @@ public class JiraValidationMethods {
     public Map<String, Object> getValidationValidateSubTaskStatus(String tipoDesarrollo, String helpMessage, String group) {
         List<String> results = new ArrayList<>(SUBTASKS_BY_DEVELOP_TYPES.get(tipoDesarrollo));
         results.addAll(List.of(VB_KM, VB_SO));
-        if (tipoDesarrollo.equalsIgnoreCase(MALLAS) || tipoDesarrollo.equalsIgnoreCase("host")) {
-            results.add("[VB][DEV]");
-        }
         results.removeIf(subtask -> subtask.contains("QA"));
 
         JsonArray subTasks = jiraTicketResult.getAsJsonObject(FIELDS).getAsJsonArray(SUBTASKS);
@@ -546,16 +542,24 @@ public class JiraValidationMethods {
             messageBadList.add(MSG_SUBTAREA + extractLabel(subTask) + " no tiene metadata disponible.");
             return null;
         }
-        String subtaskAssignee = metaData.getAsJsonArray(ISSUES)
+        JsonElement subtaskAssignee= metaData.getAsJsonArray(ISSUES)
                 .get(0).getAsJsonObject()
                 .getAsJsonObject(FIELDS)
-                .getAsJsonObject(ASSIGNEE)
-                .get(EMAIL_ADDRESS)
-                .getAsString();
-        if (subtaskAssignee == null || subtaskAssignee.isBlank()) {
+                .get(ASSIGNEE);
+        if (!subtaskAssignee.isJsonNull() && subtaskAssignee.getAsJsonObject().has(EMAIL_ADDRESS)
+                && !subtaskAssignee.getAsJsonObject().get(EMAIL_ADDRESS).isJsonNull()){
+            String emailAssignee = subtaskAssignee.getAsJsonObject()
+                    .get(EMAIL_ADDRESS)
+                    .getAsString();
+            if (emailAssignee == null || emailAssignee.isBlank()) {
+                messageBadList.add(MSG_SUBTAREA + extractLabel(subTask) + " sin asignación.");
+                return null;
+            }
+        } else{
             messageBadList.add(MSG_SUBTAREA + extractLabel(subTask) + " sin asignación.");
             return null;
         }
+
         return metaData;
     }
 
@@ -684,15 +688,15 @@ public class JiraValidationMethods {
         if (subtaskLabel.contains("QA") || subtaskLabel.contains("DEV") || DISCARDED.equalsIgnoreCase(subtaskStatus)) {
             return;
         }
-        JsonObject assignee = metaData.getAsJsonArray(ISSUES)
+        JsonElement assignee = metaData.getAsJsonArray(ISSUES)
                 .get(0).getAsJsonObject()
                 .getAsJsonObject(FIELDS)
-                .getAsJsonObject(ASSIGNEE);
+                .get(ASSIGNEE);
 
-        if (assignee == null || assignee.get(EMAIL_ADDRESS).isJsonNull()) {
+        if (assignee.isJsonNull() || !assignee.getAsJsonObject().has(EMAIL_ADDRESS) || assignee.getAsJsonObject().get(EMAIL_ADDRESS).isJsonNull()) {
             messageBadList.add("Subtarea invalida " + subtaskLabel + " no tiene correo asignado.");
         } else {
-            String assigneeEmail = assignee.get(EMAIL_ADDRESS).getAsString();
+            String assigneeEmail = assignee.getAsJsonObject().get(EMAIL_ADDRESS).getAsString();
             if (assigneeEmail.contains(".contractor")) {
                 messageBadList.add("Subtarea invalida " + subtaskLabel + " asignada a " + assigneeEmail + " no es Interno BBVA.");
             } else {
@@ -793,8 +797,8 @@ public class JiraValidationMethods {
     }
 
 
-    public Map<String, Object> getValidationTeamAssigned(
-            String tipoDesarrollo, boolean validacionEnvioFormulario, String helpMessage, String group) {
+    public Map<String, Object> getValidationTeamAssigned( String teamBackLogId,
+            String tipoDesarrollo, String helpMessage, String group) {
         String message;
         boolean isValid;
         boolean isWarning = false;
@@ -804,16 +808,16 @@ public class JiraValidationMethods {
         String currentTeamFieldLabel = getCurrentTeamFieldLabel(issueType);
 
         JsonArray histories = jiraTicketResult.getAsJsonObject(CHANGELOG).getAsJsonArray(HISTORIES);
-        message = processHistories(histories, currentTeamFieldLabel, tipoDesarrollo, validacionEnvioFormulario, jiraTicketStatus);
+        message = processHistories(teamBackLogId, histories, currentTeamFieldLabel, tipoDesarrollo, jiraTicketStatus);
 
-        isValid = message.contains("Asignado a Tablero de DQA");
+        isValid = message.contains(MSG_RULE_ASIGNEE_DQA);
 
         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
 
-    private String processHistories(
+    private String processHistories(String teamBackLogId,
             JsonArray histories, String currentTeamFieldLabel, String tipoDesarrollo,
-            boolean validacionEnvioFormulario, String jiraTicketStatus) {
+            String jiraTicketStatus) {
 
         List<String> estadosExtraMallasHost = List.of(READY, TEST, READY_TO_VERIFY);
         List<String> statusTableroDQA = prepareStatusTableroDQA();
@@ -824,12 +828,16 @@ public class JiraValidationMethods {
             if (history.has(ITEMS)) {
                 JsonArray items = history.getAsJsonArray(ITEMS);
                 String result = processItems(items, currentTeamFieldLabel, statusTableroDQA, jiraTicketStatus,
-                        tipoDesarrollo, validacionEnvioFormulario, estadosExtraMallasHost);
+                        tipoDesarrollo, estadosExtraMallasHost);
 
                 if (result != null) {
                     return result;
                 }
             }
+        }
+        if(teamBackLogId.equals(teamBackLogDQAId)){
+            this.isInTableroDQA = true;
+            return  MSG_RULE_ASIGNEE_DQA;
         }
         return "No está en el Tablero de DQA";
     }
@@ -842,7 +850,7 @@ public class JiraValidationMethods {
 
     private String processItems(
             JsonArray items, String currentTeamFieldLabel, List<String> statusTableroDQA,
-            String jiraTicketStatus, String tipoDesarrollo, boolean validacionEnvioFormulario,
+            String jiraTicketStatus, String tipoDesarrollo,
             List<String> estadosExtraMallasHost) {
 
         for (JsonElement itemElement : items) {
@@ -853,9 +861,9 @@ public class JiraValidationMethods {
 
                 if (to.equals(teamBackLogDQAId)) {
                     this.isInTableroDQA = true;
-                    return "Asignado a Tablero de DQA";
+                    return MSG_RULE_ASIGNEE_DQA;
                 } else if (statusTableroDQA.contains(jiraTicketStatus.trim().toLowerCase())) {
-                    return buildWarningMessage(tipoDesarrollo, validacionEnvioFormulario, estadosExtraMallasHost);
+                    return buildWarningMessage(tipoDesarrollo, estadosExtraMallasHost);
                 }
             }
         }
@@ -863,17 +871,16 @@ public class JiraValidationMethods {
     }
 
     private String buildWarningMessage(
-            String tipoDesarrollo, boolean validacionEnvioFormulario, List<String> estadosExtraMallasHost) {
+            String tipoDesarrollo, List<String> estadosExtraMallasHost) {
 
         StringBuilder sb = new StringBuilder("No está en el Tablero de DQA. ");
-        if (validacionEnvioFormulario) {
-            sb.append("Atención: No olvidar que para regresar el ticket a DQA, se debe cambiar el estado del ticket y la Subtarea DQA. ");
-            if (tipoDesarrollo.equalsIgnoreCase(MALLAS) || tipoDesarrollo.equalsIgnoreCase("HOST")) {
-                sb.append(String.join(", ", estadosExtraMallasHost));
-            } else {
-                sb.append(READY);
-            }
+        sb.append("Atención: No olvidar que para regresar el ticket a DQA, se debe cambiar el estado del ticket y la Subtarea DQA. ");
+        if (tipoDesarrollo.equalsIgnoreCase(MALLAS) || tipoDesarrollo.equalsIgnoreCase("HOST")) {
+            sb.append(String.join(", ", estadosExtraMallasHost));
+        } else {
+            sb.append(READY);
         }
+
         return sb.toString();
     }
 
@@ -1396,8 +1403,8 @@ public class JiraValidationMethods {
                     extractedContent = extractContentFrom(fromString);
 
                     if (from.equals(teamBackLogDQAId)) {
-                        isValid = false;
                         message = "Se creó en tablero DQA.";
+                        return buildValidationResult(message, isValid, isWarning, helpMessage, group);
                     } else {
                         isValid = true;
                         message = "Se creó en tablero diferente a DQA: " + extractedContent + ".";
@@ -1406,7 +1413,15 @@ public class JiraValidationMethods {
                 }
             }
         }
-
+        if(this.isInTableroDQA && !isValid){
+            message = "Se creó en tablero DQA pero no ha tenido history Team BackLog. Se recomienda validar.";
+            isWarning = true;
+        }
+        else if(message.isBlank()){
+            message = "No se creó en tablero DQA pero no ha tenido history Team BackLog. Se recomienda validar.";
+            isValid = true;
+            isWarning = true;
+        }
         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
 

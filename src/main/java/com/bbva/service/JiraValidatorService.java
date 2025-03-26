@@ -98,7 +98,7 @@ public class JiraValidatorService {
         var result3 = instancesRules.getValidationFixVersion(tipoDesarrollo,"Validar que se tenga Fix Version (Solo Mallas/HOST)",GROUP_TICKET);
         var result4 = instancesRules.getValidationLabels(tipoDesarrollo,"Validar que se tengan los labels correctos", GROUP_TICKET);
         var result5 = instancesRules.getValidationBoardProject(teamBacklogId, "Validar el Tablero del proyecto", GROUP_FEATURE_LINK, infoJiraProjectList);
-        var result6 = instancesRules.getValidationTeamAssigned(tipoDesarrollo,true,"Validar que el equipo asignado sea el correcto", GROUP_TICKET);
+        var result6 = instancesRules.getValidationTeamAssigned(teamBacklogId, tipoDesarrollo,"Validar que el equipo asignado sea el correcto", GROUP_TICKET);
         var result7 = instancesRules.getValidationInitialTeam("Validar si se creo en el tablero de DQA", "Tablero");
         var result8 = instancesRules.getValidationFeatureLink("Se valida el tenga un Feature Link asignado", GROUP_FEATURE_LINK);
         var result9 = instancesRules.getValidationFeatureLinkStatus( "Validar el estado Jira del Feature Link", GROUP_FEATURE_LINK);
@@ -335,7 +335,7 @@ public class JiraValidatorService {
     }
 
     public String getTeamBackLogId(String tipoDesarrollo, JsonObject jiraTicketResult) throws ParseException {
-        String teamBackLogId = null;
+        String teamBackLogId = "";
         Date oldestDate = new SimpleDateFormat("yyyy-MM-dd").parse("9999-12-31");
         JsonArray changelog = jiraTicketResult
                 .getAsJsonObject(CHANGELOG)
@@ -353,12 +353,16 @@ public class JiraValidatorService {
                 }
             }
         }
-        if (teamBackLogId == null){
-            if(tipoDesarrollo.equalsIgnoreCase(MALLAS) || tipoDesarrollo.equalsIgnoreCase(HOST)) {
+        if (teamBackLogId.isBlank()){
+            if((tipoDesarrollo.equalsIgnoreCase(MALLAS) || tipoDesarrollo.equalsIgnoreCase(HOST))
+            && jiraTicketResult.getAsJsonObject(FIELDS)
+                    .has(CUSTOMFIELD_13301) && !jiraTicketResult.getAsJsonObject(FIELDS)
+                    .getAsJsonArray(CUSTOMFIELD_13301).isJsonNull()) {
                 teamBackLogId = jiraTicketResult.getAsJsonObject(FIELDS)
                         .getAsJsonArray(CUSTOMFIELD_13301).get(0).getAsString();
             }
-            else {
+            else if(jiraTicketResult.getAsJsonObject(FIELDS)
+                    .has(CUSTOMFIELD_13300)){
                 teamBackLogId = jiraTicketResult.getAsJsonObject(FIELDS)
                         .getAsJsonArray(CUSTOMFIELD_13300).get(0).getAsString();
             }

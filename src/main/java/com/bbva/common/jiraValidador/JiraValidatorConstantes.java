@@ -56,6 +56,7 @@ public class JiraValidatorConstantes {
     public static final String DEPLOYED = "Deployed";
     public static final String VB_KM = "[VB][KM]";
     public static final String VB_SO = "[VB][SO]";
+    public static final String VB_DEV = "[VB][DEV]";
     public static final String SUBTASKS = "subtasks";
     public static final String ACCEPTED = "Accepted";
     public static final String DISCARDED = "Discarded";
@@ -68,6 +69,7 @@ public class JiraValidatorConstantes {
     public static final String MSG_RULE_TIPODESARROLLO = "Tipo de desarrollo no encontrado en los criterios de aceptación";
     public static final String MSG_RULE_CRITEROACEPTACION = "Sin Criterio de Aceptación";
     public static final String MSG_RULE_EXCEPTION_RLB = "Proviene del tabero RLB, por lo que no tiene dependencia asociada y, en consecuencia, esta regla no es aplicable.";
+    public static final String MSG_RULE_ASIGNEE_DQA = "Asignado a Tablero de DQA";
     public static final String LABEL = "label";
     public static final String DEPENDENCY = "Dependency";
     public static final String READY_TO_VERIFY = "Ready To Verify";
@@ -93,6 +95,7 @@ public class JiraValidatorConstantes {
     public static final String NAME = "name";
     public static final String TYPE = "type";
     public static final String ASSIGNEE = "assignee";
+    public static final String PRS = "prs";
 
     static {
         Map<String, List<String>> mapDevTypes = new HashMap<>();
@@ -114,7 +117,7 @@ public class JiraValidatorConstantes {
 
         Map<String, List<String>> mapAttachByDevTypes = new HashMap<>();
         mapAttachByDevTypes.put(MALLAS, new ArrayList<>(List.of(C204,P110)));
-        mapAttachByDevTypes.put("prs", new ArrayList<>(List.of(C204)));
+        mapAttachByDevTypes.put(PRS, new ArrayList<>(List.of(C204)));
         mapAttachByDevTypes.put(HAMMURABI, new ArrayList<>(List.of(C204,"RC")));
         mapAttachByDevTypes.put(HOST, new ArrayList<>(List.of(C204,P110)));
         mapAttachByDevTypes.put(MIGRATIONTOOL, new ArrayList<>(List.of(C204)));
@@ -132,7 +135,7 @@ public class JiraValidatorConstantes {
 
         Map<String, List<String>> mapLabelsByDevTypes = new HashMap<>();
         mapLabelsByDevTypes.put(MALLAS, new ArrayList<>(List.of("release", RELEASEMALLASDATIO)));
-        mapLabelsByDevTypes.put("prs", new ArrayList<>(List.of(RELEASEPRDATIO)));
+        mapLabelsByDevTypes.put(PRS, new ArrayList<>(List.of(RELEASEPRDATIO)));
         mapLabelsByDevTypes.put(PRODUCTIVIZACION, new ArrayList<>(List.of(RELEASESCAFFOLDERDATIO)));
         mapLabelsByDevTypes.put(HOST, new ArrayList<>(List.of("releaseTransmisionDatio")));
         mapLabelsByDevTypes.put(HAMMURABI, new ArrayList<>(List.of(RELEASEPRDATIO)));
@@ -150,7 +153,7 @@ public class JiraValidatorConstantes {
 
         Map<String, List<String>> mapTicketHuTypes = new HashMap<>();
         mapTicketHuTypes.put(MALLAS, new ArrayList<>(List.of(DEPENDENCY)));
-        mapTicketHuTypes.put("prs", new ArrayList<>(List.of(STORY)));
+        mapTicketHuTypes.put(PRS, new ArrayList<>(List.of(STORY)));
         mapTicketHuTypes.put(PRODUCTIVIZACION, new ArrayList<>(List.of(STORY)));
         mapTicketHuTypes.put(HOST, new ArrayList<>(List.of(DEPENDENCY)));
         mapTicketHuTypes.put(HAMMURABI, new ArrayList<>(List.of(STORY)));
@@ -177,7 +180,7 @@ public class JiraValidatorConstantes {
         mapCriteriaByDevTypes.put(MALLAS, Map.of(TEXTO, acceptanceCriteria));
         mapCriteriaByDevTypes.put(HOST, Map.of(TEXTO, acceptanceCriteria));
 
-        mapCriteriaByDevTypes.put("prs", Map.of(
+        mapCriteriaByDevTypes.put(PRS, Map.of(
                 TEXTO, "Desarrollo según lineamientos globales ONE y de Data Quality Assurance Perú."
         ));
 
@@ -200,8 +203,8 @@ public class JiraValidatorConstantes {
         CRITERIA_BY_DEVELOP_TYPES = Collections.unmodifiableMap(mapCriteriaByDevTypes);
 
         Map<String, List<String>> mapSubtasksByDevTypes = new HashMap<>();
-        mapSubtasksByDevTypes.put(MALLAS, new ArrayList<>(List.of(P110_AT, C204_PO, C204_QA)));
-        mapSubtasksByDevTypes.put("prs", new ArrayList<>(List.of(C204_PO, C204_QA)));
+        mapSubtasksByDevTypes.put(MALLAS, new ArrayList<>(List.of(P110_AT, C204_PO, C204_QA, VB_DEV)));
+        mapSubtasksByDevTypes.put(PRS, new ArrayList<>(List.of(C204_PO, C204_QA)));
         mapSubtasksByDevTypes.put(PRODUCTIVIZACION, new ArrayList<>(List.of("[VB][PO]", "[VB][QA]")));
         mapSubtasksByDevTypes.put(HOST, new ArrayList<>(List.of(P110_AT, C204_PO, C204_QA,"[P110][GC]")));
         mapSubtasksByDevTypes.put(HAMMURABI, new ArrayList<>(List.of(C204_PO, C204_QA)));
