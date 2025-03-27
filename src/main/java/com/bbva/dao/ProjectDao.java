@@ -316,7 +316,7 @@ public class ProjectDao {
 
         if (dto.records_amount > 0) {
             lista = lista.stream()
-                    .skip(dto.records_amount * (dto.page - 1))
+                    .skip((long) dto.records_amount * (dto.page - 1))
                     .limit(dto.records_amount)
                     .collect(Collectors.toList());
         }
