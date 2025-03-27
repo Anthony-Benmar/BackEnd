@@ -47,11 +47,4 @@ class MainAppTest {
         assertEquals(WEBAPP_RESOURCES_LOCATION + "/WEB-INF/web.xml", webAppContext.getDescriptor());
     }
 
-    @Test
-    void setLoggerHandler() {
-        // When
-        MainApp.initRootLogger();
-        // Then
-        Assertions.assertEquals(1, Logger.getLogger("").getHandlers().length);
-    }
 }

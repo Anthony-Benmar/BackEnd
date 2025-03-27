@@ -14,6 +14,6 @@ public class ProjectInfoFilterRequest {
     public String statusType;
     public String projectType;
     public String wowType;
-    public String startQ;
-    public String endQ;
+    private String startQ;
+    private String endQ;
 }

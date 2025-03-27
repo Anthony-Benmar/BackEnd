@@ -10,7 +10,6 @@ import com.bbva.entities.User;
 import com.bbva.entities.secu.RolMenuAction;
 import com.bbva.entities.secu.UserRole;
 import net.minidev.json.JSONObject;
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 import java.util.logging.Logger;

@@ -2,13 +2,10 @@ package com.bbva.dao;
 
 import com.bbva.database.MyBatisConnectionFactory;
 import com.bbva.database.mappers.JiraValidatorLogMapper;
-import com.bbva.database.mappers.LogMapper;
 import com.bbva.entities.jiravalidator.JiraValidatorLogEntity;
-import com.bbva.entities.secu.LogEntity;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;

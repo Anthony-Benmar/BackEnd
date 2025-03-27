@@ -1,15 +1,14 @@
 package com.bbva.dao;
 
 import com.bbva.database.MyBatisConnectionFactory;
-import com.bbva.database.mappers.AccionMapper;
 import com.bbva.database.mappers.InfoJiraProjectMapper;
 import com.bbva.entities.jiravalidator.InfoJiraProject;
-import com.bbva.entities.secu.Accion;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class InfoJiraProjectDao {
@@ -22,22 +21,20 @@ public class InfoJiraProjectDao {
         if (Objects.isNull(instance)) {
             instance = new InfoJiraProjectDao();
         }
-
         return instance;
     } 
 
     public List<InfoJiraProject> list() {
-        
         List<InfoJiraProject> infoJiraProjectList = null;
-
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         try (SqlSession session = sqlSessionFactory.openSession()) {
             InfoJiraProjectMapper mapper = session.getMapper(InfoJiraProjectMapper.class);
             infoJiraProjectList = mapper.list();
-        }    
-            
+        }
+        catch (Exception e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+        }
         return infoJiraProjectList;
-
     }
 
     public String currentQ(){
@@ -46,6 +43,9 @@ public class InfoJiraProjectDao {
         try (SqlSession session = sqlSessionFactory.openSession()) {
             InfoJiraProjectMapper mapper = session.getMapper(InfoJiraProjectMapper.class);
             currentQ = mapper.currentQ();
+        }
+        catch (Exception e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
         }
         return currentQ;
     }

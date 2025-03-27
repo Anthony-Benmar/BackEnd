@@ -5,7 +5,6 @@ import com.bbva.dto.batch.request.InsertJobExecutionActiveRequest;
 import com.bbva.dto.batch.request.InsertJobExecutionStatusRequest;
 import com.bbva.dto.batch.response.*;
 import com.bbva.entities.InsertEntity;
-import com.bbva.entities.board.Board;
 import org.apache.ibatis.annotations.*;
 
 import java.util.Date;

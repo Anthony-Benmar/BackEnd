@@ -1,7 +1,10 @@
 package com.bbva.resources;
 import com.bbva.core.abstracts.IDataResult;
+import com.bbva.dao.InfoJiraProjectDao;
+import com.bbva.dao.JiraValidatorLogDao;
 import com.bbva.dto.jira.request.JiraValidatorByUrlRequest;
 import com.bbva.dto.jira.response.JiraResponseDTO;
+import com.bbva.service.JiraApiService;
 import com.bbva.service.JiraValidatorService;
 
 import javax.ws.rs.*;
@@ -10,7 +13,10 @@ import javax.ws.rs.core.MediaType;
 @Path("/jira")
 @Produces(MediaType.APPLICATION_JSON)
 public class JiraValidatorResources {
-    private JiraValidatorService jiraValidatorService = new JiraValidatorService();
+    private final JiraApiService jiraApiService = new JiraApiService();
+    private final JiraValidatorLogDao jiraValidatorLogDao = new JiraValidatorLogDao();
+    private final InfoJiraProjectDao infoJiraProjectDao = new InfoJiraProjectDao();
+    private final JiraValidatorService jiraValidatorService = new JiraValidatorService(jiraApiService, jiraValidatorLogDao, infoJiraProjectDao);
 
     @POST
     @Path("/validator/validate")
