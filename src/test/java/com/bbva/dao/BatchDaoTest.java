@@ -111,7 +111,9 @@ class BatchDaoTest {
         );
         doThrow(new RuntimeException("Database error"))
                 .when(mockBatchMapper).insertJobExecutionStatus(requestList);
-        batchDao.saveJobExecutionStatus(requestList);
+        assertDoesNotThrow(() -> {
+            batchDao.saveJobExecutionStatus(requestList);
+        });
 
     }
 
