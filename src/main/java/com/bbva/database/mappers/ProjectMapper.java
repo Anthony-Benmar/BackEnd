@@ -210,14 +210,14 @@ public interface ProjectMapper {
     InsertEntity insertProjectInfo(InsertProjectInfoDTORequest dto);
 
     @Select("CALL SP_LIST_PROJECT(" +
-            "#{projectId}," +
-            "#{sdatoolIdOrProjectName}," +
-            "#{domainId}," +
-            "#{statusType}," +
-            "#{projectType}," +
-            "#{wowType}," +
-            "#{startQ}," +
-            "#{endQ})")
+            "#{dto.projectId}," +
+            "#{dto.sdatoolIdOrProjectName}," +
+            "#{dto.domainId}," +
+            "#{dto.statusType}," +
+            "#{dto.projectType}," +
+            "#{dto.wowType}," +
+            "#{dto.startQ}," +
+            "#{dto.endQ})")
     @Results({
             @Result(property = "projectId", column = "project_id"),
             @Result(property = "sdatoolId", column = "sdatool_id"),
