@@ -32,7 +32,6 @@ public class JiraValidationMethods {
     private final String featureLinkCode;
     private final JsonObject featureLinkResult;
     private final String currentQ;
-    private final String teamBackLogDQAId = "2461905";
 
     public JiraValidationMethods(String jiraCode, JsonObject jiraTicketResult, String featureLinkCode, JsonObject featureLinkResult, String currentQ) {
         this.jiraCode = jiraCode;
@@ -142,7 +141,6 @@ public class JiraValidationMethods {
         for (JsonElement issueLinkElement : issuelinks) {
             JsonObject issueLink = issueLinkElement.getAsJsonObject();
             String inward = issueLink.getAsJsonObject(TYPE).get(INWARD).getAsString();
-
             if (inward.equalsIgnoreCase(IS_CHILD_ITEM_OF) && issueLink.has(INWARD_ISSUE)) {
                 JsonObject inwardIssue = issueLink.getAsJsonObject(INWARD_ISSUE);
                 if (inwardIssue.has(FIELDS)) {
@@ -706,7 +704,7 @@ public class JiraValidationMethods {
     }
 
     public Map<String, Object> getValidationAcceptanceCriteria(
-            List<String> teamBackLogTicketIdRLB, String tipoDesarrollo,
+            String teamBackLogId,List<String> teamBackLogTicketIdRLB, String tipoDesarrollo,
             String helpMessage, String group) {
         String message;
         boolean isValid;
@@ -720,9 +718,7 @@ public class JiraValidationMethods {
                 .trim();
 
         if (tipoDesarrollo.equalsIgnoreCase(MALLAS)) {
-            String teamBackLogTicketId = jiraTicketResult.getAsJsonObject(FIELDS)
-                    .get("customfield_13301").getAsString();
-            boolean isTeamBackLogRLB = teamBackLogTicketIdRLB.contains(teamBackLogTicketId);
+            boolean isTeamBackLogRLB = teamBackLogTicketIdRLB.contains(teamBackLogId);
             if (isTeamBackLogRLB) {
                 message = validateAcceptanceCriteriaReliability(acceptanceCriteria, validAcceptanceCriteriaObject);
             } else {
@@ -731,7 +727,7 @@ public class JiraValidationMethods {
         } else {
             message = validateAcceptanceCriteriaForOtherTypes(acceptanceCriteria, validAcceptanceCriteriaObject);
         }
-        isValid = message.startsWith(MSG_RULE_VALID);
+        isValid = message.startsWith("Es válido: ");
 
         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
@@ -835,7 +831,7 @@ public class JiraValidationMethods {
                 }
             }
         }
-        if(teamBackLogId.equals(teamBackLogDQAId)){
+        if(teamBackLogId.equals(TEAM_BACK_LOG_DQA_ID)){
             this.isInTableroDQA = true;
             return  MSG_RULE_ASIGNEE_DQA;
         }
@@ -859,7 +855,7 @@ public class JiraValidationMethods {
             if (item.has(FIELD) && item.get(FIELD).getAsString().equals(currentTeamFieldLabel)) {
                 String to = item.get("to").getAsString();
 
-                if (to.equals(teamBackLogDQAId)) {
+                if (to.equals(TEAM_BACK_LOG_DQA_ID)) {
                     this.isInTableroDQA = true;
                     return MSG_RULE_ASIGNEE_DQA;
                 } else if (statusTableroDQA.contains(jiraTicketStatus.trim().toLowerCase())) {
@@ -1002,7 +998,13 @@ public class JiraValidationMethods {
                 !featureLinkResult.getAsJsonArray(ISSUES).isEmpty() &&
                 featureLinkResult.getAsJsonArray(ISSUES)
                         .get(0).getAsJsonObject().getAsJsonObject(FIELDS)
-                        .has(CUSTOMFIELD_10264)) {
+                        .has(CUSTOMFIELD_10264) &&
+                !featureLinkResult
+                        .getAsJsonArray(ISSUES)
+                        .get(0).getAsJsonObject()
+                        .getAsJsonObject(FIELDS)
+                        .get(CUSTOMFIELD_10264).isJsonNull()
+        ) {
             return featureLinkResult
                     .getAsJsonArray(ISSUES)
                     .get(0).getAsJsonObject()
@@ -1402,7 +1404,7 @@ public class JiraValidationMethods {
                     String fromString = extractFieldValue(items, "fromString");
                     extractedContent = extractContentFrom(fromString);
 
-                    if (from.equals(teamBackLogDQAId)) {
+                    if (from.equals(TEAM_BACK_LOG_DQA_ID)) {
                         message = "Se creó en tablero DQA.";
                         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
                     } else {

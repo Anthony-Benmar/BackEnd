@@ -96,6 +96,7 @@ public class JiraValidatorConstantes {
     public static final String TYPE = "type";
     public static final String ASSIGNEE = "assignee";
     public static final String PRS = "prs";
+    public static final String TEAM_BACK_LOG_DQA_ID = "2461905";
 
     static {
         Map<String, List<String>> mapDevTypes = new HashMap<>();

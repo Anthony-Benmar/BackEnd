@@ -22,7 +22,6 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 import static com.bbva.common.jiraValidador.JiraValidatorConstantes.*;
 
@@ -88,7 +87,7 @@ public class JiraValidatorService {
         var instancesRules = new JiraValidationMethods(dto.getUrlJira(), jiraTicketResult,featureLink,featureLinkMetadataJsonObject,currentQ);
         if (!infoJiraProjectList.isEmpty()) {
             infoJiraProjectList = infoJiraProjectList.stream().filter(obj -> obj.getTeamBackLogId() != null)
-                    .collect(Collectors.toList());
+                    .toList();
         }
 
         var result1 = instancesRules.getValidatorValidateSummaryHUTType("Validar el tipo de desarrollo en el summary", GROUP_TICKET);
@@ -106,7 +105,7 @@ public class JiraValidatorService {
         var result11 = instancesRules.getValidationFeatureLinkRLB(teamBacklogId, TEAM_BACKLOG_RLB_ID,"Validar que el Feature Link tenga INC PRB o PB como label, excepto para evolutivos", GROUP_FEATURE_LINK);
         var result12 = instancesRules.getValidationItemType("Validar Item Type sea Technical", GROUP_TICKET);
         var result13 = instancesRules.getValidationTechStack("Validar Tech Stack sea Data - Dataproc", GROUP_TICKET);
-        var result14 = instancesRules.getValidationAcceptanceCriteria(TEAM_BACKLOG_RLB_ID,tipoDesarrollo,"Validar el criterio de aceptacion, segun el tipo de desarrollo debe ser similar a la plantilla", GROUP_ACCEPTANCE_CRITERIA);
+        var result14 = instancesRules.getValidationAcceptanceCriteria(teamBacklogId,TEAM_BACKLOG_RLB_ID,tipoDesarrollo,"Validar el criterio de aceptacion, segun el tipo de desarrollo debe ser similar a la plantilla", GROUP_ACCEPTANCE_CRITERIA);
         var result15 = instancesRules.getValidationValidateImpactLabel("Validar que se tengan los Impact Label correctos (Solo Mallas/HOST)",GROUP_TICKET, tipoDesarrollo);
         var result16 = instancesRules.getValidationValidateAttachment(tipoDesarrollo,"Validar la existencia de los adjuntos", "Attachment");
         var result17 = instancesRules.getValidationDependency(teamBacklogId, TEAM_BACKLOG_RLB_ID,"Validar que exista una Dependencia asignada correctamente y comprometida (Comentario HUD Comprometida)",GROUP_DEPENDENCY);
@@ -172,10 +171,10 @@ public class JiraValidatorService {
 
             message.setVisible(config.isVisible());
             message.setMessage((String) result.get("message"));
-            if ((Boolean) result.get("isWarning")) {
+            if (Boolean.TRUE.equals(result.get("isWarning"))) {
                 message.setStatus("warning");
                 warningCount++;
-            } else if ((Boolean) result.get("isValid")) {
+            } else if (Boolean.TRUE.equals(result.get("isValid"))) {
                 message.setStatus("success");
                 successCount++;
             } else {
@@ -187,7 +186,7 @@ public class JiraValidatorService {
 
         jiraResponseDTO.setData(messages.stream().filter(JiraMessageResponseDTO::getVisible)
                 .sorted(Comparator.comparing(JiraMessageResponseDTO::getOrder))
-                .collect(Collectors.toList()));
+                .toList());
         jiraResponseDTO.setSuccessCount(successCount);
         jiraResponseDTO.setErrorCount(errorCount);
         jiraResponseDTO.setWarningCount(warningCount);
