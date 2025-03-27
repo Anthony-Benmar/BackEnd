@@ -5,7 +5,6 @@ import com.bbva.database.mappers.UserMapper;
 import com.bbva.dto.User.Request.PaginationDtoRequest;
 import com.bbva.dto.User.Request.ValidateDtoRequest;
 import com.bbva.dto.User.Response.*;
-import com.bbva.dto.template.response.TemplatePaginationResponse;
 import com.bbva.entities.User;
 import com.bbva.entities.secu.RolMenu;
 import com.bbva.entities.secu.RolMenuAction;
