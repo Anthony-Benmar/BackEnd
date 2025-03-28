@@ -37,7 +37,7 @@ class JiraValidatorLogDaoTest {
         when(sqlSessionFactoryMock.openSession()).thenReturn(sqlSessionMock);
         when(sqlSessionMock.getMapper(JiraValidatorLogMapper.class)).thenReturn(jiraValidatorLogMapperMock);
 
-        jiraValidatorLogDao = new JiraValidatorLogDao();
+        jiraValidatorLogDao = JiraValidatorLogDao.getInstance();
     }
 
     @AfterEach

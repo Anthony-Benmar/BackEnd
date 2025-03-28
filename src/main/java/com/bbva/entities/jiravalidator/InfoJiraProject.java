@@ -1,11 +1,10 @@
 package com.bbva.entities.jiravalidator;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @AllArgsConstructor
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 public class InfoJiraProject {
     
