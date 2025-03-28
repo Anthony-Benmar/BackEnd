@@ -17,11 +17,10 @@ import org.apache.ibatis.session.SqlSessionFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.MockitoAnnotations;
 
-public class UserDaoTest {
+class UserDaoTest {
 
     private UserDao userDao;
     private SqlSessionFactory sqlSessionFactoryMock;
@@ -47,12 +46,12 @@ public class UserDaoTest {
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         mockedFactory.close();
     }
 
     @Test
-    public void testGetUserSuccess() {
+    void testGetUserSuccess() {
         String googleId = "testGoogleId";
         String email = "test@example.com";
         User user1 = new User(1,"googleId123","","userId123", "J", "googleId123", "test@example.com");
@@ -73,7 +72,7 @@ public class UserDaoTest {
     }
 
     @Test
-    public void testGetUserEmptyList() {
+    void testGetUserEmptyList() {
         String googleId = "unknownId";
         String email = "unknown@example.com";
 
