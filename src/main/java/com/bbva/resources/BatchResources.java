@@ -122,5 +122,4 @@ public class BatchResources {
         return batchService.filterIssueAction(dto);
     }
 
-
 }

@@ -2,8 +2,12 @@ package com.bbva.resources;
 
 import com.bbva.core.abstracts.IDataResult;
 import com.bbva.core.results.SuccessDataResult;
-import com.bbva.dto.batch.request.InsertJobExecutionActiveRequest;
-import com.bbva.dto.batch.request.InsertJobExecutionStatusRequest;
+import com.bbva.dto.batch.request.*;
+import com.bbva.dto.batch.response.BatchIssuesActionFilterDtoResponse;
+import com.bbva.dto.batch.response.InsertAJIFJobExecutionResponseDTO;
+import com.bbva.dto.batch.response.JobExecutionByIdDTO;
+import com.bbva.dto.batch.response.JobExecutionFilterResponseDTO;
+import com.bbva.entities.InsertEntity;
 import com.bbva.service.BatchService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,7 +35,7 @@ class BatchResourcesTest {
     }
 
     @Test
-    void testGetLastJobExecutionStatusDate() throws Exception {
+    void testGetLastJobExecutionStatusDate() {
         when(batchServiceMock.getLastJobExecutionStatusDate()).thenReturn(getResponseDto());
         IDataResult<String> response = batchResources.getLastJobExecutionStatusDate();
         assertEquals(String.valueOf(Response.Status.OK.getStatusCode()), response.status);
@@ -55,6 +59,61 @@ class BatchResourcesTest {
         assertNotNull(result);
         assertTrue(result.success);
         assertEquals("Succesfull", result.message);
+    }
+
+    @Test
+    void testFilterIssueAction() {
+        BatchIssuesActionFilterDtoRequest request = new BatchIssuesActionFilterDtoRequest();
+        when(batchServiceMock.filterIssueAction(request)).thenReturn(new SuccessDataResult<>(null));
+        IDataResult<BatchIssuesActionFilterDtoResponse> result = batchResources.filterIssueAction(request);
+        assertNotNull(result);
+        assertTrue(result.success);
+        assertEquals("Succesfull", result.message);
+    }
+
+    @Test
+    void testGetJobExecutionById() {
+        JobExecutionByIdRequest request = new JobExecutionByIdRequest();
+        when(batchServiceMock.getJobExecutionById(request.getFolder(),request.getOrderId(),
+                request.getJobName(),request.getRunCounter())).thenReturn(new SuccessDataResult<>(null));
+        IDataResult<JobExecutionByIdDTO> result = batchResources.getJobExecutionById(request);
+        assertNotNull(result);
+        assertTrue(result.success);
+        assertEquals("Succesfull", result.message);
+    }
+
+    @Test
+    void testCreateAJIFJobExecution() {
+        List<InsertJobExecutionStatusRequest> request = List.of(new InsertJobExecutionStatusRequest(),new InsertJobExecutionStatusRequest());
+        when(batchServiceMock.insertAJIFJobExecution(request)).thenReturn(new SuccessDataResult<>(null));
+        IDataResult<InsertAJIFJobExecutionResponseDTO> result = batchResources.createAJIFJobExecution(request);
+        assertNotNull(result);
+        assertTrue(result.success);
+        assertEquals("Succesfull", result.message);
+    }
+
+    @Test
+    void testInsertReliabilityIncidence() {
+        InsertReliabilityIncidenceDTO request = new InsertReliabilityIncidenceDTO();
+        when(batchServiceMock.insertReliabilityIncidence(request)).thenReturn(new SuccessDataResult<>(null));
+        IDataResult<InsertEntity> result = batchResources.insertReliabilityIncidence(request);
+        assertNotNull(result);
+        assertTrue(result.success);
+        assertEquals("Succesfull", result.message);
+    }
+
+    @Test
+    void testFilter() {
+        JobExecutionFilterRequestDTO request = new JobExecutionFilterRequestDTO();
+        request.setRecords_amount(1);
+        request.setPage(1);
+        when(batchServiceMock.filter(request)).thenReturn(new SuccessDataResult<>(null));
+        IDataResult<JobExecutionFilterResponseDTO> result = batchResources.filter(request.getRecords_amount().toString(),
+                request.getPage().toString(), request.getJobName(),request.getStartDate(),
+                request.getEndDate(),request.getFolder(),request.getDataproc(),
+                request.getOrderId(),request.getProjectName(),request.getSdatoolId(),
+                request.getDomain(),request.getIsTypified());
+        assertNull(result);
     }
 
     private List<InsertJobExecutionStatusRequest> getInsertJobExecutionStatusRequestList(){
