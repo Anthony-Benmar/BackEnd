@@ -51,4 +51,12 @@ public class CatalogResources {
     public IDataResult<PeriodEntity> listAllPeriods() {
         return catalogService.listAllPeriods();
     }
+
+    @GET
+    @Path("get-active-period")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<PeriodEntity> getActivePeriod() {
+        return catalogService.getActivePeriod();
+    }
 }

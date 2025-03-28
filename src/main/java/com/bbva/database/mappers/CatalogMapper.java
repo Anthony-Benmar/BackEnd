@@ -22,9 +22,15 @@ public interface CatalogMapper {
 
     @Select({"<script>" +
             "SELECT period_id,period_order,period_status FROM data_period " +
-            "where period_status = 1" +
+            "ORDER BY period_order DESC" +
             "</script>"})
     List<PeriodEntity> listAllPeriods();
+
+    @Select({"<script>" +
+            "SELECT period_id,period_order,period_status FROM data_period " +
+            "where period_status = 1" +
+            "</script>"})
+    List<PeriodEntity> getActivePeriod();
 
     @Select("CALL SP_LIST_CATALOG(" +
             "#{catalogId}," +

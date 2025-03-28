@@ -105,4 +105,16 @@ public class CatalogDao {
             return null;
         }
     }
+
+    public List<PeriodEntity> getActivePeriod() {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            CatalogMapper mapper = session.getMapper(CatalogMapper.class);
+            List<PeriodEntity> activePeriod = mapper.getActivePeriod();
+            return activePeriod;
+        }catch (Exception e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            return null;
+        }
+    }
 }

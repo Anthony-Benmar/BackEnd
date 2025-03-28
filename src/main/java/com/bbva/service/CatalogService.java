@@ -71,4 +71,9 @@ public class CatalogService {
         var result = catalogDao.listAllPeriods();
         return new SuccessDataResult(result);
     }
+
+    public IDataResult<PeriodEntity> getActivePeriod() {
+        var result = catalogDao.getActivePeriod();
+        return new SuccessDataResult(result);
+    }
 }
