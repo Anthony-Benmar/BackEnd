@@ -1,5 +1,6 @@
 package com.bbva.config;
 
+import com.bbva.jetty.ReliabilityResource;
 import com.bbva.resources.*;
 
 import javax.ws.rs.core.Application;
@@ -36,6 +37,7 @@ public class JaxRsApplication extends Application {
         classes.add(JobResources.class);
         classes.add(JiraValidatorResources.class);
         classes.add(DocumentGeneratorResources.class);
+        classes.add(ReliabilityResource.class);
         return classes;
     }
 }
