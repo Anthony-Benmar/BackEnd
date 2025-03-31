@@ -1,9 +1,7 @@
-package com.bbva.jetty;
+package com.bbva.resources;
 
 
 import com.bbva.core.abstracts.IDataResult;
-import com.bbva.dto.project.request.ProjectInfoFilterRequest;
-import com.bbva.dto.project.response.ProjectInfoFilterResponse;
 import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
 import com.bbva.dto.reliability.response.InventoryInputsFilterDtoResponse;
 import com.bbva.service.ReliabilityService;

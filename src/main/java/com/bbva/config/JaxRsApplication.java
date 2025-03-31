@@ -1,6 +1,5 @@
 package com.bbva.config;
 
-import com.bbva.jetty.ReliabilityResource;
 import com.bbva.resources.*;
 
 import javax.ws.rs.core.Application;
