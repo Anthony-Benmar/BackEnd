@@ -16,7 +16,7 @@ public interface ReliabilityMapper {
             "#{jobType}," +
             "#{frequency}," +
             "#{isCritical}," +
-            "#{SearchByInputOutputTable})")
+            "#{searchByInputOutputTable})")
 
     @Results({
             @Result(property = "domainName", column = "domain_name"),
@@ -35,6 +35,6 @@ public interface ReliabilityMapper {
                                                               @Param("jobType") String jobType,
                                                               @Param("frequency") String frequency,
                                                               @Param("isCritical") String isCritical,
-                                                              @Param("SearchByInputOutputTable") String SearchByInputOutputTable
+                                                              @Param("searchByInputOutputTable") String searchByInputOutputTable
     );
 }

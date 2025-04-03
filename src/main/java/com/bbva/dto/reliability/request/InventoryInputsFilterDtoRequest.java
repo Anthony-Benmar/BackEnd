@@ -13,7 +13,6 @@ public class InventoryInputsFilterDtoRequest {
     private String useCase;
     private String jobType;
     private String frequency;
-    private String isCritical;
-    //private Boolean isCritical;
-    public String SearchByInputOutputTable;
+    private String isCritical;//private Boolean isCritical;
+    private String searchByInputOutputTable;
 }
