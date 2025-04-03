@@ -1,11 +1,15 @@
 package com.bbva.dto.project.request;
 
-import javax.annotation.Nullable;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.Date;
 
+@Setter
+@Getter
 public class ProjectStatusDTO {
-    public Integer projectId;
-    public String statusName;
-    public Integer statusId;
-    public Date startDate;
+    private Integer projectId;
+    private String statusName;
+    private Integer statusId;
+    private Date startDate;
 }

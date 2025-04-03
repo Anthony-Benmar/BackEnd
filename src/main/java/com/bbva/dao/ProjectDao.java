@@ -32,6 +32,7 @@ import static com.bbva.util.types.FechaUtil.convertDateToString;
 
 public class ProjectDao {
     private static final Logger log = Logger.getLogger(ProjectDao.class.getName());
+    private static final String dateFormat = "dd/MM/yyyy HH:mm:ss";
 
     public ProjectFilterByNameOrSdatoolDtoResponse filter(ProjectFilterByNameOrSdatoolDtoRequest dto) {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
@@ -324,10 +325,10 @@ public class ProjectDao {
 
         for (ProjectInfoSelectResponse item : lista) {
             if (item.getCreateAuditDate() != null) {
-                item.setCreateAuditDate_S(convertDateToString(item.getCreateAuditDate(), "dd/MM/yyyy HH:mm:ss"));
+                item.setCreateAuditDate_S(convertDateToString(item.getCreateAuditDate(), dateFormat));
             }
             if (item.getUpdateAuditDate() != null) {
-                item.setUpdateAuditDate_S(convertDateToString(item.getUpdateAuditDate(), "dd/MM/yyyy HH:mm:ss"));
+                item.setUpdateAuditDate_S(convertDateToString(item.getUpdateAuditDate(), dateFormat));
             }
 
         }
@@ -395,10 +396,10 @@ public class ProjectDao {
 
         for (ProjectInfoSelectAllByDomainDtoResponse item : lista) {
             if (item.getCreateAuditDate() != null) {
-                item.setCreateAuditDate_S(convertDateToString(item.getCreateAuditDate(), "dd/MM/yyyy HH:mm:ss"));
+                item.setCreateAuditDate_S(convertDateToString(item.getCreateAuditDate(), dateFormat));
             }
             if (item.getUpdateAuditDate() != null) {
-                item.setUpdateAuditDate_S(convertDateToString(item.getUpdateAuditDate(), "dd/MM/yyyy HH:mm:ss"));
+                item.setUpdateAuditDate_S(convertDateToString(item.getUpdateAuditDate(), dateFormat));
             }
 
         }
@@ -512,7 +513,7 @@ public class ProjectDao {
 
             for (ProjectStatusEntity item : projectStatusesList) {
                 if (item.getStartDate() != null) {
-                    item.setStartDateStr(convertDateToString(item.getStartDate(), "dd/MM/yyyy HH:mm:ss"));
+                    item.setStartDateStr(convertDateToString(item.getStartDate(), dateFormat));
                 }
             }
             return mapper.getProjectStatusTracking(projectId);

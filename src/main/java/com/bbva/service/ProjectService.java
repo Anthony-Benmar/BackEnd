@@ -407,11 +407,10 @@ public class ProjectService {
         }
     }
 
-    public IDataResult<List<ProjectStatusEntity>> getProjectStatusTracking(int projectId)
-            throws ExecutionException, InterruptedException{
+    public IDataResult<List<ProjectStatusEntity>> getProjectStatusTracking(int projectId){
         try {
-            var result = projectDao.getProjectStatusTracking(projectId);
-            return new SuccessDataResult(result);
+            List<ProjectStatusEntity> result = projectDao.getProjectStatusTracking(projectId);
+            return new SuccessDataResult<>(result);
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
             return new ErrorDataResult(projectId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());

@@ -11,6 +11,7 @@ import com.bbva.service.CatalogService;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
+import java.util.List;
 
 @Path("/catalog")
 @Produces(MediaType.APPLICATION_JSON)
@@ -56,7 +57,7 @@ public class CatalogResources {
     @Path("get-active-period")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public IDataResult<PeriodEntity> getActivePeriod() {
+    public IDataResult<List<PeriodEntity>> getActivePeriod() {
         return catalogService.getActivePeriod();
     }
 }

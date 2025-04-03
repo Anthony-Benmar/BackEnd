@@ -66,12 +66,10 @@ public interface ProjectMapper {
             "FROM project_status ps JOIN catalog c ON (c.catalog_id = 1033 and  ps.status_id = c.element_id) " +
             "WHERE ps.project_id = #{projectId} order by ps.start_date desc;" +
             "</script>"})
-    @Results({
-            @Result(property = "projectId", column = "project_id"),
-            @Result(property = "statusId", column = "status_id"),
-            @Result(property = "statusName", column = "status_name"),
-            @Result(property = "startDate", column = "start_date")
-    })
+    @Result(property = "projectId", column = "project_id")
+    @Result(property = "statusId", column = "status_id")
+    @Result(property = "statusName", column = "status_name")
+    @Result(property = "startDate", column = "start_date")
     List<ProjectStatusEntity> getProjectStatusTracking(@Param("projectId") int projectId);
 
     @Select({"SELECT project_id, sdatool_id, project_name, status_type FROM data_project " +
