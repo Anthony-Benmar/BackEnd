@@ -109,6 +109,7 @@ public class JiraValidatorConstantes {
     public static final String TEAM_BACK_LOG_DQA_ID = "2461905";
     public static final String QA = "[QA]";
     public static final String KEY = "key";
+    public static final String MSG_ERROR_RULE = "Ocurrió un error en la validación de la regla. Favor de contactar con DQA.";
 
     static {
         Map<String, List<String>> mapDevTypes = new HashMap<>();

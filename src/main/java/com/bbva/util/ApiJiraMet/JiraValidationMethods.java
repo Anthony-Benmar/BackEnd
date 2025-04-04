@@ -113,7 +113,7 @@ public class JiraValidationMethods {
         for(Map.Entry<String, List<String>> entry : keyIssueTypeAndStatus.entrySet()){
             List<String> issueTypeAndStatus = entry.getValue();
             String ticketMessage = "El ticket asociado " + entry.getKey();
-            String statusMessage = "";
+            String statusMessage;
             if (STORY.stream().noneMatch(s -> s.equalsIgnoreCase(issueTypeAndStatus.get(0)))) {
                 statusMessage = "se esperaba que fuera del tipo " + String.join("/", STORY);
             } else {
@@ -1361,13 +1361,13 @@ public class JiraValidationMethods {
         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
 
-    public Map<String, Object> getValidationInitialTeam(String helpMessage, String group) throws ParseException {
+    public Map<String, Object> getValidationInitialTeam(String helpMessage, String group){
         String message = "";
         boolean isValid = false;
         boolean isWarning = false;
 
         JsonArray changelog = jiraTicketResult.getAsJsonObject(CHANGELOG).getAsJsonArray(HISTORIES);
-        Date oldestDate = new SimpleDateFormat("yyyy-MM-dd").parse("9999-12-31");
+        Date oldestDate = parseDate("9999-12-31", "yyyy-MM-dd");
         String extractedContent;
 
         for (JsonElement history : changelog) {
@@ -1404,9 +1404,17 @@ public class JiraValidationMethods {
         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
 
-    private Date extractCreatedDate(JsonObject historyObj) throws ParseException {
+    private Date extractCreatedDate(JsonObject historyObj) {
         String created = historyObj.get(CREATED).getAsString();
-        return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").parse(created);
+        return parseDate(created, "yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+    }
+
+    private Date parseDate(String dateStr, String pattern) {
+        try {
+            return new SimpleDateFormat(pattern).parse(dateStr);
+        } catch (ParseException e) {
+            throw new RuntimeException("Error parseando la fecha: " + dateStr + " con el patrón: " + pattern, e);
+        }
     }
 
     private boolean isTeamBacklogField(JsonArray items) {
