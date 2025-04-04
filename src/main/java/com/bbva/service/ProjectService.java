@@ -348,8 +348,7 @@ public class ProjectService {
         return new SuccessDataResult(dto);
     }
 
-    public IDataResult<List<InsertProjectParticipantDTO>> getProjectParticipants(int projectId)
-            throws ExecutionException, InterruptedException {
+    public IDataResult<List<InsertProjectParticipantDTO>> getProjectParticipants(int projectId) {
 
         try {
             var result = projectDao.getProjectParticipants(projectId);
@@ -407,13 +406,13 @@ public class ProjectService {
         }
     }
 
-    public IDataResult<List<ProjectStatusEntity>> getProjectStatusTracking(int projectId){
+    public IDataResult<List<ProjectStatusEntity>> getProjectStatusTracking(int projectId) {
         try {
             List<ProjectStatusEntity> result = projectDao.getProjectStatusTracking(projectId);
             return new SuccessDataResult<>(result);
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
-            return new ErrorDataResult(projectId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
+            return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
 }

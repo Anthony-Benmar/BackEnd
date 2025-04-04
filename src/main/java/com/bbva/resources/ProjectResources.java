@@ -277,7 +277,6 @@ public class ProjectResources {
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<List<ProjectStatusEntity>> getProjectStatusTracking(@Context HttpServletRequest request,
                                                                          @PathParam("projectId") int projectId)
-            throws ExecutionException, InterruptedException
     {
         return projectService.getProjectStatusTracking(projectId);
     }
@@ -287,7 +286,6 @@ public class ProjectResources {
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<List<InsertProjectParticipantDTO>> getProjectParticipants(@Context HttpServletRequest request,
                                                                                  @PathParam("projectId") int projectId)
-            throws ExecutionException, InterruptedException
     {
         return projectService.getProjectParticipants(projectId);
     }
