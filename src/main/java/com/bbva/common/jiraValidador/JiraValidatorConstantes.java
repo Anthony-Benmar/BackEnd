@@ -29,7 +29,7 @@ public class JiraValidatorConstantes {
     public static final String RELEASEMALLASDATIO = "ReleaseMallasDatio";
     public static final String RELEASEPRDATIO = "ReleasePRDatio";
     public static final String RELEASESCAFFOLDERDATIO = "ReleaseScaffolderDatio";
-    public static final String STORY = "Story";
+    public static final List<String> STORY = List.of("Story", "Historia");
     public static final String P110_AT = "[P110][AT]";
     public static final String C204_PO = "[C204][PO]";
     public static final String C204_QA = "[C204][QA]";
@@ -51,12 +51,17 @@ public class JiraValidatorConstantes {
     public static final String CUSTOMFIELD_13301 = "customfield_13301";
     public static final String MSG_RULE_INVALID = "Esta regla no es válida para este tipo de desarrollo.";
     public static final String INWARD = "inward";
+    public static final String OUTWARD = "outward";
     public static final String STATUS = "status";
     public static final String INWARD_ISSUE = "inwardIssue";
+    public static final String OUTWARD_ISSUE = "outwardIssue";
     public static final String DEPLOYED = "Deployed";
     public static final String VB_KM = "[VB][KM]";
     public static final String VB_SO = "[VB][SO]";
     public static final String VB_DEV = "[VB][DEV]";
+    public static final String VB_ADA = "[VB][ADA]";
+    public static final String VB_ALPHA = "[VB][ALPHA]";
+    public static final String P110_GC = "[P110][GC]";
     public static final String SUBTASKS = "subtasks";
     public static final String ACCEPTED = "Accepted";
     public static final String DISCARDED = "Discarded";
@@ -65,23 +70,28 @@ public class JiraValidatorConstantes {
     public static final String MSG_SUBTAREA = "Subtarea ";
     public static final String ISSUES = "issues";
     public static final String MSG_RULE_VALID = "Es válido: %s";
-    public static final String MSG_RULE_CRITERIOFORMATO = "Criterio de aceptación no cumple con el formato requerido";
+    public static final String ACCEPTANCE_CRITERIA_MESH = "Como {0} declaramos que este Pase se encuentra listo para transitar por las etapas de Certificación Técnica, QA y Despliegue a Producción";
+    public static final String ACCEPTANCE_CRITERIA_COMMON_TEXT = "Desarrollo según lineamientos globales ONE y de Data Quality Assurance Perú";
+    public static final String MSG_RULE_CRITERIOFORMATO_MESH = "Criterio de aceptación no cumple con el formato requerido. \"" + ACCEPTANCE_CRITERIA_MESH.replace("{0}", "(Nombre de Equipo) ") + "\"";
+    public static final String MSG_RULE_CRITERIOFORMATO_PR = "Criterio de aceptación no cumple con el formato requerido.  " + ACCEPTANCE_CRITERIA_COMMON_TEXT;
     public static final String MSG_RULE_TIPODESARROLLO = "Tipo de desarrollo no encontrado en los criterios de aceptación";
     public static final String MSG_RULE_CRITEROACEPTACION = "Sin Criterio de Aceptación";
     public static final String MSG_RULE_EXCEPTION_RLB = "Proviene del tabero RLB, por lo que no tiene dependencia asociada y, en consecuencia, esta regla no es aplicable.";
     public static final String MSG_RULE_ASIGNEE_DQA = "Asignado a Tablero de DQA";
     public static final String LABEL = "label";
-    public static final String DEPENDENCY = "Dependency";
+    public static final List<String> DEPENDENCY = List.of("Dependency","Dependencia");
     public static final String READY_TO_VERIFY = "Ready To Verify";
     public static final String READY = "Ready";
     public static final String TEST = "Test";
     public static final String READY_TO_DEPLOY ="Ready To Deploy";
     public static final String IN_PROGRESS = "In Progress";
+    public static final String EN_PROGRESO = "En progreso";
     public static final String MSG_RULE_NOFEATURE = "Sin Feature Link asociado";
     public static final String LABELS = "labels";
     public static final String MSG_RULE_NOSUBTAREA = "Faltan alguna de las siguientes subtareas: ";
     public static final String MSG_RULE_RECOMENDATIONSUBTAREA = "Se recomienda validar las subtareas adicional: ";
     public static final String IS_CHILD_ITEM_OF = "is child item of";
+    public static final String IS_PARENT_ITEM_OF = "is parent item of";
     public static final String MSG_RULE_NODEPENDENCY = "Ticket no cuenta con Dependencia Asociada.";
     public static final String MSG_UUAA = "Se encontro UUAAs ";
     public static final String MSG_COORDINATION_MESSAGE = "de ser necesario coordinar con el SM / QE";
@@ -97,6 +107,8 @@ public class JiraValidatorConstantes {
     public static final String ASSIGNEE = "assignee";
     public static final String PRS = "prs";
     public static final String TEAM_BACK_LOG_DQA_ID = "2461905";
+    public static final String QA = "[QA]";
+    public static final String KEY = "key";
 
     static {
         Map<String, List<String>> mapDevTypes = new HashMap<>();
@@ -153,20 +165,20 @@ public class JiraValidatorConstantes {
         LABELS_BY_DEVELOP_TYPES = Collections.unmodifiableMap(mapLabelsByDevTypes);
 
         Map<String, List<String>> mapTicketHuTypes = new HashMap<>();
-        mapTicketHuTypes.put(MALLAS, new ArrayList<>(List.of(DEPENDENCY)));
-        mapTicketHuTypes.put(PRS, new ArrayList<>(List.of(STORY)));
-        mapTicketHuTypes.put(PRODUCTIVIZACION, new ArrayList<>(List.of(STORY)));
-        mapTicketHuTypes.put(HOST, new ArrayList<>(List.of(DEPENDENCY)));
-        mapTicketHuTypes.put(HAMMURABI, new ArrayList<>(List.of(STORY)));
-        mapTicketHuTypes.put(MIGRATIONTOOL, new ArrayList<>(List.of(STORY)));
-        mapTicketHuTypes.put(SMARTCLEANER, new ArrayList<>(List.of(STORY)));
-        mapTicketHuTypes.put(INGESTA, new ArrayList<>(List.of(STORY)));
-        mapTicketHuTypes.put(PROCESAMIENTO, new ArrayList<>(List.of(STORY)));
-        mapTicketHuTypes.put(OPERATIVIZACION, new ArrayList<>(List.of(STORY)));
-        mapTicketHuTypes.put(SCAFFOLDER, new ArrayList<>(List.of(STORY)));
-        mapTicketHuTypes.put(SPARKCOMPACTOR, new ArrayList<>(List.of(STORY)));
-        mapTicketHuTypes.put(JSON_GLOBAL, new ArrayList<>(List.of(STORY)));
-        mapTicketHuTypes.put(TERADATA, new ArrayList<>(List.of(STORY)));
+        mapTicketHuTypes.put(MALLAS, DEPENDENCY);
+        mapTicketHuTypes.put(PRS, STORY);
+        mapTicketHuTypes.put(PRODUCTIVIZACION, STORY);
+        mapTicketHuTypes.put(HOST, DEPENDENCY);
+        mapTicketHuTypes.put(HAMMURABI, STORY);
+        mapTicketHuTypes.put(MIGRATIONTOOL, STORY);
+        mapTicketHuTypes.put(SMARTCLEANER, STORY);
+        mapTicketHuTypes.put(INGESTA, STORY);
+        mapTicketHuTypes.put(PROCESAMIENTO, STORY);
+        mapTicketHuTypes.put(OPERATIVIZACION, STORY);
+        mapTicketHuTypes.put(SCAFFOLDER, STORY);
+        mapTicketHuTypes.put(SPARKCOMPACTOR, STORY);
+        mapTicketHuTypes.put(JSON_GLOBAL, STORY);
+        mapTicketHuTypes.put(TERADATA, STORY);
 
         TICKET_HU_TYPES = Collections.unmodifiableMap(mapTicketHuTypes);
 
@@ -177,50 +189,40 @@ public class JiraValidatorConstantes {
         VOBO_BY_DEVELOP_TYPES = Collections.unmodifiableMap(mapVoBoByDevTypes);
 
         Map<String, Map<String, Object>> mapCriteriaByDevTypes = new HashMap<>();
-        String acceptanceCriteria = "Como {0} declaramos que este Pase se encuentra listo para transitar por las etapas de Certificación Técnica, QA y Despliegue a Producción. La documentación adjunta corresponde al {1} así como las Historias de Usuario enlazadas a este pase.";
-        mapCriteriaByDevTypes.put(MALLAS, Map.of(TEXTO, acceptanceCriteria));
-        mapCriteriaByDevTypes.put(HOST, Map.of(TEXTO, acceptanceCriteria));
 
-        mapCriteriaByDevTypes.put(PRS, Map.of(
-                TEXTO, "Desarrollo según lineamientos globales ONE y de Data Quality Assurance Perú."
-        ));
+        mapCriteriaByDevTypes.put(MALLAS, Map.of(TEXTO, ACCEPTANCE_CRITERIA_MESH));
+        mapCriteriaByDevTypes.put(HOST, Map.of(TEXTO, ACCEPTANCE_CRITERIA_MESH));
 
-        // Texto común para los tipos de desarrollo
-        String commonText = "Desarrollo según lineamientos globales ONE y de Data Quality Assurance Perú.";
-
-        // Agregar tipos de desarrollo que comparten el mismo texto
-        List<String> devTypesWithCommonText = List.of(
+        List<String> devTypesWithCommonText = List.of(PRS,
                 HAMMURABI, MIGRATIONTOOL, SMARTCLEANER,
                 INGESTA, PROCESAMIENTO, OPERATIVIZACION,
                 SCAFFOLDER, SPARKCOMPACTOR, JSON_GLOBAL,
                 TERADATA, PRODUCTIVIZACION
         );
 
-        // Añadir cada tipo de desarrollo al mapa con el texto común
         for (String devType : devTypesWithCommonText) {
-            mapCriteriaByDevTypes.put(devType, Map.of(TEXTO, commonText));
+            mapCriteriaByDevTypes.put(devType, Map.of(TEXTO, ACCEPTANCE_CRITERIA_COMMON_TEXT));
         }
 
         CRITERIA_BY_DEVELOP_TYPES = Collections.unmodifiableMap(mapCriteriaByDevTypes);
 
         Map<String, List<String>> mapSubtasksByDevTypes = new HashMap<>();
-        mapSubtasksByDevTypes.put(MALLAS, new ArrayList<>(List.of(P110_AT, C204_PO, C204_QA, VB_DEV)));
-        mapSubtasksByDevTypes.put(PRS, new ArrayList<>(List.of(C204_PO, C204_QA)));
-        mapSubtasksByDevTypes.put(PRODUCTIVIZACION, new ArrayList<>(List.of("[VB][PO]", "[VB][QA]")));
-        mapSubtasksByDevTypes.put(HOST, new ArrayList<>(List.of(P110_AT, C204_PO, C204_QA,"[P110][GC]")));
-        mapSubtasksByDevTypes.put(HAMMURABI, new ArrayList<>(List.of(C204_PO, C204_QA)));
-        mapSubtasksByDevTypes.put(MIGRATIONTOOL, new ArrayList<>(List.of(C204_PO, C204_QA)));
-        mapSubtasksByDevTypes.put(SMARTCLEANER, new ArrayList<>(List.of(C204_PO, C204_QA)));
-        mapSubtasksByDevTypes.put(INGESTA, new ArrayList<>(List.of(C204_PO, C204_QA)));
-        mapSubtasksByDevTypes.put(PROCESAMIENTO, new ArrayList<>(List.of(C204_PO, C204_QA)));
-        mapSubtasksByDevTypes.put(OPERATIVIZACION, new ArrayList<>(List.of(C204_PO, C204_QA)));
-        mapSubtasksByDevTypes.put(SCAFFOLDER, new ArrayList<>(List.of(C204_PO, C204_QA)));
-        mapSubtasksByDevTypes.put(SPARKCOMPACTOR, new ArrayList<>(List.of(C204_PO, C204_QA)));
-        mapSubtasksByDevTypes.put(JSON_GLOBAL, new ArrayList<>(List.of(C204_PO, C204_QA)));
-        mapSubtasksByDevTypes.put(TERADATA, new ArrayList<>(List.of(C204_PO, C204_QA)));
+        mapSubtasksByDevTypes.put(MALLAS, new ArrayList<>(List.of(P110_AT, C204_PO, C204_QA, VB_DEV, VB_ADA)));
+        mapSubtasksByDevTypes.put(PRS, new ArrayList<>(List.of(C204_PO, C204_QA, VB_ADA)));
+        mapSubtasksByDevTypes.put(PRODUCTIVIZACION, new ArrayList<>(List.of("[VB][PO]", "[VB][QA]", VB_ADA)));
+        mapSubtasksByDevTypes.put(HOST, new ArrayList<>(List.of(P110_AT, C204_PO, C204_QA, P110_GC)));
+        mapSubtasksByDevTypes.put(HAMMURABI, new ArrayList<>(List.of(C204_PO, C204_QA, VB_ADA)));
+        mapSubtasksByDevTypes.put(MIGRATIONTOOL, new ArrayList<>(List.of(C204_PO, C204_QA, VB_ADA)));
+        mapSubtasksByDevTypes.put(SMARTCLEANER, new ArrayList<>(List.of(C204_PO, C204_QA, VB_ADA)));
+        mapSubtasksByDevTypes.put(INGESTA, new ArrayList<>(List.of(C204_PO, C204_QA, VB_ADA)));
+        mapSubtasksByDevTypes.put(PROCESAMIENTO, new ArrayList<>(List.of(C204_PO, C204_QA, VB_ADA)));
+        mapSubtasksByDevTypes.put(OPERATIVIZACION, new ArrayList<>(List.of(C204_PO, C204_QA, VB_ADA)));
+        mapSubtasksByDevTypes.put(SCAFFOLDER, new ArrayList<>(List.of(C204_PO, C204_QA, VB_ADA)));
+        mapSubtasksByDevTypes.put(SPARKCOMPACTOR, new ArrayList<>(List.of(C204_PO, C204_QA, VB_ADA)));
+        mapSubtasksByDevTypes.put(JSON_GLOBAL, new ArrayList<>(List.of(C204_PO, C204_QA, VB_ADA)));
+        mapSubtasksByDevTypes.put(TERADATA, new ArrayList<>(List.of(C204_PO, C204_QA, VB_ADA)));
 
         SUBTASKS_BY_DEVELOP_TYPES = Collections.unmodifiableMap(mapSubtasksByDevTypes);
-
 
         Map<String, List<String>> mapSubtasksSpecials = new HashMap<>();
         mapSubtasksSpecials.put("cambio dummy", new ArrayList<>(List.of("[AT]","[QA]"))); //VB = VoBo [VB]
@@ -277,7 +279,7 @@ public class JiraValidatorConstantes {
                 "advertenciaReadyToVerify", false,
                 "advertenciaEstadoInicial", true,
                 STATUS, new ArrayList<>(List.of(ACCEPTED, READY_TO_VERIFY)),
-                ITEMS, new ArrayList<>(List.of("[P110][GC]"))
+                ITEMS, new ArrayList<>(List.of(P110_GC))
                 )));
         mapSubtasksTipoOwner.put("qa", new HashMap<>(Map.of(
                 "label", "QA",

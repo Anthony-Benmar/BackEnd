@@ -105,7 +105,7 @@ public class JiraValidatorService {
         var result11 = instancesRules.getValidationFeatureLinkRLB(teamBacklogId, TEAM_BACKLOG_RLB_ID,"Validar que el Feature Link tenga INC PRB o PB como label, excepto para evolutivos", GROUP_FEATURE_LINK);
         var result12 = instancesRules.getValidationItemType("Validar Item Type sea Technical", GROUP_TICKET);
         var result13 = instancesRules.getValidationTechStack("Validar Tech Stack sea Data - Dataproc", GROUP_TICKET);
-        var result14 = instancesRules.getValidationAcceptanceCriteria(teamBacklogId,TEAM_BACKLOG_RLB_ID,tipoDesarrollo,"Validar el criterio de aceptacion, segun el tipo de desarrollo debe ser similar a la plantilla", GROUP_ACCEPTANCE_CRITERIA);
+        var result14 = instancesRules.getValidationAcceptanceCriteria(tipoDesarrollo,"Validar el criterio de aceptacion, segun el tipo de desarrollo debe ser similar a la plantilla", GROUP_ACCEPTANCE_CRITERIA);
         var result15 = instancesRules.getValidationValidateImpactLabel("Validar que se tengan los Impact Label correctos (Solo Mallas/HOST)",GROUP_TICKET, tipoDesarrollo);
         var result16 = instancesRules.getValidationValidateAttachment(tipoDesarrollo,"Validar la existencia de los adjuntos", "Attachment");
         var result17 = instancesRules.getValidationDependency(teamBacklogId, TEAM_BACKLOG_RLB_ID,"Validar que exista una Dependencia asignada correctamente y comprometida (Comentario HUD Comprometida)",GROUP_DEPENDENCY);
@@ -113,14 +113,14 @@ public class JiraValidatorService {
         var result19 = instancesRules.getValidationDependencyComment(teamBacklogId, TEAM_BACKLOG_RLB_ID, dto,"Validar que la dependencia cuente con un comentario comprometido de QE o QE temporal",GROUP_DEPENDENCY, infoJiraProjectList);
         var result20 = instancesRules.getValidationValidateSubTask(tipoDesarrollo,"Validar la existencia de las subtareas", GROUP_SUBTASK);
         var result21 = instancesRules.getValidationValidateSubTaskStatus(tipoDesarrollo,"Se valida que la subtarea tenga el Status correcto", GROUP_SUBTASK);
-        var result22 = instancesRules.getValidationValidateSubtaskPerson(subtaskMetadataMap, teamBacklogId,"Validar que la subtarea tenga el VoBo de la persona en el tablero de Lideres",GROUP_SUBTASK, infoJiraProjectList);
-        var result23 = instancesRules.getValidationValidateSubTaskValidateContractor(subtaskMetadataMap,"Se valida la subtarea: El email debe pertenecer a un Usuario de Negocio Interno BBVA", "Subtarea");
+        var result22 = instancesRules.getValidationValidateSubtaskPerson(tipoDesarrollo,subtaskMetadataMap, teamBacklogId,"Validar que la subtarea tenga el VoBo de la persona en el tablero de Lideres",GROUP_SUBTASK, infoJiraProjectList);
+        var result23 = instancesRules.getValidationValidateSubTaskValidateContractor(tipoDesarrollo, subtaskMetadataMap,"Se valida la subtarea: El email debe pertenecer a un Usuario de Negocio Interno BBVA", "Subtarea");
         var result24 = instancesRules.getValidationAlpha(tipoDesarrollo,"Validar que la UUAA corresponda al Dominio de ALPHA", GROUP_SUBTASK);
         var result25 = instancesRules.getValidationValidateJIRAStatus(tipoDesarrollo,"Validar el Status de Ticket JIRA",GROUP_TICKET);
         var result26 = instancesRules.getValidationPR(tipoDesarrollo, "Validar que se tenga una PR asociada", GROUP_PR);
         var result27 = instancesRules.getValidationPRBranch("Validar que esté asociado a la rama correcta", GROUP_PR);
         var result28 = instancesRules.getValidationProductivizacionIssueLink(tipoDesarrollo, "Validar que el ticket de deployado como isChild (scaffolder)", GROUP_TICKET);
-        var result29 = instancesRules.getValidatorHUTIntegration(teamBacklogId,TEAM_BACKLOG_RLB_ID,"Detectar el tipo de Ticket Integracion", tipoDesarrollo, GROUP_TICKET);
+        var result29 = instancesRules.getValidatorHUTIntegration("Detectar el tipo de Ticket Integracion", tipoDesarrollo, GROUP_TICKET);
         var result30 = instancesRules.getValidationIFRS9("Validar los bloqueo IFRS9 en las solicitudes", GROUP_TICKET);
 
         resultFinal.add(result1);
@@ -356,7 +356,7 @@ public class JiraValidatorService {
             if((tipoDesarrollo.equalsIgnoreCase(MALLAS) || tipoDesarrollo.equalsIgnoreCase(HOST))
             && jiraTicketResult.getAsJsonObject(FIELDS)
                     .has(CUSTOMFIELD_13301) && !jiraTicketResult.getAsJsonObject(FIELDS)
-                    .getAsJsonArray(CUSTOMFIELD_13301).isJsonNull()) {
+                    .get(CUSTOMFIELD_13301).isJsonNull()) {
                 teamBackLogId = jiraTicketResult.getAsJsonObject(FIELDS)
                         .getAsJsonArray(CUSTOMFIELD_13301).get(0).getAsString();
             }
