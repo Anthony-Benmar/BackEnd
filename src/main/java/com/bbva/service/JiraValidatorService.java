@@ -362,9 +362,9 @@ public class JiraValidatorService {
             return ruleExecution.get();
         } catch (Exception e) {
             Map<String, Object> errorResult = new HashMap<>();
-            errorResult.put("isValid", false);
-            errorResult.put("message", MSG_ERROR_RULE);
-            errorResult.put("isWarning", false);
+            errorResult.put(ISVALID, false);
+            errorResult.put(MESSAGE, MSG_ERROR_RULE);
+            errorResult.put(ISWARNING   , false);
             return errorResult;
         }
     }

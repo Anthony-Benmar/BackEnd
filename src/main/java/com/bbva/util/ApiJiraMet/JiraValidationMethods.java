@@ -1413,7 +1413,7 @@ public class JiraValidationMethods {
         try {
             return new SimpleDateFormat(pattern).parse(dateStr);
         } catch (ParseException e) {
-            throw new RuntimeException("Error parseando la fecha: " + dateStr + " con el patrón: " + pattern, e);
+            throw new IllegalArgumentException("Error parseando la fecha: " + dateStr + " con el patrón: " + pattern, e);
         }
     }
 
