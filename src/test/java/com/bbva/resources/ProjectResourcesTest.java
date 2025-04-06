@@ -10,7 +10,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.Context;
 import java.lang.reflect.Field;
 import java.util.List;
 

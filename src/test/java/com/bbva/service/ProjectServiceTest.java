@@ -2,15 +2,12 @@ package com.bbva.service;
 
 import com.bbva.common.HttpStatusCodes;
 import com.bbva.core.abstracts.IDataResult;
-import com.bbva.core.results.ErrorDataResult;
-import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dao.ProjectDao;
 import com.bbva.entities.project.ProjectStatusEntity;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
-import org.mockito.Mockito;
 
 import java.lang.reflect.Field;
 import java.util.List;
@@ -85,9 +82,8 @@ class ProjectServiceTest {
         assertEquals(HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, result.status);
         verify(projectDaoMock).getProjectStatusTracking(projectId);
 
-        // Verificar que el log contiene el mensaje esperado
         LogRecord logRecord = logHandler.getLogRecords().stream()
-                .filter(record -> record.getLevel().equals(Level.SEVERE) && record.getMessage().equals(errorMessage))
+                .filter(log -> log.getLevel().equals(Level.SEVERE) && log.getMessage().equals(errorMessage))
                 .findFirst()
                 .orElse(null);
 
@@ -99,8 +95,8 @@ class ProjectServiceTest {
         private final List<LogRecord> logRecords = new ArrayList<>();
 
         @Override
-        public void publish(LogRecord record) {
-            logRecords.add(record);
+        public void publish(LogRecord logRecord) {
+            logRecords.add(logRecord);
         }
 
         @Override

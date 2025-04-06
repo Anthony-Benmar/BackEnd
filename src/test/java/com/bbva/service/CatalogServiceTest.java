@@ -1,23 +1,15 @@
 package com.bbva.service;
 
 import com.bbva.core.abstracts.IDataResult;
-import com.bbva.core.results.SuccessDataResult;
-import com.bbva.core.results.ErrorDataResult;
 import com.bbva.dao.CatalogDao;
 import com.bbva.dao.SppDao;
 import com.bbva.dto.catalog.request.ListByCatalogIdDtoRequest;
 import com.bbva.dto.catalog.response.CatalogResponseDto;
-import com.bbva.dto.catalog.response.ElementsDto;
 import com.bbva.dto.catalog.response.ListByCatalogIdDtoResponse;
 import com.bbva.entities.batch.GetCatalogEntity;
 import com.bbva.entities.common.PeriodEntity;
-import com.bbva.entities.spp.Period;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
-
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
