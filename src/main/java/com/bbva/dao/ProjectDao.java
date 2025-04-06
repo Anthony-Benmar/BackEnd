@@ -516,7 +516,7 @@ public class ProjectDao {
                     item.setStartDateStr(convertDateToString(item.getStartDate(), DATE_FORMAT));
                 }
             }
-            return mapper.getProjectStatusTracking(projectId);
+            return projectStatusesList;
         }
     }
 }

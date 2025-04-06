@@ -112,7 +112,7 @@ public class CatalogDao {
         try (SqlSession session = sqlSessionFactory.openSession()) {
             CatalogMapper mapper = session.getMapper(CatalogMapper.class);
             return mapper.getActivePeriod();
-        }catch (Exception e) {
+        } catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
             return Collections.emptyList();
         }
