@@ -83,7 +83,7 @@ spec:
                         def statusCode = null
 
                         sonar([
-                            sonarInstanceName: 'sonar-community-pro',
+                            sonarInstanceName: 'sonar-datacenter-pro',
                             waitForQualityGate: true
                         ]) {
                             withCredentials([
