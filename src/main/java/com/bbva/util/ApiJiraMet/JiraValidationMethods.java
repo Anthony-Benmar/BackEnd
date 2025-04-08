@@ -61,7 +61,6 @@ public class JiraValidationMethods {
 
         if (!tipoDesarrolloSummary.isEmpty()) {
             message = "Tipo de desarrollo: " + tipoDesarrolloSummary + " valido para el summary";
-
             isValid = true;
         } else {
             message = "Summary sin Tipo de desarrollo valido";
@@ -95,66 +94,78 @@ public class JiraValidationMethods {
         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
 
-    public Map<String, Object> getValidatorHUTIntegration(
-            String teamBackLogId, List<String> teamBackLogTicketIdRLB, String helpMessage,
+    public Map<String, Object> getValidatorHUTIntegration(String helpMessage,
             String tipoDesarrollo, String group) {
+        List<String> badResult = new ArrayList<>();
+        List<String> goodResult = new ArrayList<>();
         boolean isWarning = false;
+        boolean isValid = false;
+        String message;
         if (!tipoDesarrollo.equalsIgnoreCase(INGESTA)) {
             return buildValidationResult(MSG_RULE_INVALID, true, isWarning, helpMessage, group);
         }
-        if (teamBackLogTicketIdRLB.contains(teamBackLogId)) {
-            return buildValidationResult(MSG_RULE_INVALID, true, isWarning, helpMessage, group);
-        }
+
         JsonArray issuelinks = jiraTicketResult.getAsJsonObject(FIELDS).getAsJsonArray(ISSUELINKS);
-        String name = getIssueTypeName(issuelinks);
-        String statusCategory = getIssueStatusCategory(issuelinks);
-        if (name == null || !name.equals(STORY)) {
+        Map<String,List<String>> keyIssueTypeAndStatus = getIssueTypeAndStatus(issuelinks);
+        if (keyIssueTypeAndStatus.isEmpty()){
             return buildValidationResult("No es ticket de integración", true, isWarning, helpMessage, group);
         }
-        else if (statusCategory != null && statusCategory.equals(DEPLOYED)) {
-            return buildValidationResult("Ticket de integración sin tickets deployados", true, isWarning, helpMessage, group);
+        for(Map.Entry<String, List<String>> entry : keyIssueTypeAndStatus.entrySet()){
+            List<String> issueTypeAndStatus = entry.getValue();
+            String ticketMessage = "El ticket asociado " + entry.getKey();
+            String statusMessage;
+            if (STORY.stream().noneMatch(s -> s.equalsIgnoreCase(issueTypeAndStatus.get(0)))) {
+                statusMessage = "se esperaba que fuera del tipo " + String.join("/", STORY);
+            } else {
+                statusMessage = "es del tipo " + String.join("/", STORY);
+            }
+
+            if (!DEPLOYED.equalsIgnoreCase(issueTypeAndStatus.get(1))) {
+                statusMessage += " y se esperaba en estado " + DEPLOYED;
+            } else {
+                statusMessage += " y se encuentra en estado " + DEPLOYED;
+            }
+
+            if (statusMessage.contains("esperaba")) {
+                badResult.add(ticketMessage + " " + statusMessage);
+            } else {
+                goodResult.add(ticketMessage + " " + statusMessage);
+            }
+        }
+        if (!badResult.isEmpty()){
+            message = "Ticket de integración no valido: " + String.join(". \n", badResult);
+        }
+        else {
+            message = "Ticket de integración valido: " + String.join(". \n", goodResult);
+            isValid = true;
         }
 
-        return buildValidationResult("Ticket de integración sin tickets deployados", false, isWarning, helpMessage, group);
+        return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
 
-    private String getIssueTypeName(JsonArray issuelinks) {
+    private Map<String,List<String>> getIssueTypeAndStatus(JsonArray issuelinks) {
+        Map <String,List<String>> mapIssueType = new HashMap<>();
         for (JsonElement issueLinkElement : issuelinks) {
             JsonObject issueLink = issueLinkElement.getAsJsonObject();
             String inward = issueLink.getAsJsonObject(TYPE).get(INWARD).getAsString();
-
-            if (inward.equalsIgnoreCase(IS_CHILD_ITEM_OF) && issueLink.has(INWARD_ISSUE)) {
-                JsonObject inwardIssue = issueLink.getAsJsonObject(INWARD_ISSUE);
-                if (inwardIssue.has(FIELDS)) {
-                    JsonObject fields = inwardIssue.getAsJsonObject(FIELDS);
-                    if (fields.has(ISSUETYPE)) {
+            String outward = issueLink.getAsJsonObject(TYPE).get(OUTWARD).getAsString();
+            if (inward.equalsIgnoreCase(IS_CHILD_ITEM_OF)
+                    && outward.equalsIgnoreCase(IS_PARENT_ITEM_OF)
+                    && issueLink.has(OUTWARD_ISSUE)) {
+                JsonObject outwardIssue = issueLink.getAsJsonObject(OUTWARD_ISSUE);
+                if (outwardIssue.has(FIELDS)) {
+                    JsonObject fields = outwardIssue.getAsJsonObject(FIELDS);
+                    if (fields.has(ISSUETYPE) && fields.has(STATUS)) {
                         JsonObject issuetype = fields.getAsJsonObject(ISSUETYPE);
-                        return issuetype.get(NAME).getAsString();
-                    }
-                }
-            }
-        }
-        return null;
-    }
-
-    private String getIssueStatusCategory(JsonArray issuelinks) {
-        for (JsonElement issueLinkElement : issuelinks) {
-            JsonObject issueLink = issueLinkElement.getAsJsonObject();
-            String inward = issueLink.getAsJsonObject(TYPE).get(INWARD).getAsString();
-            if (inward.equalsIgnoreCase(IS_CHILD_ITEM_OF) && issueLink.has(INWARD_ISSUE)) {
-                JsonObject inwardIssue = issueLink.getAsJsonObject(INWARD_ISSUE);
-                if (inwardIssue.has(FIELDS)) {
-                    JsonObject fields = inwardIssue.getAsJsonObject(FIELDS);
-                    if (fields.has(STATUS)) {
                         JsonObject status = fields.getAsJsonObject(STATUS);
-                        return status.get(NAME).getAsString();
+                        mapIssueType.put(outwardIssue.get(KEY).getAsString(),
+                                List.of(issuetype.get(NAME).getAsString(),status.get(NAME).getAsString()));
                     }
                 }
             }
         }
-        return null;
+        return mapIssueType;
     }
-
 
     private Map<String, Object> buildValidationResult(String message, boolean isValid, boolean isWarning, String helpMessage, String group) {
         return Map.of(
@@ -213,14 +224,14 @@ public class JiraValidationMethods {
             message.append("Con PR asociada: ").append(prValid.keySet());
         } else if (cantidadPrsValidas > 1) {
             message.append("Se encontraron ").append(cantidadPrsValidas).append(" PRs asociadas: ").append(prValid.keySet())
-                    .append(". Atención: No se puede tener más de una PR asociada.");
+                    .append("\nAtención: No se puede tener más de una PR asociada.");
         } else {
             message.append("No se detectó una PR valida asociada.")
-                    .append(" Atención: Si la PR fue asociada correctamente, falta dar permisos de acceso a los QEs.");
+                    .append("\nAtención: Si la PR fue asociada correctamente, falta dar permisos de acceso a los QEs.");
         }
 
         if (cantidadPrsWarning > 0) {
-            message.append(" Atención: Se encontraron ").append(cantidadPrsWarning)
+            message.append("\nAtención: Se encontraron ").append(cantidadPrsWarning)
                     .append(" PRs asociadas en MERGED: ").append(prWarning.keySet());
         }
 
@@ -320,16 +331,15 @@ public class JiraValidationMethods {
 
     public Map<String, Object> getValidationValidateSubTaskStatus(String tipoDesarrollo, String helpMessage, String group) {
         List<String> results = new ArrayList<>(SUBTASKS_BY_DEVELOP_TYPES.get(tipoDesarrollo));
-        results.addAll(List.of(VB_KM, VB_SO));
-        results.removeIf(subtask -> subtask.contains("QA"));
+        results.addAll(List.of(VB_KM, VB_SO, VB_ALPHA));
 
         JsonArray subTasks = jiraTicketResult.getAsJsonObject(FIELDS).getAsJsonArray(SUBTASKS);
 
         SubTaskStatusResult statusResult = validateSubTaskStatus(subTasks, results);
 
         String message = statusResult.hasBadStatus
-                ? "Subtareas sin estado Accepted: " + String.join(", ", statusResult.badSubTaskLabels)
-                : "Todas las subtareas tienen el estado Aceptado"+ String.join(", ", results);
+                ? "Subtareas con estado incorrecto:\n Se esperaba: " + String.join(".\n", statusResult.subTaskBadResult)
+                : "Subtareas validas tienen el estado correcto Aceptado/Ready:\n "+ String.join(".\n", statusResult.subTaskGoodResult);
 
         boolean isValid = !statusResult.hasBadStatus;
 
@@ -374,30 +384,37 @@ public class JiraValidationMethods {
     }
 
     private SubTaskStatusResult validateSubTaskStatus(JsonArray subTasks, List<String> validLabels) {
-        List<JsonObject> validSubTasks = new ArrayList<>();
-        List<String> badSubTaskLabels = new ArrayList<>();
+        List<String> subTaskBadResult = new ArrayList<>();
+        List<String> subTaskGoodResult = new ArrayList<>();
         boolean hasBadStatus = false;
 
         for (JsonElement subTask : subTasks) {
             String subTaskLabel = extractLabel(subTask.getAsJsonObject());
             String subTaskStatus = extractStatus(subTask.getAsJsonObject());
-
-            if (validLabels.contains(subTaskLabel) && !subTaskStatus.equalsIgnoreCase(ACCEPTED) && !subTaskStatus.equalsIgnoreCase(DISCARDED)) {
-                badSubTaskLabels.add(subTaskLabel);
-                hasBadStatus = true;
+            if (validLabels.contains(subTaskLabel) && !subTaskLabel.contains(VB_ADA)) {
+                if (subTaskLabel.contains(QA) && !subTaskStatus.equalsIgnoreCase(READY)) {
+                    subTaskBadResult.add(subTaskLabel + " -> " + READY);
+                    hasBadStatus = true;
+                } else if (!subTaskLabel.contains(QA) && !subTaskStatus.equalsIgnoreCase(ACCEPTED) && !subTaskStatus.equalsIgnoreCase(DISCARDED)) {
+                    subTaskBadResult.add(subTaskLabel + " -> " + ACCEPTED);
+                    hasBadStatus = true;
+                }
+                else{
+                    subTaskGoodResult.add(subTaskLabel + " -> " + subTaskStatus);
+                }
             }
         }
 
-        return new SubTaskStatusResult(validSubTasks, badSubTaskLabels, hasBadStatus);
+        return new SubTaskStatusResult(subTaskBadResult, subTaskGoodResult, hasBadStatus);
     }
 
     private String generateMessageForSubTasks(String tipoDesarrollo, SubTaskResult result, List<String> foundSpecialLabel, List<String> aditionalSpecialSubtask, List<String> requiredSubTasks) {
         StringBuilder message = new StringBuilder();
 
         if (new HashSet<>(result.foundSubTasks).containsAll(requiredSubTasks)) {
-            message.append("Todas las subtareas requeridas fueron encontradas: ").append(String.join(", ", requiredSubTasks));
+            message.append("Todas las subtareas requeridas fueron encontradas: ").append(String.join(", ", requiredSubTasks)).append(".\n");
             if (!result.additionalSubTasks.isEmpty()) {
-                message.append("También se encontraron subtareas adicionales: ").append(String.join(", ", result.additionalSubTasks)).append(". ");
+                message.append(" También se encontraron subtareas adicionales: ").append(String.join(", ", result.additionalSubTasks)).append(".\n");
                 if (tipoDesarrollo.equals(MALLAS)) {
                     if (!foundSpecialLabel.isEmpty() && result.foundSpecialSubtasks.isEmpty()) {
                         message.append(MSG_RULE_NOSUBTAREA).append(String.join(", ", aditionalSpecialSubtask));
@@ -432,20 +449,22 @@ public class JiraValidationMethods {
     }
 
     private static class SubTaskStatusResult {
-        List<JsonObject> validSubTasks;
-        List<String> badSubTaskLabels;
+        List<String> subTaskBadResult;
+        List<String> subTaskGoodResult;
         boolean hasBadStatus;
 
-        SubTaskStatusResult(List<JsonObject> validSubTasks, List<String> badSubTaskLabels, boolean hasBadStatus) {
-            this.validSubTasks = validSubTasks;
-            this.badSubTaskLabels = badSubTaskLabels;
+        SubTaskStatusResult(List<String> subTaskBadResult,List<String> subTaskGoodResult, boolean hasBadStatus) {
+            this.subTaskBadResult = subTaskBadResult;
+            this.subTaskGoodResult = subTaskGoodResult;
             this.hasBadStatus = hasBadStatus;
         }
     }
 
-    public Map<String, Object> getValidationValidateSubtaskPerson(Map<String, JsonObject> subtaskMetadataMap,
+    public Map<String, Object> getValidationValidateSubtaskPerson(String tipoDesarrollo,Map<String, JsonObject> subtaskMetadataMap,
             String teamBackLogId, String helpMessage,
             String group, List<InfoJiraProject> infoJiraProjectList) {
+        List<String> results = new ArrayList<>(SUBTASKS_BY_DEVELOP_TYPES.get(tipoDesarrollo));
+        results.addAll(List.of(VB_KM, VB_SO, VB_ALPHA));
 
         List<String> messageBadList = new ArrayList<>();
         List<String> messageGoodList = new ArrayList<>();
@@ -460,7 +479,7 @@ public class JiraValidationMethods {
             return buildValidationResult("HU no cuenta con subtareas asociadas", false, false, helpMessage, group);
         }
 
-        processSubtasksPerson(subtaskMetadataMap, subTasks, teamBackLogId, infoJiraProjectList, messageBadList, messageGoodList);
+        processSubtasksPerson(results,subtaskMetadataMap, subTasks, teamBackLogId, infoJiraProjectList, messageBadList, messageGoodList);
 
         if (messageBadList.isEmpty() && messageGoodList.isEmpty()) {
             messageBadList.add("No se encontraron subtareas asociadas");
@@ -470,11 +489,11 @@ public class JiraValidationMethods {
             isValid = true;
         }
 
-        String message = String.join(". ", mergeMessageLists(messageGoodList, messageBadList));
+        String message = String.join(".\n", mergeMessageLists(messageGoodList, messageBadList));
         return buildValidationResult(message, isValid, false, helpMessage, group);
     }
 
-    private void processSubtasksPerson(Map<String, JsonObject> subtaskMetadataMap,
+    private void processSubtasksPerson(List<String> results, Map<String, JsonObject> subtaskMetadataMap,
                                        JsonArray subTasks, String teamBackLogId,
                                        List<InfoJiraProject> infoJiraProjectList,
                                        List<String> messageBadList, List<String> messageGoodList) {
@@ -482,7 +501,7 @@ public class JiraValidationMethods {
         for (JsonElement subTask : subTasks) {
             String subtaskLabel = extractLabel(subTask);
 
-            if (!shouldSkipSubtask(subtaskLabel, subTask)) {
+            if (!shouldSkipSubtask(subtaskLabel, subTask) && results.contains(subtaskLabel)) {
                 JsonObject metaDataSubtask = validateSubtaskAssignment(subTask, subtaskMetadataMap, messageBadList);
                 if (metaDataSubtask != null) {
                     JsonObject maxHistory = validateSubtaskHistory(metaDataSubtask, messageBadList, subtaskLabel);
@@ -526,7 +545,7 @@ public class JiraValidationMethods {
     }
 
     private boolean shouldSkipSubtask(String subtaskLabel, JsonElement subTask) {
-        if (subtaskLabel.contains("QA") || subtaskLabel.contains("DEV") || subtaskLabel.contains("GC")) {
+        if (subtaskLabel.contains(QA) || subtaskLabel.contains(VB_DEV) || subtaskLabel.contains(P110_GC) || subtaskLabel.contains(VB_ADA)) {
             return true;
         }
         String subtaskStatus = extractStatus(subTask.getAsJsonObject());
@@ -534,7 +553,7 @@ public class JiraValidationMethods {
     }
 
     private JsonObject validateSubtaskAssignment(JsonElement subTask, Map<String, JsonObject> subtaskMetadataMap, List<String> messageBadList) {
-        String codeJiraSubTask = subTask.getAsJsonObject().get("key").getAsString();
+        String codeJiraSubTask = subTask.getAsJsonObject().get(KEY).getAsString();
         JsonObject metaData = subtaskMetadataMap.get(codeJiraSubTask);
         if (metaData == null) {
             messageBadList.add(MSG_SUBTAREA + extractLabel(subTask) + " no tiene metadata disponible.");
@@ -623,10 +642,10 @@ public class JiraValidationMethods {
         }
 
         List<InfoJiraProject> filteredProjects = filterProjectsForSubtask(infoJiraProjectList, teamBackLogId, subtaskLabel);
-        if (filteredProjects.isEmpty()) {
+        if (filteredProjects.isEmpty() || !existsVoBoPersonInProjects(filteredProjects, voboPerson)) {
             messageBadList.add("No se encontró persona para este rol para " + subtaskLabel + " en SIDE");
         } else if (existsVoBoPersonInProjects(filteredProjects, voboPerson)) {
-            messageGoodList.add(voboPerson + " para " + subtaskLabel + " es válida");
+            messageGoodList.add("La persona " + voboPerson + " para la subtarea " + subtaskLabel + " es válida");
         }
     }
     private boolean existsVoBoPersonInProjects(List<InfoJiraProject> projects, String voboPerson) {
@@ -652,25 +671,36 @@ public class JiraValidationMethods {
         return projectsFiltrados;
     }
 
-    public Map<String, Object> getValidationValidateSubTaskValidateContractor(Map<String, JsonObject> subtaskMetadataMap, String helpMessage, String group) {
+    public Map<String, Object> getValidationValidateSubTaskValidateContractor(String tipoDesarrollo, Map<String, JsonObject> subtaskMetadataMap, String helpMessage, String group) {
         String message;
         boolean isValid;
         boolean isWarning = false;
+        List<String> results = new ArrayList<>(SUBTASKS_BY_DEVELOP_TYPES.get(tipoDesarrollo));
+        results.addAll(List.of(VB_KM, VB_SO, VB_ALPHA));
 
         List<String> messageBadList = new ArrayList<>();
         List<String> messageGoodList = new ArrayList<>();
 
-        for (Map.Entry<String, JsonObject> entry : subtaskMetadataMap.entrySet()) {
-            JsonObject metaData = entry.getValue();
-            validateContractorSubtask(metaData, messageGoodList, messageBadList);
+        JsonArray subTasks = jiraTicketResult.getAsJsonObject(FIELDS).getAsJsonArray(SUBTASKS);
+        if (subTasks.isEmpty()) {
+            return buildValidationResult("HU no cuenta con subtareas asociadas", false, false, helpMessage, group);
+        }
+
+        for (JsonElement subTask : subTasks) {
+            String subtaskLabel = extractLabel(subTask);
+            if (!shouldSkipSubtask(subtaskLabel, subTask) && results.contains(subtaskLabel)) {
+                String codeJiraSubTask = subTask.getAsJsonObject().get(KEY).getAsString();
+                JsonObject metaData = subtaskMetadataMap.get(codeJiraSubTask);
+                validateContractorSubtask(metaData, messageGoodList, messageBadList, subtaskLabel);
+            }
         }
 
         if (!messageBadList.isEmpty()) {
-            messageBadList.addAll(messageGoodList);
-            message = String.join(". ", messageBadList);
+            message = "Subtareas válidas: " + String.join(".\n", messageGoodList) + ".\n";
+            message += "Subtareas inválidas: " + String.join(".\n", messageBadList) + ".";
             isValid = false;
         } else {
-            message = String.join(". ", messageGoodList);
+            message = "Subtareas validas: " + String.join(".\n", messageGoodList);
             isValid = true;
         }
 
@@ -678,33 +708,26 @@ public class JiraValidationMethods {
     }
 
     private void validateContractorSubtask(
-            JsonObject metaData, List<String> messageGoodList, List<String> messageBadList) {
+            JsonObject metaData, List<String> messageGoodList, List<String> messageBadList,String subtaskLabel) {
 
-        String subtaskLabel = extractLabel(metaData.getAsJsonArray(ISSUES).get(0));
-        String subtaskStatus = extractStatus(metaData.getAsJsonArray(ISSUES).get(0));
-
-        if (subtaskLabel.contains("QA") || subtaskLabel.contains("DEV") || DISCARDED.equalsIgnoreCase(subtaskStatus)) {
-            return;
-        }
         JsonElement assignee = metaData.getAsJsonArray(ISSUES)
                 .get(0).getAsJsonObject()
                 .getAsJsonObject(FIELDS)
                 .get(ASSIGNEE);
 
         if (assignee.isJsonNull() || !assignee.getAsJsonObject().has(EMAIL_ADDRESS) || assignee.getAsJsonObject().get(EMAIL_ADDRESS).isJsonNull()) {
-            messageBadList.add("Subtarea invalida " + subtaskLabel + " no tiene correo asignado.");
+            messageBadList.add(subtaskLabel + " no tiene correo asignado");
         } else {
             String assigneeEmail = assignee.getAsJsonObject().get(EMAIL_ADDRESS).getAsString();
             if (assigneeEmail.contains(".contractor")) {
-                messageBadList.add("Subtarea invalida " + subtaskLabel + " asignada a " + assigneeEmail + " no es Interno BBVA.");
+                messageBadList.add(subtaskLabel + " asignada a " + assigneeEmail + " no es Interno BBVA");
             } else {
-                messageGoodList.add("Subtarea valida " + subtaskLabel + " asignada a " + assigneeEmail + " es Interno BBVA.");
+                messageGoodList.add(subtaskLabel + " asignada a " + assigneeEmail + " es Interno BBVA");
             }
         }
     }
 
-    public Map<String, Object> getValidationAcceptanceCriteria(
-            String teamBackLogId,List<String> teamBackLogTicketIdRLB, String tipoDesarrollo,
+    public Map<String, Object> getValidationAcceptanceCriteria(String tipoDesarrollo,
             String helpMessage, String group) {
         String message;
         boolean isValid;
@@ -718,12 +741,7 @@ public class JiraValidationMethods {
                 .trim();
 
         if (tipoDesarrollo.equalsIgnoreCase(MALLAS)) {
-            boolean isTeamBackLogRLB = teamBackLogTicketIdRLB.contains(teamBackLogId);
-            if (isTeamBackLogRLB) {
-                message = validateAcceptanceCriteriaReliability(acceptanceCriteria, validAcceptanceCriteriaObject);
-            } else {
-                message = validateAcceptanceCriteriaStandard(acceptanceCriteria, validAcceptanceCriteriaObject);
-            }
+            message = validateAcceptanceCriteriaMeshStandard(acceptanceCriteria, validAcceptanceCriteriaObject);
         } else {
             message = validateAcceptanceCriteriaForOtherTypes(acceptanceCriteria, validAcceptanceCriteriaObject);
         }
@@ -732,7 +750,7 @@ public class JiraValidationMethods {
         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
 
-    private String validateAcceptanceCriteriaReliability(
+    private String validateAcceptanceCriteriaMeshStandard(
             String acceptanceCriteria, Map<String, Object> validAcceptanceCriteriaObject) {
         if (acceptanceCriteria.isEmpty()) {
             return MSG_RULE_CRITEROACEPTACION;
@@ -740,40 +758,14 @@ public class JiraValidationMethods {
         if (validAcceptanceCriteriaObject == null) {
             return MSG_RULE_TIPODESARROLLO;
         }
-        String expectedPattern = ((String) validAcceptanceCriteriaObject.get(TEXTO))
-                .replace("{0}", "[A-Za-z\\s-/.\\&]+")
-                .replaceAll("\\s+", "\\\\s+")
-                .replace("{1}", "(SDATOOL-\\d{5}|SDATOOL\\s+\\d{5})(.*?)\\s*,") + "?";
-
+        String expectedPattern = ((String) validAcceptanceCriteriaObject.get(TEXTO)).replace("{0}", "([\\w\\d\\s\\-\\.\\&áéíóúÁÉÍÓÚüÜ]+)");
         Pattern pattern = Pattern.compile(expectedPattern);
-        Matcher matcher = pattern.matcher(acceptanceCriteria);
+        Matcher matcher = pattern.matcher(acceptanceCriteria.replaceAll("([_*{}])", ""));
 
-        if (matcher.matches()) {
+        if (matcher.find()) {
             return String.format(MSG_RULE_VALID, acceptanceCriteria);
         }
-        return MSG_RULE_CRITERIOFORMATO;
-    }
-
-    private String validateAcceptanceCriteriaStandard(
-            String acceptanceCriteria, Map<String, Object> validAcceptanceCriteriaObject) {
-        if (acceptanceCriteria.isEmpty()) {
-            return MSG_RULE_CRITEROACEPTACION;
-        }
-        if (validAcceptanceCriteriaObject == null) {
-            return MSG_RULE_TIPODESARROLLO;
-        }
-        String expectedPattern = ((String) validAcceptanceCriteriaObject.get(TEXTO))
-                .replace("{0}", "[A-Za-z\\s-/.\\&]+")
-                .replaceAll("\\s+", "\\\\s+")
-                .replace("\\.", "\\\\.")
-                .replace("{1}", "(SDATOOL-\\d{5}|SDATOOL\\s+\\d{5})(.*?)\\s*,") + "?";
-        Pattern pattern = Pattern.compile(expectedPattern);
-        Matcher matcher = pattern.matcher(acceptanceCriteria);
-
-        if (matcher.matches()) {
-            return String.format(MSG_RULE_VALID, acceptanceCriteria);
-        }
-        return MSG_RULE_CRITERIOFORMATO;
+        return MSG_RULE_CRITERIOFORMATO_MESH;
     }
 
     private String validateAcceptanceCriteriaForOtherTypes(
@@ -789,7 +781,7 @@ public class JiraValidationMethods {
         if (palabras.length >= 11) {
             return String.format(MSG_RULE_VALID, acceptanceCriteria);
         }
-        return MSG_RULE_CRITERIOFORMATO;
+        return MSG_RULE_CRITERIOFORMATO_PR;
     }
 
 
@@ -800,11 +792,9 @@ public class JiraValidationMethods {
         boolean isWarning = false;
 
         String jiraTicketStatus = extractStatus(jiraTicketResult);
-        String issueType = extractIssueType(jiraTicketResult);
-        String currentTeamFieldLabel = getCurrentTeamFieldLabel(issueType);
 
         JsonArray histories = jiraTicketResult.getAsJsonObject(CHANGELOG).getAsJsonArray(HISTORIES);
-        message = processHistories(teamBackLogId, histories, currentTeamFieldLabel, tipoDesarrollo, jiraTicketStatus);
+        message = processHistories(teamBackLogId, histories, tipoDesarrollo, jiraTicketStatus);
 
         isValid = message.contains(MSG_RULE_ASIGNEE_DQA);
 
@@ -812,7 +802,7 @@ public class JiraValidationMethods {
     }
 
     private String processHistories(String teamBackLogId,
-            JsonArray histories, String currentTeamFieldLabel, String tipoDesarrollo,
+            JsonArray histories, String tipoDesarrollo,
             String jiraTicketStatus) {
 
         List<String> estadosExtraMallasHost = List.of(READY, TEST, READY_TO_VERIFY);
@@ -823,7 +813,7 @@ public class JiraValidationMethods {
 
             if (history.has(ITEMS)) {
                 JsonArray items = history.getAsJsonArray(ITEMS);
-                String result = processItems(items, currentTeamFieldLabel, statusTableroDQA, jiraTicketStatus,
+                String result = processItems(items, statusTableroDQA, jiraTicketStatus,
                         tipoDesarrollo, estadosExtraMallasHost);
 
                 if (result != null) {
@@ -840,19 +830,19 @@ public class JiraValidationMethods {
 
     private List<String> prepareStatusTableroDQA() {
         return Stream.of(
-                READY, IN_PROGRESS, TEST, READY_TO_VERIFY, READY_TO_DEPLOY, DEPLOYED, ACCEPTED
+                READY, IN_PROGRESS,EN_PROGRESO, TEST, READY_TO_VERIFY, READY_TO_DEPLOY, DEPLOYED, ACCEPTED
         ).map(String::toLowerCase).toList();
     }
 
     private String processItems(
-            JsonArray items, String currentTeamFieldLabel, List<String> statusTableroDQA,
+            JsonArray items, List<String> statusTableroDQA,
             String jiraTicketStatus, String tipoDesarrollo,
             List<String> estadosExtraMallasHost) {
 
         for (JsonElement itemElement : items) {
             JsonObject item = itemElement.getAsJsonObject();
 
-            if (item.has(FIELD) && item.get(FIELD).getAsString().equals(currentTeamFieldLabel)) {
+            if (item.has(FIELD) && item.get(FIELD).getAsString().equals(TEAM_BACKLOG)) {
                 String to = item.get("to").getAsString();
 
                 if (to.equals(TEAM_BACK_LOG_DQA_ID)) {
@@ -880,21 +870,6 @@ public class JiraValidationMethods {
         return sb.toString();
     }
 
-    private String getCurrentTeamFieldLabel(String issueType) {
-        Map<String, String> storyMap = Map.of(
-                LABEL, TEAM_BACKLOG,
-                FIELD, "teamId"
-        );
-
-        Map<String, Map<String, String>> teamFieldLabelByIssueType = Map.of(
-                "Historia", storyMap,
-                STORY, storyMap,
-                DEPENDENCY, storyMap
-        );
-
-        return teamFieldLabelByIssueType.getOrDefault(issueType, Map.of()).getOrDefault(LABEL, "");
-    }
-
     public Map<String, Object> getValidationValidateJIRAStatus(String tipoDesarrollo, String helpMessage, String group) {
         String message;
         boolean isValid = false;
@@ -905,6 +880,7 @@ public class JiraValidationMethods {
         List<String> statusTableroDQA = new ArrayList<>(Arrays.asList(
                 READY,
                 IN_PROGRESS,
+                EN_PROGRESO,
                 TEST,
                 READY_TO_VERIFY,
                 READY_TO_DEPLOY,
@@ -953,7 +929,7 @@ public class JiraValidationMethods {
         String message;
         boolean isValid = false;
         boolean isWarning = false;
-        List<String> validStatus = List.of(IN_PROGRESS);
+        List<String> validStatus = List.of(IN_PROGRESS, EN_PROGRESO);
         Map<String, Object> validationFeatureResult = getValidationFeatureLink(helpMessage, group);
         if (!(boolean) validationFeatureResult.get(ISVALID)) {
             return validationFeatureResult;
@@ -1333,7 +1309,8 @@ public class JiraValidationMethods {
 
             if (type.equals(IS_CHILD_ITEM_OF) && inwardIssue != null) {
                 String name = extractIssueType(inwardIssue);
-                if (name.equals(STORY)) {
+                if (STORY.stream()
+                        .anyMatch(s -> s.equalsIgnoreCase(name))) {
                     issueLinkStory.add(issueLinkElement);
                 }
             }
@@ -1384,13 +1361,13 @@ public class JiraValidationMethods {
         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
 
-    public Map<String, Object> getValidationInitialTeam(String helpMessage, String group) throws ParseException {
+    public Map<String, Object> getValidationInitialTeam(String helpMessage, String group){
         String message = "";
         boolean isValid = false;
         boolean isWarning = false;
 
         JsonArray changelog = jiraTicketResult.getAsJsonObject(CHANGELOG).getAsJsonArray(HISTORIES);
-        Date oldestDate = new SimpleDateFormat("yyyy-MM-dd").parse("9999-12-31");
+        Date oldestDate = parseDate("9999-12-31", "yyyy-MM-dd");
         String extractedContent;
 
         for (JsonElement history : changelog) {
@@ -1427,9 +1404,17 @@ public class JiraValidationMethods {
         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
 
-    private Date extractCreatedDate(JsonObject historyObj) throws ParseException {
+    private Date extractCreatedDate(JsonObject historyObj) {
         String created = historyObj.get(CREATED).getAsString();
-        return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").parse(created);
+        return parseDate(created, "yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+    }
+
+    private Date parseDate(String dateStr, String pattern) {
+        try {
+            return new SimpleDateFormat(pattern).parse(dateStr);
+        } catch (ParseException e) {
+            throw new IllegalArgumentException("Error parseando la fecha: " + dateStr + " con el patrón: " + pattern, e);
+        }
     }
 
     private boolean isTeamBacklogField(JsonArray items) {
@@ -1477,7 +1462,7 @@ public class JiraValidationMethods {
         }
         if (areAllDependenciesInProgress(statusDependencyCollection)) {
             isValid = true;
-            message = "Todas las dependencias se encuentran en el estado que corresponde: " + IN_PROGRESS;
+            message = "Todas las dependencias se encuentran en el estado que corresponde: " + IN_PROGRESS + "/"+EN_PROGRESO;
         } else {
             isWarning = true;
             message = buildWarningMessage(statusDependencyCollection, dependencyPadCollection);
@@ -1495,11 +1480,12 @@ public class JiraValidationMethods {
 
             if (type.equals(IS_CHILD_ITEM_OF) && inwardIssue != null) {
                 String issueType = extractIssueType(inwardIssue);
-                if (issueType.equalsIgnoreCase(DEPENDENCY)) {
+                if (DEPENDENCY.stream()
+                        .anyMatch(s -> s.equalsIgnoreCase(issueType))) {
                     String statusDependencyTicket = extractStatus(inwardIssue.getAsJsonObject()).toLowerCase();
                     statusDependencyCollection.add(statusDependencyTicket);
 
-                    String dependencyKey = inwardIssue.getAsJsonObject().get("key").getAsString();
+                    String dependencyKey = inwardIssue.getAsJsonObject().get(KEY).getAsString();
                     dependencyPadCollection.add(dependencyKey);
                 }
             }
@@ -1508,20 +1494,21 @@ public class JiraValidationMethods {
 
     private boolean areAllDependenciesInProgress(List<String> statusDependencyCollection) {
         return statusDependencyCollection.stream()
-                .allMatch(status -> status.equalsIgnoreCase(IN_PROGRESS));
+                .allMatch(status -> status.equalsIgnoreCase(IN_PROGRESS) || status.equalsIgnoreCase(EN_PROGRESO));
     }
 
     private String buildWarningMessage(List<String> statusDependencyCollection, List<String> dependencyPadCollection) {
         StringBuilder urlMessage = new StringBuilder("Las siguientes dependencias: ");
         for (int i = 0; i < statusDependencyCollection.size(); i++) {
-            if (!statusDependencyCollection.get(i).equalsIgnoreCase(IN_PROGRESS)) {
+            if (!statusDependencyCollection.get(i).equalsIgnoreCase(IN_PROGRESS)
+            && !statusDependencyCollection.get(i).equalsIgnoreCase(EN_PROGRESO)) {
                 urlMessage.append(ApiJiraName.URL_API_BROWSE)
                         .append(dependencyPadCollection.get(i))
                         .append(", ");
             }
         }
         urlMessage.setLength(urlMessage.length() - 2);
-        urlMessage.append(" no se encuentran en el estado correspondiente (In Progress).");
+        urlMessage.append(" no se encuentran en el estado correspondiente "+IN_PROGRESS+"/"+EN_PROGRESO);
         return urlMessage.toString();
     }
 
@@ -1568,8 +1555,9 @@ public class JiraValidationMethods {
 
             if (type.equals(IS_CHILD_ITEM_OF) && inwardIssue != null) {
                 String issueType = extractIssueType(inwardIssue);
-                if (issueType.equalsIgnoreCase(DEPENDENCY)) {
-                    String isChildPadName = inwardIssue.getAsJsonObject().get("key").getAsString();
+                if (DEPENDENCY.stream()
+                        .anyMatch(s -> s.equalsIgnoreCase(issueType))) {
+                    String isChildPadName = inwardIssue.getAsJsonObject().get(KEY).getAsString();
                     isChildPadNameCollection.add(isChildPadName);
                 }
             }
@@ -1599,7 +1587,7 @@ public class JiraValidationMethods {
     }
 
     public Map<String, Object> getValidationBoardProject(String teamBackLogId,String helpMessage, String group,List<InfoJiraProject> infoJiraProjectList) {
-        String message = "El tablero es valido";
+        String message;
         boolean isValid = false;
         boolean isWarning = false;
         String summaryTicket = extractLabel(jiraTicketResult.getAsJsonObject());
@@ -1637,6 +1625,10 @@ public class JiraValidationMethods {
                 message="El tablero del Ticket es distinto al mencionado en el summary";
                 isWarning = true;
             }
+            else {
+                message = "El tablero del Ticket es valido, coincide al tablero del Feature, y definido en el summary";
+                isValid = true;
+            }
         }
         else {
             message = "El tablero no se ha encontrado como válido para los proyectos habilitados del Q";
@@ -1649,8 +1641,7 @@ public class JiraValidationMethods {
         boolean isValid = false;
         boolean isWarning = false;
 
-        String alphaVoBo = "[VB][ALPHA]";
-        List<String> alphaUuaas = List.of("KLIM", "KFUL", "ATAU", "KSKR", "KMOL", "KAGE", "KSAN", "W1BD", "KCOL");
+        List<String> alphaUuaas = List.of("KLIM", "KFUL", "ATAU", "KSKR", "KMOL", "KAGE", "KSAN", "W1BD", "KCOL", "KUSU", "KCSN", "KBTQ");
 
         if (!tipoDesarrollo.equalsIgnoreCase(MALLAS)) {
             message = MSG_RULE_INVALID;
@@ -1668,7 +1659,7 @@ public class JiraValidationMethods {
             isValid = true;
             return buildValidationResult(message, isValid, isWarning, helpMessage, group);
         }
-        message = validateAlphaSubtasks(matchedUuaas, jiraTicketResult, alphaVoBo);
+        message = validateAlphaSubtasks(matchedUuaas, jiraTicketResult);
         isValid = message.contains("estado Accepted");
         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
@@ -1690,11 +1681,11 @@ public class JiraValidationMethods {
                 .toList();
     }
 
-    private String validateAlphaSubtasks(List<String> matchedUuaas, JsonObject jiraTicketResult, String alphaVoBo) {
+    private String validateAlphaSubtasks(List<String> matchedUuaas, JsonObject jiraTicketResult) {
         JsonArray subTasks = jiraTicketResult.getAsJsonObject(FIELDS).getAsJsonArray(SUBTASKS);
         for (JsonElement subTask : subTasks) {
             String subTaskLabel = extractLabel(subTask.getAsJsonObject());
-            if (subTaskLabel.equals(alphaVoBo)) {
+            if (subTaskLabel.equalsIgnoreCase(VB_ALPHA)) {
                 String statusSubtask = extractStatus(subTask.getAsJsonObject());
                 if (statusSubtask.equals(ACCEPTED)) {
                     return MSG_UUAA + String.join(", ", matchedUuaas) +
@@ -1705,7 +1696,7 @@ public class JiraValidationMethods {
                 }
             }
         }
-        return MSG_UUAA + String.join(", ", matchedUuaas) + " bajo dominio de Alpha sin Subtarea.";
+        return MSG_UUAA + String.join(", ", matchedUuaas) + " bajo dominio de Alpha sin Subtarea " + VB_ALPHA +".";
     }
 
     public Map<String, Object> getValidationItemType(String helpMessage, String group) {
@@ -1776,8 +1767,8 @@ public class JiraValidationMethods {
         }
         try {
             message = validateDependencyComments(isChildPadNameCollection, dto, teamBackLogId, infoJiraProjectList);
-            isValid = !message.contains("no cuenta con");
-            isWarning = message.contains("pero no está asociado");
+            isValid = !message.contains("no tiene");
+            isWarning = message.contains("no está asociado");
         } catch (Exception e) {
             LOGGER.info("ERROR CONSULTA DEPENDENCIA LINK: " + e.getMessage());
         }
@@ -1792,7 +1783,7 @@ public class JiraValidationMethods {
         for (String isChildPad : isChildPadNameCollection) {
             JsonArray comments = fetchDependencyComments(isChildPad, dto);
             if (comments.isEmpty()) {
-                return "Dependencia Asociada no tiene comentarios.";
+                return "La dependencia asociada no tiene comentarios.";
             }
             for (JsonElement comment : comments) {
                 String authorEmailAddress = comment.getAsJsonObject().getAsJsonObject("author").get(EMAIL_ADDRESS).getAsString();
@@ -1802,7 +1793,7 @@ public class JiraValidationMethods {
                 }
             }
         }
-        return "Dependencia no cuenta con ningún comentario \"Comprometido\".";
+        return "La dependencia no tiene ningún comentario \"Comprometido\".";
     }
 
     private boolean containsComprometido(String comentario) {
@@ -1830,13 +1821,13 @@ public class JiraValidationMethods {
 
         if (filteredProjects.isEmpty()) {
             if (personsRolIdQE.contains(authorEmailAddress)) {
-                return "Dependencia cuenta con comentario \"Comprometido\", QE o del QE temporal " + authorEmailAddress
-                        + " pero no está asociado al proyecto.";
+                return "La dependencia tiene con el comentario \"Comprometido\".\n El QE/QE temporal que escribió el comentario: " + authorEmailAddress
+                        + " no está asociado como participante en el proyecto.";
             } else {
-                return "Dependencia cuenta con comentario \"Comprometido\", pero no de algún QE o del QE temporal.";
+                return "La dependencia tiene con el comentario \"Comprometido\". Pero la persona que escribó el comentario no está asociado como QE o QE Temporal como participante para algún proyecto.";
             }
         } else {
-            return "Dependencia cuenta con comentario \"Comprometido\", del QE o del QE temporal " + authorEmailAddress
+            return "La dependencia tiene con comentario \"Comprometido\", del QE/QE temporal " + authorEmailAddress
                     + " asociado al proyecto.";
         }
     }
