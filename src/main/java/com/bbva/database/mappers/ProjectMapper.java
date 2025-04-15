@@ -61,11 +61,7 @@ public interface ProjectMapper {
             "</script>"})
     List<ProjectEntity> readonly(@Param("list") int[] listId);
 
-    @Select({"<script>" +
-            "SELECT ps.project_id, ps.status_id, c.element_name as status_name, ps.start_date " +
-            "FROM project_status ps JOIN catalog c ON (c.catalog_id = 1033 and  ps.status_id = c.element_id) " +
-            "WHERE ps.project_id = #{projectId} order by ps.start_date desc;" +
-            "</script>"})
+    @Select("CALL SP_GET_PROJECT_STATUS_TRACKING(#{projectId})")
     @Result(property = "projectId", column = "project_id")
     @Result(property = "statusId", column = "status_id")
     @Result(property = "statusName", column = "status_name")

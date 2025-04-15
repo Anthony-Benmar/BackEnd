@@ -27,8 +27,7 @@ public interface CatalogMapper {
     List<PeriodEntity> listAllPeriods();
 
     @Select({"<script>" +
-            "SELECT period_id,period_order,period_status FROM data_period " +
-            "where period_status = 1" +
+            "CALL SP_GET_ACTIVE_PERIOD() " +
             "</script>"})
     List<PeriodEntity> getActivePeriod();
 
