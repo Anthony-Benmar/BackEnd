@@ -17,6 +17,7 @@ import com.bbva.entities.common.PeriodPEntity;
 import com.bbva.entities.issueticket.WorkOrderDetail;
 import com.bbva.entities.map_dependecy.MapDependencyEntity;
 import com.bbva.entities.project.ProjectPortafolioEntity;
+import com.bbva.entities.project.ProjectStatusEntity;
 import com.bbva.entities.use_case_definition.UseCaseDefinitionEntity;
 
 import java.util.Date;
@@ -347,8 +348,7 @@ public class ProjectService {
         return new SuccessDataResult(dto);
     }
 
-    public IDataResult<List<InsertProjectParticipantDTO>> getProjectParticipants(int projectId)
-            throws ExecutionException, InterruptedException {
+    public IDataResult<List<InsertProjectParticipantDTO>> getProjectParticipants(int projectId) {
 
         try {
             var result = projectDao.getProjectParticipants(projectId);
@@ -403,6 +403,16 @@ public class ProjectService {
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
             return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
+
+    public IDataResult<List<ProjectStatusEntity>> getProjectStatusTracking(int projectId) {
+        try {
+            List<ProjectStatusEntity> result = projectDao.getProjectStatusTracking(projectId);
+            return new SuccessDataResult<>(result);
+        } catch (Exception e) {
+            log.log(Level.SEVERE, e.getMessage(), e);
+            return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
 }

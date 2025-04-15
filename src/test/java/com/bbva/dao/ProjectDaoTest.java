@@ -5,6 +5,7 @@ import com.bbva.database.mappers.ProjectMapper;
 import com.bbva.dto.project.request.ProjectInfoFilterRequest;
 import com.bbva.dto.project.response.ProjectInfoFilterResponse;
 import com.bbva.dto.project.response.ProjectInfoSelectResponse;
+import com.bbva.entities.project.ProjectStatusEntity;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.junit.jupiter.api.AfterEach;
@@ -94,6 +95,29 @@ class ProjectDaoTest {
         verify(sqlSessionFactoryMock).openSession();
         verify(sqlSessionMock).getMapper(ProjectMapper.class);
         verify(projectMapperMock).projectInfoFilter(request);
+        verify(sqlSessionMock).close();
+    }
+
+    @Test
+    void testGetProjectStatusTracking() {
+        int projectId = 1;
+        List<ProjectStatusEntity> mockProjectStatuses = Arrays.asList(
+                new ProjectStatusEntity() {{
+                    setStartDate(new Date());
+                }}
+        );
+
+        when(projectMapperMock.getProjectStatusTracking(projectId)).thenReturn(mockProjectStatuses);
+
+        List<ProjectStatusEntity> result = projectDao.getProjectStatusTracking(projectId);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertNotNull(result.get(0).getStartDateStr());
+
+        verify(sqlSessionFactoryMock).openSession();
+        verify(sqlSessionMock).getMapper(ProjectMapper.class);
+        verify(projectMapperMock).getProjectStatusTracking(projectId);
         verify(sqlSessionMock).close();
     }
 }

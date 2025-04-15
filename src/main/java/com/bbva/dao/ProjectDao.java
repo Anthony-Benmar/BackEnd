@@ -17,6 +17,7 @@ import com.bbva.entities.feature.JiraFeatureEntity;
 import com.bbva.entities.project.ProjectFilterEntity;
 import com.bbva.entities.project.ProjectPortafolioEntity;
 import com.bbva.entities.project.ProjectPortafolioFilterEntity;
+import com.bbva.entities.project.ProjectStatusEntity;
 import com.bbva.util.JSONUtils;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -31,6 +32,7 @@ import static com.bbva.util.types.FechaUtil.convertDateToString;
 
 public class ProjectDao {
     private static final Logger log = Logger.getLogger(ProjectDao.class.getName());
+    private static final String DATE_FORMAT = "dd/MM/yyyy HH:mm:ss";
 
     public ProjectFilterByNameOrSdatoolDtoResponse filter(ProjectFilterByNameOrSdatoolDtoRequest dto) {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
@@ -323,10 +325,10 @@ public class ProjectDao {
 
         for (ProjectInfoSelectResponse item : lista) {
             if (item.getCreateAuditDate() != null) {
-                item.setCreateAuditDate_S(convertDateToString(item.getCreateAuditDate(), "dd/MM/yyyy HH:mm:ss"));
+                item.setCreateAuditDate_S(convertDateToString(item.getCreateAuditDate(), DATE_FORMAT));
             }
             if (item.getUpdateAuditDate() != null) {
-                item.setUpdateAuditDate_S(convertDateToString(item.getUpdateAuditDate(), "dd/MM/yyyy HH:mm:ss"));
+                item.setUpdateAuditDate_S(convertDateToString(item.getUpdateAuditDate(), DATE_FORMAT));
             }
 
         }
@@ -394,10 +396,10 @@ public class ProjectDao {
 
         for (ProjectInfoSelectAllByDomainDtoResponse item : lista) {
             if (item.getCreateAuditDate() != null) {
-                item.setCreateAuditDate_S(convertDateToString(item.getCreateAuditDate(), "dd/MM/yyyy HH:mm:ss"));
+                item.setCreateAuditDate_S(convertDateToString(item.getCreateAuditDate(), DATE_FORMAT));
             }
             if (item.getUpdateAuditDate() != null) {
-                item.setUpdateAuditDate_S(convertDateToString(item.getUpdateAuditDate(), "dd/MM/yyyy HH:mm:ss"));
+                item.setUpdateAuditDate_S(convertDateToString(item.getUpdateAuditDate(), DATE_FORMAT));
             }
 
         }
@@ -499,6 +501,22 @@ public class ProjectDao {
         try (SqlSession session = sqlSessionFactory.openSession()) {
             ProjectMapper mapper = session.getMapper(ProjectMapper.class);
             return mapper.getFeaturesByProject(sdatoolId, featureKey);
+        }
+    }
+
+    public List<ProjectStatusEntity> getProjectStatusTracking(int projectId) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        List<ProjectStatusEntity> projectStatusesList;
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ProjectMapper mapper = session.getMapper(ProjectMapper.class);
+            projectStatusesList = mapper.getProjectStatusTracking(projectId);
+
+            for (ProjectStatusEntity item : projectStatusesList) {
+                if (item.getStartDate() != null) {
+                    item.setStartDateStr(convertDateToString(item.getStartDate(), DATE_FORMAT));
+                }
+            }
+            return projectStatusesList;
         }
     }
 }

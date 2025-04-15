@@ -11,6 +11,7 @@ import com.bbva.entities.feature.JiraFeatureEntity;
 import com.bbva.entities.project.ProjectPortafolioEntity;
 import com.bbva.entities.project.ProjectFilterEntity;
 import com.bbva.entities.project.ProjectPortafolioFilterEntity;
+import com.bbva.entities.project.ProjectStatusEntity;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;
@@ -59,6 +60,13 @@ public interface ProjectMapper {
             "<foreach item='item' index='index' collection='list' open='(' separator=',' close=')'> #{item} </foreach>" +
             "</script>"})
     List<ProjectEntity> readonly(@Param("list") int[] listId);
+
+    @Select("CALL SP_GET_PROJECT_STATUS_TRACKING(#{projectId})")
+    @Result(property = "projectId", column = "project_id")
+    @Result(property = "statusId", column = "status_id")
+    @Result(property = "statusName", column = "status_name")
+    @Result(property = "startDate", column = "start_date")
+    List<ProjectStatusEntity> getProjectStatusTracking(@Param("projectId") int projectId);
 
     @Select({"SELECT project_id, sdatool_id, project_name, status_type FROM data_project " +
             "WHERE project_id = #{projectId}"})
@@ -383,4 +391,6 @@ public interface ProjectMapper {
     })
     List<JiraFeatureEntity> getFeaturesByProject(@Param("sdatoolId") String sdatoolId,
                                                  @Param("featureKey") String featureKey);
+
+
 }

@@ -13,6 +13,7 @@ import com.bbva.entities.common.PeriodEntity;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -103,6 +104,17 @@ public class CatalogDao {
         }catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
             return null;
+        }
+    }
+
+    public List<PeriodEntity> getActivePeriod() {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            CatalogMapper mapper = session.getMapper(CatalogMapper.class);
+            return mapper.getActivePeriod();
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            return Collections.emptyList();
         }
     }
 }
