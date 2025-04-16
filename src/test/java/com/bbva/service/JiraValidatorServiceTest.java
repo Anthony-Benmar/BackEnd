@@ -42,7 +42,7 @@ class JiraValidatorServiceTest {
         when(jiraApiServiceMock.getQuerySuffixURL()).thenReturn("&maxResults=500&json_result=true&expand=changelog&fields=id,key,summary,comment,assignee,reporter,labels,project,updated,due,status,subtasks,description,created,issuetype,issuelinks,attachment,fixVersions,prs,customfield_10260,customfield_10264,customfield_10267,customfield_10270,customfield_18001,customfield_10004,customfield_13300,customfield_13302,customfield_10272,customfield_13301");
         when(jiraApiServiceMock.GetJiraAsync(requestMock.getUserName(),
                 requestMock.getToken(),
-                jiraValidatorService.buildJiraQueryUrl(List.of(requestMock.getUrlJira()))))
+                jiraApiServiceMock.buildJiraQueryUrl(List.of(requestMock.getUrlJira()))))
                 .thenReturn(getResponseJiraQueryMalla());
         when(jiraApiServiceMock.GetJiraAsync(requestMock.getUserName(),
                 requestMock.getToken(), urlPullRequest))
@@ -85,7 +85,7 @@ class JiraValidatorServiceTest {
         when(jiraApiServiceMock.getQuerySuffixURL()).thenReturn("&maxResults=500&json_result=true&expand=changelog&fields=id,key,summary,comment,assignee,reporter,labels,project,updated,due,status,subtasks,description,created,issuetype,issuelinks,attachment,fixVersions,prs,customfield_10260,customfield_10264,customfield_10267,customfield_10270,customfield_18001,customfield_10004,customfield_13300,customfield_13302,customfield_10272,customfield_13301");
         when(jiraApiServiceMock.GetJiraAsync(requestMock.getUserName(),
                 requestMock.getToken(),
-                jiraValidatorService.buildJiraQueryUrl(List.of(requestMock.getUrlJira()))))
+                jiraApiServiceMock.buildJiraQueryUrl(List.of(requestMock.getUrlJira()))))
                 .thenReturn(getResponseJiraQueryMallaRLB());
         when(jiraApiServiceMock.GetJiraAsync(requestMock.getUserName(),
                 requestMock.getToken(), urlPullRequest))
@@ -123,7 +123,7 @@ class JiraValidatorServiceTest {
         when(jiraApiServiceMock.getQuerySuffixURL()).thenReturn("&maxResults=500&json_result=true&expand=changelog&fields=id,key,summary,comment,assignee,reporter,labels,project,updated,due,status,subtasks,description,created,issuetype,issuelinks,attachment,fixVersions,prs,customfield_10260,customfield_10264,customfield_10267,customfield_10270,customfield_18001,customfield_10004,customfield_13300,customfield_13302,customfield_10272,customfield_13301");
         when(jiraApiServiceMock.GetJiraAsync(requestMock.getUserName(),
                 requestMock.getToken(),
-                jiraValidatorService.buildJiraQueryUrl(List.of(requestMock.getUrlJira()))))
+                jiraApiServiceMock.buildJiraQueryUrl(List.of(requestMock.getUrlJira()))))
                 .thenReturn(getResponseJiraQueryMallaError());
         when(jiraApiServiceMock.GetJiraAsync(requestMock.getUserName(),
                 requestMock.getToken(), urlPullRequest))
@@ -156,7 +156,7 @@ class JiraValidatorServiceTest {
         when(jiraApiServiceMock.getQuerySuffixURL()).thenReturn("&maxResults=500&json_result=true&expand=changelog&fields=id,key,summary,comment,assignee,reporter,labels,project,updated,due,status,subtasks,description,created,issuetype,issuelinks,attachment,fixVersions,prs,customfield_10260,customfield_10264,customfield_10267,customfield_10270,customfield_18001,customfield_10004,customfield_13300,customfield_13302,customfield_10272,customfield_13301");
         when(jiraApiServiceMock.GetJiraAsync(requestMock.getUserName(),
                 requestMock.getToken(),
-                jiraValidatorService.buildJiraQueryUrl(List.of(requestMock.getUrlJira()))))
+                jiraApiServiceMock.buildJiraQueryUrl(List.of(requestMock.getUrlJira()))))
                 .thenReturn(getResponseJiraQueryPr());
         when(jiraApiServiceMock.GetJiraAsync(requestMock.getUserName(),
                 requestMock.getToken(), urlPullRequest))
@@ -192,7 +192,7 @@ class JiraValidatorServiceTest {
         when(jiraApiServiceMock.getQuerySuffixURL()).thenReturn("&maxResults=500&json_result=true&expand=changelog&fields=id,key,summary,comment,assignee,reporter,labels,project,updated,due,status,subtasks,description,created,issuetype,issuelinks,attachment,fixVersions,prs,customfield_10260,customfield_10264,customfield_10267,customfield_10270,customfield_18001,customfield_10004,customfield_13300,customfield_13302,customfield_10272,customfield_13301");
         when(jiraApiServiceMock.GetJiraAsync(requestMock.getUserName(),
                 requestMock.getToken(),
-                jiraValidatorService.buildJiraQueryUrl(List.of(requestMock.getUrlJira()))))
+                jiraApiServiceMock.buildJiraQueryUrl(List.of(requestMock.getUrlJira()))))
                 .thenReturn(getResponseJiraQueryIntegration());
         when(jiraApiServiceMock.GetJiraAsync(requestMock.getUserName(),
                 requestMock.getToken(), urlPullRequest))

@@ -8,6 +8,7 @@ import com.bbva.dto.board.response.BoardPaginationDataDtoResponse;
 import com.bbva.dto.board.response.BoardPaginationDtoResponse;
 import com.bbva.dto.board.response.ListDtoResponse;
 import com.bbva.entities.board.BoardPaginationEntity;
+import com.bbva.entities.board.JiraTeamBacklogEntity;
 import com.bbva.util.JSONUtils;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -87,6 +88,14 @@ public class BoardDao {
             }
             log.info(JSONUtils.convertFromObjectToJson(response));
             return response;
+        }
+    }
+
+    public List<JiraTeamBacklogEntity> listJiraTeamBackLog(Long projectId) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            BoardMapper mapper = session.getMapper(BoardMapper.class);
+            return mapper.listJiraTeamBacklog(projectId);
         }
     }
 

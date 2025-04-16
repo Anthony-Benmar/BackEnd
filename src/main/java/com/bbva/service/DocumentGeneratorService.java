@@ -3,19 +3,28 @@ package com.bbva.service;
 import com.bbva.dao.ProjectDao;
 import com.bbva.dto.documentgenerator.request.*;
 import com.bbva.dto.project.request.InsertProjectParticipantDTO;
+import com.bbva.util.ApiJiraName;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.xwpf.usermodel.*;
 import org.w3c.dom.*;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.StringReader;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import java.io.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -23,6 +32,8 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import static com.bbva.common.jiraValidador.JiraValidatorConstantes.ISSUES;
 
 public class DocumentGeneratorService {
     private static final Logger log = Logger.getLogger(DocumentGeneratorService.class.getName());
@@ -35,11 +46,15 @@ public class DocumentGeneratorService {
     private static final String JOB = "JOB";
     private static final String JOBNAME = "JOBNAME";
     private static final String ERROR = "ERROR DOCUMENTOSSERVICE: ";
+    private static final String GIT_CHANGE_TYPE = "gitChangeType";
     private final ProjectDao projectDao;
+    private final BitbucketApiService bitbucketApiService;
+    private final JiraApiService jiraApiService;
 
-
-    public DocumentGeneratorService(ProjectDao projectDao) {
+    public DocumentGeneratorService(ProjectDao projectDao, BitbucketApiService bitbucketApiService, JiraApiService jiraApiService) {
         this.projectDao = projectDao;
+        this.bitbucketApiService = bitbucketApiService;
+        this.jiraApiService = jiraApiService;
     }
 
     public byte[] getDocumentBytes(String documentoBase64) {
@@ -47,31 +62,185 @@ public class DocumentGeneratorService {
     }
 
     public byte[] generateDocumentMeshCases(DocumentGeneratorMeshRequest dto) {
-        byte[] documentoBytes = getDocumentBytes(C204MESH_BASE64);
-        List<InsertProjectParticipantDTO> projectParticipant = projectDao.getProjectParticipants(dto.getProjectId());
-        List<InsertProjectParticipantDTO> smParticipant = projectParticipant.stream()
-                .filter(t -> t.getProjectRolType().equals(1) || t.getProjectRolType().equals(2))
-                .toList();
-        List<InsertProjectParticipantDTO> poParticipant = projectParticipant.stream()
-                .filter(t -> t.getProjectRolType().equals(5) || t.getProjectRolType().equals(8))
-                .toList();
-        Map<String, Map<String, Long>> conteoMallas = conteoMallas(dto.getDataDocumentMesh());
-        Map<String, Map<String, String>> jobsDetail = buildJobsSummaryDetail(dto.getDataDocumentMesh());
-        Map<String, Map<String, List<String>>> jobSummaryType = buildJobsSummaryType(dto.getDataDocumentMesh());
-        List<Map.Entry<String, Map<String, String>>> listJobsDetail = new ArrayList<>(jobsDetail.entrySet());
-        List<Map.Entry<String, Map<String, List<String>>>> listJobSummary = new ArrayList<>(jobSummaryType.entrySet());
-        Map<String, String> descripcionMallas = descripcionMallas(conteoMallas);
-        DocumentGeneratorMeshInfo mallasInfo = new DocumentGeneratorMeshInfo(smParticipant,poParticipant,listJobsDetail,listJobSummary,descripcionMallas,conteoMallas);
+        byte[] documentBytes = getDocumentBytes(C204MESH_BASE64);
+        try {
+            if (!dto.getUrl().isBlank()) {
+                dto.setDataDocumentMesh(getDataDocumentMesh(dto));
+            }
+            List<InsertProjectParticipantDTO> projectParticipant = projectDao.getProjectParticipants(dto.getProjectId());
+            List<InsertProjectParticipantDTO> smParticipant = projectParticipant.stream()
+                    .filter(t -> t.getProjectRolType().equals(1) || t.getProjectRolType().equals(2))
+                    .toList();
+            List<InsertProjectParticipantDTO> poParticipant = projectParticipant.stream()
+                    .filter(t -> t.getProjectRolType().equals(5) || t.getProjectRolType().equals(8))
+                    .toList();
+            Map<String, Map<String, Long>> conteoMallas = conteoMallas(dto.getDataDocumentMesh());
+            Map<String, Map<String, String>> jobsDetail = buildJobsSummaryDetail(dto.getDataDocumentMesh());
+            Map<String, Map<String, List<String>>> jobSummaryType = buildJobsSummaryType(dto.getDataDocumentMesh());
+            List<Map.Entry<String, Map<String, String>>> listJobsDetail = new ArrayList<>(jobsDetail.entrySet());
+            List<Map.Entry<String, Map<String, List<String>>>> listJobSummary = new ArrayList<>(jobSummaryType.entrySet());
+            Map<String, String> descripcionMallas = descripcionMallas(conteoMallas);
+            DocumentGeneratorMeshInfo mallasInfo = new DocumentGeneratorMeshInfo(smParticipant,poParticipant,listJobsDetail,listJobSummary,descripcionMallas,conteoMallas);
 
-        try (XWPFDocument document = new XWPFDocument(new ByteArrayInputStream(documentoBytes))) {
+            XWPFDocument document = new XWPFDocument(new ByteArrayInputStream(documentBytes));
             XWPFDocument documentWrite = fillTables(document,dto,mallasInfo);
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             documentWrite.write(outputStream);
             return outputStream.toByteArray();
-        } catch (IOException e) {
+
+        } catch (Exception e) {
             log.info(ERROR + e.getMessage());
         }
-        return documentoBytes;
+        return documentBytes;
+    }
+
+    private DataDocumentMesh getDataDocumentMesh(DocumentGeneratorMeshRequest dto) throws Exception {
+        String pullRequestUrl;
+        if(!dto.getUrl().contains("bitbucket")){
+            JsonObject jiraTicketResult = getInfoJira(dto, List.of(dto.getUrl())).getAsJsonArray(ISSUES).get(0).getAsJsonObject();
+            pullRequestUrl = getPullRequestUrl(dto, jiraTicketResult);
+        }
+        else{
+            pullRequestUrl = dto.getUrl();
+        }
+        DataDocumentMesh dataDocumentMesh = processDocuments(dto, pullRequestUrl);
+        dto.setDataDocumentMesh(dataDocumentMesh);
+        return dataDocumentMesh;
+    }
+
+    private DataDocumentMesh processDocuments(DocumentGeneratorMeshRequest dto, String pullRequestUrl) throws IOException, ParserConfigurationException, SAXException, TransformerException {
+        JsonNode pullRequestChanges = bitbucketApiService.getPullRequestChanges(pullRequestUrl, dto.getUserName(),dto.getToken());
+        String fromHash = pullRequestChanges.get("fromHash").asText();
+        String toHash = pullRequestChanges.get("toHash").asText();
+        JsonNode values = pullRequestChanges.get("values");
+        DataDocumentMesh dataDocumentMesh = new DataDocumentMesh();
+        List<DataDocumentMeshFolder> folderList = new ArrayList<>();
+        for (JsonNode value : values) {
+            List<DataDocumentMeshJobName> jobList = new ArrayList<>();
+            DataDocumentMeshFolder dataDocumentMeshFolder = new DataDocumentMeshFolder();
+            JsonNode path = value.get("path");
+            String fileName = path.get("name").asText();
+            String fullPath = path.get("toString").asText();
+            JsonNode properties = value.get("properties");
+            if (properties.get(GIT_CHANGE_TYPE).asText().equals("MODIFY")) {
+                Document docBefore = bitbucketApiService.getPullRequestFileInfo(pullRequestUrl, dto.getUserName(), dto.getToken(), fullPath, fromHash);
+                Document docAfter = bitbucketApiService.getPullRequestFileInfo(pullRequestUrl, dto.getUserName(), dto.getToken(), fullPath, toHash);
+                Map<String, Element> docJobsBefore = extractJobsByName(docBefore);
+                Map<String, Element> docJobsAfter = extractJobsByName(docAfter);
+                dataDocumentMeshFolder.setXmlBefore(documentToString(docBefore));
+                dataDocumentMeshFolder.setXmlAfter(documentToString(docAfter));
+                processDifferences(docJobsBefore, docJobsAfter, jobList);
+            } else if (properties.get(GIT_CHANGE_TYPE).asText().equals("ADD")) {
+                Document docAfter = bitbucketApiService.getPullRequestFileInfo(pullRequestUrl, dto.getUserName(), dto.getToken(), fullPath, toHash);
+                dataDocumentMeshFolder.setXmlAfter(documentToString(docAfter));
+                processNewOrEliminatedMesh(docAfter, jobList, NEW);
+            } else if (properties.get(GIT_CHANGE_TYPE).asText().equals("DELETE")){
+                Document docBefore = bitbucketApiService.getPullRequestFileInfo(pullRequestUrl, dto.getUserName(), dto.getToken(), fullPath, fromHash);
+                dataDocumentMeshFolder.setXmlBefore(documentToString(docBefore));
+                processNewOrEliminatedMesh(docBefore, jobList, ELIMINATED);
+            }
+            dataDocumentMeshFolder.setFolderName(fileName.replace(".xml", ""));
+            dataDocumentMeshFolder.setJobNames(jobList);
+            folderList.add(dataDocumentMeshFolder);
+        }
+        dataDocumentMesh.setFolderList(folderList);
+
+        return  dataDocumentMesh;
+    }
+
+    public static String documentToString(Document doc) throws TransformerException {
+            TransformerFactory tf = TransformerFactory.newInstance();
+            Transformer transformer = tf.newTransformer();
+            transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
+            transformer.setOutputProperty(OutputKeys.METHOD, "xml");
+            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+            transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+
+            StringWriter writer = new StringWriter();
+            transformer.transform(new DOMSource(doc), new StreamResult(writer));
+            return writer.toString();
+    }
+
+    private static Map<String, Element> extractJobsByName(Document doc) {
+        Map<String, Element> jobsMap = new HashMap<>();
+        NodeList jobs = doc.getElementsByTagName(JOB);
+
+        for (int i = 0; i < jobs.getLength(); i++) {
+            Element job = (Element) jobs.item(i);
+            String jobName = job.getAttribute(JOBNAME);
+            jobsMap.put(jobName, job);
+        }
+        return jobsMap;
+    }
+
+    private static boolean isEqualNode(Element controlJob, Element testJob) throws TransformerException {
+        String controlJobText = normalizeXml(controlJob);
+        String testJobText = normalizeXml(testJob);
+        return controlJobText.equals(testJobText);
+    }
+
+    private static String normalizeXml(Element element) throws TransformerException {
+        Transformer transformer = TransformerFactory.newInstance().newTransformer();
+        transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+        transformer.setOutputProperty(OutputKeys.INDENT, "no");
+        StringWriter writer = new StringWriter();
+        transformer.transform(new DOMSource(element), new StreamResult(writer));
+        return writer.toString().replaceAll(">\\s+<", "><").trim();
+    }
+
+    private List<String> compareXmlByLine(String xmlBefore, String xmlAfter) {
+        List<String> results = new ArrayList<>();
+        String[] linesBefore = xmlBefore.split("><");
+        String[] linesAfter = xmlAfter.split("><");
+
+        Set<String> setBefore = Arrays.stream(linesBefore).map(String::trim).collect(Collectors.toSet());
+        Set<String> setAfter = Arrays.stream(linesAfter).map(String::trim).collect(Collectors.toSet());
+
+        for (String line : setBefore) {
+            if (!setAfter.contains(line)) {
+                String diff = "- <" + line + ">";
+                results.add(diff);
+            }
+        }
+        for (String line : setAfter) {
+            if (!setBefore.contains(line)) {
+                String diff = "+ <" + line + ">";
+                results.add(diff);
+            }
+        }
+        return results;
+    }
+
+    private void processNewOrEliminatedMesh(Document doc, List<DataDocumentMeshJobName> jobs, String status) {
+        NodeList jobNodes = doc.getElementsByTagName(JOB);
+        for (int i = 0; i < jobNodes.getLength(); i++) {
+            Element jobElement = (Element) jobNodes.item(i);
+            String jobName = jobElement.getAttribute(JOBNAME);
+            if (!jobName.isEmpty()) {
+                jobs.add(new DataDocumentMeshJobName(jobName, status));
+            }
+        }
+    }
+
+    private void processDifferences(Map<String, Element> docJobsBefore, Map<String, Element> docJobsAfter,
+                                    List<DataDocumentMeshJobName> jobList) throws TransformerException {
+        for (Map.Entry<String, Element> entry : docJobsBefore.entrySet()) {
+            String jobName = entry.getKey();
+            if (!docJobsAfter.containsKey(jobName)) {
+                jobList.add(new DataDocumentMeshJobName(jobName, ELIMINATED));
+            }
+        }
+        for (Map.Entry<String, Element> entry : docJobsAfter.entrySet()) {
+            String jobName = entry.getKey();
+            Element afterJob = entry.getValue();
+            Element beforeJob = docJobsBefore.get(jobName);
+
+            if (beforeJob == null) {
+                jobList.add(new DataDocumentMeshJobName(jobName, NEW));
+            } else if (!isEqualNode(beforeJob, afterJob)) {
+                jobList.add(new DataDocumentMeshJobName(jobName, MODIFIED));
+            }
+        }
     }
 
     private XWPFDocument fillTables(XWPFDocument document, DocumentGeneratorMeshRequest dto, DocumentGeneratorMeshInfo mallasInfo) {
@@ -191,7 +360,7 @@ public class DocumentGeneratorService {
         for (DataDocumentMeshFolder folder : dataDocumentMesh.getFolderList()) {
             String folderName = folder.getFolderName();
             Map<String, Long> stateCount = folder.getJobNames().stream()
-                    .collect(Collectors.groupingBy(DataDocumentMeshJobName::getState, Collectors.counting()));
+                    .collect(Collectors.groupingBy(DataDocumentMeshJobName::getStatus, Collectors.counting()));
             result.put(folderName, stateCount);
         }
         return result;
@@ -259,10 +428,12 @@ public class DocumentGeneratorService {
         return jobsMap;
     }
 
-    private Document getDocumentXML(String xml) {
+    public Document getDocumentXML(String xml) {
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            factory.setIgnoringElementContentWhitespace(true);
             factory.setNamespaceAware(true);
+            factory.setValidating(false);
             factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
             factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
             factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
@@ -278,7 +449,7 @@ public class DocumentGeneratorService {
         Map<String, Map<String, String>> summaryMap = new HashMap<>();
 
         for (DataDocumentMeshFolder folderDto : dataDocumentMesh.getFolderList()) {
-            Map<String, Map<String, String>> parsedResult = parseXml(folderDto.getXml());
+            Map<String, Map<String, String>> parsedResult = parseXml(folderDto.getXmlAfter());
             String folderName = folderDto.getFolderName();
             Map<String, String> jobSummaryMap = new LinkedHashMap<>();
             Map<String, String> xmlJobs = parsedResult.get(folderName);
@@ -289,8 +460,8 @@ public class DocumentGeneratorService {
                         .sorted((job1, job2) -> {
 
                             List<String> order = Arrays.asList(NEW, MODIFIED, ELIMINATED);
-                            String state1 = job1.getState().toLowerCase();
-                            String state2 = job2.getState().toLowerCase();
+                            String state1 = job1.getStatus().toLowerCase();
+                            String state2 = job2.getStatus().toLowerCase();
                             int index1 = order.indexOf(state1);
                             int index2 = order.indexOf(state2);
                             return Integer.compare(index1, index2);
@@ -320,7 +491,7 @@ public class DocumentGeneratorService {
             stateMap.put(ELIMINATED, new ArrayList<>());
 
             for (DataDocumentMeshJobName job : folder.getJobNames()) {
-                String state = job.getState();
+                String state = job.getStatus();
                 if (stateMap.containsKey(state)) {
                     stateMap.get(state).add(job.getJobName());
                 }
@@ -364,11 +535,14 @@ public class DocumentGeneratorService {
 
     public byte[] generateDocumentMeshTracking(DocumentGeneratorMeshRequest dto){
         byte[] documentoBytes = getDocumentBytes(P110MESH_BASE64);
-        List<InsertProjectParticipantDTO> projectParticipant = projectDao.getProjectParticipants(dto.getProjectId());
-        List<InsertProjectParticipantDTO> smParticipant = projectParticipant.stream()
-                .filter(t -> t.getProjectRolType().equals(1) || t.getProjectRolType().equals(2))
-                .toList();
         try {
+            if (!dto.getUrl().isBlank()) {
+                dto.setDataDocumentMesh(getDataDocumentMesh(dto));
+            }
+            List<InsertProjectParticipantDTO> projectParticipant = projectDao.getProjectParticipants(dto.getProjectId());
+            List<InsertProjectParticipantDTO> smParticipant = projectParticipant.stream()
+                    .filter(t -> t.getProjectRolType().equals(1) || t.getProjectRolType().equals(2))
+                    .toList();
             ByteArrayInputStream inputStream = new ByteArrayInputStream(documentoBytes);
             Workbook workbook = new XSSFWorkbook(inputStream);
             Sheet sheet = workbook.getSheetAt(0);
@@ -376,34 +550,44 @@ public class DocumentGeneratorService {
             int columnStart = 0;
 
             for(int i = 0; i < dto.getDataDocumentMesh().getFolderList().size(); i++){
-                Document doc = getDocumentXML(dto.getDataDocumentMesh().getFolderList().get(i).getXml());
-                assert doc != null;
+                Document docAfter = getDocumentXML(dto.getDataDocumentMesh().getFolderList().get(i).getXmlAfter());
+                Document docBefore = getDocumentXML(dto.getDataDocumentMesh().getFolderList().get(i).getXmlBefore());
                 for(int j = 0; j < dto.getDataDocumentMesh().getFolderList().get(i).getJobNames().size(); j++){
                     String jobName = dto.getDataDocumentMesh().getFolderList().get(i).getJobNames()
                             .get(j).getJobName();
-                    String jobNameState = dto.getDataDocumentMesh().getFolderList().get(i).getJobNames()
-                            .get(j).getState();
-                    jobNameState = getState(jobNameState);
-                    jobNameState = jobNameState.substring(0, 1).toUpperCase() + jobNameState.substring(1).toLowerCase();
+                    String jobNameStatus = dto.getDataDocumentMesh().getFolderList().get(i).getJobNames()
+                            .get(j).getStatus();
+                    Document doc = jobNameStatus.equalsIgnoreCase(ELIMINATED) ? docBefore : docAfter;
+                    assert doc != null;
+                    Element jobNode = getJobNode(jobName, doc);
+
                     Row row = sheet.getRow(rowStart + i);
                     Cell uuaa = row.getCell(columnStart);
-                    uuaa.setCellValue(getUUAA(jobName,doc));
+                    uuaa.setCellValue(getUUAA(jobNode));
                     Cell jobNameDatio = row.getCell(columnStart + 1);
                     jobNameDatio.setCellValue(jobName);
                     Cell jobNameDataproc = row.getCell(columnStart + 2);
-                    jobNameDataproc.setCellValue(getJobDataproc(jobName,doc));
+                    jobNameDataproc.setCellValue(getJobDataproc(jobNode));
                     Cell folder = row.getCell(columnStart+3);
                     folder.setCellValue(dto.getDataDocumentMesh().getFolderList().get(i).getFolderName());
                     Cell sdaTool = row.getCell(columnStart + 6);
                     sdaTool.setCellValue(dto.getSdatool()+" - "+dto.getProjectDescription());
+                    Cell tableroBacklog = row.getCell(columnStart + 7);
+                    tableroBacklog.setCellValue(dto.getTeamBacklogName());
                     Cell sm = row.getCell(columnStart + 8);
                     sm.setCellValue(smParticipant.isEmpty() ? "" : smParticipant.get(0).getParticipantName());
                     Cell dev = row.getCell(columnStart + 9);
                     dev.setCellValue(dto.getEmployeeId());
                     Cell jobType = row.getCell(columnStart + 10);
                     jobType.setCellValue(typeClasificationJobs(uuaa.getStringCellValue(),jobName,jobNameDataproc.getStringCellValue()));
-                    Cell jobState = row.getCell(columnStart + 11);
-                    jobState.setCellValue(getState(jobNameState));
+                    Cell modifiedDetail = row.getCell(columnStart+12);
+                    modifiedDetail.setCellValue(getModificationDetail(jobNameStatus, jobName, docBefore, docAfter));
+                    jobNameStatus = getStatus(jobNameStatus);
+                    jobNameStatus = jobNameStatus.substring(0, 1).toUpperCase() + jobNameStatus.substring(1).toLowerCase();
+                    Cell jobStatus = row.getCell(columnStart + 11);
+                    jobStatus.setCellValue(getStatus(jobNameStatus));
+                    Cell masterObject = row.getCell(columnStart+14);
+                    masterObject.setCellValue(getTableName(jobNode));
                     rowStart++;
                 }
             }
@@ -419,59 +603,73 @@ public class DocumentGeneratorService {
         return documentoBytes;
     }
 
-    private String getUUAA (String jobName, Document doc){
-        String uuaaApplication = "";
+    private String getModificationDetail(String jobNameStatus, String jobName, Document docBefore, Document docAfter) throws TransformerException {
+        String modification = "";
+        if (jobNameStatus.equalsIgnoreCase(MODIFIED) && docBefore != null) {
+            modification = getDifference(jobName, docBefore, docAfter);
+        }
+        return modification;
+    }
+
+    private String getDifference(String jobName, Document docBefore, Document docAfter) throws TransformerException {
+        Element jobBefore = getJobNode(jobName, docBefore);
+        Element jobAfter = getJobNode(jobName, docAfter);
+        return String.join("\n",compareXmlByLine(normalizeXml(jobBefore),normalizeXml(jobAfter)));
+    }
+
+    private Element getJobNode(String jobName, Document doc) {
+        Element jobElement = null;
         NodeList folderNodes = doc.getElementsByTagName(FOLDER);
         for (int i = 0; i < folderNodes.getLength(); i++) {
             Element folderElement = (Element) folderNodes.item(i);
             NodeList jobNodes = folderElement.getElementsByTagName(JOB);
             for (int j = 0; j < jobNodes.getLength(); j++) {
-                Element jobElement = (Element) jobNodes.item(j);
-                if (jobElement.getAttribute(JOBNAME).equals(jobName)){
-                    uuaaApplication = jobElement.getAttribute("APPLICATION").split("-")[0];
-                    if (uuaaApplication.length() == 3){
-                        return "P" + uuaaApplication;
-                    }
-                    return uuaaApplication;
+                jobElement = (Element) jobNodes.item(j);
+                if (jobElement.getAttribute(JOBNAME).equals(jobName)) {
+                    return jobElement;
                 }
             }
+        }
+        return jobElement;
+    }
+
+    private String getTableName(Element jobElement) {
+        String description = jobElement.getAttribute("DESCRIPTION");
+        Pattern pattern = Pattern.compile("\\b(t_\\w+)\\b");
+        Matcher matcher = pattern.matcher(description);
+        return matcher.find() ? matcher.group(1) : "";
+    }
+
+    private String getUUAA (Element jobElement){
+        String uuaaApplication;
+        uuaaApplication = jobElement.getAttribute("APPLICATION").split("-")[0];
+        if (uuaaApplication.length() == 3){
+            return "P" + uuaaApplication;
         }
         return uuaaApplication;
     }
 
-
-    private String getJobDataproc (String jobName,Document doc){
+    private String getJobDataproc (Element jobElement){
         String jobDataproc = "";
-        NodeList folderNodes = doc.getElementsByTagName(FOLDER);
-        for (int i = 0; i < folderNodes.getLength(); i++) {
-            Element folderElement = (Element) folderNodes.item(i);
-            NodeList jobNodes = folderElement.getElementsByTagName(JOB);
-            for (int j = 0; j < jobNodes.getLength(); j++) {
-                Element jobElement = (Element) jobNodes.item(j);
-                if (jobElement.getAttribute(JOBNAME).equals(jobName)){
-                    NodeList variableNodes = jobElement.getElementsByTagName("VARIABLE");
-                    for (int k = 0; k < variableNodes.getLength(); k++) {
-                        Element variableElement = (Element) variableNodes.item(k);
-                        String value;
-                        if ("%%SENTRY_JOB".equals(variableElement.getAttribute("NAME"))) {
-                            value = variableElement.getAttribute("VALUE");
-                            jobDataproc = getJobNameDataproc(value);
-                        }
-                    }
-                }
+        NodeList variableNodes = jobElement.getElementsByTagName("VARIABLE");
+        for (int k = 0; k < variableNodes.getLength(); k++) {
+            Element variableElement = (Element) variableNodes.item(k);
+            String value;
+            if ("%%SENTRY_JOB".equals(variableElement.getAttribute("NAME"))) {
+                value = variableElement.getAttribute("VALUE");
+                jobDataproc = getJobNameDataproc(value);
             }
         }
         return jobDataproc;
     }
 
-    public String getState(String state){
+    public String getStatus(String status){
         Map<String, String> translations = new HashMap<>();
         translations.put(NEW, "nuevo");
         translations.put(MODIFIED, "modificado");
         translations.put(ELIMINATED, "eliminado");
-        return translations.getOrDefault(state.toLowerCase(), state);
+        return translations.getOrDefault(status.toLowerCase(), status);
     }
-
 
     public String getJobNameDataproc(String texto) {
         Pattern pattern = Pattern.compile("\\b[\\w-]*-([\\w-]*-){4}[\\w-]*\\b");
@@ -545,4 +743,22 @@ public class DocumentGeneratorService {
         }
         return String.join("_", uuaaSet) + "_" + String.join("_", periodicidadSet);
     }
+
+    public JsonObject getInfoJira(DocumentGeneratorMeshRequest dto, List<String> jiraIssues) throws Exception {
+        String url = jiraApiService.buildJiraQueryUrl(jiraIssues);
+        String response = jiraApiService.GetJiraAsync(dto.getUserName(), dto.getToken(), url);
+        return JsonParser.parseString(response).getAsJsonObject();
+    }
+
+    public String getPullRequestUrl(DocumentGeneratorMeshRequest dto, JsonObject jiraTicketResult) throws Exception {
+        String idTicket = jiraTicketResult.getAsJsonObject().get("id").getAsString();
+        String url = ApiJiraName.URL_API_JIRA_PULL_REQUEST + idTicket + "&applicationType=stash&dataType=pullrequest";
+        String response = this.jiraApiService.GetJiraAsync(dto.getUserName(), dto.getToken(), url);
+        JsonObject prsJsonResponse = JsonParser.parseString(response).getAsJsonObject();
+        return prsJsonResponse
+                .getAsJsonArray("detail").get(0).getAsJsonObject()
+                .getAsJsonArray("pullRequests").get(0).getAsJsonObject()
+                .get("url").getAsString();
+    }
+
 }
