@@ -18,4 +18,8 @@ public class InventoryInputsDtoResponse {
     private String[] inputPathsArray;
     private String outputPath;
     private String jobPhase;
+    private Integer domainId;
+    private Integer useCaseId;
+    private Integer frequencyId;
+    private Integer jobTypeId;
 }

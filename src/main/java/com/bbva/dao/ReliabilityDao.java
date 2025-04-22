@@ -3,6 +3,7 @@ package com.bbva.dao;
 import com.bbva.database.MyBatisConnectionFactory;
 import com.bbva.database.mappers.ReliabilityMapper;
 import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
+import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
 import com.bbva.dto.reliability.response.InventoryInputsDtoResponse;
 import com.bbva.dto.reliability.response.InventoryInputsFilterDtoResponse;
 import com.bbva.util.JSONUtils;
@@ -77,6 +78,27 @@ public class ReliabilityDao {
         response.setData(lista);
         log.info(JSONUtils.convertFromObjectToJson(response.getData()));
         return response;
+    }
+
+    public void updateInventoryJobStock(InventoryJobUpdateDtoRequest dto) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ReliabilityMapper reliabilityMapper = session.getMapper(ReliabilityMapper.class);
+            reliabilityMapper.updateInventoryJobStock(
+                    dto.getJobName(),
+                    dto.getComponentName(),
+                    dto.getFrequencyId(),
+                    dto.getInputPaths(),
+                    dto.getOutputPath(),
+                    dto.getJobTypeId(),
+                    dto.getUseCaseId(),
+                    dto.getIsCritical(),
+                    dto.getDomainId()
+            );
+            session.commit();
+        } catch (Exception e) {
+            throw e;
+        }
     }
 
 }

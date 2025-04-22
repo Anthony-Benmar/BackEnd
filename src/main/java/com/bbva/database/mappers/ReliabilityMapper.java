@@ -1,10 +1,7 @@
 package com.bbva.database.mappers;
 
 import com.bbva.dto.reliability.response.InventoryInputsDtoResponse;
-import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Result;
-import org.apache.ibatis.annotations.Results;
-import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.*;
 
 import java.util.List;
 
@@ -28,7 +25,11 @@ public interface ReliabilityMapper {
             @Result(property = "frequency", column = "frequency"),
             @Result(property = "inputPaths", column = "input_paths"),
             @Result(property = "outputPath", column = "output_path"),
-            @Result(property = "jobPhase", column = "job_phase")
+            @Result(property = "jobPhase", column = "job_phase"),
+            @Result(property = "domainId", column = "domain_id"),
+            @Result(property = "useCaseId", column = "use_case_id"),
+            @Result(property = "frequencyId", column = "frequency_id"),
+            @Result(property = "jobTypeId", column = "job_type_id")
     })
     List<InventoryInputsDtoResponse> inventoryInputsFilter(@Param("domainName") String domainName,
                                                               @Param("useCase") String useCase,
@@ -36,5 +37,27 @@ public interface ReliabilityMapper {
                                                               @Param("frequency") String frequency,
                                                               @Param("isCritical") String isCritical,
                                                               @Param("searchByInputOutputTable") String searchByInputOutputTable
+    );
+
+    @Update("CALL SP_UPDATE_INVENTORY_JOB_STOCK(" +
+            "#{jobName}," +
+            "#{componentName}," +
+            "#{frequencyId}," +
+            "#{inputPaths}," +
+            "#{outputPath}," +
+            "#{jobTypeId}," +
+            "#{useCaseId}," +
+            "#{isCritical}," +
+            "#{domainId})")
+    void updateInventoryJobStock(
+            @Param("jobName") String jobName,
+            @Param("componentName") String componentName,
+            @Param("frequencyId") int frequencyId,
+            @Param("inputPaths") String inputPaths,
+            @Param("outputPath") String outputPath,
+            @Param("jobTypeId") int jobTypeId,
+            @Param("useCaseId") int useCaseId,
+            @Param("isCritical") String isCritical,
+            @Param("domainId") int domainId
     );
 }

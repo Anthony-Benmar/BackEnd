@@ -3,6 +3,7 @@ package com.bbva.resources;
 
 import com.bbva.core.abstracts.IDataResult;
 import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
+import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
 import com.bbva.dto.reliability.response.InventoryInputsFilterDtoResponse;
 import com.bbva.service.ReliabilityService;
 
@@ -24,6 +25,14 @@ public class ReliabilityResource {
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<InventoryInputsFilterDtoResponse> inventoryInputsFilter(InventoryInputsFilterDtoRequest dto) {
         return reliabilityService.inventoryInputsFilter(dto);
+    }
+
+    @POST
+    @Path("/job/update")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult updateInventoryJobStock(InventoryJobUpdateDtoRequest dto) {
+        return reliabilityService.updateInventoryJobStock(dto);
     }
 
 }
