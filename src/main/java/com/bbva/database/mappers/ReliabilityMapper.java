@@ -1,7 +1,10 @@
 package com.bbva.database.mappers;
 
+import com.bbva.dto.reliability.response.ExecutionValidationDtoResponse;
 import com.bbva.dto.reliability.response.InventoryInputsDtoResponse;
 import org.apache.ibatis.annotations.*;
+import com.bbva.dto.reliability.response.PendingCustodyJobsDtoResponse;
+import com.bbva.dto.reliability.response.ProjectCustodyInfoDtoResponse;
 
 import java.util.List;
 
@@ -38,7 +41,6 @@ public interface ReliabilityMapper {
                                                               @Param("isCritical") String isCritical,
                                                               @Param("searchByInputOutputTable") String searchByInputOutputTable
     );
-
     @Update("CALL SP_UPDATE_INVENTORY_JOB_STOCK(" +
             "#{jobName}," +
             "#{componentName}," +
@@ -60,4 +62,30 @@ public interface ReliabilityMapper {
             @Param("isCritical") String isCritical,
             @Param("domainId") int domainId
     );
+
+    @Select("CALL SP_GET_PENDING_CUSTODY_JOBS(#{sdatoolId})")
+    @Results({
+            @Result(property = "jobName", column = "job_name"),
+            @Result(property = "jsonName", column = "json_name"),
+            @Result(property = "frequency", column = "frequency"),
+            @Result(property = "jobType", column = "job_type"),
+            @Result(property = "originType", column = "origin_type"),
+            @Result(property = "phaseType", column = "phase_type")
+    })
+    List<PendingCustodyJobsDtoResponse> getPendingCustodyJobs(@Param("sdatoolId") String sdatoolId);
+
+    @Select("CALL SP_GET_PROJECT_CUSTODY_INFO(#{sdatoolId})")
+    @Results({
+            @Result(property = "useCase", column = "use_case"),
+            @Result(property = "pack", column = "pack"),
+            @Result(property = "domainName", column = "domain_name"),
+            @Result(property = "productOwner", column = "product_owner")
+    })
+    List<ProjectCustodyInfoDtoResponse> getProjectCustodyInfo(@Param("sdatoolId") String sdatoolId);
+
+    @Select("CALL SP_GET_EXECUTION_VALIDATION(#{jobName})")
+    @Results({
+            @Result(property = "validation", column = "validacion")
+    })
+    ExecutionValidationDtoResponse getExecutionValidation(@Param("jobName") String jobName);
 }

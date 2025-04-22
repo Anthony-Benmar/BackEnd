@@ -1,13 +1,20 @@
 package com.bbva.service;
 
+import com.bbva.common.HttpStatusCodes;
 import com.bbva.core.abstracts.IDataResult;
 import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dao.ReliabilityDao;
 import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
 import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
+import com.bbva.dto.reliability.response.ExecutionValidationDtoResponse;
 import com.bbva.dto.reliability.response.InventoryInputsFilterDtoResponse;
+import com.bbva.dto.reliability.response.PendingCustodyJobsDtoResponse;
+import com.bbva.dto.reliability.response.ProjectCustodyInfoDtoResponse;
 
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class ReliabilityService {
@@ -25,6 +32,38 @@ public class ReliabilityService {
         } catch (Exception e) {
             log.severe("Error updating job stock: " + e.getMessage());
             return new ErrorDataResult<>(null, "500", e.getMessage());
+        }
+    }
+    public IDataResult<List<PendingCustodyJobsDtoResponse>> getPendingCustodyJobs(String sdatoolId)
+            throws ExecutionException, InterruptedException{
+        try {
+            var result = reliabilityDao.getPendingCustodyJobs(sdatoolId);
+            return new SuccessDataResult(result);
+        } catch (Exception e) {
+            log.log(Level.SEVERE, e.getMessage(), e);
+            return new ErrorDataResult(sdatoolId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
+
+    public IDataResult<List<ProjectCustodyInfoDtoResponse>> getProjectCustodyInfo(String sdatoolId)
+            throws ExecutionException, InterruptedException {
+        try {
+            var result = reliabilityDao.getProjectCustodyInfo(sdatoolId);
+            return new SuccessDataResult(result);
+        } catch (Exception e) {
+            log.log(Level.SEVERE, e.getMessage(), e);
+            return new ErrorDataResult(sdatoolId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
+
+    public IDataResult<ExecutionValidationDtoResponse> getExecutionValidation(String jobName)
+            throws ExecutionException, InterruptedException {
+        try {
+            var result = reliabilityDao.getExecutionValidation(jobName);
+            return new SuccessDataResult(result);
+        } catch (Exception e) {
+            log.log(Level.SEVERE, e.getMessage(), e);
+            return new ErrorDataResult(jobName, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
 }

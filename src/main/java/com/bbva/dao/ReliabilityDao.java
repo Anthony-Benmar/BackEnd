@@ -4,8 +4,7 @@ import com.bbva.database.MyBatisConnectionFactory;
 import com.bbva.database.mappers.ReliabilityMapper;
 import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
 import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
-import com.bbva.dto.reliability.response.InventoryInputsDtoResponse;
-import com.bbva.dto.reliability.response.InventoryInputsFilterDtoResponse;
+import com.bbva.dto.reliability.response.*;
 import com.bbva.util.JSONUtils;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -13,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -79,7 +79,20 @@ public class ReliabilityDao {
         log.info(JSONUtils.convertFromObjectToJson(response.getData()));
         return response;
     }
-
+    public List<PendingCustodyJobsDtoResponse> getPendingCustodyJobs(String sdatoolId) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        List<PendingCustodyJobsDtoResponse> pendingCustodyJobsList;
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ReliabilityMapper mapper = session.getMapper(ReliabilityMapper.class);
+            pendingCustodyJobsList = mapper.getPendingCustodyJobs(sdatoolId);
+            for (PendingCustodyJobsDtoResponse item : pendingCustodyJobsList) {
+                if (item.getJobName() != null) {
+                    item.setJobName(item.getJobName().replaceAll("\\s+", ""));
+                }
+            }
+            return pendingCustodyJobsList;
+        }
+    }
     public void updateInventoryJobStock(InventoryJobUpdateDtoRequest dto) {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         try (SqlSession session = sqlSessionFactory.openSession()) {
@@ -100,5 +113,29 @@ public class ReliabilityDao {
             throw e;
         }
     }
+    public List<ProjectCustodyInfoDtoResponse> getProjectCustodyInfo(String sdatoolId) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        List<ProjectCustodyInfoDtoResponse> projectCustodyInfoList;
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ReliabilityMapper mapper = session.getMapper(ReliabilityMapper.class);
+            projectCustodyInfoList = mapper.getProjectCustodyInfo(sdatoolId);
+            return projectCustodyInfoList;
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            return null;
+        }
+    }
 
+    public ExecutionValidationDtoResponse getExecutionValidation(String jobName) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        ExecutionValidationDtoResponse executionValidation;
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ReliabilityMapper mapper = session.getMapper(ReliabilityMapper.class);
+            executionValidation = mapper.getExecutionValidation(jobName);
+            return executionValidation;
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            return null;
+        }
+    }
 }
