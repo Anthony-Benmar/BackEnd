@@ -10,6 +10,7 @@ import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.logging.Level;
@@ -85,6 +86,12 @@ public class ReliabilityDao {
         try (SqlSession session = sqlSessionFactory.openSession()) {
             ReliabilityMapper mapper = session.getMapper(ReliabilityMapper.class);
             pendingCustodyJobsList = mapper.getPendingCustodyJobs(sdatoolId);
+
+            // Validar si la lista es nula o está vacía
+            if (pendingCustodyJobsList == null || pendingCustodyJobsList.isEmpty()) {
+                return Collections.emptyList(); // Retorna una lista vacía en lugar de null
+            }
+
             for (PendingCustodyJobsDtoResponse item : pendingCustodyJobsList) {
                 if (item.getJobName() != null) {
                     item.setJobName(item.getJobName().replaceAll("\\s+", ""));

@@ -289,4 +289,12 @@ public class ProjectResources {
     {
         return projectService.getProjectParticipants(projectId);
     }
+
+    @GET
+    @Path("/get-all")
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<List<ProjectByDomainIdDTO>> getProjectsByDomainId(@Context HttpServletRequest request)
+    {
+        return projectService.getAllProjects();
+    }
 }

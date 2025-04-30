@@ -392,6 +392,16 @@ public class ProjectService {
         }
     }
 
+    public IDataResult<List<ProjectByDomainIdDTO>> getAllProjects() {
+        try {
+            var result = projectDao.getAllProjects();
+            return new SuccessDataResult(result);
+        } catch (Exception e) {
+            log.log(Level.SEVERE, e.getMessage(), e);
+            return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
+
     public IDataResult getFeaturesByProject(String sdatoolId) {
         try {
             var listFeaturesEntity = projectDao.getFeaturesByProject(sdatoolId, "");
