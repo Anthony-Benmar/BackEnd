@@ -519,4 +519,12 @@ public class ProjectDao {
             return projectStatusesList;
         }
     }
+
+    public List<ProjectByDomainIdDTO> getAllProjects() {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ProjectMapper mapper = session.getMapper(ProjectMapper.class);
+            return mapper.listProjects();
+        }
+    }
 }

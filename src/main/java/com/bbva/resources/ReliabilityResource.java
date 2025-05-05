@@ -4,6 +4,7 @@ package com.bbva.resources;
 import com.bbva.common.HttpStatusCodes;
 import com.bbva.core.abstracts.IDataResult;
 import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
+import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
 import com.bbva.dto.reliability.response.ExecutionValidationDtoResponse;
 import com.bbva.dto.reliability.response.InventoryInputsFilterDtoResponse;
 import com.bbva.dto.reliability.response.PendingCustodyJobsDtoResponse;
@@ -61,5 +62,12 @@ public class ReliabilityResource {
         return reliabilityService.getExecutionValidation(jobName);
     }
 
+    @POST
+    @Path("/job/update")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult updateInventoryJobStock(InventoryJobUpdateDtoRequest dto) {
+        return reliabilityService.updateInventoryJobStock(dto);
+    }
 
 }

@@ -3,12 +3,14 @@ package com.bbva.dao;
 import com.bbva.database.MyBatisConnectionFactory;
 import com.bbva.database.mappers.ReliabilityMapper;
 import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
+import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
 import com.bbva.dto.reliability.response.*;
 import com.bbva.util.JSONUtils;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.logging.Level;
@@ -84,6 +86,12 @@ public class ReliabilityDao {
         try (SqlSession session = sqlSessionFactory.openSession()) {
             ReliabilityMapper mapper = session.getMapper(ReliabilityMapper.class);
             pendingCustodyJobsList = mapper.getPendingCustodyJobs(sdatoolId);
+
+            // Validar si la lista es nula o está vacía
+            if (pendingCustodyJobsList == null || pendingCustodyJobsList.isEmpty()) {
+                return Collections.emptyList(); // Retorna una lista vacía en lugar de null
+            }
+
             for (PendingCustodyJobsDtoResponse item : pendingCustodyJobsList) {
                 if (item.getJobName() != null) {
                     item.setJobName(item.getJobName().replaceAll("\\s+", ""));
@@ -92,7 +100,26 @@ public class ReliabilityDao {
             return pendingCustodyJobsList;
         }
     }
-
+    public void updateInventoryJobStock(InventoryJobUpdateDtoRequest dto) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ReliabilityMapper reliabilityMapper = session.getMapper(ReliabilityMapper.class);
+            reliabilityMapper.updateInventoryJobStock(
+                    dto.getJobName(),
+                    dto.getComponentName(),
+                    dto.getFrequencyId(),
+                    dto.getInputPaths(),
+                    dto.getOutputPath(),
+                    dto.getJobTypeId(),
+                    dto.getUseCaseId(),
+                    dto.getIsCritical(),
+                    dto.getDomainId()
+            );
+            session.commit();
+        } catch (Exception e) {
+            throw e;
+        }
+    }
     public List<ProjectCustodyInfoDtoResponse> getProjectCustodyInfo(String sdatoolId) {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         List<ProjectCustodyInfoDtoResponse> projectCustodyInfoList;
