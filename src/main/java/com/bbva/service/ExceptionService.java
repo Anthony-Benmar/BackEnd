@@ -5,7 +5,6 @@ import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dao.ExceptionDao;
 import com.bbva.dto.batch.response.ExceptionEntityResponseDTO;
-import com.bbva.dto.batch.response.StatusJobExecutionDTO;
 
 import java.util.List;
 
