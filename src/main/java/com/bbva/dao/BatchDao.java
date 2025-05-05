@@ -28,8 +28,7 @@ public class BatchDao {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         try (SqlSession session = sqlSessionFactory.openSession()) {
             BatchMapper batchMapper = session.getMapper(BatchMapper.class);
-            String result = batchMapper.getLastJobExecutionStatusDate();
-            return result;
+            return batchMapper.getLastJobExecutionStatusDate();
         }
     }
 
@@ -148,17 +147,15 @@ public class BatchDao {
     }
 
     public void saveJobExecutionStatus(List<InsertJobExecutionStatusRequest> request) {
-        try {
-            SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
-            try (SqlSession session = sqlSessionFactory.openSession()) {
-                BatchMapper batchMapper = session.getMapper(BatchMapper.class);
-                try {
-                    batchMapper.insertJobExecutionStatus(request);
-                    session.commit();
-                } catch (Exception e) {
-                    session.rollback();
-                    log.log(Level.SEVERE, e.getMessage(), e);
-                }
+       SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+       try (SqlSession session = sqlSessionFactory.openSession()) {
+            BatchMapper batchMapper = session.getMapper(BatchMapper.class);
+            try {
+                batchMapper.insertJobExecutionStatus(request);
+                session.commit();
+            } catch (Exception e) {
+                session.rollback();
+                log.log(Level.SEVERE, e.getMessage(), e);
             }
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
@@ -166,19 +163,18 @@ public class BatchDao {
     }
 
     public void saveJobExecutionActive(List<InsertJobExecutionActiveRequest> request) {
-        try {
-            SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
-            try (SqlSession session = sqlSessionFactory.openSession()) {
-                BatchMapper batchMapper = session.getMapper(BatchMapper.class);
-                try {
-                    batchMapper.deleteJobExecutionActive(request);
-                    batchMapper.insertJobExecutionActive(request);
-                    session.commit();
-                } catch (Exception e) {
-                    session.rollback();
-                    log.log(Level.SEVERE, e.getMessage(), e);
-                }
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            BatchMapper batchMapper = session.getMapper(BatchMapper.class);
+            try {
+                batchMapper.deleteJobExecutionActive(request);
+                batchMapper.insertJobExecutionActive(request);
+                session.commit();
+            } catch (Exception e) {
+                session.rollback();
+                log.log(Level.SEVERE, e.getMessage(), e);
             }
+
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
         }

@@ -5,13 +5,11 @@ import com.bbva.dto.board.request.BoardPaginationDtoRequest;
 import com.bbva.dto.board.request.ListDtoRequest;
 import com.bbva.dto.board.response.ListDtoResponse;
 import com.bbva.dto.board.response.BoardPaginationDtoResponse;
+import com.bbva.entities.board.JiraTeamBacklogEntity;
 import com.bbva.service.BoardService;
 import com.bbva.service.LogService;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.logging.Logger;
@@ -41,5 +39,13 @@ public class BoardResources {
         LOGGER.info("board readonly");
         IDataResult<List<ListDtoResponse>>  result = boardManager.list(dto);
         return result;
+    }
+
+    @GET
+    @Path("/{projectId}/jirateambacklog")
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<List<JiraTeamBacklogEntity>> getProjectParticipants(@PathParam("projectId") Long projectId)
+    {
+        return boardManager.getJiraTeamBackLog(projectId);
     }
 }

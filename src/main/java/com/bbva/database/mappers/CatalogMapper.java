@@ -26,6 +26,11 @@ public interface CatalogMapper {
             "</script>"})
     List<PeriodEntity> listAllPeriods();
 
+    @Select({"<script>" +
+            "CALL SP_GET_ACTIVE_PERIOD() " +
+            "</script>"})
+    List<PeriodEntity> getActivePeriod();
+
     @Select("CALL SP_LIST_CATALOG(" +
             "#{catalogId}," +
             "#{pageCurrent}," +

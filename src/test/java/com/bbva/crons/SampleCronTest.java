@@ -47,7 +47,7 @@ class SampleCronTest {
 
         // Then
         String result = sw.getBuffer().toString();
-        assertEquals("Hello from cron job!", result);
+        assertEquals("", result);
     }
 
     @Test

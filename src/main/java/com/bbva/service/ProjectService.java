@@ -4,22 +4,18 @@ import com.bbva.common.HttpStatusCodes;
 import com.bbva.core.abstracts.IDataResult;
 import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
-import com.bbva.dao.MapDependencyDao;
-import com.bbva.dao.ProjectDao;
-import com.bbva.dao.UseCaseDefinitionDao;
-import com.bbva.dao.UserDao;
+import com.bbva.dao.*;
 import com.bbva.dto.feature.response.featureDtoResponse;
 import com.bbva.dto.map_dependency.response.MapDependencyListByProjectResponse;
 import com.bbva.dto.project.request.*;
 import com.bbva.dto.project.response.*;
 import com.bbva.entities.User;
 import com.bbva.entities.common.PeriodPEntity;
-import com.bbva.entities.issueticket.WorkOrderDetail;
 import com.bbva.entities.map_dependecy.MapDependencyEntity;
 import com.bbva.entities.project.ProjectPortafolioEntity;
+import com.bbva.entities.project.ProjectStatusEntity;
 import com.bbva.entities.use_case_definition.UseCaseDefinitionEntity;
 
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
@@ -347,8 +343,7 @@ public class ProjectService {
         return new SuccessDataResult(dto);
     }
 
-    public IDataResult<List<InsertProjectParticipantDTO>> getProjectParticipants(int projectId)
-            throws ExecutionException, InterruptedException {
+    public IDataResult<List<InsertProjectParticipantDTO>> getProjectParticipants(int projectId) {
 
         try {
             var result = projectDao.getProjectParticipants(projectId);
@@ -405,4 +400,15 @@ public class ProjectService {
             return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
+
+    public IDataResult<List<ProjectStatusEntity>> getProjectStatusTracking(int projectId) {
+        try {
+            List<ProjectStatusEntity> result = projectDao.getProjectStatusTracking(projectId);
+            return new SuccessDataResult<>(result);
+        } catch (Exception e) {
+            log.log(Level.SEVERE, e.getMessage(), e);
+            return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
+
 }
