@@ -13,6 +13,7 @@ import java.util.List;
 @Setter
 public class DataDocumentMeshFolder {
     private String folderName;
-    private String xml;
+    private String xmlBefore;
+    private String xmlAfter;
     private List<DataDocumentMeshJobName> jobNames;
 }

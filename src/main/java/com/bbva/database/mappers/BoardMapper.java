@@ -3,6 +3,7 @@ package com.bbva.database.mappers;
 import com.bbva.entities.board.Board;
 import com.bbva.entities.board.BoardListEntity;
 import com.bbva.entities.board.BoardPaginationEntity;
+import com.bbva.entities.board.JiraTeamBacklogEntity;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
@@ -32,4 +33,8 @@ public interface BoardMapper {
 
     @Select("CALL SP_BOARD_FILTERED_BY_ID(#{id})")
     List<BoardListEntity> lista(@Param("id") Integer id);
+
+    @Select("{CALL SP_LIST_TEAMBACKLOG_BY_PROJECT(#{projectId})}")
+    List<JiraTeamBacklogEntity> listJiraTeamBacklog(@Param("projectId") Long projectId);
+
 }

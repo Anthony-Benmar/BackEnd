@@ -18,4 +18,6 @@ public class DocumentGeneratorMeshRequest {
     private String name;
     private String token;
     private DataDocumentMesh dataDocumentMesh;
+    private String url;
+    private String teamBacklogName;
 }

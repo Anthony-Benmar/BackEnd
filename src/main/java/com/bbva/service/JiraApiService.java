@@ -24,6 +24,8 @@ import java.net.http.HttpClient;
 import java.util.*;
 import java.util.logging.Logger;
 
+import static com.bbva.common.jiraValidador.JiraValidatorConstantes.KEY_IN;
+
 public class JiraApiService {
     private static final Logger LOGGER = Logger.getLogger(JiraValidatorService.class.getName());
     private JiraApiService jiraApiService;
@@ -161,6 +163,11 @@ public class JiraApiService {
         }
 
         return responseBodyString;
+    }
+
+    public String buildJiraQueryUrl(List<String> jiraIssues) {
+        String query = KEY_IN + String.join(",", jiraIssues) + ")";
+        return ApiJiraName.URL_API_JIRA_SQL + query + getQuerySuffixURL();
     }
 
 }

@@ -2,7 +2,9 @@ package com.bbva.resources;
 
 import com.bbva.dao.ProjectDao;
 import com.bbva.dto.documentgenerator.request.DocumentGeneratorMeshRequest;
+import com.bbva.service.BitbucketApiService;
 import com.bbva.service.DocumentGeneratorService;
+import com.bbva.service.JiraApiService;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -12,7 +14,9 @@ import javax.ws.rs.core.Response;
 @Produces(MediaType.APPLICATION_JSON)
 public class DocumentGeneratorResources {
     private final ProjectDao projectDao = new ProjectDao();
-    private final DocumentGeneratorService documentGeneratorService = new DocumentGeneratorService(projectDao);
+    private final BitbucketApiService bitbucketApiService = new BitbucketApiService();
+    private final JiraApiService jiraApiService = new JiraApiService();
+    private final DocumentGeneratorService documentGeneratorService = new DocumentGeneratorService(projectDao, bitbucketApiService, jiraApiService);
     private static final String CONTENTDISPOSITION = "Content-Disposition";
 
     @POST

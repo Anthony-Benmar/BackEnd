@@ -11,5 +11,5 @@ import lombok.Setter;
 @Setter
 public class DataDocumentMeshJobName {
     private String jobName;
-    private String state;
+    private String status;
 }
