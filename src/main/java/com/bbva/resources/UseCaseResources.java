@@ -4,7 +4,6 @@ import com.bbva.core.abstracts.IDataResult;
 import com.bbva.dto.use_case.request.UpdateOrInsertUseCaseDtoRequest;
 import com.bbva.dto.use_case.request.UseCaseInputsFilterDtoRequest;
 import com.bbva.dto.use_case.response.UseCaseInputsFilterDtoResponse;
-import com.bbva.entities.UpdateOrInsertEntity;
 import com.bbva.entities.usecase.UseCaseEntity;
 import com.bbva.service.UseCaseService;
 
@@ -12,7 +11,6 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
-import java.util.concurrent.ExecutionException;
 
 @Path("/use-cases")
 @Produces(MediaType.APPLICATION_JSON)

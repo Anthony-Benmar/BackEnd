@@ -286,7 +286,7 @@ public class JiraValidatorService {
         if (jiraIssues == null || jiraIssues.isEmpty()) {
             return result;
         }
-        String url = buildJiraQueryUrl(jiraIssues);
+        String url = jiraApiService.buildJiraQueryUrl(jiraIssues);
         try{
             String response = jiraApiService.GetJiraAsync(dto.getUserName(), dto.getToken(), url);
             result = JsonParser.parseString(response).getAsJsonObject();
@@ -294,11 +294,6 @@ public class JiraValidatorService {
             LOGGER.info("ERROR CONSULTA JIRA LINK " + url + ": " + e.getMessage());
         }
         return result;
-    }
-
-    public String buildJiraQueryUrl(List<String> jiraIssues) {
-        String query = KEY_IN + String.join(",", jiraIssues) + ")";
-        return ApiJiraName.URL_API_JIRA_SQL + query + jiraApiService.getQuerySuffixURL();
     }
 
     public String getTeamBackLogId(String tipoDesarrollo, JsonObject jiraTicketResult) throws ParseException {
