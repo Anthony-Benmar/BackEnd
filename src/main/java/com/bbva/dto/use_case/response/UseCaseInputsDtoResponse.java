@@ -6,7 +6,9 @@ import lombok.Setter;
 @Getter
 @Setter
 public class UseCaseInputsDtoResponse {
+    private Integer useCaseId;
     private String domainName;
+    private Integer domainId;
     private String useCaseName;
     private String useCaseDescription;
     private Integer projectCount;

@@ -36,7 +36,9 @@ public interface UseCaseMapper {
             "#{domainName}," +
             "#{projectName})")
     @Results({
+            @Result(property = "useCaseId", column = "use_case_id"),
             @Result(property = "domainName", column = "domain_name"),
+            @Result(property = "domainId", column = "domain_id"),
             @Result(property = "useCaseName", column = "use_case_name"),
             @Result(property = "useCaseDescription", column = "use_case_description"),
             @Result(property = "projectCount", column = "project_count"),
