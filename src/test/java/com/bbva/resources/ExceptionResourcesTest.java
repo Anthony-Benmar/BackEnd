@@ -30,7 +30,7 @@ class ExceptionResourcesTest {
     }
 
     @Test
-    void testGetLastJobExecutionStatusDate() {
+    void testGetExceptionResources() {
         when(exceptionServiceMock.getExceptionsWithSource()).thenReturn(getResponseDto());
         IDataResult<List<ExceptionEntityResponseDTO>> response = exceptionResources.exceptionService();
         assertEquals(String.valueOf(Response.Status.OK.getStatusCode()), response.status);
