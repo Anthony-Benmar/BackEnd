@@ -1,7 +1,6 @@
 package com.bbva.service;
 
 import com.bbva.core.abstracts.IDataResult;
-import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dao.EfectivityDao;
 import com.bbva.dto.efectivity.response.EfectivityEntityResponseDTO;

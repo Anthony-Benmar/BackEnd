@@ -11,14 +11,13 @@ import java.util.List;
 @Path("/efectivity")
 @Produces(MediaType.APPLICATION_JSON)
 public class EfectivityResources {
-    private EfectivityService efectivityService = new EfectivityService();
+    private final EfectivityService efectivityService = new EfectivityService();
 
     @GET
     @Path("/getEfectivityWithSource/{tableName}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<List<EfectivityEntityResponseDTO>> exceptionService(@PathParam("tableName") String tableName) {
-        IDataResult<List<EfectivityEntityResponseDTO>> result = efectivityService.getEfectivityWithSource(tableName);
-        return result;
+        return efectivityService.getEfectivityWithSource(tableName);
     }
 }
