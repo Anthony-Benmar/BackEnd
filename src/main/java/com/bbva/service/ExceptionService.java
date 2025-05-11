@@ -12,11 +12,7 @@ public class ExceptionService {
     private final ExceptionDao exceptionDao = new ExceptionDao();
     public IDataResult<List<ExceptionEntityResponseDTO>> getExceptionsWithSource(){
         List<ExceptionEntityResponseDTO> result;
-        try {
          result = exceptionDao.getExceptionsWithSource();
-    } catch (Exception e) {
-        return new ErrorDataResult(e.getCause(),"500","No se pudo realizar el listado");
-    }
-        return new SuccessDataResult(result);
+        return new SuccessDataResult<>(result);
     }
 }
