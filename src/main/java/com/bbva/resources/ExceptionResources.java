@@ -1,10 +1,7 @@
 package com.bbva.resources;
 
 import com.bbva.core.abstracts.IDataResult;
-import com.bbva.dto.batch.request.BatchIssuesActionFilterDtoRequest;
-import com.bbva.dto.batch.response.BatchIssuesActionFilterDtoResponse;
-import com.bbva.dto.batch.response.ExceptionEntityResponseDTO;
-import com.bbva.dto.batch.response.StatusJobExecutionDTO;
+import com.bbva.dto.exception.response.ExceptionEntityResponseDTO;
 import com.bbva.service.ExceptionService;
 
 import javax.ws.rs.*;

@@ -2,7 +2,7 @@ package com.bbva.resources;
 
 import com.bbva.core.abstracts.IDataResult;
 import com.bbva.core.results.SuccessDataResult;
-import com.bbva.dto.batch.response.EfectivityEntityResponseDTO;
+import com.bbva.dto.efectivity.response.EfectivityEntityResponseDTO;
 import com.bbva.service.EfectivityService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

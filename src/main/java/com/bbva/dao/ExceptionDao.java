@@ -1,14 +1,8 @@
 package com.bbva.dao;
 
-import com.bbva.core.results.ErrorDataResult;
 import com.bbva.database.MyBatisConnectionFactory;
-import com.bbva.database.mappers.BatchMapper;
 import com.bbva.database.mappers.ExceptionsMapper;
-import com.bbva.dto.batch.request.BatchIssuesActionFilterDtoRequest;
-import com.bbva.dto.batch.response.BatchIssuesActionFilterDtoResponse;
-import com.bbva.dto.batch.response.BatchIssuesActionSelectDtoResponse;
-import com.bbva.dto.batch.response.ExceptionEntityResponseDTO;
-import com.bbva.dto.batch.response.StatusJobExecutionDTO;
+import com.bbva.dto.exception.response.ExceptionEntityResponseDTO;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 

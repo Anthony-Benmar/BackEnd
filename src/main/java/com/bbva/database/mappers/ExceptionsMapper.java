@@ -1,8 +1,6 @@
 package com.bbva.database.mappers;
 
-import com.bbva.dto.batch.request.InsertAJIFJobExecutionRequest;
-import com.bbva.dto.batch.response.ExceptionEntityResponseDTO;
-import com.bbva.entities.InsertEntity;
+import com.bbva.dto.exception.response.ExceptionEntityResponseDTO;
 import org.apache.ibatis.annotations.Result;
 import org.apache.ibatis.annotations.Results;
 import org.apache.ibatis.annotations.Select;

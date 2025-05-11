@@ -1,6 +1,6 @@
 package com.bbva.database.mappers;
 
-import com.bbva.dto.batch.response.EfectivityEntityResponseDTO;
+import com.bbva.dto.efectivity.response.EfectivityEntityResponseDTO;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Result;
 import org.apache.ibatis.annotations.Results;

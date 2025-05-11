@@ -1,4 +1,4 @@
-package com.bbva.dto.batch.response;
+package com.bbva.dto.exception.response;
 
 import lombok.Getter;
 import lombok.Setter;

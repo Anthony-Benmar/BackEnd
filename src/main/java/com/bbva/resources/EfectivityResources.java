@@ -1,7 +1,7 @@
 package com.bbva.resources;
 
 import com.bbva.core.abstracts.IDataResult;
-import com.bbva.dto.batch.response.EfectivityEntityResponseDTO;
+import com.bbva.dto.efectivity.response.EfectivityEntityResponseDTO;
 import com.bbva.service.EfectivityService;
 
 import javax.ws.rs.*;
