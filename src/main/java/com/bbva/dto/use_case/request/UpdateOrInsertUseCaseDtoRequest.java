@@ -10,4 +10,5 @@ public class UpdateOrInsertUseCaseDtoRequest {
     private String useCaseName;
     private String useCaseDescription;
     private Integer domainId;
+    private String action;
 }
