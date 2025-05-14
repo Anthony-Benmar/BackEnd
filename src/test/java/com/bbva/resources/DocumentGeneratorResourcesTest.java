@@ -33,7 +33,7 @@ class DocumentGeneratorResourcesTest {
         byte[] documentoMock = Base64.getDecoder().decode("VGhpcyBpcyBhIHRlc3Q=");
         when(documentGeneratorServiceMock.generateDocumentMeshCases(mockRequest)).thenReturn(documentoMock);
         when(documentGeneratorServiceMock.generateNameMeshCases(mockRequest)).thenReturn("MockNombre");
-        Response response = documentGeneratorResources.generateDocumentMeshCases(mockRequest);
+        Response response = documentGeneratorResources. generateDocumentMeshCases(mockRequest);
 
         assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
         assertEquals("attachment; filename=\"C204 - MALLA - MockNombre.docx\"",
@@ -53,7 +53,7 @@ class DocumentGeneratorResourcesTest {
         Response response = documentGeneratorResources.generateDocumentMeshTracking(mockRequest);
 
         assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
-        assertEquals("attachment; filename=\"P110-Plantilla_Seguimiento de Mallas_MockNombre_v1.xlsx\"",
+        assertEquals("attachment; filename=\"P110-Plantilla_Seguimiento de Mallas_MockNombre_v2.xlsx\"",
                 response.getHeaderString("Content-Disposition"));
 
         verify(documentGeneratorServiceMock, times(1)).generateDocumentMeshTracking(mockRequest);

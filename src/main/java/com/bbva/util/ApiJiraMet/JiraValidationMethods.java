@@ -235,27 +235,6 @@ public class JiraValidationMethods {
         return tipoDesarrollo.equalsIgnoreCase("PRs") || tipoDesarrollo.equalsIgnoreCase(MALLAS) || tipoDesarrolloPRs.contains(tipoDesarrollo.toLowerCase());
     }
 
-    private String generateValidationMessage(int cantidadPrsValidas, int cantidadPrsWarning, Map<String, String> prValid, Map<String, String> prWarning) {
-        StringBuilder message = new StringBuilder();
-
-        if (cantidadPrsValidas == 1) {
-            message.append("Con PR asociada: ").append(prValid.keySet());
-        } else if (cantidadPrsValidas > 1) {
-            message.append("Se encontraron ").append(cantidadPrsValidas).append(" PRs asociadas: ").append(prValid.keySet())
-                    .append("\nAtención: No se puede tener más de una PR asociada.");
-        } else {
-            message.append("No se detectó una PR valida asociada.")
-                    .append("\nAtención: Si la PR fue asociada correctamente, falta dar permisos de acceso a los QEs.");
-        }
-
-        if (cantidadPrsWarning > 0) {
-            message.append("\nAtención: Se encontraron ").append(cantidadPrsWarning)
-                    .append(" PRs asociadas en MERGED: ").append(prWarning.keySet());
-        }
-
-        return message.toString();
-    }
-
     private Map<String, Map<String, String>> classifyPRs(JsonObject jiraTicketResultPrs, List<String> prsStatusException, List<String> prsStatusWarning) {
         Map<String, String> prException = new HashMap<>();
         Map<String, String> prWarning = new HashMap<>();
