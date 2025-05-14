@@ -44,7 +44,7 @@ public class DocumentGeneratorResources {
         String nombreDocumento = documentGeneratorService.generateNameMeshTracking(dto);
 
         return Response.ok(documentoModificado)
-                .header(CONTENTDISPOSITION, "attachment; filename=\"P110-Plantilla_Seguimiento de Mallas_"+nombreDocumento+"_v1.xlsx\"")
+                .header(CONTENTDISPOSITION, "attachment; filename=\"P110-Plantilla_Seguimiento de Mallas_"+nombreDocumento+"_v2.xlsx\"")
                 .header("Access-Control-Expose-Headers", CONTENTDISPOSITION)
                 .build();
     }
