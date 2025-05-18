@@ -26,8 +26,13 @@ public class UseCaseService {
         try {
             var result = useCaseReliabilityDao.updateOrInsertUseCase(dto);
 
-            if (dto.getUseCaseId() == null || dto.getUseCaseId().equals(0))
-                return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "UseCaseId must not be null or 0");
+            boolean isInsert = (dto.getUseCaseId() == null || dto.getUseCaseId().equals(0));
+            boolean isUpdateOperation = !isInsert;
+            if (dto.getUseCaseId() == null || dto.getUseCaseId().equals(0)) {
+                if (isUpdateOperation) {
+                    return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "UseCaseId is required for update.");
+                }
+            }
             if (dto.getUseCaseName() == null || dto.getUseCaseName().isBlank())
                 return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "UseCaseName must not be null or empty");
             if (dto.getUseCaseDescription() == null || dto.getUseCaseDescription().isBlank())
