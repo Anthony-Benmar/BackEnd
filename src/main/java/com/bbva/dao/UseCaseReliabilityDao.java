@@ -60,7 +60,7 @@ public class UseCaseReliabilityDao {
                     dto.getProjectName()
             );
         }
-        recordsCount = (lista.isEmpty()) ? (int) lista.stream().count() : 0;
+        recordsCount = (lista.isEmpty()) ? 0 : (int) lista.size();
         pagesAmount = dto.getRecordsAmount() > 0 ? (int) Math.ceil(recordsCount.floatValue() / dto.getRecordsAmount().floatValue()) : 1;
 
         if (dto.getRecordsAmount() > 0) {
