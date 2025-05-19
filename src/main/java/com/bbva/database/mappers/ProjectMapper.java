@@ -210,7 +210,9 @@ public interface ProjectMapper {
             "#{wowType}," +
             "#{countryPriorityType}," +
             "#{createAuditUser}," +
-            "#{statusType})")
+            "#{statusType}," +
+            "#{useCaseId})"
+    )
     @Results({
             @Result(property = "last_insert_id", column = "last_insert_id"),
             @Result(property = "new_register", column = "new_register")

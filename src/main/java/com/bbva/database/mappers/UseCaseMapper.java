@@ -1,8 +1,8 @@
 package com.bbva.database.mappers;
 
 import com.bbva.dto.use_case.request.UpdateOrInsertUseCaseDtoRequest;
+import com.bbva.dto.use_case.response.UpdateOrInsertDtoResponse;
 import com.bbva.dto.use_case.response.UseCaseInputsDtoResponse;
-import com.bbva.entities.UpdateOrInsertEntity;
 import com.bbva.entities.use_case.UseCaseEntity;
 import org.apache.ibatis.annotations.Result;
 import org.apache.ibatis.annotations.Results;
@@ -21,14 +21,16 @@ public interface UseCaseMapper {
             "#{useCaseId}," +
             "#{useCaseName}," +
             "#{useCaseDescription}," +
-            "#{domainId})")
+            "#{domainId},"+
+            "#{userId})")
     @Results({
             @Result(property = "last_updated_id", column = "last_updated_id"),
             @Result(property = "updated_register", column = "updated_register"),
             @Result(property = "last_insert_id", column = "last_insert_id"),
-            @Result(property = "new_register", column = "new_register")
+            @Result(property = "new_register", column = "new_register"),
+            @Result(property = "error_message", column = "error_message")
     })
-    UpdateOrInsertEntity updateOrInsertUseCase(UpdateOrInsertUseCaseDtoRequest dto);
+    UpdateOrInsertDtoResponse updateOrInsertUseCase(UpdateOrInsertUseCaseDtoRequest dto);
 
     @Select("CALL SP_GET_FILTERED_USE_CASES(" +
             "#{domainName}," +

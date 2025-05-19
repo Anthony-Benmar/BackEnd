@@ -32,4 +32,5 @@ public class InsertProjectInfoDTORequest {
     public List<InsertProjectParticipantDTO> participants;
     public List<InsertProjectDocumentDTO> documents;
     public Integer statusType;
+    public Integer useCaseId;
 }

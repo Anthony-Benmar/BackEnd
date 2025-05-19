@@ -7,9 +7,9 @@ import com.bbva.database.MyBatisConnectionFactory;
 import com.bbva.database.mappers.UseCaseMapper;
 import com.bbva.dto.use_case.request.UpdateOrInsertUseCaseDtoRequest;
 import com.bbva.dto.use_case.request.UseCaseInputsFilterDtoRequest;
+import com.bbva.dto.use_case.response.UpdateOrInsertDtoResponse;
 import com.bbva.dto.use_case.response.UseCaseInputsDtoResponse;
 import com.bbva.dto.use_case.response.UseCaseInputsFilterDtoResponse;
-import com.bbva.entities.UpdateOrInsertEntity;
 import com.bbva.entities.use_case.UseCaseEntity;
 import com.bbva.util.JSONUtils;
 import org.apache.ibatis.session.SqlSession;
@@ -35,12 +35,12 @@ public class UseCaseReliabilityDao {
         }
     }
 
-    public DataResult<UpdateOrInsertEntity> updateOrInsertUseCase(UpdateOrInsertUseCaseDtoRequest dto) {
+    public DataResult<UpdateOrInsertDtoResponse> updateOrInsertUseCase(UpdateOrInsertUseCaseDtoRequest dto) {
         try {
             SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
             try (SqlSession session = sqlSessionFactory.openSession()) {
                 UseCaseMapper mapper = session.getMapper(UseCaseMapper.class);
-                UpdateOrInsertEntity result = mapper.updateOrInsertUseCase(dto);
+                UpdateOrInsertDtoResponse result = mapper.updateOrInsertUseCase(dto);
                 session.commit();
                 return new SuccessDataResult(result);
             }
