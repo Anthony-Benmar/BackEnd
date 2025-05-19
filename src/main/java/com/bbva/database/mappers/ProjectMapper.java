@@ -100,7 +100,7 @@ public interface ProjectMapper {
     @Select("CALL SP_UPDATE_PROJECT_INFO(" +
             "#{sdatoolId}, #{projectName}, #{projectDesc}, #{portafolioCode}, #{regulatoryType}, #{ttvType}, #{domainId}, " +
             "#{projectType}, #{categoryType}, #{classificationType}, #{startPiId}, #{endPiId}, #{finalStartPiId}, #{finalEndPiId}, " +
-            "#{wowType}, #{countryPriorityType}, #{statusType}, #{createAuditUser}, #{projectId})")
+            "#{wowType}, #{countryPriorityType}, #{statusType}, #{createAuditUser}, #{projectId}, #{useCaseId})")
     void updateProjectInfo(ProjectInfoDTO dto);
 
     @Delete("Delete from data_project WHERE project_id = #{projectId}")
@@ -210,7 +210,9 @@ public interface ProjectMapper {
             "#{wowType}," +
             "#{countryPriorityType}," +
             "#{createAuditUser}," +
-            "#{statusType})")
+            "#{statusType}," +
+            "#{useCaseId})"
+    )
     @Results({
             @Result(property = "last_insert_id", column = "last_insert_id"),
             @Result(property = "new_register", column = "new_register")
@@ -253,7 +255,8 @@ public interface ProjectMapper {
             @Result(property = "createAuditDate", column = "create_audit_date"),
             @Result(property = "createAuditUser", column = "create_audit_user"),
             @Result(property = "updateAuditDate", column = "update_audit_date"),
-            @Result(property = "updateAuditUser", column = "update_audit_user")
+            @Result(property = "updateAuditUser", column = "update_audit_user"),
+            @Result(property = "useCaseId", column = "use_case_id")
     })
     List<ProjectInfoSelectResponse> projectInfoFilter(@Param("dto") ProjectInfoFilterRequest dto);
 
