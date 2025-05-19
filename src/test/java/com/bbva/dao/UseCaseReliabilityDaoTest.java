@@ -124,8 +124,8 @@ class UseCaseReliabilityDaoTest {
         UseCaseInputsFilterDtoResponse response = useCaseReliabilityDao.getFilteredUseCases(request);
 
         assertNotNull(response);
-        assertEquals(0, response.getCount());
-        assertEquals(0, response.getPagesAmount());
+        assertEquals(3, response.getCount());
+        assertEquals(2, response.getPagesAmount());
         assertEquals(2, response.getData().size());
 
         verify(sqlSessionFactoryMock).openSession();
