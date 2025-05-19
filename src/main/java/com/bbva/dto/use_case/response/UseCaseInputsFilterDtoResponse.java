@@ -8,6 +8,6 @@ import java.util.List;
 @Setter
 public class UseCaseInputsFilterDtoResponse {
     private Integer count;
-    private Integer pages_amount;
+    private Integer pagesAmount;
     private List<UseCaseInputsDtoResponse> data;
 }
