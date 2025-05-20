@@ -7,7 +7,7 @@ import lombok.Setter;
 @Setter
 public class UseCaseInputsFilterDtoRequest {
     private Integer page;
-    private Integer records_amount;
+    private Integer recordsAmount;
 
     private String domainName;
     private String projectName;

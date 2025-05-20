@@ -116,7 +116,7 @@ public class JiraValidatorService {
         resultFinal.add(executeRule(() -> instancesRules.getValidationValidateSubTaskValidateContractor(tipoDesarrollo, subtaskMetadataMap,"Se valida la subtarea: El email debe pertenecer a un Usuario de Negocio Interno BBVA", "Subtarea")));
         resultFinal.add(executeRule(() -> instancesRules.getValidationAlpha(tipoDesarrollo,"Validar que la UUAA corresponda al Dominio de ALPHA", GROUP_SUBTASK)));
         resultFinal.add(executeRule(() -> instancesRules.getValidationValidateJIRAStatus(tipoDesarrollo,"Validar el Status de Ticket JIRA",GROUP_TICKET)));
-        resultFinal.add(executeRule(() -> instancesRules.getValidationPR(tipoDesarrollo, "Validar que se tenga una PR asociada", GROUP_PR)));
+        resultFinal.add(executeRule(() -> instancesRules.getValidationPR(tipoDesarrollo, "Validar que se tenga una PR asociada", teamBacklogId,  GROUP_PR, infoJiraProjectList)));
         resultFinal.add(executeRule(() -> instancesRules.getValidationPRBranch("Validar que esté asociado a la rama correcta", GROUP_PR)));
         resultFinal.add(executeRule(() -> instancesRules.getValidationProductivizacionIssueLink(tipoDesarrollo, "Validar que el ticket de deployado como isChild (scaffolder)", GROUP_TICKET)));
         resultFinal.add(executeRule(() -> instancesRules.getValidatorHUTIntegration("Detectar el tipo de Ticket Integracion", tipoDesarrollo, GROUP_TICKET)));
@@ -236,6 +236,9 @@ public class JiraValidatorService {
         public RuleConfig(String ruleTitle, Integer order) {
             this(order, ruleTitle, true);
         }
+        public RuleConfig(String ruleTitle, Integer order, boolean visible) {
+            this(order, ruleTitle, visible);
+        }
     }
 
     private static final Map<Integer, RuleConfig> reglasConfig =  Map.ofEntries(
@@ -251,7 +254,7 @@ public class JiraValidatorService {
             Map.entry(10, new RuleConfig("Validacion Feature Link Program Increment:", 10)),
             Map.entry(11, new RuleConfig("Validacion Feature Link Incidencia/problema:", 11)),
             Map.entry(12, new RuleConfig("Validacion Item Type:", 12)),
-            Map.entry(13, new RuleConfig("Validacion Tech Stack:", 13)),
+            Map.entry(13, new RuleConfig("Validacion Tech Stack:", 13, false)),
             Map.entry(14, new RuleConfig("Validacion Acceptance Criteria:", 14)),
             Map.entry(15, new RuleConfig("Validacion Impact Label:", 15)),
             Map.entry(16, new RuleConfig("Validacion documentos adjuntos:", 16)),
