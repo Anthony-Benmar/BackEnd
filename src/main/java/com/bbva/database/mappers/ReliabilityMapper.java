@@ -16,7 +16,9 @@ public interface ReliabilityMapper {
             "#{jobType}," +
             "#{frequency}," +
             "#{isCritical}," +
-            "#{searchByInputOutputTable})")
+            "#{searchByInputOutputTable})"
+    )
+
 
     @Results({
             @Result(property = "domainName", column = "domain_name"),
@@ -32,7 +34,9 @@ public interface ReliabilityMapper {
             @Result(property = "domainId", column = "domain_id"),
             @Result(property = "useCaseId", column = "use_case_id"),
             @Result(property = "frequencyId", column = "frequency_id"),
-            @Result(property = "jobTypeId", column = "job_type_id")
+            @Result(property = "jobTypeId", column = "job_type_id"),
+            @Result(property = "bitBucketUrl", column = "bitbucket_url"),
+            @Result(property = "pack", column = "pack")
     })
     List<InventoryInputsDtoResponse> inventoryInputsFilter(@Param("domainName") String domainName,
                                                               @Param("useCase") String useCase,

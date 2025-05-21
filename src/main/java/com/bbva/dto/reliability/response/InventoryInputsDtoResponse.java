@@ -22,4 +22,6 @@ public class InventoryInputsDtoResponse {
     private Integer useCaseId;
     private Integer frequencyId;
     private Integer jobTypeId;
+    private String bitBucketUrl;
+    private String pack;
 }
