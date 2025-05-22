@@ -46,5 +46,10 @@ public interface UseCaseMapper {
     @Result(property = "useCaseDescription", column = "use_case_description")
     @Result(property = "projectCount", column = "project_count")
     @Result(property = "projects", column = "projects")
+    @Result(property = "deliveredPiId", column = "delivered_pi_id")
+    @Result(property = "critical", column = "critical")
+    @Result(property = "isRegulatory", column = "is_regulatory")
+    @Result(property = "useCaseScope", column = "use_case_scope")
+    @Result(property = "operativeModel", column = "operative_model")
     List<UseCaseInputsDtoResponse> getFilteredUseCases(String domainName, String projectName);
 }
