@@ -13,7 +13,6 @@ import com.bbva.dto.reliability.response.PendingCustodyJobsDtoResponse;
 import com.bbva.dto.reliability.response.ProjectCustodyInfoDtoResponse;
 
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 

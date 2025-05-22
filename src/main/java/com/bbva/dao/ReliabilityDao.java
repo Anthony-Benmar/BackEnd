@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 public class ReliabilityDao {
     private static final Logger LOGGER = Logger.getLogger(ReliabilityDao.class.getName());
@@ -68,12 +67,13 @@ public class ReliabilityDao {
         response.setCount(recordsCount);
         response.setPagesAmount(pagesAmount);
         response.setData(lista);
-        if (response.getData() != null && !response.getData().isEmpty()) {
-            log.info(JSONUtils.convertFromObjectToJson(response.getData()));
-        } else {
-            log.info("No se encontraron datos para los filtros aplicados.");
+        if (log.isInfoEnabled()) {
+            try {
+                log.info(JSONUtils.convertFromObjectToJson(response.getData()));
+            } catch (Exception e) {
+                log.warn("Error converting response to JSON", e);
+            }
         }
-
         return response;
     }
     public List<PendingCustodyJobsDtoResponse> getPendingCustodyJobs(String sdatoolId) {
@@ -100,21 +100,10 @@ public class ReliabilityDao {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         try (SqlSession session = sqlSessionFactory.openSession()) {
             ReliabilityMapper reliabilityMapper = session.getMapper(ReliabilityMapper.class);
-            reliabilityMapper.updateInventoryJobStock(
-                    dto.getJobName(),
-                    dto.getComponentName(),
-                    dto.getFrequencyId(),
-                    dto.getInputPaths(),
-                    dto.getOutputPath(),
-                    dto.getJobTypeId(),
-                    dto.getUseCaseId(),
-                    dto.getIsCritical(),
-                    dto.getDomainId()
-            );
+            reliabilityMapper.updateInventoryJobStock(dto);
             session.commit();
-        } catch (Exception e) {
+        }catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
-            throw new RuntimeException(e);
         }
     }
     public List<ProjectCustodyInfoDtoResponse> getProjectCustodyInfo(String sdatoolId) {
