@@ -8,7 +8,7 @@ import java.util.List;
 @Getter
 @Setter
 public class InventoryInputsFilterDtoResponse {
-    public int count;
-    public int pages_amount;
-    public List<InventoryInputsDtoResponse> data;
+    private int count;
+    private int pagesAmount;
+    private List<InventoryInputsDtoResponse> data;
 }

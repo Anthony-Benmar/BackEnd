@@ -6,8 +6,8 @@ import lombok.Setter;
 @Setter
 @Getter
 public class InventoryInputsFilterDtoRequest {
-    public Integer page;
-    public Integer recordsAmount;
+    private Integer page;
+    private Integer recordsAmount;
     private String domainName;
     private String useCase;
     private String jobType;

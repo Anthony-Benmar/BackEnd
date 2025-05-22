@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 public class ProjectService {
     private final ProjectDao projectDao = new ProjectDao();
     private static final Logger log = Logger.getLogger(ProjectService.class.getName());
+    private static final String DELETE_PROYECT = "No se pudo eliminar proyecto";
 
     public IDataResult<ProjectFilterByNameOrSdatoolDtoResponse> filter(ProjectFilterByNameOrSdatoolDtoRequest dto) {
         var result = projectDao.filter(dto);
@@ -188,11 +189,11 @@ public class ProjectService {
             if (res.success) {
                 return new SuccessDataResult(projectId);
             } else {
-                return new ErrorDataResult<>(null,"500", "No se pudo eliminar proyecto");
+                return new ErrorDataResult<>(null,"500", DELETE_PROYECT);
             }
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
-            return new ErrorDataResult<>(null,"500", "No se pudo eliminar proyecto");
+            return new ErrorDataResult<>(null,"500", DELETE_PROYECT);
         }
     }
 
@@ -200,11 +201,11 @@ public class ProjectService {
         try {
             var res = projectDao.deleteProjectInfo(projectId);
             if (!res.success)
-                return new ErrorDataResult<>(projectId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "No se pudo eliminar proyecto");
+                return new ErrorDataResult<>(projectId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, DELETE_PROYECT);
 
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
-            return new ErrorDataResult<>(projectId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "No se pudo eliminar proyecto");
+            return new ErrorDataResult<>(projectId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, DELETE_PROYECT);
         }
         return new SuccessDataResult<>(projectId);
     }
@@ -267,11 +268,11 @@ public class ProjectService {
         try {
             var res = projectDao.deleteDocument(projectId, documentId, updateAuditUser);
             if (!res.success)
-                return new ErrorDataResult<>(projectId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "No se pudo eliminar proyecto");
+                return new ErrorDataResult<>(projectId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, DELETE_PROYECT);
 
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
-            return new ErrorDataResult<>(projectId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "No se pudo eliminar proyecto");
+            return new ErrorDataResult<>(projectId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, DELETE_PROYECT);
         }
         return new SuccessDataResult<>(projectId);
     }
@@ -305,11 +306,11 @@ public class ProjectService {
         try {
             var res = projectDao.deleteParticipantProject(projectId, participantId, updateAuditUser);
             if (!res.success)
-                return new ErrorDataResult<>(projectId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "No se pudo eliminar proyecto");
+                return new ErrorDataResult<>(projectId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, DELETE_PROYECT);
 
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
-            return new ErrorDataResult<>(projectId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "No se pudo eliminar proyecto");
+            return new ErrorDataResult<>(projectId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, DELETE_PROYECT);
         }
         return new SuccessDataResult<>(projectId);
     }

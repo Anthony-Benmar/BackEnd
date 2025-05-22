@@ -16,8 +16,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.logging.Logger;
+
 @Path("/reliability")
 @Produces(MediaType.APPLICATION_JSON)
 public class ReliabilityResource {
@@ -36,7 +35,6 @@ public class ReliabilityResource {
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<List<PendingCustodyJobsDtoResponse>> getPendingCustodyJobs(@Context HttpStatusCodes request,
                                                                                   @PathParam("sdatoolId") String sdatoolId)
-            throws ExecutionException, InterruptedException
     {
         return reliabilityService.getPendingCustodyJobs(sdatoolId);
     }
@@ -46,7 +44,6 @@ public class ReliabilityResource {
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<List<ProjectCustodyInfoDtoResponse>> getProjectCustodyInfo(@Context HttpServletRequest request,
                                                                                   @PathParam("sdatoolId") String sdatoolId)
-            throws ExecutionException, InterruptedException
     {
         return reliabilityService.getProjectCustodyInfo(sdatoolId);
     }
@@ -56,7 +53,6 @@ public class ReliabilityResource {
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<ExecutionValidationDtoResponse> getExecutionValidation(@Context HttpServletRequest request,
                                                                               @PathParam("jobName") String jobName)
-            throws ExecutionException, InterruptedException
     {
         return reliabilityService.getExecutionValidation(jobName);
     }
@@ -65,7 +61,7 @@ public class ReliabilityResource {
     @Path("/job/update")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public IDataResult<?> updateInventoryJobStock(InventoryJobUpdateDtoRequest dto) {
+    public IDataResult<Void> updateInventoryJobStock(InventoryJobUpdateDtoRequest dto) {
         return reliabilityService.updateInventoryJobStock(dto);
     }
 

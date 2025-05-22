@@ -53,10 +53,10 @@ public class ReliabilityDao {
         recordsCount = (!lista.isEmpty()) ? lista.size() : 0;
         pagesAmount = dto.getRecordsAmount() > 0 ? (int) Math.ceil(recordsCount.floatValue() / dto.getRecordsAmount().floatValue()) : 1;
 
-        if (dto.recordsAmount > 0) {
+        if (dto.getRecordsAmount() > 0) {
             lista = lista.stream()
-                    .skip((long) dto.recordsAmount * (dto.page - 1))
-                    .limit(dto.recordsAmount)
+                    .skip((long) dto.getRecordsAmount() * (dto.getPage() - 1))
+                    .limit(dto.getRecordsAmount())
                     .toList();
         }
 
@@ -66,9 +66,14 @@ public class ReliabilityDao {
             }
         }
         response.setCount(recordsCount);
-        response.setPages_amount(pagesAmount);
+        response.setPagesAmount(pagesAmount);
         response.setData(lista);
-        log.info(JSONUtils.convertFromObjectToJson(response.getData()));
+        if (response.getData() != null && !response.getData().isEmpty()) {
+            log.info(JSONUtils.convertFromObjectToJson(response.getData()));
+        } else {
+            log.info("No se encontraron datos para los filtros aplicados.");
+        }
+
         return response;
     }
     public List<PendingCustodyJobsDtoResponse> getPendingCustodyJobs(String sdatoolId) {
@@ -109,7 +114,7 @@ public class ReliabilityDao {
             session.commit();
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
-            throw e;
+            throw new RuntimeException(e);
         }
     }
     public List<ProjectCustodyInfoDtoResponse> getProjectCustodyInfo(String sdatoolId) {
