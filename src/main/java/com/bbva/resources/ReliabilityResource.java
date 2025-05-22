@@ -21,7 +21,6 @@ import java.util.logging.Logger;
 @Path("/reliability")
 @Produces(MediaType.APPLICATION_JSON)
 public class ReliabilityResource {
-    private static final Logger LOGGER = Logger.getLogger(ReliabilityResource.class.getName());
     private final ReliabilityService reliabilityService = new ReliabilityService();
 
     @POST
@@ -66,7 +65,7 @@ public class ReliabilityResource {
     @Path("/job/update")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public IDataResult updateInventoryJobStock(InventoryJobUpdateDtoRequest dto) {
+    public IDataResult<?> updateInventoryJobStock(InventoryJobUpdateDtoRequest dto) {
         return reliabilityService.updateInventoryJobStock(dto);
     }
 

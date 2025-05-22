@@ -50,25 +50,16 @@ public class ReliabilityDao {
 
         }
 
-        recordsCount = (lista.size() > 0) ? (int) lista.stream().count() : 0;
-        pagesAmount = dto.getRecords_amount() > 0 ? (int) Math.ceil(recordsCount.floatValue() / dto.getRecords_amount().floatValue()) : 1;
+        recordsCount = (!lista.isEmpty()) ? lista.size() : 0;
+        pagesAmount = dto.getRecordsAmount() > 0 ? (int) Math.ceil(recordsCount.floatValue() / dto.getRecordsAmount().floatValue()) : 1;
 
-        if (dto.records_amount > 0) {
+        if (dto.recordsAmount > 0) {
             lista = lista.stream()
-                    .skip(dto.records_amount * (dto.page - 1))
-                    .limit(dto.records_amount)
-                    .collect(Collectors.toList());
+                    .skip((long) dto.recordsAmount * (dto.page - 1))
+                    .limit(dto.recordsAmount)
+                    .toList();
         }
 
-//        for (ProjectInfoSelectResponse item : lista) {
-//            if (item.getCreateAuditDate() != null) {
-//                item.setCreateAuditDate_S(convertDateToString(item.getCreateAuditDate(), "dd/MM/yyyy HH:mm:ss"));
-//            }
-//            if (item.getUpdateAuditDate() != null) {
-//                item.setUpdateAuditDate_S(convertDateToString(item.getUpdateAuditDate(), "dd/MM/yyyy HH:mm:ss"));
-//            }
-//
-//        }
         for (InventoryInputsDtoResponse item : lista) {
             if (item.getInputPaths() != null) {
                 item.setInputPathsArray(item.getInputPaths().split("\n"));
@@ -117,6 +108,7 @@ public class ReliabilityDao {
             );
             session.commit();
         } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
             throw e;
         }
     }
@@ -129,7 +121,7 @@ public class ReliabilityDao {
             return projectCustodyInfoList;
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
-            return null;
+            return List.of();
         }
     }
 

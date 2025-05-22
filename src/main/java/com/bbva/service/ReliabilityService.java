@@ -34,36 +34,33 @@ public class ReliabilityService {
             return new ErrorDataResult<>(null, "500", e.getMessage());
         }
     }
-    public IDataResult<List<PendingCustodyJobsDtoResponse>> getPendingCustodyJobs(String sdatoolId)
-            throws ExecutionException, InterruptedException{
+    public IDataResult<List<PendingCustodyJobsDtoResponse>> getPendingCustodyJobs(String sdatoolId) {
         try {
             var result = reliabilityDao.getPendingCustodyJobs(sdatoolId);
-            return new SuccessDataResult(result);
+            return new SuccessDataResult<>(result);
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
-            return new ErrorDataResult(sdatoolId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
+            return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
 
-    public IDataResult<List<ProjectCustodyInfoDtoResponse>> getProjectCustodyInfo(String sdatoolId)
-            throws ExecutionException, InterruptedException {
+    public IDataResult<List<ProjectCustodyInfoDtoResponse>> getProjectCustodyInfo(String sdatoolId) {
         try {
             var result = reliabilityDao.getProjectCustodyInfo(sdatoolId);
-            return new SuccessDataResult(result);
+            return new SuccessDataResult<>(result);
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
-            return new ErrorDataResult(sdatoolId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
+            return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
 
-    public IDataResult<ExecutionValidationDtoResponse> getExecutionValidation(String jobName)
-            throws ExecutionException, InterruptedException {
+    public IDataResult<ExecutionValidationDtoResponse> getExecutionValidation(String jobName) {
         try {
             var result = reliabilityDao.getExecutionValidation(jobName);
-            return new SuccessDataResult(result);
+            return new SuccessDataResult<>(result);
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
-            return new ErrorDataResult(jobName, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
+            return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
 }

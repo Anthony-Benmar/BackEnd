@@ -7,12 +7,11 @@ import lombok.Setter;
 @Getter
 public class InventoryInputsFilterDtoRequest {
     public Integer page;
-    public Integer records_amount;
-
+    public Integer recordsAmount;
     private String domainName;
     private String useCase;
     private String jobType;
     private String frequency;
-    private String isCritical;//private Boolean isCritical;
+    private String isCritical;
     private String searchByInputOutputTable;
 }

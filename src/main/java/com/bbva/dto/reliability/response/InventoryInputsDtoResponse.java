@@ -12,7 +12,6 @@ public class InventoryInputsDtoResponse {
     private String componentName;
     private String jobType;
     private String isCritical;
-    //private Boolean isCritical;
     private String frequency;
     private String inputPaths;
     private String[] inputPathsArray;
