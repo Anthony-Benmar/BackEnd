@@ -374,12 +374,11 @@ public interface ProjectMapper {
     List<ProjectInfoSelectResponse> listProjectsByDomain(@Param("domain_id") int domain_id);
 
     @Select("SELECT project_id, sdatool_id, project_name FROM project_info")
-    @Results({
-            @Result(property = "projectId", column = "project_id"),
-            @Result(property = "sdatoolId", column = "sdatool_id"),
-            @Result(property = "projectName", column = "project_name"),
-            @Result(property = "domainId", column = "domain_id")
-    })
+
+    @Result(property = "projectId", column = "project_id")
+    @Result(property = "sdatoolId", column = "sdatool_id")
+    @Result(property = "projectName", column = "project_name")
+    @Result(property = "domainId", column = "domain_id")
     List<ProjectByDomainIdDTO> listProjects();
 
     @Select("CALL SP_LIST_PROJECT_BY_DOMAINS(#{domainId})")
