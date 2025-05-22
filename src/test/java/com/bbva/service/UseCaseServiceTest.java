@@ -51,6 +51,11 @@ class UseCaseServiceTest {
         dto.setUseCaseName("Test Use Case");
         dto.setUseCaseDescription("Test Description");
         dto.setDomainId(1);
+        dto.setDeliveredPiId(1);
+        dto.setCritical(1);
+        dto.setIsRegulatory(1);
+        dto.setUseCaseScope(1);
+        dto.setOperativeModel(1);
 
         when(useCaseReliabilityDaoMock.updateOrInsertUseCase(any(UpdateOrInsertUseCaseDtoRequest.class))).thenReturn(mockResponse);
 
@@ -78,7 +83,11 @@ class UseCaseServiceTest {
         dto.setUseCaseName("Test Use Case");
         dto.setUseCaseDescription("Test Description");
         dto.setDomainId(1);
-
+        dto.setDeliveredPiId(1);
+        dto.setCritical(1);
+        dto.setIsRegulatory(1);
+        dto.setUseCaseScope(1);
+        dto.setOperativeModel(1);
         when(useCaseReliabilityDaoMock.updateOrInsertUseCase(dto)).thenThrow(new RuntimeException("Database error"));
 
         IDataResult<UpdateOrInsertDtoResponse> result = useCaseService.updateOrInsertUseCase(dto);

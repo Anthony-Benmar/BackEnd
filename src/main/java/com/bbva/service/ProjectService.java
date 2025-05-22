@@ -28,7 +28,7 @@ public class ProjectService {
 
     public IDataResult<ProjectFilterByNameOrSdatoolDtoResponse> filter(ProjectFilterByNameOrSdatoolDtoRequest dto) {
         var result = projectDao.filter(dto);
-        return new SuccessDataResult(result, "Succesfull");
+        return new SuccessDataResult<>(result, "Succesfull");
     }
 
     public IDataResult<ProjectPortafolioSelectResponse> selectProject(int projectId) {
@@ -69,22 +69,22 @@ public class ProjectService {
         result.setStatusType(project.getStatusType());
         result.setProcess(listMapDependency);
 
-        return new SuccessDataResult(result);
+        return new SuccessDataResult<>(result);
     }
 
     public IDataResult<List<ProjectListForSelectDtoResponse>> listForSelect(PeriodPEntity period) {
         var result = projectDao.listForSelect(period);
-        return new SuccessDataResult(result);
+        return new SuccessDataResult<>(result);
     }
 
     public IDataResult<List<ProjectListForSelectDtoResponse>> listForSelect() {
         var result = projectDao.listForSelect();
-        return new SuccessDataResult(result, "Succesfull");
+        return new SuccessDataResult<>(result, "Succesfull");
     }
     
     public IDataResult<ProjectPortafolioFilterDtoResponse> portafolioFilter(ProjectPortafolioFilterDTORequest dto) {
         var result = projectDao.portafolioFilter(dto);
-        return new SuccessDataResult(result);
+        return new SuccessDataResult<>(result);
     }
 
     public IDataResult<ProjectPortafolioFilterDtoResponse> insertProject(ProjectPortafolioDTORequest dto)
@@ -132,15 +132,15 @@ public class ProjectService {
                         mapDependencyDao.insert(mapDependency);
                     });
                 } else {
-                    return new ErrorDataResult(resultUseCase.message);
+                    return new ErrorDataResult<>(resultUseCase.message);
                 }
-                return new SuccessDataResult(null);
+                return new SuccessDataResult<>(null);
             } else {
-                return new ErrorDataResult(resultProject.message);
+                return new ErrorDataResult<>(resultProject.message);
             }
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
-            return new ErrorDataResult( e.getMessage());
+            return new ErrorDataResult<>(e.getMessage());
         }
     }
 
@@ -149,7 +149,7 @@ public class ProjectService {
 
         try {
             if (dto.getProjectId().equals(0)) {
-                return new ErrorDataResult(null,"500", "ProjectId must to be not null");
+                return new ErrorDataResult<>(null,"500", "ProjectId must to be not null");
             }
 
             ProjectPortafolioEntity project = new ProjectPortafolioEntity(
@@ -172,11 +172,11 @@ public class ProjectService {
             if (resultProject.success) {
                 return new SuccessDataResult(dto);
             } else {
-                return new ErrorDataResult(null,"500", resultProject.message);
+                return new ErrorDataResult<>(null,"500", resultProject.message);
             }
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
-            return new ErrorDataResult(null,"500", e.getMessage());
+            return new ErrorDataResult<>(null,"500", e.getMessage());
         }
     }
     public IDataResult<ProjectPortafolioFilterDtoResponse> deleteProject(int projectId)
@@ -188,159 +188,145 @@ public class ProjectService {
             if (res.success) {
                 return new SuccessDataResult(projectId);
             } else {
-                return new ErrorDataResult(projectId,"500", "No se pudo eliminar proyecto");
+                return new ErrorDataResult<>(null,"500", "No se pudo eliminar proyecto");
             }
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
-            return new ErrorDataResult(projectId,"500", "No se pudo eliminar proyecto");
+            return new ErrorDataResult<>(null,"500", "No se pudo eliminar proyecto");
         }
     }
 
-    public IDataResult<Integer> deleteProjectInfo(int projectId)
-            throws ExecutionException, InterruptedException {
-
+    public IDataResult<Integer> deleteProjectInfo(int projectId) {
         try {
             var res = projectDao.deleteProjectInfo(projectId);
             if (!res.success)
-                return new ErrorDataResult(projectId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "No se pudo eliminar proyecto");
+                return new ErrorDataResult<>(projectId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "No se pudo eliminar proyecto");
 
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
-            return new ErrorDataResult(projectId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "No se pudo eliminar proyecto");
+            return new ErrorDataResult<>(projectId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "No se pudo eliminar proyecto");
         }
-        return new SuccessDataResult(projectId);
+        return new SuccessDataResult<>(projectId);
     }
 
-    public IDataResult<ProjectInfoDTO> updateProjectInfo(ProjectInfoDTO dto)
-            throws ExecutionException, InterruptedException {
-
+    public IDataResult<ProjectInfoDTO> updateProjectInfo(ProjectInfoDTO dto) {
         try {
             if (dto.getProjectId().equals(0))
-                return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "ProjectId must to be not null");
+                return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "ProjectId must to be not null");
 
             projectDao.updateProjectInfo(dto);
 
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
-            return new ErrorDataResult(null,HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
+            return new ErrorDataResult<>(null,HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
         }
-        return new SuccessDataResult(dto);
+        return new SuccessDataResult<>(dto);
     }
 
-    public IDataResult<List<MapDependencyListByProjectResponse>> getProcessByProjectId(int projectId)
-            throws ExecutionException, InterruptedException {
-
+    public IDataResult<List<MapDependencyListByProjectResponse>> getProcessByProjectId(int projectId) {
         try {
             var mapDependencyDao = new MapDependencyDao();
             var result = mapDependencyDao.listMapDependencyByProjectId(projectId);
-            return new SuccessDataResult(result);
+            return new SuccessDataResult<>(result);
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
-            return new ErrorDataResult(projectId,"500", "No se pudieron obtener los procesos.");
+            return new ErrorDataResult<>(null,"500", "No se pudieron obtener los procesos.");
         }
     }
 
     public IDataResult<InsertProjectDocumentDTO> insertProjectDocument(InsertProjectDocumentDTO dto) {
         var result = projectDao.insertProjectDocument(dto);
-        return new SuccessDataResult(result);
+        return new SuccessDataResult<>(result);
     }
 
     public IDataResult<InsertProjectParticipantDTO> insertProjectParticipant(InsertProjectParticipantDTO dto) {
         var result = projectDao.insertProjectParticipant(dto);
-        return new SuccessDataResult(result);
+        return new SuccessDataResult<>(result);
     }
 
     public IDataResult<InsertProjectInfoDTORequest> insertProjectInfo(InsertProjectInfoDTORequest dto)  throws Exception{
         var result = projectDao.insertProjectInfo(dto);
-        return new SuccessDataResult(result);
+        return new SuccessDataResult<>(result);
     }
 
     public IDataResult<ProjectInfoFilterResponse> projectInfoFilter(ProjectInfoFilterRequest dto) {
         var result = projectDao.projectInfoFilter(dto);
-        return new SuccessDataResult(result);
+        return new SuccessDataResult<>(result);
     }
     public IDataResult<ProjectInfoFilterByDomainDtoResponse> projectInfoFilterByDomain(ProjectInfoFilterByDomainDtoRequest dto) {
         var result = projectDao.projectInfoFilterByDomain(dto);
-        return new SuccessDataResult(result);
+        return new SuccessDataResult<>(result);
     }
 
     public IDataResult<ProjectInfoFilterAllByDomainDtoResponse> projectInfoFilterAllByDomain(ProjectInfoFilterByDomainDtoRequest dto) {
         var result = projectDao.projectInfoFilterAllByDomain(dto);
-        return new SuccessDataResult(result);
+        return new SuccessDataResult<>(result);
     }
 
-    public IDataResult<Integer> deleteDocument(int projectId, int documentId, String updateAuditUser)
-            throws ExecutionException, InterruptedException {
-
+    public IDataResult<Integer> deleteDocument(int projectId, int documentId, String updateAuditUser) {
         try {
             var res = projectDao.deleteDocument(projectId, documentId, updateAuditUser);
             if (!res.success)
-                return new ErrorDataResult(projectId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "No se pudo eliminar proyecto");
+                return new ErrorDataResult<>(projectId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "No se pudo eliminar proyecto");
 
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
-            return new ErrorDataResult(projectId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "No se pudo eliminar proyecto");
+            return new ErrorDataResult<>(projectId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "No se pudo eliminar proyecto");
         }
-        return new SuccessDataResult(projectId);
+        return new SuccessDataResult<>(projectId);
     }
 
-    public IDataResult<InsertProjectDocumentDTO> updateDocument(InsertProjectDocumentDTO dto)
-            throws ExecutionException, InterruptedException {
-
+    public IDataResult<InsertProjectDocumentDTO> updateDocument(InsertProjectDocumentDTO dto) {
         try {
             if (dto.getProjectId().equals(0) | dto.getDocumentId().equals(0))
-                return new ErrorDataResult(null,HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "projectId or documentId must to be not null or 0");
+                return new ErrorDataResult<>(null,HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "projectId or documentId must to be not null or 0");
 
             projectDao.updateDocument(dto);
 
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
-            return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
+            return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
         }
-        return new SuccessDataResult(dto);
+        return new SuccessDataResult<>(dto);
     }
 
-    public IDataResult<List<InsertProjectDocumentDTO>> getDocument(int projectId, int documentId)
-            throws ExecutionException, InterruptedException {
-
+    public IDataResult<List<InsertProjectDocumentDTO>> getDocument(int projectId, int documentId) {
         try {
             var result = projectDao.getDocument(projectId, documentId);
-            return new SuccessDataResult(result);
+            return new SuccessDataResult<>(result);
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
-            return new ErrorDataResult(projectId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
+            return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
 
-    public IDataResult<Integer> deleteParticipantProject(int projectId, int participantId, String updateAuditUser)
-            throws ExecutionException, InterruptedException {
+    public IDataResult<Integer> deleteParticipantProject(int projectId, int participantId, String updateAuditUser) {
 
         try {
             var res = projectDao.deleteParticipantProject(projectId, participantId, updateAuditUser);
             if (!res.success)
-                return new ErrorDataResult(projectId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "No se pudo eliminar proyecto");
+                return new ErrorDataResult<>(projectId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "No se pudo eliminar proyecto");
 
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
-            return new ErrorDataResult(projectId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "No se pudo eliminar proyecto");
+            return new ErrorDataResult<>(projectId, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "No se pudo eliminar proyecto");
         }
-        return new SuccessDataResult(projectId);
+        return new SuccessDataResult<>(projectId);
     }
 
-    public IDataResult<InsertProjectParticipantDTO> updateParticipant(InsertProjectParticipantDTO dto)
-            throws ExecutionException, InterruptedException {
+    public IDataResult<InsertProjectParticipantDTO> updateParticipant(InsertProjectParticipantDTO dto) {
 
         try {
             if (dto.getProjectId().equals(0) | dto.getProjectParticipantId().equals(0))
-                return new ErrorDataResult(null,HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "projectId or projectParticipantId must to be not null or 0");
+                return new ErrorDataResult<>(null,HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "projectId or projectParticipantId must to be not null or 0");
 
             projectDao.updateParticipant(dto);
 
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
-            return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
+            return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
         }
-        return new SuccessDataResult(dto);
+        return new SuccessDataResult<>(dto);
     }
 
     public IDataResult<List<InsertProjectParticipantDTO>> getProjectParticipants(int projectId) {
@@ -357,10 +343,10 @@ public class ProjectService {
     public IDataResult<List<SelectCalendarDTO>> getCalendar() {
         try {
             var result = projectDao.getAllCalendar();
-            return new SuccessDataResult(result);
+            return new SuccessDataResult<>(result);
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
-            return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
+            return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
 
@@ -380,34 +366,34 @@ public class ProjectService {
     public IDataResult<List<ProjectByDomainIdDTO>> getProjectsByDomainId(String domainId) {
         try {
             var result = projectDao.getProjectsByDomainId(domainId);
-            return new SuccessDataResult(result);
+            return new SuccessDataResult<>(result);
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
-            return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
+            return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
 
     public IDataResult<List<ProjectByDomainIdDTO>> getAllProjects() {
         try {
             var result = projectDao.getAllProjects();
-            return new SuccessDataResult(result);
+            return new SuccessDataResult<>(result);
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
-            return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
+            return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
 
-    public IDataResult getFeaturesByProject(String sdatoolId) {
+    public IDataResult<List<featureDtoResponse>> getFeaturesByProject(String sdatoolId) {
         try {
             var listFeaturesEntity = projectDao.getFeaturesByProject(sdatoolId, "");
             var listFeatureDto = listFeaturesEntity.stream()
                     .map(s -> new featureDtoResponse(s.featureId, s.featureKey, s.featureName, s.sdatoolId, s.teamBacklog,
                             s.jiraProjectId, s.jiraProjectName))
                     .collect(Collectors.toList());
-            return new SuccessDataResult(listFeatureDto);
+            return new SuccessDataResult<>(listFeatureDto);
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
-            return new ErrorDataResult(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
+            return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
 
