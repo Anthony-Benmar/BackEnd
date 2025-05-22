@@ -43,6 +43,17 @@ public class UseCaseService {
             if (dto.getDomainId() == null || dto.getDomainId().equals(0))
                 return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "DomainId must not be null or 0");
 
+            if (dto.getDeliveredPiId() == null || dto.getDeliveredPiId().equals(0))
+                return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "DeliveredPiId must not be null or 0");
+            if (dto.getCritical() == null || dto.getCritical().equals(0))
+                return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "Critical must not be null or 0");
+            if (dto.getIsRegulatory() == null)
+                return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "Regulatory must not be null");
+            if (dto.getUseCaseScope() == null || dto.getUseCaseScope().equals(0))
+                return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "UseCaseScope must not be null or 0");
+            if (dto.getOperativeModel() == null)
+                return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "OperativeModel must not be null");
+
             var result = useCaseReliabilityDao.updateOrInsertUseCase(dto);
             return new SuccessDataResult<>(result, HttpStatusCodes.HTTP_OK, isInsert ? "Use case inserted successfully." : "Use case updated successfully.");
         } catch (Exception e) {

@@ -17,11 +17,18 @@ public interface UseCaseMapper {
     List<UseCaseEntity> listAllUseCases();
 
     @Select("CALL SP_INSERT_OR_UPDATE_USE_CASE(" +
-            "#{useCaseId}," +
-            "#{useCaseName}," +
-            "#{useCaseDescription}," +
-            "#{domainId}," +
-            "#{userId})")
+            "#{useCaseId}, " +
+            "#{useCaseName}, " +
+            "#{useCaseDescription}, " +
+            "#{domainId}, " +
+            "#{deliveredPiId}, " +
+            "#{critical}, " +
+            "#{isRegulatory}, " +
+            "#{useCaseScope}, " +
+            "#{operativeModel}, " +
+            "#{userId}" +
+            ")"
+    )
     @Result(property = "lastUpdatedId", column = "last_updated_id")
     @Result(property = "updatedRegister", column = "updated_register")
     @Result(property = "lastInsertId", column = "last_insert_id")
