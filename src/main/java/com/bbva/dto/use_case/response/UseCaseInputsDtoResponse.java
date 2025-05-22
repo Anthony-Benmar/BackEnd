@@ -14,8 +14,13 @@ public class UseCaseInputsDtoResponse {
     private Integer projectCount;
     private String projects;
     private Integer deliveredPiId;
+    private String piLargeName;
     private Integer critical;
+    private String criticalDesc;
     private Integer isRegulatory;
+    private String regulatoryDesc;
     private Integer useCaseScope;
+    private String useCaseScopeDesc;
     private Integer operativeModel;
+    private String operativeModelDesc;
 }
