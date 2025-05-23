@@ -1,13 +1,12 @@
 package com.bbva.database.mappers;
 
-import com.bbva.dto.baseunica.response.BaseunicaResponseDTO;
-import org.apache.ibatis.annotations.Param;
+import com.bbva.dto.singleBase.response.SingleBaseResponseDTO;
 import org.apache.ibatis.annotations.Result;
 import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
 
-public interface BaseunicaMapper {
+public interface SingleBaseMapper {
 
     // Llamada al procedimiento GET_BASE_UNICA con un parámetro 'table_name'
     @Select("CALL GET_BASE_UNICA()")  // El procedimiento GET_BASE_UNICA no necesita el parámetro aquí, según el ejemplo anterior
@@ -28,5 +27,5 @@ public interface BaseunicaMapper {
     @Result(property = "oldSourceId", column = "old_source_id")
     @Result(property = "ucFinalistDesc", column = "uc_finalist_desc")
     @Result(property = "catalogId", column = "catalog_id")
-    List<BaseunicaResponseDTO> getBaseUnicaData(@Param("table_name") String tableName);
+    List<SingleBaseResponseDTO> getBaseUnicaData();
 }

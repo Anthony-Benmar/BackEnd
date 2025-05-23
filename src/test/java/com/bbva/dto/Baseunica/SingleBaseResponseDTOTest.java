@@ -1,16 +1,17 @@
 package com.bbva.dto.baseunica.response;
 
+import com.bbva.dto.singleBase.response.SingleBaseResponseDTO;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class BaseunicaResponseDTOTest {
+class SingleBaseResponseDTOTest {
 
     @Test
     void testGettersAndSetters() {
-        BaseunicaResponseDTO dto = new BaseunicaResponseDTO();
+        SingleBaseResponseDTO dto = new SingleBaseResponseDTO();
 
         // Establecer valores en el DTO
         dto.setFolio("FOLIO123");

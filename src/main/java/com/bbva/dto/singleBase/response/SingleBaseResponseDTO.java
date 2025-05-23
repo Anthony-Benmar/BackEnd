@@ -1,4 +1,4 @@
-package com.bbva.dto.baseunica.response;
+package com.bbva.dto.singleBase.response;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 
 @Getter
 @Setter
-public class BaseunicaResponseDTO {
+public class SingleBaseResponseDTO {
     private Integer id;
     private String folio;
     private String projectName;

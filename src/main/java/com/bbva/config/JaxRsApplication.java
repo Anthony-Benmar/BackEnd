@@ -38,6 +38,7 @@ public class JaxRsApplication extends Application {
         classes.add(DocumentGeneratorResources.class);
         classes.add(ExceptionResources.class);
         classes.add(EfectivityResources.class);
+        classes.add(SingleBaseResources.class);
         return classes;
     }
 }
