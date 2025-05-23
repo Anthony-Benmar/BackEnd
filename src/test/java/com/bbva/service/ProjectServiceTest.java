@@ -2,7 +2,6 @@ package com.bbva.service;
 
 import com.bbva.common.HttpStatusCodes;
 import com.bbva.core.abstracts.IDataResult;
-import com.bbva.core.results.DataResult;
 import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dao.*;
@@ -25,7 +24,6 @@ import org.mockito.MockedStatic;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
@@ -105,7 +103,7 @@ class ProjectServiceTest {
     }
 
     @Test
-    void testSelectProjectSuccess() throws Exception {
+    void testSelectProjectSuccess(){
         int projectId = 1;
         ProjectPortafolioEntity project = createMockProject();
         when(projectDaoMock.projectById(projectId)).thenReturn(project);
@@ -181,7 +179,7 @@ class ProjectServiceTest {
         IDataResult<ProjectPortafolioSelectResponse> result = projectService.selectProject(projectId);
 
         // Verify
-        assertTrue(result instanceof SuccessDataResult);
+        assertInstanceOf(SuccessDataResult.class, result);
         assertTrue(result.success);
 
         ProjectPortafolioSelectResponse data = result.data;
@@ -230,7 +228,7 @@ class ProjectServiceTest {
     }
 
     @Test
-    void testInsertProjectSuccess() throws Exception {
+    void testInsertProjectSuccess() {
         MapDependencyDTORequest request = new MapDependencyDTORequest();
         request.setProjectId(1);
         request.setArisCode("Code");
@@ -264,7 +262,7 @@ class ProjectServiceTest {
     }
 
     @Test
-    void testInsertProjectFailure() throws Exception {
+    void testInsertProjectFailure() {
         ProjectPortafolioDTORequest dto = new ProjectPortafolioDTORequest();
         dto.setProcess(Collections.emptyList());
 
