@@ -46,11 +46,11 @@ public class UseCaseService {
         }
     }
 
-    private boolean isInsertOperation(UpdateOrInsertUseCaseDtoRequest dto) {
+    boolean isInsertOperation(UpdateOrInsertUseCaseDtoRequest dto) {
         return dto.getUseCaseId() == null || dto.getUseCaseId().equals(0);
     }
 
-    private IDataResult<UpdateOrInsertDtoResponse> validateRequest(UpdateOrInsertUseCaseDtoRequest dto) {
+    IDataResult<UpdateOrInsertDtoResponse> validateRequest(UpdateOrInsertUseCaseDtoRequest dto) {
         if (!isInsertOperation(dto) && (dto.getUseCaseId() == null || dto.getUseCaseId().equals(0))) {
             return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "UseCaseId is required for update.");
         }

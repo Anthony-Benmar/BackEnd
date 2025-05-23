@@ -24,8 +24,6 @@ class UseCaseServiceTest {
     void setUp() throws Exception {
         useCaseService = new UseCaseService();
         useCaseReliabilityDaoMock = mock(UseCaseReliabilityDao.class);
-
-        // Inyectar el mock de UseCaseReliabilityDao
         var field = UseCaseService.class.getDeclaredField("useCaseReliabilityDao");
         field.setAccessible(true);
         field.set(useCaseService, useCaseReliabilityDaoMock);
@@ -124,5 +122,198 @@ class UseCaseServiceTest {
         assertFalse(result.success);
         assertEquals("Database error", result.message);
         verify(useCaseReliabilityDaoMock).getFilteredUseCases(dto);
+    }
+    @Test
+    void testLstUseCasesException() {
+        when(useCaseReliabilityDaoMock.listAllUseCases()).thenThrow(new RuntimeException("Database error"));
+
+        IDataResult<List<UseCaseEntity>> result = useCaseService.listUseCases();
+
+        assertNotNull(result);
+        assertFalse(result.success);
+        assertEquals("Database error", result.message);
+        verify(useCaseReliabilityDaoMock).listAllUseCases();
+    }
+    @Test
+    void testValidateRequest_UseCaseIdRequiredForUpdate_MockedIsInsertOperation() {
+        UseCaseService useCaseServiceSpy = spy(new UseCaseService());
+        UpdateOrInsertUseCaseDtoRequest dto = new UpdateOrInsertUseCaseDtoRequest();
+        dto.setUseCaseId(0);
+
+        doReturn(false).when(useCaseServiceSpy).isInsertOperation(dto);
+
+        IDataResult<?> result = useCaseServiceSpy.validateRequest(dto);
+
+        assertNotNull(result);
+        assertFalse(result.success);
+        assertEquals("UseCaseId is required for update.", result.message);
+    }
+
+    @Test
+    void testValidateRequest_UseCaseNameMustNotBeNullOrEmpty() {
+        UpdateOrInsertUseCaseDtoRequest dto = new UpdateOrInsertUseCaseDtoRequest();
+        dto.setUseCaseName(null); // Invalid name
+
+        IDataResult<?> result = useCaseService.validateRequest(dto);
+
+        assertNotNull(result);
+        assertFalse(result.success);
+        assertEquals("UseCaseName must not be null or empty", result.message);
+    }
+
+    @Test
+    void testValidateRequest_UseCaseDescriptionMustNotBeNullOrEmpty() {
+        UpdateOrInsertUseCaseDtoRequest dto = new UpdateOrInsertUseCaseDtoRequest();
+        dto.setUseCaseId(1);
+        dto.setUseCaseName("Test Use Case");
+        dto.setDomainId(1);
+        dto.setAction("Test Action");
+        dto.setUserId("Test User");
+        dto.setDeliveredPiId(1);
+        dto.setCritical(1);
+        dto.setIsRegulatory(1);
+        dto.setUseCaseScope(1);
+        dto.setOperativeModel(1);
+        dto.setUseCaseDescription(""); // Invalid description
+
+        IDataResult<?> result = useCaseService.validateRequest(dto);
+
+        assertNotNull(result);
+        assertFalse(result.success);
+        assertEquals("UseCaseDescription must not be null or empty", result.message);
+    }
+
+    @Test
+    void testValidateRequest_DomainIdMustNotBeNullOrZero() {
+        UpdateOrInsertUseCaseDtoRequest dto = new UpdateOrInsertUseCaseDtoRequest();
+        dto.setUseCaseId(1);
+        dto.setUseCaseName("Test Use Case");
+        dto.setUseCaseDescription("Test Description");
+        dto.setAction("Test Action");
+        dto.setUserId("Test User");
+        dto.setDeliveredPiId(1);
+        dto.setCritical(1);
+        dto.setIsRegulatory(1);
+        dto.setUseCaseScope(1);
+        dto.setOperativeModel(1);
+        dto.setDomainId(0);
+
+        IDataResult<?> result = useCaseService.validateRequest(dto);
+
+        assertNotNull(result);
+        assertFalse(result.success);
+        assertEquals("DomainId must not be null or 0", result.message);
+    }
+
+    @Test
+    void testValidateRequest_DeliveredPiIdMustNotBeNullOrZero() {
+        UpdateOrInsertUseCaseDtoRequest dto = new UpdateOrInsertUseCaseDtoRequest();
+        dto.setUseCaseId(1);
+        dto.setUseCaseName("Test Use Case");
+        dto.setUseCaseDescription("Test Description");
+        dto.setDomainId(1);
+        dto.setAction("Test Action");
+        dto.setUserId("Test User");
+        dto.setCritical(1);
+        dto.setIsRegulatory(1);
+        dto.setUseCaseScope(1);
+        dto.setOperativeModel(1);
+        dto.setDeliveredPiId(0); // Invalid delivered PI ID
+
+        IDataResult<?> result = useCaseService.validateRequest(dto);
+
+        assertNotNull(result);
+        assertFalse(result.success);
+        assertEquals("DeliveredPiId must not be null or 0", result.message);
+    }
+
+    @Test
+    void testValidateRequest_CriticalMustNotBeNullOrZero() {
+        UpdateOrInsertUseCaseDtoRequest dto = new UpdateOrInsertUseCaseDtoRequest();
+        dto.setUseCaseId(1);
+        dto.setUseCaseName("Test Use Case");
+        dto.setUseCaseDescription("Test Description");
+        dto.setDomainId(1);
+        dto.setAction("Test Action");
+        dto.setUserId("Test User");
+        dto.setDeliveredPiId(1);
+        dto.setIsRegulatory(1);
+        dto.setUseCaseScope(1);
+        dto.setOperativeModel(1);
+
+        dto.setCritical(0);
+
+        IDataResult<?> result = useCaseService.validateRequest(dto);
+
+        assertNotNull(result);
+        assertFalse(result.success);
+        assertEquals("Critical must not be null or 0", result.message);
+    }
+
+    @Test
+    void testValidateRequest_RegulatoryMustNotBeNull() {
+        UpdateOrInsertUseCaseDtoRequest dto = new UpdateOrInsertUseCaseDtoRequest();
+        dto.setUseCaseId(1);
+        dto.setUseCaseName("Test Use Case");
+        dto.setUseCaseDescription("Test Description");
+        dto.setDomainId(1);
+        dto.setAction("Test Action");
+        dto.setUserId("Test User");
+        dto.setDeliveredPiId(1);
+        dto.setCritical(1);
+        dto.setUseCaseScope(1);
+        dto.setOperativeModel(1);
+
+        dto.setIsRegulatory(null);
+
+        IDataResult<?> result = useCaseService.validateRequest(dto);
+
+        assertNotNull(result);
+        assertFalse(result.success);
+        assertEquals("Regulatory must not be null", result.message);
+    }
+
+    @Test
+    void testValidateRequest_UseCaseScopeMustNotBeNullOrZero() {
+        UpdateOrInsertUseCaseDtoRequest dto = new UpdateOrInsertUseCaseDtoRequest();
+        dto.setUseCaseId(1);
+        dto.setUseCaseName("Test Use Case");
+        dto.setUseCaseDescription("Test Description");
+        dto.setDomainId(1);
+        dto.setAction("Test Action");
+        dto.setUserId("Test User");
+        dto.setDeliveredPiId(1);
+        dto.setCritical(1);
+        dto.setIsRegulatory(1);
+        dto.setOperativeModel(1);
+        dto.setUseCaseScope(0);
+
+        IDataResult<?> result = useCaseService.validateRequest(dto);
+
+        assertNotNull(result);
+        assertFalse(result.success);
+        assertEquals("UseCaseScope must not be null or 0", result.message);
+    }
+
+    @Test
+    void testValidateRequest_OperativeModelMustNotBeNull() {
+        UpdateOrInsertUseCaseDtoRequest dto = new UpdateOrInsertUseCaseDtoRequest();
+        dto.setUseCaseId(1);
+        dto.setUseCaseName("Test Use Case");
+        dto.setUseCaseDescription("Test Description");
+        dto.setDomainId(1);
+        dto.setAction("Test Action");
+        dto.setUserId("Test User");
+        dto.setDeliveredPiId(1);
+        dto.setCritical(1);
+        dto.setIsRegulatory(1);
+        dto.setUseCaseScope(1);
+        dto.setOperativeModel(null);
+
+        IDataResult<?> result = useCaseService.validateRequest(dto);
+
+        assertNotNull(result);
+        assertFalse(result.success);
+        assertEquals("OperativeModel must not be null", result.message);
     }
 }
