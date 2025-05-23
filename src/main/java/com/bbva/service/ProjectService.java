@@ -24,6 +24,9 @@ import java.util.stream.Collectors;
 
 public class ProjectService {
     private final ProjectDao projectDao = new ProjectDao();
+    private final UserDao userDao = new UserDao();
+    private final MapDependencyDao mapDependencyDao = new MapDependencyDao();
+    private final UseCaseDefinitionDao caseDefinitionDao = new UseCaseDefinitionDao();
     private static final Logger log = Logger.getLogger(ProjectService.class.getName());
     private static final String DELETE_PROYECT = "No se pudo eliminar proyecto";
 
@@ -34,8 +37,6 @@ public class ProjectService {
 
     public IDataResult<ProjectPortafolioSelectResponse> selectProject(int projectId) {
         var result = new ProjectPortafolioSelectResponse();
-        var mapDependencyDao = new MapDependencyDao();
-        var userDao = new UserDao();
         var project = projectDao.projectById(projectId);
         if (project != null){
             var arrayUserId = new int[] {project.getProductOwnerId(), project.getSponsorOwnerId()};
@@ -88,8 +89,7 @@ public class ProjectService {
         return new SuccessDataResult<>(result);
     }
 
-    public IDataResult<ProjectPortafolioFilterDtoResponse> insertProject(ProjectPortafolioDTORequest dto)
-            throws ExecutionException, InterruptedException {
+    public IDataResult<ProjectPortafolioFilterDtoResponse> insertProject(ProjectPortafolioDTORequest dto) {
         try {
             ProjectPortafolioEntity project = new ProjectPortafolioEntity(
                     dto.getProjectId(),
@@ -110,15 +110,12 @@ public class ProjectService {
 
             if (resultProject.success) {
                 int projectId = project.getProjectId();
-                UseCaseDefinitionDao caseDefinitionDao = new UseCaseDefinitionDao();
                 UseCaseDefinitionEntity caseDefinition = new UseCaseDefinitionEntity(0, projectId, null, null);
                 caseDefinition.setStatusType(1);
 
                 var resultUseCase = caseDefinitionDao.insert(caseDefinition);
 
                 if (resultUseCase.success) {
-                    MapDependencyDao mapDependencyDao = new MapDependencyDao();
-
                     dto.getProcess().forEach(x -> {
                         MapDependencyEntity mapDependency = new MapDependencyEntity(
                                 0,
@@ -226,7 +223,6 @@ public class ProjectService {
 
     public IDataResult<List<MapDependencyListByProjectResponse>> getProcessByProjectId(int projectId) {
         try {
-            var mapDependencyDao = new MapDependencyDao();
             var result = mapDependencyDao.listMapDependencyByProjectId(projectId);
             return new SuccessDataResult<>(result);
         } catch (Exception e) {
