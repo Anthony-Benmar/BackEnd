@@ -241,7 +241,7 @@ public class JiraValidatorConstantes {
                 "advertenciaEstadoInicial", false,
                 STATUS, new ArrayList<>(List.of(ACCEPTED, READY_TO_VERIFY)),
                 ITEMS, new ArrayList<>(List.of(P110_AT,"[VB][AT]","[C204][AT]")),
-                "rol", new ArrayList<>(List.of("1","2"))
+                "rol", new ArrayList<>(List.of("1","2","3"))
                 )));
         mapSubtasksTipoOwner.put("po", new HashMap<>(Map.of(
                 "label", "PO",

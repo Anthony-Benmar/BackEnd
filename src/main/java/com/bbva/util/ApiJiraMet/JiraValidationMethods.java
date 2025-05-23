@@ -308,6 +308,7 @@ public class JiraValidationMethods {
 
         tipoDesarrolloPRs.replaceAll(String::toLowerCase);
 
+
         if (jiraTicketResultPrs.get("prs") != null) {
             int cantidadPRs = jiraTicketResultPrs.get("prs").getAsJsonArray().size();
             if (cantidadPRs > 0) {
@@ -334,7 +335,12 @@ public class JiraValidationMethods {
     public Map<String, Object> getValidationValidateSubTask(String tipoDesarrollo, String helpMessage, String group) {
         List<String> aditionalSpecialSubtask = List.of(VB_KM, VB_SO);
         List<String> aditionalSpecialLabels = List.of("datioRutaCritica", "JobsHuerfanos");
+
         List<String> requiredSubTasks = SUBTASKS_BY_DEVELOP_TYPES.get(tipoDesarrollo);
+        if(!containsAnyBranch(jiraTicketResult.getAsJsonObject(FIELDS), List.of("master"))){
+            requiredSubTasks.remove(VB_ADA);
+        }
+
         JsonArray labels = jiraTicketResult.getAsJsonObject(FIELDS).getAsJsonArray(LABELS);
         JsonArray subTasks = jiraTicketResult.getAsJsonObject(FIELDS).getAsJsonArray(SUBTASKS);
 
@@ -511,6 +517,18 @@ public class JiraValidationMethods {
 
         String message = String.join(".\n", mergeMessageLists(messageGoodList, messageBadList));
         return buildValidationResult(message, isValid, false, helpMessage, group);
+    }
+
+    private boolean containsAnyBranch(JsonObject jiraTicketResultPrs, List<String> branches) {
+        if (jiraTicketResultPrs.get("prs") != null) {
+            for (JsonElement prObj : jiraTicketResultPrs.get("prs").getAsJsonArray()) {
+                String branch = prObj.getAsJsonObject().get("destinyBranch").getAsString();
+                if (branches.contains(branch)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private void processSubtasksPerson(List<String> results, Map<String, JsonObject> subtaskMetadataMap,
