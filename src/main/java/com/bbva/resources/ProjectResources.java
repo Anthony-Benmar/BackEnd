@@ -49,9 +49,7 @@ public class ProjectResources {
     @Path("/portfolio/insert")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public IDataResult<ProjectPortafolioFilterDtoResponse> insert(ProjectPortafolioDTORequest dto)
-            throws ExecutionException, InterruptedException
-    {
+    public IDataResult<ProjectPortafolioFilterDtoResponse> insert(ProjectPortafolioDTORequest dto) {
         return projectService.insertProject(dto);
     }
 
@@ -77,9 +75,7 @@ public class ProjectResources {
     @GET
     @Path("/{projectId}/process")
     @Produces(MediaType.APPLICATION_JSON)
-    public IDataResult<List<MapDependencyListByProjectResponse>> getProcessByProjectId(@Context HttpServletRequest request, @PathParam("projectId") int projectId)
-            throws ExecutionException, InterruptedException
-    {
+    public IDataResult<List<MapDependencyListByProjectResponse>> getProcessByProjectId(@Context HttpServletRequest request, @PathParam("projectId") int projectId) {
         return projectService.getProcessByProjectId(projectId);
     }
 
@@ -141,9 +137,7 @@ public class ProjectResources {
     @DELETE
     @Path("/info/{projectId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public IDataResult<Integer> deleteProjectInfo(@Context HttpServletRequest request, @PathParam("projectId") int projectId)
-            throws ExecutionException, InterruptedException
-    {
+    public IDataResult<Integer> deleteProjectInfo(@Context HttpServletRequest request, @PathParam("projectId") int projectId) {
         return projectService.deleteProjectInfo(projectId);
     }
 
@@ -151,9 +145,7 @@ public class ProjectResources {
     @Path("/info/update")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public IDataResult<ProjectInfoDTO> updateProjectInfo(ProjectInfoDTO dto)
-            throws ExecutionException, InterruptedException
-    {
+    public IDataResult<ProjectInfoDTO> updateProjectInfo(ProjectInfoDTO dto) {
 
         try{
             if(projectService.sdatoolIdExistsUpdate(dto.getSdatoolId(), dto.getProjectId())) {
@@ -194,9 +186,7 @@ public class ProjectResources {
     public IDataResult<Integer> deleteDocument(@Context HttpServletRequest request,
                                                @PathParam("projectId") int projectId,
                                                @PathParam("documentId") int documentId,
-                                               @PathParam("updateAuditUser") String updateAuditUser)
-            throws ExecutionException, InterruptedException
-    {
+                                               @PathParam("updateAuditUser") String updateAuditUser) {
         return projectService.deleteDocument(projectId, documentId, updateAuditUser);
     }
 
@@ -204,9 +194,7 @@ public class ProjectResources {
     @Path("/info/document/update")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public IDataResult<InsertProjectDocumentDTO> updateDocument(InsertProjectDocumentDTO dto)
-            throws ExecutionException, InterruptedException
-    {
+    public IDataResult<InsertProjectDocumentDTO> updateDocument(InsertProjectDocumentDTO dto) {
         return projectService.updateDocument(dto);
     }
 
@@ -215,9 +203,7 @@ public class ProjectResources {
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<List<InsertProjectDocumentDTO>> getDocument(@Context  HttpServletRequest request,
                                                                    @PathParam("projectId") int projectId,
-                                                                   @PathParam("documentId") int documentId)
-            throws ExecutionException, InterruptedException
-    {
+                                                                   @PathParam("documentId") int documentId) {
         return projectService.getDocument(projectId, documentId);
     }
 
@@ -227,9 +213,7 @@ public class ProjectResources {
     public IDataResult<Integer> deleteParticipantProject(@Context HttpServletRequest request,
                                                @PathParam("projectId") int projectId,
                                                @PathParam("participantId") int participantId,
-                                               @PathParam("updateAuditUser") String updateAuditUser)
-            throws ExecutionException, InterruptedException
-    {
+                                               @PathParam("updateAuditUser") String updateAuditUser) {
         return projectService.deleteParticipantProject(projectId, participantId, updateAuditUser);
     }
 
@@ -237,18 +221,14 @@ public class ProjectResources {
     @Path("/info/participant/update")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public IDataResult<InsertProjectParticipantDTO> updateParticipant(InsertProjectParticipantDTO dto)
-            throws ExecutionException, InterruptedException
-    {
+    public IDataResult<InsertProjectParticipantDTO> updateParticipant(InsertProjectParticipantDTO dto) {
         return projectService.updateParticipant(dto);
     }
 
     @GET
     @Path("/calendar")
     @Produces(MediaType.APPLICATION_JSON)
-    public IDataResult<List<SelectCalendarDTO>> getCalendar()
-            throws ExecutionException, InterruptedException
-    {
+    public IDataResult<List<SelectCalendarDTO>> getCalendar() {
         return projectService.getCalendar();
     }
 
@@ -256,9 +236,7 @@ public class ProjectResources {
     @Path("/domain/{domainId}")
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<List<ProjectByDomainIdDTO>> getProjectsByDomainId(@Context HttpServletRequest request,
-                                                                        @PathParam("domainId") String domainId)
-            throws ExecutionException, InterruptedException
-    {
+                                                                        @PathParam("domainId") String domainId) {
         return projectService.getProjectsByDomainId(domainId);
     }
 
@@ -266,9 +244,7 @@ public class ProjectResources {
     @Path("/features/{sdatoolId}")
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<List<featureDtoResponse>> getFeaturesByProject(@Context HttpServletRequest request,
-                                                               @PathParam("sdatoolId") String sdatoolId)
-            throws ExecutionException, InterruptedException
-    {
+                                                               @PathParam("sdatoolId") String sdatoolId) {
         return projectService.getFeaturesByProject(sdatoolId);
     }
 
