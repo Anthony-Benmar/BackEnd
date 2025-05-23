@@ -12,4 +12,9 @@ public class UpdateOrInsertUseCaseDtoRequest {
     private Integer domainId;
     private String action;
     private String userId;
+    private Integer deliveredPiId;
+    private Integer critical;
+    private Integer isRegulatory;
+    private Integer useCaseScope;
+    private Integer operativeModel;
 }

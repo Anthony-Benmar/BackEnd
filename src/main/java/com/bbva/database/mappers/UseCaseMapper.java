@@ -17,11 +17,18 @@ public interface UseCaseMapper {
     List<UseCaseEntity> listAllUseCases();
 
     @Select("CALL SP_INSERT_OR_UPDATE_USE_CASE(" +
-            "#{useCaseId}," +
-            "#{useCaseName}," +
-            "#{useCaseDescription}," +
-            "#{domainId}," +
-            "#{userId})")
+            "#{useCaseId}, " +
+            "#{useCaseName}, " +
+            "#{useCaseDescription}, " +
+            "#{domainId}, " +
+            "#{deliveredPiId}, " +
+            "#{critical}, " +
+            "#{isRegulatory}, " +
+            "#{useCaseScope}, " +
+            "#{operativeModel}, " +
+            "#{userId}" +
+            ")"
+    )
     @Result(property = "lastUpdatedId", column = "last_updated_id")
     @Result(property = "updatedRegister", column = "updated_register")
     @Result(property = "lastInsertId", column = "last_insert_id")
@@ -39,5 +46,15 @@ public interface UseCaseMapper {
     @Result(property = "useCaseDescription", column = "use_case_description")
     @Result(property = "projectCount", column = "project_count")
     @Result(property = "projects", column = "projects")
+    @Result(property = "deliveredPiId", column = "delivered_pi_id")
+    @Result(property = "piLargeName", column = "pi_large_name")
+    @Result(property = "critical", column = "critical")
+    @Result(property = "criticalDesc", column = "critical_desc")
+    @Result(property = "isRegulatory", column = "is_regulatory")
+    @Result(property = "regulatoryDesc", column = "regulatory_desc")
+    @Result(property = "useCaseScope", column = "use_case_scope")
+    @Result(property = "useCaseScopeDesc", column = "use_case_scope_desc")
+    @Result(property = "operativeModel", column = "operative_model")
+    @Result(property = "operativeModelDesc", column = "operative_model_desc")
     List<UseCaseInputsDtoResponse> getFilteredUseCases(String domainName, String projectName);
 }

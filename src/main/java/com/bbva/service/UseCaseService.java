@@ -31,24 +31,71 @@ public class UseCaseService {
 
     public IDataResult<UpdateOrInsertDtoResponse> updateOrInsertUseCase(UpdateOrInsertUseCaseDtoRequest dto) {
         try {
-            boolean isInsert = (dto.getUseCaseId() == null || dto.getUseCaseId().equals(0));
-            boolean isUpdateOperation = !isInsert;
-            if ((dto.getUseCaseId() == null || dto.getUseCaseId().equals(0)) && isUpdateOperation) {
-                return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "UseCaseId is required for update.");
+            IDataResult<UpdateOrInsertDtoResponse> validationResult = validateRequest(dto);
+            if (validationResult != null) {
+                return validationResult;
             }
-            if (dto.getUseCaseName() == null || dto.getUseCaseName().isBlank())
-                return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "UseCaseName must not be null or empty");
-            if (dto.getUseCaseDescription() == null || dto.getUseCaseDescription().isBlank())
-                return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "UseCaseDescription must not be null or empty");
-            if (dto.getDomainId() == null || dto.getDomainId().equals(0))
-                return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "DomainId must not be null or 0");
 
+            boolean isInsert = isInsertOperation(dto);
             var result = useCaseReliabilityDao.updateOrInsertUseCase(dto);
-            return new SuccessDataResult<>(result, HttpStatusCodes.HTTP_OK, isInsert ? "Use case inserted successfully." : "Use case updated successfully.");
+            return new SuccessDataResult<>(result, HttpStatusCodes.HTTP_OK,
+                    isInsert ? "Use case inserted successfully." : "Use case updated successfully.");
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
             return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
         }
+    }
+
+    boolean isInsertOperation(UpdateOrInsertUseCaseDtoRequest dto) {
+        return dto.getUseCaseId() == null || dto.getUseCaseId().equals(0);
+    }
+
+    IDataResult<UpdateOrInsertDtoResponse> validateRequest(UpdateOrInsertUseCaseDtoRequest dto) {
+        if (!isInsertOperation(dto) && (dto.getUseCaseId() == null || dto.getUseCaseId().equals(0))) {
+            return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "UseCaseId is required for update.");
+        }
+
+        if (isNullOrBlank(dto.getUseCaseName())) {
+            return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "UseCaseName must not be null or empty");
+        }
+
+        if (isNullOrBlank(dto.getUseCaseDescription())) {
+            return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "UseCaseDescription must not be null or empty");
+        }
+
+        if (isNullOrZero(dto.getDomainId())) {
+            return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "DomainId must not be null or 0");
+        }
+
+        if (isNullOrZero(dto.getDeliveredPiId())) {
+            return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "DeliveredPiId must not be null or 0");
+        }
+
+        if (isNullOrZero(dto.getCritical())) {
+            return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "Critical must not be null or 0");
+        }
+
+        if (dto.getIsRegulatory() == null) {
+            return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "Regulatory must not be null");
+        }
+
+        if (isNullOrZero(dto.getUseCaseScope())) {
+            return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "UseCaseScope must not be null or 0");
+        }
+
+        if (dto.getOperativeModel() == null) {
+            return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "OperativeModel must not be null");
+        }
+
+        return null;
+    }
+
+    private boolean isNullOrBlank(String value) {
+        return value == null || value.isBlank();
+    }
+
+    private boolean isNullOrZero(Integer value) {
+        return value == null || value.equals(0);
     }
 
     public IDataResult<UseCaseInputsFilterDtoResponse> getFilteredUseCases(UseCaseInputsFilterDtoRequest dto) {

@@ -1,12 +1,10 @@
 package com.bbva.entities.use_case_definition;
 
 import com.bbva.entities.BaseEntity;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @AllArgsConstructor
+@RequiredArgsConstructor
 @Setter
 @Getter
 @Data

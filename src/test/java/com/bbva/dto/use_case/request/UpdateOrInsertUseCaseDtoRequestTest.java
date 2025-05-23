@@ -14,6 +14,11 @@ class UpdateOrInsertUseCaseDtoRequestTest {
         request.setDomainId(2);
         request.setAction("insert");
         request.setUserId("user123");
+        request.setDeliveredPiId(1);
+        request.setCritical(1);
+        request.setIsRegulatory(1);
+        request.setUseCaseScope(1);
+        request.setOperativeModel(1);
 
         assertEquals(1, request.getUseCaseId());
         assertEquals("Test Use Case", request.getUseCaseName());
@@ -21,5 +26,10 @@ class UpdateOrInsertUseCaseDtoRequestTest {
         assertEquals(2, request.getDomainId());
         assertEquals("insert", request.getAction());
         assertEquals("user123", request.getUserId());
+        assertEquals(1, request.getDeliveredPiId());
+        assertEquals(1, request.getCritical());
+        assertEquals(1, request.getIsRegulatory());
+        assertEquals(1, request.getUseCaseScope());
+        assertEquals(1, request.getOperativeModel());
     }
 }
