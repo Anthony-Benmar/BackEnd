@@ -15,8 +15,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
-
-public class SingleBaseServiceTest {
+ class SingleBaseServiceTest {
     @InjectMocks
     private SingleBaseService singleBaseService;
     @Mock
