@@ -11,7 +11,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class BaseunicaResourcesTest {
+class SingleBaseResourcesTest {
     private SingleBaseService baseunicaServiceMock;
     private SingleBaseResources baseunicaResources;
 
