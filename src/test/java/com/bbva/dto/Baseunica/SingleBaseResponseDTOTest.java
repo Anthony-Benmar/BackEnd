@@ -1,5 +1,5 @@
 package com.bbva.dto.Baseunica;
-import com.bbva.dto.singleBase.response.SingleBaseResponseDTO;
+import com.bbva.dto.single_base.response.SingleBaseResponseDTO;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;

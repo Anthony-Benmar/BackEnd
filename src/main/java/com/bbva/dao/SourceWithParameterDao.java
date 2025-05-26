@@ -1,10 +1,8 @@
 package com.bbva.dao;
 
 import com.bbva.database.MyBatisConnectionFactory;
-import com.bbva.database.mappers.EfectivityMapper;
 import com.bbva.database.mappers.SourceWithParameterMapper;
-import com.bbva.dto.efectivity.response.EfectivityEntityResponseDTO;
-import com.bbva.dto.sourceWithParameter.response.SourceWithParameterDTO;
+import com.bbva.dto.source_with_parameter.response.SourceWithParameterDTO;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 

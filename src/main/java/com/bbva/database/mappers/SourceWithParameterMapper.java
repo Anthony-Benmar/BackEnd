@@ -1,6 +1,6 @@
 package com.bbva.database.mappers;
 
-import com.bbva.dto.sourceWithParameter.response.SourceWithParameterDTO;
+import com.bbva.dto.source_with_parameter.response.SourceWithParameterDTO;
 import org.apache.ibatis.annotations.Result;
 import org.apache.ibatis.annotations.Select;
 

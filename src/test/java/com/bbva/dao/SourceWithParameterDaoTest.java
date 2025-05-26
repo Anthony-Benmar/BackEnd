@@ -2,7 +2,7 @@ package com.bbva.dao;
 
 import com.bbva.database.MyBatisConnectionFactory;
 import com.bbva.database.mappers.SourceWithParameterMapper;
-import com.bbva.dto.sourceWithParameter.response.SourceWithParameterDTO;
+import com.bbva.dto.source_with_parameter.response.SourceWithParameterDTO;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.junit.jupiter.api.Test;
@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
-public class SourceWithParameterDaoTest {
+ class SourceWithParameterDaoTest {
     @Test
     void testGetSourceWithParameter() {
         SqlSessionFactory mockSqlSessionFactory = mock(SqlSessionFactory.class);

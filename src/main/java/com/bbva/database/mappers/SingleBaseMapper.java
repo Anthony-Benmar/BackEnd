@@ -1,6 +1,6 @@
 package com.bbva.database.mappers;
 
-import com.bbva.dto.singleBase.response.SingleBaseResponseDTO;
+import com.bbva.dto.single_base.response.SingleBaseResponseDTO;
 import org.apache.ibatis.annotations.Result;
 import org.apache.ibatis.annotations.Select;
 

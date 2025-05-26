@@ -1,4 +1,4 @@
-package com.bbva.dto.singleBase.response;
+package com.bbva.dto.single_base.response;
 
 import lombok.Getter;
 import lombok.Setter;

@@ -3,7 +3,7 @@ package com.bbva.service;
 import com.bbva.core.abstracts.IDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dao.SourceWithParameterDao;
-import com.bbva.dto.sourceWithParameter.response.SourceWithParameterDTO;
+import com.bbva.dto.source_with_parameter.response.SourceWithParameterDTO;
 
 import java.util.List;
 

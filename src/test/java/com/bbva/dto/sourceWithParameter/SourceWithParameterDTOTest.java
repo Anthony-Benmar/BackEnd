@@ -1,13 +1,13 @@
 package com.bbva.dto.sourceWithParameter;
 
-import com.bbva.dto.sourceWithParameter.response.SourceWithParameterDTO;
+import com.bbva.dto.source_with_parameter.response.SourceWithParameterDTO;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class SourceWithParameterDTOTest {
+ class SourceWithParameterDTOTest {
     @Test
-    public void testGettersAndSetters() {
+     void testGettersAndSetters() {
         SourceWithParameterDTO dto = new SourceWithParameterDTO();
 
         // Set values

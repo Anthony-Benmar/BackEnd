@@ -2,7 +2,7 @@ package com.bbva.dao;
 
 import com.bbva.database.MyBatisConnectionFactory;
 import com.bbva.database.mappers.SingleBaseMapper;
-import com.bbva.dto.singleBase.response.SingleBaseResponseDTO;
+import com.bbva.dto.single_base.response.SingleBaseResponseDTO;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 

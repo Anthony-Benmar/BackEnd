@@ -1,7 +1,7 @@
 package com.bbva.resources;
 
 import com.bbva.core.abstracts.IDataResult;
-import com.bbva.dto.sourceWithParameter.response.SourceWithParameterDTO;
+import com.bbva.dto.source_with_parameter.response.SourceWithParameterDTO;
 import com.bbva.service.SourceWithParameterService;
 
 import javax.ws.rs.Consumes;
@@ -20,7 +20,6 @@ public class SourceWithParameterResources {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<List<SourceWithParameterDTO>> getSourceWithParameter() {
-        IDataResult<List<SourceWithParameterDTO>> result = sourceWithParameterService.getSourceWithParameter();
-        return result;
+        return sourceWithParameterService.getSourceWithParameter();
     }
 }

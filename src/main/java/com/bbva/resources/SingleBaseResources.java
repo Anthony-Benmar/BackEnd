@@ -1,7 +1,7 @@
 package com.bbva.resources;
 
 import com.bbva.core.abstracts.IDataResult;
-import com.bbva.dto.singleBase.response.SingleBaseResponseDTO;
+import com.bbva.dto.single_base.response.SingleBaseResponseDTO;
 import com.bbva.service.SingleBaseService;
 
 import javax.ws.rs.*;

@@ -1,4 +1,4 @@
-package com.bbva.dto.sourceWithParameter.response;
+package com.bbva.dto.source_with_parameter.response;
 
 import lombok.Getter;
 import lombok.Setter;
