@@ -1,5 +1,4 @@
-package com.bbva.dto.baseunica.response;
-
+package com.bbva.dto.Baseunica;
 import com.bbva.dto.singleBase.response.SingleBaseResponseDTO;
 import org.junit.jupiter.api.Test;
 

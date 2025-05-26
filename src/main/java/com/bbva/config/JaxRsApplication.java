@@ -39,6 +39,7 @@ public class JaxRsApplication extends Application {
         classes.add(ExceptionResources.class);
         classes.add(EfectivityResources.class);
         classes.add(SingleBaseResources.class);
+        classes.add(SourceWithParameterResources.class);
         return classes;
     }
 }

@@ -17,7 +17,7 @@ public interface SourceWithParameterMapper {
     @Result(property = "replacementId", column = "replacement_id")
     @Result(property = "modelOwner", column = "model_owner")
     @Result(property = "masterRegisteredBoard", column = "master_registered_board")
-    @Result(property = "datalakeLayer", column = "datalake_layer")
+    @Result(property = "dataLakeLayer", column = "datalake_layer")
     @Result(property = "uuaaRaw", column = "uuaa_raw")
     @Result(property = "uuaaMaster", column = "uuaa_master")
     @Result(property = "tdsOpinionDebt", column = "tds_opinion_debt")
