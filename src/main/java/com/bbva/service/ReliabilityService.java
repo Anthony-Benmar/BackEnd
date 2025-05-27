@@ -5,6 +5,7 @@ import com.bbva.core.abstracts.IDataResult;
 import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dao.ReliabilityDao;
+import com.bbva.dto.reliability.request.ExecutionValidationInputsDtoRequest;
 import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
 import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
 import com.bbva.dto.reliability.response.ExecutionValidationDtoResponse;
