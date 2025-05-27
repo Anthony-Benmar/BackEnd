@@ -5,12 +5,10 @@ import com.bbva.core.abstracts.IDataResult;
 import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dao.ReliabilityDao;
+import com.bbva.dto.reliability.request.ExecutionValidationInputsDtoRequest;
 import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
 import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
-import com.bbva.dto.reliability.response.ExecutionValidationDtoResponse;
-import com.bbva.dto.reliability.response.InventoryInputsFilterDtoResponse;
-import com.bbva.dto.reliability.response.PendingCustodyJobsDtoResponse;
-import com.bbva.dto.reliability.response.ProjectCustodyInfoDtoResponse;
+import com.bbva.dto.reliability.response.*;
 
 import java.util.List;
 import java.util.logging.Level;
@@ -57,6 +55,16 @@ public class ReliabilityService {
         try {
             var result = reliabilityDao.getExecutionValidation(jobName);
             return new SuccessDataResult<>(result);
+        } catch (Exception e) {
+            log.log(Level.SEVERE, e.getMessage(), e);
+            return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
+
+    public IDataResult<ExecutionValidationAllDtoResponse> getExecutionValidationAll(List<ExecutionValidationInputsDtoRequest> jobsNames) {
+        try {
+            var result = reliabilityDao.getExecutionValidationAll(jobsNames);
+            return new SuccessDataResult(result);
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
             return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());

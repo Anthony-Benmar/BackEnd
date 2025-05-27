@@ -3,12 +3,10 @@ package com.bbva.resources;
 
 import com.bbva.common.HttpStatusCodes;
 import com.bbva.core.abstracts.IDataResult;
+import com.bbva.dto.reliability.request.ExecutionValidationInputsDtoRequest;
 import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
 import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
-import com.bbva.dto.reliability.response.ExecutionValidationDtoResponse;
-import com.bbva.dto.reliability.response.InventoryInputsFilterDtoResponse;
-import com.bbva.dto.reliability.response.PendingCustodyJobsDtoResponse;
-import com.bbva.dto.reliability.response.ProjectCustodyInfoDtoResponse;
+import com.bbva.dto.reliability.response.*;
 import com.bbva.service.ReliabilityService;
 
 import javax.servlet.http.HttpServletRequest;
@@ -55,6 +53,16 @@ public class ReliabilityResource {
                                                                               @PathParam("jobName") String jobName)
     {
         return reliabilityService.getExecutionValidation(jobName);
+    }
+
+    @POST
+    @Path("/execution_validation_all")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<ExecutionValidationAllDtoResponse> getExecutionValidationAll(@Context HttpServletRequest request,
+                                                                                    List<ExecutionValidationInputsDtoRequest> jobsNames)
+    {
+        return reliabilityService.getExecutionValidationAll(jobsNames);
     }
 
     @POST

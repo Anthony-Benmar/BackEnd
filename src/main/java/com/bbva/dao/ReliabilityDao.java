@@ -2,6 +2,7 @@ package com.bbva.dao;
 
 import com.bbva.database.MyBatisConnectionFactory;
 import com.bbva.database.mappers.ReliabilityMapper;
+import com.bbva.dto.reliability.request.ExecutionValidationInputsDtoRequest;
 import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
 import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
 import com.bbva.dto.reliability.response.*;
@@ -10,6 +11,7 @@ import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -126,6 +128,27 @@ public class ReliabilityDao {
             ReliabilityMapper mapper = session.getMapper(ReliabilityMapper.class);
             executionValidation = mapper.getExecutionValidation(jobName);
             return executionValidation;
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            return null;
+        }
+    }
+
+    public List<ExecutionValidationAllDtoResponse> getExecutionValidationAll(List<ExecutionValidationInputsDtoRequest> jobsNames) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        List<ExecutionValidationAllDtoResponse> executionValidationAll = new ArrayList<>();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ReliabilityMapper mapper = session.getMapper(ReliabilityMapper.class);
+            jobsNames.forEach(jobName -> {
+                ExecutionValidationDtoResponse executionValidation = mapper.getExecutionValidation(jobName.getJobName());
+                executionValidationAll.add(ExecutionValidationAllDtoResponse.builder()
+                                .jobName(jobName.getJobName())
+                                .validation(executionValidation.getValidation())
+                        .build());
+            });
+
+
+            return executionValidationAll;
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
             return null;
