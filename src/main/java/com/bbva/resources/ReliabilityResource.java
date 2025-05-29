@@ -9,6 +9,8 @@ import com.bbva.dto.reliability.response.ExecutionValidationDtoResponse;
 import com.bbva.dto.reliability.response.InventoryInputsFilterDtoResponse;
 import com.bbva.dto.reliability.response.PendingCustodyJobsDtoResponse;
 import com.bbva.dto.reliability.response.ProjectCustodyInfoDtoResponse;
+import com.bbva.dto.reliability.request.TransferInputDtoRequest;
+import com.bbva.dto.reliability.response.*;
 import com.bbva.service.ReliabilityService;
 
 import javax.servlet.http.HttpServletRequest;
@@ -58,11 +60,29 @@ public class ReliabilityResource {
     }
 
     @POST
+    @Path("/execution_validation_all")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<ExecutionValidationAllDtoResponse> getExecutionValidationAll(@Context HttpServletRequest request,
+                                                                                    List<String> jobsNames)
+    {
+        return reliabilityService.getExecutionValidationAll(jobsNames);
+    }
+
+    @POST
     @Path("/job/update")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<Void> updateInventoryJobStock(InventoryJobUpdateDtoRequest dto) {
         return reliabilityService.updateInventoryJobStock(dto);
+    }
+
+    @POST
+    @Path("/transfer/insert")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<Void> insertTransfer(TransferInputDtoRequest dto) {
+        return reliabilityService.insertTransfer(dto);
     }
 
 }
