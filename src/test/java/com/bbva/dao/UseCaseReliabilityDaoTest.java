@@ -119,7 +119,7 @@ class UseCaseReliabilityDaoTest {
                 new UseCaseInputsDtoResponse()
         );
 
-        when(useCaseMapperMock.getFilteredUseCases("domain", "project")).thenReturn(mockList);
+        when(useCaseMapperMock.getFilteredUseCases("domain", "critical", "project")).thenReturn(mockList);
 
         UseCaseInputsFilterDtoResponse response = useCaseReliabilityDao.getFilteredUseCases(request);
 
@@ -130,7 +130,7 @@ class UseCaseReliabilityDaoTest {
 
         verify(sqlSessionFactoryMock).openSession();
         verify(sqlSessionMock).getMapper(UseCaseMapper.class);
-        verify(useCaseMapperMock).getFilteredUseCases("domain", "project");
+        verify(useCaseMapperMock).getFilteredUseCases("domain","critical", "project");
         verify(sqlSessionMock).close();
     }
 
