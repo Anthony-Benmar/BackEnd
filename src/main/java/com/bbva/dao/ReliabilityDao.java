@@ -2,9 +2,9 @@ package com.bbva.dao;
 
 import com.bbva.database.MyBatisConnectionFactory;
 import com.bbva.database.mappers.ReliabilityMapper;
-import com.bbva.dto.reliability.request.ExecutionValidationInputsDtoRequest;
 import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
 import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
+import com.bbva.dto.reliability.request.TransferInputDtoRequest;
 import com.bbva.dto.reliability.response.*;
 import com.bbva.util.JSONUtils;
 import org.apache.ibatis.session.SqlSession;
@@ -134,15 +134,15 @@ public class ReliabilityDao {
         }
     }
 
-    public List<ExecutionValidationAllDtoResponse> getExecutionValidationAll(List<ExecutionValidationInputsDtoRequest> jobsNames) {
+    public List<ExecutionValidationAllDtoResponse> getExecutionValidationAll(List<String> jobsNames) {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         List<ExecutionValidationAllDtoResponse> executionValidationAll = new ArrayList<>();
         try (SqlSession session = sqlSessionFactory.openSession()) {
             ReliabilityMapper mapper = session.getMapper(ReliabilityMapper.class);
             jobsNames.forEach(jobName -> {
-                ExecutionValidationDtoResponse executionValidation = mapper.getExecutionValidation(jobName.getJobName());
+                ExecutionValidationDtoResponse executionValidation = mapper.getExecutionValidation(jobName);
                 executionValidationAll.add(ExecutionValidationAllDtoResponse.builder()
-                                .jobName(jobName.getJobName())
+                                .jobName(jobName)
                                 .validation(executionValidation.getValidation())
                         .build());
             });
@@ -152,6 +152,18 @@ public class ReliabilityDao {
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
             return null;
+        }
+    }
+
+    public void insertTransfer(TransferInputDtoRequest dto) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ReliabilityMapper reliabilityMapper = session.getMapper(ReliabilityMapper.class);
+            reliabilityMapper.insertTranfer(dto);
+            dto.getTransferInputDtoRequests().forEach(reliabilityMapper::insertJobStock);
+            session.commit();
+        }catch (Exception e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
         }
     }
 }

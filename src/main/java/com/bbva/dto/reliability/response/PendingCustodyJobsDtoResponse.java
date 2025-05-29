@@ -8,8 +8,9 @@ import lombok.Setter;
 public class PendingCustodyJobsDtoResponse {
     private String jobName;
     private String jsonName;
-    private String frequency;
-    private String jobType;
-    private String originType;
-    private String phaseType;
+    private String frequencyId;
+    private String jobTypeId;
+    private String originTypeId;
+    private String phaseTypeId;
+    private String principalJob;
 }

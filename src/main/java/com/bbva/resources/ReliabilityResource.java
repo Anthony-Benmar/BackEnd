@@ -3,9 +3,9 @@ package com.bbva.resources;
 
 import com.bbva.common.HttpStatusCodes;
 import com.bbva.core.abstracts.IDataResult;
-import com.bbva.dto.reliability.request.ExecutionValidationInputsDtoRequest;
 import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
 import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
+import com.bbva.dto.reliability.request.TransferInputDtoRequest;
 import com.bbva.dto.reliability.response.*;
 import com.bbva.service.ReliabilityService;
 
@@ -60,7 +60,7 @@ public class ReliabilityResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<ExecutionValidationAllDtoResponse> getExecutionValidationAll(@Context HttpServletRequest request,
-                                                                                    List<ExecutionValidationInputsDtoRequest> jobsNames)
+                                                                                    List<String> jobsNames)
     {
         return reliabilityService.getExecutionValidationAll(jobsNames);
     }
@@ -71,6 +71,14 @@ public class ReliabilityResource {
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<Void> updateInventoryJobStock(InventoryJobUpdateDtoRequest dto) {
         return reliabilityService.updateInventoryJobStock(dto);
+    }
+
+    @POST
+    @Path("/transfer/insert")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<Void> insertTransfer(TransferInputDtoRequest dto) {
+        return reliabilityService.insertTransfer(dto);
     }
 
 }

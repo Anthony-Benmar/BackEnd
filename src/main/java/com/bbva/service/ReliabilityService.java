@@ -5,9 +5,9 @@ import com.bbva.core.abstracts.IDataResult;
 import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dao.ReliabilityDao;
-import com.bbva.dto.reliability.request.ExecutionValidationInputsDtoRequest;
 import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
 import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
+import com.bbva.dto.reliability.request.TransferInputDtoRequest;
 import com.bbva.dto.reliability.response.*;
 
 import java.util.List;
@@ -61,13 +61,35 @@ public class ReliabilityService {
         }
     }
 
-    public IDataResult<ExecutionValidationAllDtoResponse> getExecutionValidationAll(List<ExecutionValidationInputsDtoRequest> jobsNames) {
+    public IDataResult<ExecutionValidationAllDtoResponse> getExecutionValidationAll(List<String> jobsNames) {
         try {
             var result = reliabilityDao.getExecutionValidationAll(jobsNames);
             return new SuccessDataResult(result);
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
             return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
+
+    public IDataResult<Void> insertTransfer(TransferInputDtoRequest dto) {
+        try {
+            if (dto.getPack() == null || dto.getPack().trim().isEmpty()) {
+                return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "Pack must not be null or empty");
+            }
+            if (dto.getDomainId() == null) {
+                return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "DomainId must not be null");
+            }
+            if (dto.getProductOwnerUserId() == null) {
+                return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "ProductOwnerUserId must not be null");
+            }
+            if (dto.getUseCaseId() == null) {
+                return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "UseCaseId must not be null");
+            }
+            reliabilityDao.insertTransfer(dto);
+            return new SuccessDataResult<>(null, "Job stock updated successfully");
+        } catch (Exception e) {
+            log.severe("Error updating job stock: " + e.getMessage());
+            return new ErrorDataResult<>(null, "500", e.getMessage());
         }
     }
 }
