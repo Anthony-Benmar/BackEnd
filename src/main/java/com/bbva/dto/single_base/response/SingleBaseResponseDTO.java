@@ -12,17 +12,16 @@ public class SingleBaseResponseDTO {
     private String projectName;
     private String ucSourceName;
     private String ucSourceDesc;
-    private String registeredFolioDate;  // Puede ser de tipo Date si prefieres manejar fechas de esa forma.
-    private String statusFolioType;  // Enum, pero lo manejamos como String.
+    private String registeredFolioDate;
+    private String statusFolioType;
     private String analystProjectId;
     private String analystCaId;
     private String resolutionSourceType;
-    private String resolutionSourceDate;  // Puede ser de tipo Date también.
+    private String resolutionSourceDate;
     private String reusedFolioCode;
     private String resolutionCommentDesc;
-    private String folioType;  // Enum, manejado como String.
-    private BigDecimal oldSourceId;  // Usamos BigDecimal para manejar decimales.
+    private String folioType;
+    private BigDecimal oldSourceId;
     private String ucFinalistDesc;
     private String catalogId;
-
 }

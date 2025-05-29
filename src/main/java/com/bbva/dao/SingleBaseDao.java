@@ -13,18 +13,29 @@ import java.util.logging.Logger;
 public class SingleBaseDao {
     private static final Logger log = Logger.getLogger(SingleBaseDao.class.getName());
 
-    public List<SingleBaseResponseDTO> getBaseUnicaWithSource() {
+    // Método para obtener los datos paginados
+    public List<SingleBaseResponseDTO> getBaseUnicaWithSource(int limit, int offset) {
         List<SingleBaseResponseDTO> result = null;
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         try (SqlSession session = sqlSessionFactory.openSession()) {
-            // Obtener el mapper correspondiente para Baseunica
             SingleBaseMapper mapper = session.getMapper(SingleBaseMapper.class);
-            // Llamar al método que ejecuta el procedimiento y pasa el parámetro 'tableName'
-            result = mapper.getBaseUnicaData();
+            result = mapper.getBaseUnicaData(limit, offset);
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
         }
         return result;
     }
-}
 
+    // Método para obtener el total de registros (sin paginación)
+    public int getBaseUnicaTotalCount() {
+        int totalCount = 0;
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            SingleBaseMapper mapper = session.getMapper(SingleBaseMapper.class);
+            totalCount = mapper.getBaseUnicaTotalCount();
+        } catch (Exception e) {
+            log.log(Level.SEVERE, e.getMessage(), e);
+        }
+        return totalCount;
+    }
+}
