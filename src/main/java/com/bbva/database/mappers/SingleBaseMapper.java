@@ -10,7 +10,7 @@ import java.util.List;
 
 public interface SingleBaseMapper {
 
-    @Select("CALL GET_BASE_UNICA(#{limit}, #{offset}, #{projectName}, #{tipoFolio}, #{folio})")
+    @Select("CALL GET_BASE_UNICA(#{limit}, #{offset}, #{projectName}, #{tipoFolio}, #{folio}, #{registeredFolioDate})")
     @Results({
             @Result(property = "id", column = "id"),
             @Result(property = "folio", column = "folio"),
@@ -35,14 +35,16 @@ public interface SingleBaseMapper {
             @Param("offset") int offset,
             @Param("projectName") String projectName,
             @Param("tipoFolio") String tipoFolio,
-            @Param("folio") String folio
+            @Param("folio") String folio,
+            @Param("registeredFolioDate") String registeredFolioDate // <-- Nuevo parámetro
     );
 
-    @Select("CALL GET_BASE_UNICA_TOTAL(#{projectName}, #{tipoFolio}, #{folio})")
+    @Select("CALL GET_BASE_UNICA_TOTAL(#{projectName}, #{tipoFolio}, #{folio}, #{registeredFolioDate})")
     int getBaseUnicaTotalCountWithFilters(
             @Param("projectName") String projectName,
             @Param("tipoFolio") String tipoFolio,
-            @Param("folio") String folio
+            @Param("folio") String folio,
+            @Param("registeredFolioDate") String registeredFolioDate // <-- Nuevo parámetro
     );
 
     // Métodos para combos

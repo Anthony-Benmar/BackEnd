@@ -15,6 +15,7 @@ public class SingleBaseService {
     private final SingleBaseDao singleBaseDao = new SingleBaseDao();
 
     public IDataResult<SingleBasePaginatedResponseDTO> getBaseUnicaWithSource(SingleBasePaginationDtoRequest dto) {
+        // El DTO ya contiene el campo registeredFolioDate, así que no necesitas cambiar nada aquí
         List<SingleBaseDataDtoResponse> data = singleBaseDao.getBaseUnicaWithSource(dto);
         int totalCount = singleBaseDao.getBaseUnicaTotalCount(dto);
 

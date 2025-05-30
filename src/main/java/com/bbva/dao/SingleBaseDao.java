@@ -24,7 +24,8 @@ public class SingleBaseDao {
                     dto.getOffset(),
                     dto.getProjectName(),
                     dto.getTipoFolio(),
-                    dto.getFolio()
+                    dto.getFolio(),
+                    dto.getRegisteredFolioDate() // <-- Nuevo parámetro añadido
             );
             if (result == null) {
                 result = List.of();
@@ -44,7 +45,8 @@ public class SingleBaseDao {
             totalCount = mapper.getBaseUnicaTotalCountWithFilters(
                     dto.getProjectName(),
                     dto.getTipoFolio(),
-                    dto.getFolio()
+                    dto.getFolio(),
+                    dto.getRegisteredFolioDate() // <-- Nuevo parámetro añadido
             );
             log.info("SingleBaseDao - Total filtrado: " + totalCount);
         } catch (Exception e) {

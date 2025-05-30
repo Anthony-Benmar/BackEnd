@@ -29,7 +29,8 @@ public class SingleBaseResources {
             @QueryParam("offset") String offset,
             @QueryParam("projectName") String projectName,
             @QueryParam("tipoFolio") String tipoFolio,
-            @QueryParam("folio") String folio
+            @QueryParam("folio") String folio,
+            @QueryParam("registeredFolioDate") String registeredFolioDate // <-- Agrega esto
     ) {
         LOGGER.info("SingleBase paginated request");
         Integer limitFinal = helper.parseIntegerOrDefault(limit, 30);
@@ -41,6 +42,7 @@ public class SingleBaseResources {
         dto.setProjectName(projectName);
         dto.setTipoFolio(tipoFolio);
         dto.setFolio(folio);
+        dto.setRegisteredFolioDate(registeredFolioDate); // <-- Agrega esto
 
         return singleBaseService.getBaseUnicaWithSource(dto);
     }
