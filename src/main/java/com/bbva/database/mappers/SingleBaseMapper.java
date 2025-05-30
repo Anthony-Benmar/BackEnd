@@ -1,16 +1,16 @@
 package com.bbva.database.mappers;
 
-import com.bbva.dto.single_base.response.SingleBaseResponseDTO;
+import com.bbva.dto.single_base.response.SingleBaseDataDtoResponse;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Result;
 import org.apache.ibatis.annotations.Results;
 import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
 public interface SingleBaseMapper {
 
-    @Select("CALL GET_BASE_UNICA(#{limit}, #{offset})")
+    @Select("CALL GET_BASE_UNICA(#{limit}, #{offset}, #{projectName}, #{tipoFolio}, #{folio})")
     @Results({
             @Result(property = "id", column = "id"),
             @Result(property = "folio", column = "folio"),
@@ -30,9 +30,34 @@ public interface SingleBaseMapper {
             @Result(property = "ucFinalistDesc", column = "uc_finalist_desc"),
             @Result(property = "catalogId", column = "catalog_id")
     })
-    List<SingleBaseResponseDTO> getBaseUnicaData(@Param("limit") int limit, @Param("offset") int offset);
+    List<SingleBaseDataDtoResponse> getBaseUnicaDataWithFilters(
+            @Param("limit") int limit,
+            @Param("offset") int offset,
+            @Param("projectName") String projectName,
+            @Param("tipoFolio") String tipoFolio,
+            @Param("folio") String folio
+    );
 
-    // NUEVO MÉTODO: obtener el total de registros
-    @Select("SELECT COUNT(*) FROM folios")
-    int getBaseUnicaTotalCount();
+    @Select("CALL GET_BASE_UNICA_TOTAL(#{projectName}, #{tipoFolio}, #{folio})")
+    int getBaseUnicaTotalCountWithFilters(
+            @Param("projectName") String projectName,
+            @Param("tipoFolio") String tipoFolio,
+            @Param("folio") String folio
+    );
+
+    // Métodos para combos
+    @Select("SELECT DISTINCT folio FROM folios WHERE folio IS NOT NULL")
+    List<String> getDistinctFolios();
+
+    @Select("SELECT DISTINCT project_name FROM folios WHERE project_name IS NOT NULL")
+    List<String> getDistinctProjectNames();
+
+    @Select("SELECT DISTINCT registered_folio_date FROM folios WHERE registered_folio_date IS NOT NULL")
+    List<java.sql.Date> getDistinctRegisteredFolioDates();
+
+    @Select("SELECT DISTINCT status_folio_type FROM folios WHERE status_folio_type IS NOT NULL")
+    List<String> getDistinctStatusFolioTypes();
+
+    @Select("SELECT DISTINCT folio_type FROM folios WHERE folio_type IS NOT NULL")
+    List<String> getDistinctFolioTypes();
 }

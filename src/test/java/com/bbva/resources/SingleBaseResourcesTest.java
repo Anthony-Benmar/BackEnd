@@ -2,7 +2,6 @@ package com.bbva.resources;
 
 import com.bbva.core.abstracts.IDataResult;
 import com.bbva.core.results.SuccessDataResult;
-import com.bbva.dto.single_base.response.SingleBaseResponseDTO;
 import com.bbva.service.SingleBaseService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

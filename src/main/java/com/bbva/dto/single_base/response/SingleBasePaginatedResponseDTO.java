@@ -7,6 +7,6 @@ import java.util.List;
 @Getter
 @Setter
 public class SingleBasePaginatedResponseDTO {
-    private List<SingleBaseResponseDTO> data;
-    private int totalCount;
+    private Integer totalCount;
+    private List<SingleBaseDataDtoResponse> data;
 }
