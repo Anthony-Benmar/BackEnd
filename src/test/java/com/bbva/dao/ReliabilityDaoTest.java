@@ -4,6 +4,8 @@ import com.bbva.database.MyBatisConnectionFactory;
 import com.bbva.database.mappers.ReliabilityMapper;
 import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
 import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
+import com.bbva.dto.reliability.request.JobTransferInputDtoRequest;
+import com.bbva.dto.reliability.request.TransferInputDtoRequest;
 import com.bbva.dto.reliability.response.*;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -12,6 +14,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -145,5 +148,56 @@ class ReliabilityDaoTest {
         assertNotNull(instance1);
         assertNotNull(instance2);
         assertSame(instance1, instance2);
+    }
+
+    @Test
+    void testGetExecutionValidationAll() {
+        List<String> jobNames = Arrays.asList("job1", "job2");
+        ExecutionValidationDtoResponse response1 = new ExecutionValidationDtoResponse();
+        response1.setValidation("SUCCESS");
+        ExecutionValidationDtoResponse response2 = new ExecutionValidationDtoResponse();
+        response2.setValidation("FAILED");
+
+        when(sqlSessionFactoryMock.openSession()).thenReturn(sqlSessionMock);
+        when(sqlSessionMock.getMapper(ReliabilityMapper.class)).thenReturn(reliabilityMapperMock);
+        when(reliabilityMapperMock.getExecutionValidation("job1")).thenReturn(response1);
+        when(reliabilityMapperMock.getExecutionValidation("job2")).thenReturn(response2);
+
+        List<ExecutionValidationAllDtoResponse> result = reliabilityDao.getExecutionValidationAll(jobNames);
+
+        assertEquals(2, result.size());
+        assertEquals("job1", result.get(0).getJobName());
+        assertEquals("SUCCESS", result.get(0).getValidation());
+        assertEquals("job2", result.get(1).getJobName());
+        assertEquals("FAILED", result.get(1).getValidation());
+
+        verify(sqlSessionFactoryMock).openSession();
+        verify(sqlSessionMock).getMapper(ReliabilityMapper.class);
+        verify(reliabilityMapperMock).getExecutionValidation("job1");
+        verify(reliabilityMapperMock).getExecutionValidation("job2");
+        verify(sqlSessionMock).close();
+    }
+
+    @Test
+    void testInsertTransfer() {
+        TransferInputDtoRequest dto = new TransferInputDtoRequest();
+        dto.setPack("com.example");
+        dto.setDomainId(1);
+
+        JobTransferInputDtoRequest job1 = new JobTransferInputDtoRequest();
+        job1.setJobName("job1");
+        dto.setTransferInputDtoRequests(List.of(job1));
+
+        when(sqlSessionFactoryMock.openSession()).thenReturn(sqlSessionMock);
+        when(sqlSessionMock.getMapper(ReliabilityMapper.class)).thenReturn(reliabilityMapperMock);
+
+        reliabilityDao.insertTransfer(dto);
+
+        verify(sqlSessionFactoryMock).openSession();
+        verify(sqlSessionMock).getMapper(ReliabilityMapper.class);
+        verify(reliabilityMapperMock).insertTranfer(dto);
+        verify(reliabilityMapperMock).insertJobStock(job1);
+        verify(sqlSessionMock).commit();
+        verify(sqlSessionMock).close();
     }
 }

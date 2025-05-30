@@ -5,12 +5,12 @@ import com.bbva.core.abstracts.IDataResult;
 import com.bbva.dao.ReliabilityDao;
 import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
 import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
-import com.bbva.dto.reliability.response.ExecutionValidationDtoResponse;
-import com.bbva.dto.reliability.response.InventoryInputsFilterDtoResponse;
-import com.bbva.dto.reliability.response.PendingCustodyJobsDtoResponse;
-import com.bbva.dto.reliability.response.ProjectCustodyInfoDtoResponse;
+import com.bbva.dto.reliability.request.TransferInputDtoRequest;
+import com.bbva.dto.reliability.response.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -161,5 +161,130 @@ class ReliabilityServiceTest {
         assertEquals(HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, result.status);
         assertEquals("Error fetching project info", result.message);
         verify(reliabilityDaoMock).getProjectCustodyInfo(sdatoolId);
+    }
+
+    @Test
+    void getExecutionValidationAll() {
+        List<String> jobNames = Arrays.asList("Job1", "Job2");
+        List<ExecutionValidationAllDtoResponse> expectedResults = Arrays.asList(
+                new ExecutionValidationAllDtoResponse("Job1", "SUCCESS"),
+                new ExecutionValidationAllDtoResponse("Job2", "FAILED")
+        );
+
+        when(reliabilityDaoMock.getExecutionValidationAll(jobNames)).thenReturn(expectedResults);
+
+        IDataResult<ExecutionValidationAllDtoResponse> result = reliabilityService.getExecutionValidationAll(jobNames);
+
+        assertTrue(result.success);
+        verify(reliabilityDaoMock, times(1)).getExecutionValidationAll(jobNames);
+    }
+
+    @Test
+    void insertTransfer() {
+        TransferInputDtoRequest validDto = new TransferInputDtoRequest();
+        validDto.setPack("com.example.package");
+        validDto.setDomainId(1);
+        validDto.setProductOwnerUserId(100);
+        validDto.setUseCaseId(200);
+
+        IDataResult<Void> result = reliabilityService.insertTransfer(validDto);
+
+        assertTrue(result.success);
+        assertEquals("Transfer insert successfully", result.message);
+        verify(reliabilityDaoMock, times(1)).insertTransfer(validDto);
+    }
+
+    @Test
+    void insertTransferWhenPackIsNull() {
+        TransferInputDtoRequest invalidDto = new TransferInputDtoRequest();
+        invalidDto.setPack(null);
+        invalidDto.setDomainId(1);
+        invalidDto.setProductOwnerUserId(100);
+        invalidDto.setUseCaseId(200);
+
+        IDataResult<Void> result = reliabilityService.insertTransfer(invalidDto);
+
+        assertFalse(result.success);
+        assertEquals("Pack must not be null or empty", result.message);
+        assertEquals(HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, result.status);
+        verify(reliabilityDaoMock, never()).insertTransfer(any());
+    }
+
+    @Test
+    void insertTransferWhenPackIsEmpty() {
+        TransferInputDtoRequest invalidDto = new TransferInputDtoRequest();
+        invalidDto.setPack("   ");
+        invalidDto.setDomainId(1);
+        invalidDto.setProductOwnerUserId(100);
+        invalidDto.setUseCaseId(200);
+
+        IDataResult<Void> result = reliabilityService.insertTransfer(invalidDto);
+
+        assertFalse(result.success);
+        assertEquals("Pack must not be null or empty", result.message);
+        verify(reliabilityDaoMock, never()).insertTransfer(any());
+    }
+
+    @Test
+    void insertTransferWhenDomainIdIsNull() {
+        TransferInputDtoRequest invalidDto = new TransferInputDtoRequest();
+        invalidDto.setPack("com.example.package");
+        invalidDto.setDomainId(null);
+        invalidDto.setProductOwnerUserId(100);
+        invalidDto.setUseCaseId(200);
+
+        IDataResult<Void> result = reliabilityService.insertTransfer(invalidDto);
+
+        assertFalse(result.success);
+        assertEquals("DomainId must not be null", result.message);
+        verify(reliabilityDaoMock, never()).insertTransfer(any());
+    }
+
+    @Test
+    void insertTransferWhenProductOwnerUserIdIsNull() {
+        TransferInputDtoRequest invalidDto = new TransferInputDtoRequest();
+        invalidDto.setPack("com.example.package");
+        invalidDto.setDomainId(1);
+        invalidDto.setProductOwnerUserId(null);
+        invalidDto.setUseCaseId(200);
+
+        IDataResult<Void> result = reliabilityService.insertTransfer(invalidDto);
+
+        assertFalse(result.success);
+        assertEquals("ProductOwnerUserId must not be null", result.message);
+        verify(reliabilityDaoMock, never()).insertTransfer(any());
+    }
+
+    @Test
+    void insertTransferWhenUseCaseIdIsNull() {
+        TransferInputDtoRequest invalidDto = new TransferInputDtoRequest();
+        invalidDto.setPack("com.example.package");
+        invalidDto.setDomainId(1);
+        invalidDto.setProductOwnerUserId(100);
+        invalidDto.setUseCaseId(null);
+
+        IDataResult<Void> result = reliabilityService.insertTransfer(invalidDto);
+
+        assertFalse(result.success);
+        assertEquals("UseCaseId must not be null", result.message);
+        verify(reliabilityDaoMock, never()).insertTransfer(any());
+    }
+
+    @Test
+    void insertTransferWhenDaoThrowsException() {
+        TransferInputDtoRequest validDto = new TransferInputDtoRequest();
+        validDto.setPack("com.example.package");
+        validDto.setDomainId(1);
+        validDto.setProductOwnerUserId(100);
+        validDto.setUseCaseId(200);
+
+        doThrow(new RuntimeException("Database error")).when(reliabilityDaoMock).insertTransfer(validDto);
+
+        IDataResult<Void> result = reliabilityService.insertTransfer(validDto);
+
+        assertFalse(result.success);
+        assertEquals("500", result.status);
+        assertTrue(result.message.contains("Database error"));
+        verify(reliabilityDaoMock, times(1)).insertTransfer(validDto);
     }
 }

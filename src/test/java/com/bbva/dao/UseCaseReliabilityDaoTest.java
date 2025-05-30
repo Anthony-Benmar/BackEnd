@@ -109,8 +109,9 @@ class UseCaseReliabilityDaoTest {
     void testGetFilteredUseCasesSuccess() {
         UseCaseInputsFilterDtoRequest request = new UseCaseInputsFilterDtoRequest();
         request.setDomainName("domain");
+        request.setCritical("critical");
         request.setProjectName("project");
-        request.setRecordsAmount(2);
+        request.setRecordsAmount(0);
         request.setPage(1);
 
         List<UseCaseInputsDtoResponse> mockList = List.of(
@@ -125,8 +126,8 @@ class UseCaseReliabilityDaoTest {
 
         assertNotNull(response);
         assertEquals(3, response.getCount());
-        assertEquals(2, response.getPagesAmount());
-        assertEquals(2, response.getData().size());
+        assertEquals(1, response.getPagesAmount());
+        assertEquals(3, response.getData().size());
 
         verify(sqlSessionFactoryMock).openSession();
         verify(sqlSessionMock).getMapper(UseCaseMapper.class);

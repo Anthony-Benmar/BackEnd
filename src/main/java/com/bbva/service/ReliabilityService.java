@@ -91,9 +91,9 @@ public class ReliabilityService {
                 return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "UseCaseId must not be null");
             }
             reliabilityDao.insertTransfer(dto);
-            return new SuccessDataResult<>(null, "Job stock updated successfully");
+            return new SuccessDataResult<>(null, "Transfer insert successfully");
         } catch (Exception e) {
-            log.severe("Error updating job stock: " + e.getMessage());
+            log.severe("Error insert transfer: " + e.getMessage());
             return new ErrorDataResult<>(null, "500", e.getMessage());
         }
     }
