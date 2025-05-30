@@ -13,4 +13,5 @@ public class ProjectStatusEntity {
     private String statusName;
     private Date startDate;
     private String startDateStr;
+    private String piLargeName;
 }

@@ -66,6 +66,7 @@ public interface ProjectMapper {
     @Result(property = "statusId", column = "status_id")
     @Result(property = "statusName", column = "status_name")
     @Result(property = "startDate", column = "start_date")
+    @Result(property = "piLargeName", column = "pi_large_name")
     List<ProjectStatusEntity> getProjectStatusTracking(@Param("projectId") int projectId);
 
     @Select({"SELECT project_id, sdatool_id, project_name, status_type FROM data_project " +
