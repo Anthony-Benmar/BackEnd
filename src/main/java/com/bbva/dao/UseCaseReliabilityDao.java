@@ -57,6 +57,7 @@ public class UseCaseReliabilityDao {
             UseCaseMapper mapper = session.getMapper(UseCaseMapper.class);
             lista = mapper.getFilteredUseCases(
                     dto.getDomainName(),
+                    dto.getCritical(),
                     dto.getProjectName()
             );
         }
