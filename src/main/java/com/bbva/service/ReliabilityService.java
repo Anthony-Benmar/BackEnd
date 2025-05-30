@@ -5,7 +5,6 @@ import com.bbva.core.abstracts.IDataResult;
 import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dao.ReliabilityDao;
-import com.bbva.dto.reliability.request.ExecutionValidationInputsDtoRequest;
 import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
 import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
 import com.bbva.dto.reliability.response.ExecutionValidationDtoResponse;
@@ -66,10 +65,10 @@ public class ReliabilityService {
         }
     }
 
-    public IDataResult<ExecutionValidationAllDtoResponse> getExecutionValidationAll(List<String> jobsNames) {
+    public IDataResult<List<ExecutionValidationAllDtoResponse>> getExecutionValidationAll(List<String> jobsNames) {
         try {
             var result = reliabilityDao.getExecutionValidationAll(jobsNames);
-            return new SuccessDataResult(result);
+            return new SuccessDataResult<>(result);
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
             return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());

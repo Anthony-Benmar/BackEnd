@@ -173,7 +173,7 @@ class ReliabilityServiceTest {
 
         when(reliabilityDaoMock.getExecutionValidationAll(jobNames)).thenReturn(expectedResults);
 
-        IDataResult<ExecutionValidationAllDtoResponse> result = reliabilityService.getExecutionValidationAll(jobNames);
+        IDataResult<List<ExecutionValidationAllDtoResponse>> result = reliabilityService.getExecutionValidationAll(jobNames);
 
         assertTrue(result.success);
         verify(reliabilityDaoMock, times(1)).getExecutionValidationAll(jobNames);

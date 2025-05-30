@@ -2,7 +2,6 @@ package com.bbva.dao;
 
 import com.bbva.database.MyBatisConnectionFactory;
 import com.bbva.database.mappers.ReliabilityMapper;
-import com.bbva.dto.reliability.request.ExecutionValidationInputsDtoRequest;
 import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
 import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
 import com.bbva.dto.reliability.request.TransferInputDtoRequest;
@@ -152,7 +151,7 @@ public class ReliabilityDao {
             return executionValidationAll;
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
-            return null;
+            return List.of();
         }
     }
 

@@ -200,4 +200,29 @@ class ReliabilityDaoTest {
         verify(sqlSessionMock).commit();
         verify(sqlSessionMock).close();
     }
+
+    @Test
+    void testInsertTransferNoJobs() {
+        TransferInputDtoRequest dto = new TransferInputDtoRequest();
+        dto.setTransferInputDtoRequests(null);
+
+        when(sqlSessionFactoryMock.openSession()).thenReturn(sqlSessionMock);
+        when(sqlSessionMock.getMapper(ReliabilityMapper.class)).thenReturn(reliabilityMapperMock);
+
+        reliabilityDao.insertTransfer(dto);
+
+        verify(reliabilityMapperMock).insertTranfer(dto);
+        verify(reliabilityMapperMock, never()).insertJobStock(any());
+        verify(sqlSessionMock).close();
+    }
+
+    @Test
+    void testInsertTransferDatabaseError() {
+        TransferInputDtoRequest dto = new TransferInputDtoRequest();
+        when(sqlSessionFactoryMock.openSession()).thenThrow(new RuntimeException("DB error"));
+
+        reliabilityDao.insertTransfer(dto);
+
+        verify(sqlSessionMock, never()).commit();
+    }
 }
