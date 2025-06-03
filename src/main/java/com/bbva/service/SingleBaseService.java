@@ -27,8 +27,28 @@ public class SingleBaseService {
     }
 
     public IDataResult<SingleBaseReadOnlyDtoResponse> readOnly(SingleBaseReadOnlyDtoRequest request) {
-        // Implementa la lógica de detalle si la necesitas
+        // Implementación para devolver el detalle por ID
+        SingleBaseDataDtoResponse data = singleBaseDao.getSingleBaseById(request.getSingleBaseId());
         SingleBaseReadOnlyDtoResponse response = new SingleBaseReadOnlyDtoResponse();
+        if (data != null) {
+            response.setId(data.getId());
+            response.setFolio(data.getFolio());
+            response.setProjectName(data.getProjectName());
+            response.setUcSourceName(data.getUcSourceName());
+            response.setUcSourceDesc(data.getUcSourceDesc());
+            response.setRegisteredFolioDate(data.getRegisteredFolioDate());
+            response.setStatusFolioType(data.getStatusFolioType());
+            response.setAnalystProjectId(data.getAnalystProjectId());
+            response.setAnalystCaId(data.getAnalystCaId());
+            response.setResolutionSourceType(data.getResolutionSourceType());
+            response.setResolutionSourceDate(data.getResolutionSourceDate());
+            response.setReusedFolioCode(data.getReusedFolioCode());
+            response.setResolutionCommentDesc(data.getResolutionCommentDesc());
+            response.setFolioType(data.getFolioType());
+            response.setOldSourceId(data.getOldSourceId());
+            response.setUcFinalistDesc(data.getUcFinalistDesc());
+            response.setCatalogId(data.getCatalogId());
+        }
         return new SuccessDataResult<>(response);
     }
 

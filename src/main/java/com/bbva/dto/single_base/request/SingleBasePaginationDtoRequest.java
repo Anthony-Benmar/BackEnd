@@ -12,4 +12,5 @@ public class SingleBasePaginationDtoRequest {
     private String tipoFolio;
     private String folio;
     private String registeredFolioDate;
+    private String oldSourceId;
 }

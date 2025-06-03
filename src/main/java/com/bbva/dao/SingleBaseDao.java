@@ -25,7 +25,8 @@ public class SingleBaseDao {
                     dto.getProjectName(),
                     dto.getTipoFolio(),
                     dto.getFolio(),
-                    dto.getRegisteredFolioDate() // <-- Nuevo parámetro añadido
+                    dto.getRegisteredFolioDate(),
+                    dto.getOldSourceId() // <-- Agregado para filtrar por TDS (ID FUENTE)
             );
             if (result == null) {
                 result = List.of();
@@ -46,13 +47,23 @@ public class SingleBaseDao {
                     dto.getProjectName(),
                     dto.getTipoFolio(),
                     dto.getFolio(),
-                    dto.getRegisteredFolioDate() // <-- Nuevo parámetro añadido
+                    dto.getRegisteredFolioDate(),
+                    dto.getOldSourceId() // <-- Agregado para filtrar por TDS (ID FUENTE)
             );
             log.info("SingleBaseDao - Total filtrado: " + totalCount);
         } catch (Exception e) {
             log.log(Level.SEVERE, "Error en getBaseUnicaTotalCount: " + e.getMessage(), e);
         }
         return totalCount;
+    }
+
+    // ----------- AGREGADO: Método para detalle por ID -----------
+    public SingleBaseDataDtoResponse getSingleBaseById(Integer singleBaseId) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            SingleBaseMapper mapper = session.getMapper(SingleBaseMapper.class);
+            return mapper.getSingleBaseById(singleBaseId);
+        }
     }
 
     // Métodos para combos

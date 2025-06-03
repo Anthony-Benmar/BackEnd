@@ -10,7 +10,7 @@ import java.util.List;
 
 public interface SingleBaseMapper {
 
-    @Select("CALL GET_BASE_UNICA(#{limit}, #{offset}, #{projectName}, #{tipoFolio}, #{folio}, #{registeredFolioDate})")
+    @Select("CALL GET_BASE_UNICA(#{limit}, #{offset}, #{projectName}, #{tipoFolio}, #{folio}, #{registeredFolioDate}, #{oldSourceId})")
     @Results({
             @Result(property = "id", column = "id"),
             @Result(property = "folio", column = "folio"),
@@ -36,15 +36,17 @@ public interface SingleBaseMapper {
             @Param("projectName") String projectName,
             @Param("tipoFolio") String tipoFolio,
             @Param("folio") String folio,
-            @Param("registeredFolioDate") String registeredFolioDate // <-- Nuevo parámetro
+            @Param("registeredFolioDate") String registeredFolioDate,
+            @Param("oldSourceId") String oldSourceId // <-- Agregado para filtrar por TDS (ID FUENTE)
     );
 
-    @Select("CALL GET_BASE_UNICA_TOTAL(#{projectName}, #{tipoFolio}, #{folio}, #{registeredFolioDate})")
+    @Select("CALL GET_BASE_UNICA_TOTAL(#{projectName}, #{tipoFolio}, #{folio}, #{registeredFolioDate}, #{oldSourceId})")
     int getBaseUnicaTotalCountWithFilters(
             @Param("projectName") String projectName,
             @Param("tipoFolio") String tipoFolio,
             @Param("folio") String folio,
-            @Param("registeredFolioDate") String registeredFolioDate // <-- Nuevo parámetro
+            @Param("registeredFolioDate") String registeredFolioDate,
+            @Param("oldSourceId") String oldSourceId // <-- Agregado para filtrar por TDS (ID FUENTE)
     );
 
     // Métodos para combos
@@ -62,4 +64,27 @@ public interface SingleBaseMapper {
 
     @Select("SELECT DISTINCT folio_type FROM folios WHERE folio_type IS NOT NULL")
     List<String> getDistinctFolioTypes();
+
+    // ----------- AGREGADO: Método para detalle por ID -----------
+    @Select("SELECT * FROM folios WHERE id = #{singleBaseId}")
+    @Results({
+            @Result(property = "id", column = "id"),
+            @Result(property = "folio", column = "folio"),
+            @Result(property = "projectName", column = "project_name"),
+            @Result(property = "ucSourceName", column = "uc_source_name"),
+            @Result(property = "ucSourceDesc", column = "uc_source_desc"),
+            @Result(property = "registeredFolioDate", column = "registered_folio_date"),
+            @Result(property = "statusFolioType", column = "status_folio_type"),
+            @Result(property = "analystProjectId", column = "analyst_project_id"),
+            @Result(property = "analystCaId", column = "analyst_ca_id"),
+            @Result(property = "resolutionSourceType", column = "resolution_source_type"),
+            @Result(property = "resolutionSourceDate", column = "resolution_source_date"),
+            @Result(property = "reusedFolioCode", column = "reused_folio_code"),
+            @Result(property = "resolutionCommentDesc", column = "resolution_comment_desc"),
+            @Result(property = "folioType", column = "folio_type"),
+            @Result(property = "oldSourceId", column = "old_source_id"),
+            @Result(property = "ucFinalistDesc", column = "uc_finalist_desc"),
+            @Result(property = "catalogId", column = "catalog_id")
+    })
+    SingleBaseDataDtoResponse getSingleBaseById(@Param("singleBaseId") Integer singleBaseId);
 }
