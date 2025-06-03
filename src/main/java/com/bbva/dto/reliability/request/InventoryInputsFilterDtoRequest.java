@@ -14,4 +14,5 @@ public class InventoryInputsFilterDtoRequest {
     private String frequency;
     private String isCritical;
     private String searchByInputOutputTable;
+    private String searchType;
 }
