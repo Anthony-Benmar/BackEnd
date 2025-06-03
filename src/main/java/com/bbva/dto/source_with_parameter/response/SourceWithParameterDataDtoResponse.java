@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class SourceWithParameterDTO {
+public class SourceWithParameterDataDtoResponse {
     private Integer id;
     private String tdsDescription;
     private String tdsSource;

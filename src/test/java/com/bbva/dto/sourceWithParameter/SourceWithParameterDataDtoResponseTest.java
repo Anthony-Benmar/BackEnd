@@ -1,14 +1,14 @@
 package com.bbva.dto.sourceWithParameter;
 
-import com.bbva.dto.source_with_parameter.response.SourceWithParameterDTO;
+import com.bbva.dto.source_with_parameter.response.SourceWithParameterDataDtoResponse;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class SourceWithParameterDTOTest {
+class SourceWithParameterDataDtoResponseTest {
    @Test
    void testGettersAndSetters() {
-      SourceWithParameterDTO dto = new SourceWithParameterDTO();
+      SourceWithParameterDataDtoResponse dto = new SourceWithParameterDataDtoResponse();
 
       // Set values
       dto.setId(1);
@@ -61,7 +61,7 @@ class SourceWithParameterDTOTest {
       assertCriticalFields(dto);
    }
 
-   private void assertBasicFields(SourceWithParameterDTO dto) {
+   private void assertBasicFields(SourceWithParameterDataDtoResponse dto) {
       assertEquals(1, dto.getId());
       assertEquals("Test Description", dto.getTdsDescription());
       assertEquals("Test Source", dto.getTdsSource());
@@ -74,7 +74,7 @@ class SourceWithParameterDTOTest {
       assertEquals("Layer", dto.getDataLakeLayer());
    }
 
-   private void assertTagsAndPaths(SourceWithParameterDTO dto) {
+   private void assertTagsAndPaths(SourceWithParameterDataDtoResponse dto) {
       assertEquals("Tag1", dto.getTag1());
       assertEquals("Tag2", dto.getTag2());
       assertEquals("Tag3", dto.getTag3());
@@ -82,7 +82,7 @@ class SourceWithParameterDTOTest {
       assertEquals("/path/to/raw", dto.getRawPath());
    }
 
-   private void assertCriticalFields(SourceWithParameterDTO dto) {
+   private void assertCriticalFields(SourceWithParameterDataDtoResponse dto) {
       assertEquals("Critical", dto.getCriticalTable());
       assertEquals("Owner", dto.getCriticalTableOwner());
       assertEquals("L1T", dto.getL1t());
