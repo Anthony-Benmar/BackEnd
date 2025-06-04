@@ -46,7 +46,8 @@ public class ReliabilityDao {
                     dto.getJobType(),
                     dto.getFrequency(),
                     dto.getIsCritical(),
-                    dto.getSearchByInputOutputTable()
+                    dto.getSearchByInputOutputTable(),
+                    dto.getSearchType()
             );
 
         }

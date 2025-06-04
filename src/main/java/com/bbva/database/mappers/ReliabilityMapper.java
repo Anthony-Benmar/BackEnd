@@ -19,7 +19,8 @@ public interface ReliabilityMapper {
             "#{jobType}," +
             "#{frequency}," +
             "#{isCritical}," +
-            "#{searchByInputOutputTable})"
+            "#{searchByInputOutputTable}, "+
+            "#{searchType})"
     )
 
     @Result(property = "domainName", column = "domain_name")
@@ -43,7 +44,8 @@ public interface ReliabilityMapper {
                                                               @Param("jobType") String jobType,
                                                               @Param("frequency") String frequency,
                                                               @Param("isCritical") String isCritical,
-                                                              @Param("searchByInputOutputTable") String searchByInputOutputTable
+                                                              @Param("searchByInputOutputTable") String searchByInputOutputTable,
+                                                              @Param("searchType") String searchType
     );
     @Update("CALL SP_UPDATE_INVENTORY_JOB_STOCK(" +
             "#{jobName}," +
