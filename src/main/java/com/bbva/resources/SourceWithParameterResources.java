@@ -29,9 +29,7 @@ public class SourceWithParameterResources {
     public IDataResult<SourceWithParameterPaginatedResponseDTO> getSourceWithParameter(
             @QueryParam("limit") String limit,
             @QueryParam("offset") String offset,
-            @QueryParam("tdsDescription") String tdsDescription,
-            @QueryParam("tdsSource") String tdsSource,
-            @QueryParam("replacementId") String replacementId,
+            @QueryParam("status") String status,
             @QueryParam("originType") String originType,
             @QueryParam("tdsOpinionDebt") String tdsOpinionDebt,
             @QueryParam("effectivenessDebt") String effectivenessDebt
@@ -42,9 +40,7 @@ public class SourceWithParameterResources {
         SourceWithParameterPaginationDtoRequest dto = new SourceWithParameterPaginationDtoRequest();
         dto.setLimit(limitFinal);
         dto.setOffset(offsetFinal);
-        dto.setTdsDescription(tdsDescription);
-        dto.setTdsSource(tdsSource);
-        dto.setReplacementId(replacementId);
+        dto.setStatus(status);
         dto.setOriginType(originType);
         dto.setTdsOpinionDebt(tdsOpinionDebt);
         dto.setEffectivenessDebt(effectivenessDebt);
@@ -59,31 +55,15 @@ public class SourceWithParameterResources {
         LOGGER.info("SingleBase readonly request");
         return sourceWithParameterService.readOnly(request);
     }
+    @GET
+    @Path("/getDistinctStatuses")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<String> getDistinctStatuses() {
+        LOGGER.info("getDistinctStatuses request");
+        return sourceWithParameterService.getDistinctStatuses();
+    }
 
-    @GET
-    @Path("/getDistinctTdsDescriptions")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<String> getDistinctTdsDescriptions() {
-        LOGGER.info("getDistinctTdsDescriptions request");
-        return sourceWithParameterService.getDistinctTdsDescriptions();
-    }
-    @GET
-    @Path("/getDistinctTdsSources")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<String> getDistinctTdsSources() {
-        LOGGER.info("getDistinctTdsSources request");
-        return sourceWithParameterService.getDistinctTdsSources();
-    }
-    @GET
-    @Path("/getDistinctReplacementIds")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<String> getDistinctReplacementIds() {
-        LOGGER.info("getDistinctReplacementIds request");
-        return sourceWithParameterService.getDistinctReplacementIds();
-    }
     @GET
     @Path("/getDistinctOriginTypes")
     @Consumes(MediaType.APPLICATION_JSON)

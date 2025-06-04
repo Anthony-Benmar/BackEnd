@@ -22,9 +22,7 @@ public class SourceWithParameterDao {
             result = mapper.getSourcesWithParameterWithFilters(
                     dto.getLimit(),
                     dto.getOffset(),
-                    dto.getTdsDescription(),
-                    dto.getTdsSource(),
-                    dto.getReplacementId(),
+                    dto.getStatus(),
                     dto.getOriginType(),
                     dto.getTdsOpinionDebt(),
                     dto.getEffectivenessDebt()
@@ -40,9 +38,7 @@ public class SourceWithParameterDao {
         try (SqlSession session = sqlSessionFactory.openSession()) {
             SourceWithParameterMapper mapper = session.getMapper(SourceWithParameterMapper.class);
             totalCount = mapper.getSourcesWithParameterTotalCountWithFilters(
-                    dto.getTdsDescription(),
-                    dto.getTdsSource(),
-                    dto.getReplacementId(),
+                    dto.getStatus(),
                     dto.getOriginType(),
                     dto.getTdsOpinionDebt(),
                     dto.getEffectivenessDebt()
@@ -64,19 +60,9 @@ public class SourceWithParameterDao {
         }
     }
     // Métodos para combos
-    public List<String> getDistinctTdsDescriptions() {
+    public List<String> getDistinctStatuses() {
         try (SqlSession session = MyBatisConnectionFactory.getInstance().openSession()) {
-            return session.getMapper(SourceWithParameterMapper.class).getTdsDescription();
-        }
-    }
-    public List<String> getDistinctTdsSources() {
-        try (SqlSession session = MyBatisConnectionFactory.getInstance().openSession()) {
-            return session.getMapper(SourceWithParameterMapper.class).getTdsSource();
-        }
-    }
-    public List<String> getDistinctReplacementIds() {
-        try (SqlSession session = MyBatisConnectionFactory.getInstance().openSession()) {
-            return session.getMapper(SourceWithParameterMapper.class).getReplacementId();
+            return session.getMapper(SourceWithParameterMapper.class).getStatus();
         }
     }
     public List<String> getDistinctOriginTypes() {

@@ -7,9 +7,7 @@ import lombok.Setter;
 public class SourceWithParameterPaginationDtoRequest {
     private Integer limit;
     private Integer offset;
-    private String TdsDescription;
-    private String TdsSource;
-    private String ReplacementId;
+    private String status;
     private String OriginType;
     private String TdsOpinionDebt;
     private String EffectivenessDebt;

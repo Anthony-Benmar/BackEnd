@@ -74,14 +74,8 @@ public class SourceWithParameterService {
         return new SuccessDataResult<>(response);
     }
     // Métodos para combos
-    public List<String> getDistinctTdsDescriptions() {
-        return sourceWithParameterDao.getDistinctTdsDescriptions();
-    }
-    public List<String> getDistinctTdsSources() {
-        return sourceWithParameterDao.getDistinctTdsSources();
-    }
-    public List<String> getDistinctReplacementIds() {
-        return sourceWithParameterDao.getDistinctReplacementIds();
+    public List<String> getDistinctStatuses() {
+        return sourceWithParameterDao.getDistinctStatuses();
     }
     public List<String> getDistinctOriginTypes() {
         return sourceWithParameterDao.getDistinctOriginTypes();

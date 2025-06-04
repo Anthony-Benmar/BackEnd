@@ -9,7 +9,7 @@ import org.apache.ibatis.annotations.Select;
 import java.util.List;
 
 public interface SourceWithParameterMapper {
-    @Select("CALL GET_SOURCES_WITH_PARAMETER(#{limit}, #{offset}, #{tdsDescription}, #{tdsSource}, #{replacementId}, #{originType}, #{tdsOpinionDebt}, #{effectivenessDebt})")
+    @Select("CALL GET_SOURCES_WITH_PARAMETER(#{limit}, #{offset}, #{status}, #{originType}, #{tdsOpinionDebt}, #{effectivenessDebt})")
     @Results({
             @Result(property = "id", column = "id"),
             @Result(property = "tdsDescription", column = "tds_description"),
@@ -58,31 +58,22 @@ public interface SourceWithParameterMapper {
     List<SourceWithParameterDataDtoResponse> getSourcesWithParameterWithFilters(
             @Param("limit") int limit,
             @Param("offset") int offset,
-            @Param("tdsDescription") String projectName,
-            @Param("tdsSource") String tdsSource,
-            @Param("replacementId") String replacementId,
+            @Param("status") String status,
             @Param("originType") String originType,
             @Param("tdsOpinionDebt") String tdsOpinionDebt,
             @Param("effectivenessDebt") String effectivenessDebt
     );
-    @Select("CALL GET_SOURCES_WITH_PARAMETER_TOTAL(#{tdsDescription}, #{tdsSource}, #{replacementId}," +
+    @Select("CALL GET_SOURCES_WITH_PARAMETER_TOTAL(#{status}," +
             " #{originType}, #{tdsOpinionDebt}, #{effectivenessDebt})")
     int getSourcesWithParameterTotalCountWithFilters(
-            @Param("tdsDescription") String tdsDescription,
-            @Param("tdsSource") String tdsSource,
-            @Param("replacementId") String replacementId,
+            @Param("status") String status,
             @Param("originType") String originType,
             @Param("tdsOpinionDebt") String tdsOpinionDebt,
             @Param("effectivenessDebt") String effectivenessDebt
     );
-    @Select("SELECT DISTINCT tds_description FROM sources WHERE tds_description IS NOT NULL")
-    List<String> getTdsDescription();
 
-    @Select("SELECT DISTINCT tds_source FROM sources WHERE tds_source IS NOT NULL")
-    List<String> getTdsSource();
-
-    @Select("SELECT DISTINCT replacement_id FROM sources WHERE replacement_id IS NOT NULL")
-    List<String> getReplacementId();
+    @Select("SELECT DISTINCT status FROM sources WHERE tds_source IS NOT NULL")
+    List<String> getStatus();
 
     @Select("SELECT DISTINCT origin_type FROM sources WHERE origin_type IS NOT NULL")
     List<String> getOriginType();

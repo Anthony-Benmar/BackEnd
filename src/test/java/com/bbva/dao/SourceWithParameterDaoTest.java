@@ -28,7 +28,7 @@ import static org.mockito.Mockito.*;
 
         List<SourceWithParameterDataDtoResponse> expectedList = List.of(new SourceWithParameterDataDtoResponse());
         when(mockSourceWithParameterMapper.getSourcesWithParameterWithFilters(
-                anyInt(), anyInt(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString()))
+                 anyInt(), Integer.parseInt(anyString()), anyString(), anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(expectedList);
 
         try (MockedStatic<MyBatisConnectionFactory> mockedFactory = mockStatic(MyBatisConnectionFactory.class)) {
