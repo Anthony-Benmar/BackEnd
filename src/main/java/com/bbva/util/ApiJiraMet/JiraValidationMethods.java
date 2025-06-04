@@ -200,14 +200,11 @@ public class JiraValidationMethods {
         List<String> tipoDesarrolloPRs = getDevelopmentTypes();
         if (isValidDevelopmentType(tipoDesarrollo, tipoDesarrolloPRs)) {
             if (cantidadPrsValidas == 1) {
-                boolean hasValidApproval = validateApprovalBySMorFP(teamBackLogId, infoJiraProjectList, smFpRoles);
-                if (hasValidApproval) {
-                    message = "Con PR asociada y aprobada por Scrum Master o Focal Point: " + prValid.keySet();
-                    isValid = true;
-                } else {
-                    message = "Con PR asociada pero sin aprobación de Scrum Master o Focal Point: " + prValid.keySet();
-                    isValid = false;
-                }
+                boolean isApprovedBySMorFP = validateApprovalBySMorFP(teamBackLogId, infoJiraProjectList, smFpRoles);
+                isValid = true;
+                message = isApprovedBySMorFP
+                        ? "Con PR asociada y aprobada por Scrum Master o Focal Point: " + prValid.keySet()
+                        : "Con PR asociada: " + prValid.keySet();
             } else {
                 message = "No se detectó una PR válida asociada.";
                 message += " Atención: Si la PR fue asociada correctamente, falta dar permisos de acceso.";

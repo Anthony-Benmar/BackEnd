@@ -46,7 +46,8 @@ public class ReliabilityDao {
                     dto.getJobType(),
                     dto.getFrequency(),
                     dto.getIsCritical(),
-                    dto.getSearchByInputOutputTable()
+                    dto.getSearchByInputOutputTable(),
+                    dto.getSearchType()
             );
 
         }
@@ -151,7 +152,7 @@ public class ReliabilityDao {
             return executionValidationAll;
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
-            return null;
+            return List.of();
         }
     }
 

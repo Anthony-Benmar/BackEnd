@@ -7,6 +7,10 @@ import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dao.ReliabilityDao;
 import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
 import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
+import com.bbva.dto.reliability.response.ExecutionValidationDtoResponse;
+import com.bbva.dto.reliability.response.InventoryInputsFilterDtoResponse;
+import com.bbva.dto.reliability.response.PendingCustodyJobsDtoResponse;
+import com.bbva.dto.reliability.response.ProjectCustodyInfoDtoResponse;
 import com.bbva.dto.reliability.request.TransferInputDtoRequest;
 import com.bbva.dto.reliability.response.*;
 
@@ -61,10 +65,10 @@ public class ReliabilityService {
         }
     }
 
-    public IDataResult<ExecutionValidationAllDtoResponse> getExecutionValidationAll(List<String> jobsNames) {
+    public IDataResult<List<ExecutionValidationAllDtoResponse>> getExecutionValidationAll(List<String> jobsNames) {
         try {
             var result = reliabilityDao.getExecutionValidationAll(jobsNames);
-            return new SuccessDataResult(result);
+            return new SuccessDataResult<>(result);
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
             return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
@@ -86,9 +90,9 @@ public class ReliabilityService {
                 return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "UseCaseId must not be null");
             }
             reliabilityDao.insertTransfer(dto);
-            return new SuccessDataResult<>(null, "Job stock updated successfully");
+            return new SuccessDataResult<>(null, "Transfer insert successfully");
         } catch (Exception e) {
-            log.severe("Error updating job stock: " + e.getMessage());
+            log.severe("Error insert transfer: " + e.getMessage());
             return new ErrorDataResult<>(null, "500", e.getMessage());
         }
     }

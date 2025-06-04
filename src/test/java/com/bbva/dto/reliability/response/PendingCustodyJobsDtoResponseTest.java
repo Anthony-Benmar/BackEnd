@@ -11,16 +11,18 @@ class PendingCustodyJobsDtoResponseTest {
 
         response.setJobName("JobCustody001");
         response.setJsonName("jobCustody001.json");
-        response.setFrequency("Weekly");
-        response.setJobType("Batch");
-        response.setOriginType("Internal");
-        response.setPhaseType("Development");
+        response.setFrequencyId("Weekly");
+        response.setJobTypeId("Batch");
+        response.setOriginTypeId("Internal");
+        response.setPhaseTypeId("Development");
+        response.setPrincipalJob("Principal Job");
 
         assertEquals("JobCustody001", response.getJobName());
         assertEquals("jobCustody001.json", response.getJsonName());
-        assertEquals("Weekly", response.getFrequency());
-        assertEquals("Batch", response.getJobType());
-        assertEquals("Internal", response.getOriginType());
-        assertEquals("Development", response.getPhaseType());
+        assertEquals("Weekly", response.getFrequencyId());
+        assertEquals("Batch", response.getJobTypeId());
+        assertEquals("Internal", response.getOriginTypeId());
+        assertEquals("Development", response.getPhaseTypeId());
+        assertEquals("Principal Job", response.getPrincipalJob());
     }
 }
