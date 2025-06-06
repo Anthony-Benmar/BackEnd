@@ -8,7 +8,7 @@ public class SourceWithParameterPaginationDtoRequest {
     private Integer limit;
     private Integer offset;
     private String status;
-    private String OriginType;
-    private String TdsOpinionDebt;
-    private String EffectivenessDebt;
+    private String originType;
+    private String tdsOpinionDebt;
+    private String effectivenessDebt;
 }
