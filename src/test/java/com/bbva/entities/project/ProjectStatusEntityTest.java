@@ -15,6 +15,7 @@ class ProjectStatusEntityTest {
         String statusName = "In Progress";
         Date startDate = new Date();
         String startDateStr = "2025-04-04";
+        String piLargeName = "piLargeName";
 
         ProjectStatusEntity entity = new ProjectStatusEntity();
         entity.setProjectId(projectId);
@@ -22,6 +23,7 @@ class ProjectStatusEntityTest {
         entity.setStatusName(statusName);
         entity.setStartDate(startDate);
         entity.setStartDateStr(startDateStr);
+        entity.setPiLargeName(piLargeName);
 
         assertNotNull(entity);
         assertEquals(projectId, entity.getProjectId());
@@ -29,6 +31,7 @@ class ProjectStatusEntityTest {
         assertEquals(statusName, entity.getStatusName());
         assertEquals(startDate, entity.getStartDate());
         assertEquals(startDateStr, entity.getStartDateStr());
+        assertEquals(piLargeName, entity.getPiLargeName());
     }
 
     @Test
