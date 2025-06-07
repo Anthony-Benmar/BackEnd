@@ -31,26 +31,11 @@ public class ReliabilityDao {
     }
 
     public InventoryInputsFilterDtoResponse inventoryInputsFilter(InventoryInputsFilterDtoRequest dto) {
-        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
-        List<InventoryInputsDtoResponse> lista;
-
+        List<InventoryInputsDtoResponse> lista = listinventory(dto);
         Integer recordsCount = 0;
         Integer pagesAmount = 0;
 
         var response = new InventoryInputsFilterDtoResponse();
-        try (SqlSession session = sqlSessionFactory.openSession()) {
-            ReliabilityMapper reliabilityMapper = session.getMapper(ReliabilityMapper.class);
-            lista = reliabilityMapper.inventoryInputsFilter(
-                    dto.getDomainName(),
-                    dto.getUseCase(),
-                    dto.getJobType(),
-                    dto.getFrequency(),
-                    dto.getIsCritical(),
-                    dto.getSearchByInputOutputTable(),
-                    dto.getSearchType()
-            );
-
-        }
 
         recordsCount = (!lista.isEmpty()) ? lista.size() : 0;
         pagesAmount = dto.getRecordsAmount() > 0 ? (int) Math.ceil(recordsCount.floatValue() / dto.getRecordsAmount().floatValue()) : 1;
@@ -165,6 +150,27 @@ public class ReliabilityDao {
             session.commit();
         }catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
+        }
+    }
+
+    public List<InventoryInputsDtoResponse> listinventory(InventoryInputsFilterDtoRequest dto) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        List<InventoryInputsDtoResponse> lista;
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ReliabilityMapper reliabilityMapper = session.getMapper(ReliabilityMapper.class);
+            lista = reliabilityMapper.inventoryInputsFilter(
+                    dto.getDomainName(),
+                    dto.getUseCase(),
+                    dto.getJobType(),
+                    dto.getFrequency(),
+                    dto.getIsCritical(),
+                    dto.getSearchByInputOutputTable(),
+                    dto.getSearchType()
+            );
+            return lista;
+        }catch (Exception e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            return List.of();
         }
     }
 }
