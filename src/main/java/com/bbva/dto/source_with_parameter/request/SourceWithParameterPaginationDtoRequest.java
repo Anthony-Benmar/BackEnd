@@ -7,6 +7,10 @@ import lombok.Setter;
 public class SourceWithParameterPaginationDtoRequest {
     private Integer limit;
     private Integer offset;
+    private String id;
+    private String tdsSource;
+    private String uuaaMaster;
+    private String modelOwner;
     private String status;
     private String originType;
     private String tdsOpinionDebt;

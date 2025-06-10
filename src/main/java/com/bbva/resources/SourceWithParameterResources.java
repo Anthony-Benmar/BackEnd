@@ -29,6 +29,10 @@ public class SourceWithParameterResources {
     public IDataResult<SourceWithParameterPaginatedResponseDTO> getSourceWithParameter(
             @QueryParam("limit") String limit,
             @QueryParam("offset") String offset,
+            @QueryParam("id") String id,
+            @QueryParam("tdsSource") String tdsSource,
+            @QueryParam("uuaaMaster") String uuaaMaster,
+            @QueryParam("modelOwner") String modelOwner,
             @QueryParam("status") String status,
             @QueryParam("originType") String originType,
             @QueryParam("tdsOpinionDebt") String tdsOpinionDebt,
@@ -40,6 +44,10 @@ public class SourceWithParameterResources {
         SourceWithParameterPaginationDtoRequest dto = new SourceWithParameterPaginationDtoRequest();
         dto.setLimit(limitFinal);
         dto.setOffset(offsetFinal);
+        dto.setId(id);
+        dto.setTdsSource(tdsSource);
+        dto.setUuaaMaster(uuaaMaster);
+        dto.setModelOwner(modelOwner);
         dto.setStatus(status);
         dto.setOriginType(originType);
         dto.setTdsOpinionDebt(tdsOpinionDebt);

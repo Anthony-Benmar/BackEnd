@@ -22,6 +22,10 @@ public class SourceWithParameterDao {
             result = mapper.getSourcesWithParameterWithFilters(
                     dto.getLimit(),
                     dto.getOffset(),
+                    dto.getId(),
+                    dto.getTdsSource(),
+                    dto.getUuaaMaster(),
+                    dto.getModelOwner(),
                     dto.getStatus(),
                     dto.getOriginType(),
                     dto.getTdsOpinionDebt(),
@@ -38,6 +42,10 @@ public class SourceWithParameterDao {
         try (SqlSession session = sqlSessionFactory.openSession()) {
             SourceWithParameterMapper mapper = session.getMapper(SourceWithParameterMapper.class);
             totalCount = mapper.getSourcesWithParameterTotalCountWithFilters(
+                    dto.getId(),
+                    dto.getTdsSource(),
+                    dto.getUuaaMaster(),
+                    dto.getModelOwner(),
                     dto.getStatus(),
                     dto.getOriginType(),
                     dto.getTdsOpinionDebt(),

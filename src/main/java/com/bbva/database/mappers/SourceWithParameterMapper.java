@@ -9,7 +9,8 @@ import org.apache.ibatis.annotations.Select;
 import java.util.List;
 
 public interface SourceWithParameterMapper {
-    @Select("CALL GET_SOURCES_WITH_PARAMETER(#{limit}, #{offset}, #{status}, #{originType}, #{tdsOpinionDebt}, #{effectivenessDebt})")
+    @Select("CALL GET_SOURCES_WITH_PARAMETER(#{limit}, #{offset}, #{id}, #{tdsSource}, #{uuaaMaster}, #{modelOwner}," +
+            " #{status}, #{originType}, #{tdsOpinionDebt}, #{effectivenessDebt})")
     @Results({
             @Result(property = "id", column = "id"),
             @Result(property = "tdsDescription", column = "tds_description"),
@@ -58,14 +59,22 @@ public interface SourceWithParameterMapper {
     List<SourceWithParameterDataDtoResponse> getSourcesWithParameterWithFilters(
             @Param("limit") int limit,
             @Param("offset") int offset,
+            @Param("id") String id,
+            @Param("tdsSource") String tdsSource,
+            @Param("uuaaMaster") String uuaaMaster,
+            @Param("modelOwner") String modelOwner,
             @Param("status") String status,
             @Param("originType") String originType,
             @Param("tdsOpinionDebt") String tdsOpinionDebt,
             @Param("effectivenessDebt") String effectivenessDebt
     );
-    @Select("CALL GET_SOURCES_WITH_PARAMETER_TOTAL(#{status}," +
+    @Select("CALL GET_SOURCES_WITH_PARAMETER_TOTAL(#{id}, #{tdsSource}, #{uuaaMaster}, #{modelOwner}, #{status}," +
             " #{originType}, #{tdsOpinionDebt}, #{effectivenessDebt})")
     int getSourcesWithParameterTotalCountWithFilters(
+            @Param("id") String id,
+            @Param("tdsSource") String tdsSource,
+            @Param("uuaaMaster") String uuaaMaster,
+            @Param("modelOwner") String modelOwner,
             @Param("status") String status,
             @Param("originType") String originType,
             @Param("tdsOpinionDebt") String tdsOpinionDebt,
