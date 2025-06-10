@@ -1,6 +1,5 @@
 package com.bbva.dto.efectivity;
 
-import com.bbva.dto.efectivity.response.EfectivityEntityResponseDTO;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

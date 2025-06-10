@@ -1,11 +1,12 @@
-package com.bbva.dto.efectivity.response;
+package com.bbva.dto.efectivity_base.response;
 
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class EfectivityEntityResponseDTO {
+public class EfectivityBaseDataDtoResponse {
+    private String id;
     private String ticketCode;
     private String sprintDate;
     private String sdatoolProject;
@@ -17,5 +18,5 @@ public class EfectivityEntityResponseDTO {
     private String registrationResponsible;
     private String buildObservations;
     private String registrationObservations;
-    private Integer id;
+    private String sourceTable;
 }

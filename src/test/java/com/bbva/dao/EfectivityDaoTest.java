@@ -1,8 +1,6 @@
 package com.bbva.dao;
 
 import com.bbva.database.MyBatisConnectionFactory;
-import com.bbva.database.mappers.EfectivityMapper;
-import com.bbva.dto.efectivity.response.EfectivityEntityResponseDTO;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.junit.jupiter.api.Test;
