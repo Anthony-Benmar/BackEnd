@@ -11,6 +11,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 
+
 @Path("/batch")
 @Produces(MediaType.APPLICATION_JSON)
 public class BatchResources {
