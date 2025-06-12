@@ -4,12 +4,14 @@ import com.bbva.database.MyBatisConnectionFactory;
 import com.bbva.database.mappers.ReliabilityMapper;
 import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
 import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
+import com.bbva.dto.reliability.request.TransferInputDtoRequest;
 import com.bbva.dto.reliability.response.*;
 import com.bbva.util.JSONUtils;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -29,25 +31,11 @@ public class ReliabilityDao {
     }
 
     public InventoryInputsFilterDtoResponse inventoryInputsFilter(InventoryInputsFilterDtoRequest dto) {
-        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
-        List<InventoryInputsDtoResponse> lista;
-
+        List<InventoryInputsDtoResponse> lista = listinventory(dto);
         Integer recordsCount = 0;
         Integer pagesAmount = 0;
 
         var response = new InventoryInputsFilterDtoResponse();
-        try (SqlSession session = sqlSessionFactory.openSession()) {
-            ReliabilityMapper reliabilityMapper = session.getMapper(ReliabilityMapper.class);
-            lista = reliabilityMapper.inventoryInputsFilter(
-                    dto.getDomainName(),
-                    dto.getUseCase(),
-                    dto.getJobType(),
-                    dto.getFrequency(),
-                    dto.getIsCritical(),
-                    dto.getSearchByInputOutputTable()
-            );
-
-        }
 
         recordsCount = (!lista.isEmpty()) ? lista.size() : 0;
         pagesAmount = dto.getRecordsAmount() > 0 ? (int) Math.ceil(recordsCount.floatValue() / dto.getRecordsAmount().floatValue()) : 1;
@@ -129,6 +117,60 @@ public class ReliabilityDao {
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
             return null;
+        }
+    }
+
+    public List<ExecutionValidationAllDtoResponse> getExecutionValidationAll(List<String> jobsNames) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        List<ExecutionValidationAllDtoResponse> executionValidationAll = new ArrayList<>();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ReliabilityMapper mapper = session.getMapper(ReliabilityMapper.class);
+            jobsNames.forEach(jobName -> {
+                ExecutionValidationDtoResponse executionValidation = mapper.getExecutionValidation(jobName);
+                executionValidationAll.add(ExecutionValidationAllDtoResponse.builder()
+                                .jobName(jobName)
+                                .validation(executionValidation.getValidation())
+                        .build());
+            });
+
+
+            return executionValidationAll;
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            return List.of();
+        }
+    }
+
+    public void insertTransfer(TransferInputDtoRequest dto) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ReliabilityMapper reliabilityMapper = session.getMapper(ReliabilityMapper.class);
+            reliabilityMapper.insertTranfer(dto);
+            dto.getTransferInputDtoRequests().forEach(reliabilityMapper::insertJobStock);
+            session.commit();
+        }catch (Exception e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+        }
+    }
+
+    public List<InventoryInputsDtoResponse> listinventory(InventoryInputsFilterDtoRequest dto) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        List<InventoryInputsDtoResponse> lista;
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ReliabilityMapper reliabilityMapper = session.getMapper(ReliabilityMapper.class);
+            lista = reliabilityMapper.inventoryInputsFilter(
+                    dto.getDomainName(),
+                    dto.getUseCase(),
+                    dto.getJobType(),
+                    dto.getFrequency(),
+                    dto.getIsCritical(),
+                    dto.getSearchByInputOutputTable(),
+                    dto.getSearchType()
+            );
+            return lista;
+        }catch (Exception e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            return List.of();
         }
     }
 }

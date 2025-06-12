@@ -8,7 +8,7 @@ import lombok.Setter;
 public class UseCaseInputsFilterDtoRequest {
     private Integer page;
     private Integer recordsAmount;
-
+    private String critical;
     private String domainName;
     private String projectName;
 }

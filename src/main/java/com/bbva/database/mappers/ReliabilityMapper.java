@@ -1,6 +1,8 @@
 package com.bbva.database.mappers;
 
 import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
+import com.bbva.dto.reliability.request.JobTransferInputDtoRequest;
+import com.bbva.dto.reliability.request.TransferInputDtoRequest;
 import com.bbva.dto.reliability.response.ExecutionValidationDtoResponse;
 import com.bbva.dto.reliability.response.InventoryInputsDtoResponse;
 import org.apache.ibatis.annotations.*;
@@ -17,7 +19,8 @@ public interface ReliabilityMapper {
             "#{jobType}," +
             "#{frequency}," +
             "#{isCritical}," +
-            "#{searchByInputOutputTable})"
+            "#{searchByInputOutputTable}, "+
+            "#{searchType})"
     )
 
     @Result(property = "domainName", column = "domain_name")
@@ -41,13 +44,14 @@ public interface ReliabilityMapper {
                                                               @Param("jobType") String jobType,
                                                               @Param("frequency") String frequency,
                                                               @Param("isCritical") String isCritical,
-                                                              @Param("searchByInputOutputTable") String searchByInputOutputTable
+                                                              @Param("searchByInputOutputTable") String searchByInputOutputTable,
+                                                              @Param("searchType") String searchType
     );
     @Update("CALL SP_UPDATE_INVENTORY_JOB_STOCK(" +
             "#{jobName}," +
             "#{componentName}," +
             "#{frequencyId}," +
-            "#{inputPaths}," +
+            "#{inputPath}," +
             "#{outputPath}," +
             "#{jobTypeId}," +
             "#{useCaseId}," +
@@ -59,21 +63,57 @@ public interface ReliabilityMapper {
 
     @Result(property = "jobName", column = "job_name")
     @Result(property = "jsonName", column = "json_name")
-    @Result(property = "frequency", column = "frequency")
-    @Result(property = "jobType", column = "job_type")
-    @Result(property = "originType", column = "origin_type")
-    @Result(property = "phaseType", column = "phase_type")
+    @Result(property = "frequencyId", column = "frequency_id")
+    @Result(property = "jobTypeId", column = "job_type_id")
+    @Result(property = "originTypeId", column = "origin_type_id")
+    @Result(property = "phaseTypeId", column = "phase_type_id")
+    @Result(property = "principalJob", column = "principal_job")
     List<PendingCustodyJobsDtoResponse> getPendingCustodyJobs(@Param("sdatoolId") String sdatoolId);
 
     @Select("CALL SP_GET_PROJECT_CUSTODY_INFO(#{sdatoolId})")
 
     @Result(property = "useCase", column = "use_case")
+    @Result(property = "useCaseId", column = "use_case_id")
+    @Result(property = "domainId", column = "domain_id")
     @Result(property = "pack", column = "pack")
     @Result(property = "domainName", column = "domain_name")
+    @Result(property = "productOwnerUserId", column = "participant_id")
     @Result(property = "productOwner", column = "product_owner")
     List<ProjectCustodyInfoDtoResponse> getProjectCustodyInfo(@Param("sdatoolId") String sdatoolId);
 
     @Select("CALL SP_GET_EXECUTION_VALIDATION(#{jobName})")
     @Result(property = "validation", column = "validacion")
     ExecutionValidationDtoResponse getExecutionValidation(@Param("jobName") String jobName);
+
+    @Update("CALL SP_INSERT_RELIABILITY_PACK(" +
+            "#{pack}," +
+            "#{domainId}," +
+            "#{productOwnerUserId}," +
+            "#{useCaseId}," +
+            "#{projectId}," +
+            "#{creatorUserId}," +
+            "#{pdfLink}," +
+            "#{jobCount})")
+    void insertTranfer(TransferInputDtoRequest dto);
+
+    @Insert("CALL SP_INSERT_JOB_STOCK(" +
+            "#{jobTypeId}," +
+            "#{jobName}," +
+            "#{componentName}," +
+            "#{frequencyId}," +
+            "#{bitbucketUrl}," +
+            "#{inputPaths}," +
+            "#{outputPath}," +
+            "#{responsible}," +
+            "#{comments}," +
+            "#{jobPhaseId}," +
+            "#{originTypeId}," +
+            "#{useCaseId}," +
+            "#{isCritical}," +
+            "#{domainId}," +
+            "#{pack}," +
+            "#{statusId}" +
+            ")")
+    void insertJobStock(JobTransferInputDtoRequest dto);
+
 }
