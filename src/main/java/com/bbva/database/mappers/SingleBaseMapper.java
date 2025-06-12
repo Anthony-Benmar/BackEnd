@@ -10,7 +10,7 @@ import java.util.List;
 
 public interface SingleBaseMapper {
 
-    @Select("CALL GET_BASE_UNICA(#{limit}, #{offset}, #{projectName}, #{tipoFolio}, #{folio}, #{registeredFolioDate}, #{oldSourceId})")
+    @Select("CALL GET_BASE_UNICA(#{limit}, #{offset}, #{id}, #{projectName}, #{tipoFolio}, #{folio}, #{registeredFolioDate}, #{oldSourceId})")
     @Results({
             @Result(property = "id", column = "id"),
             @Result(property = "folio", column = "folio"),
@@ -33,6 +33,7 @@ public interface SingleBaseMapper {
     List<SingleBaseDataDtoResponse> getBaseUnicaDataWithFilters(
             @Param("limit") int limit,
             @Param("offset") int offset,
+            @Param("id") Integer id,
             @Param("projectName") String projectName,
             @Param("tipoFolio") String tipoFolio,
             @Param("folio") String folio,
@@ -40,8 +41,9 @@ public interface SingleBaseMapper {
             @Param("oldSourceId") String oldSourceId // <-- Agregado para filtrar por TDS (ID FUENTE)
     );
 
-    @Select("CALL GET_BASE_UNICA_TOTAL(#{projectName}, #{tipoFolio}, #{folio}, #{registeredFolioDate}, #{oldSourceId})")
+    @Select("CALL GET_BASE_UNICA_TOTAL(#{id}, #{projectName}, #{tipoFolio}, #{folio}, #{registeredFolioDate}, #{oldSourceId})")
     int getBaseUnicaTotalCountWithFilters(
+            @Param("id") Integer id,
             @Param("projectName") String projectName,
             @Param("tipoFolio") String tipoFolio,
             @Param("folio") String folio,

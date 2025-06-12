@@ -27,6 +27,7 @@ public class SingleBaseResources {
     public IDataResult<SingleBasePaginatedResponseDTO> getBaseUnicaWithSource(
             @QueryParam("limit") String limit,
             @QueryParam("offset") String offset,
+            @QueryParam("id") Integer id,
             @QueryParam("projectName") String projectName,
             @QueryParam("tipoFolio") String tipoFolio,
             @QueryParam("folio") String folio,
@@ -39,6 +40,7 @@ public class SingleBaseResources {
         SingleBasePaginationDtoRequest dto = new SingleBasePaginationDtoRequest();
         dto.setLimit(limitFinal);
         dto.setOffset(offsetFinal);
+        dto.setId(id);
         dto.setProjectName(projectName);
         dto.setTipoFolio(tipoFolio);
         dto.setFolio(folio);

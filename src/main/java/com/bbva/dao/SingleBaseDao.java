@@ -22,6 +22,7 @@ public class SingleBaseDao {
             result = mapper.getBaseUnicaDataWithFilters(
                     dto.getLimit(),
                     dto.getOffset(),
+                    dto.getId(),
                     dto.getProjectName(),
                     dto.getTipoFolio(),
                     dto.getFolio(),
@@ -44,6 +45,7 @@ public class SingleBaseDao {
         try (SqlSession session = sqlSessionFactory.openSession()) {
             SingleBaseMapper mapper = session.getMapper(SingleBaseMapper.class);
             totalCount = mapper.getBaseUnicaTotalCountWithFilters(
+                    dto.getId(),
                     dto.getProjectName(),
                     dto.getTipoFolio(),
                     dto.getFolio(),
