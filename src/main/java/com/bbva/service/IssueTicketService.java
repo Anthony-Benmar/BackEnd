@@ -6,15 +6,21 @@ import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dao.IssueTicketDao;
 import com.bbva.dto.issueticket.request.WorkOrderDtoRequest;
+import com.bbva.dto.issueticket.request.WorkOrderDtoRequest2;
 import com.bbva.dto.issueticket.request.authJiraDtoRequest;
 import com.bbva.dto.issueticket.response.issueTicketDtoResponse;
 import com.bbva.dto.issueticket.request.sourceTicketDtoRequest;
 import com.bbva.dto.issueticket.response.sourceTicketDtoResponse;
 import com.bbva.dto.jira.request.IssueBulkDto;
 import com.bbva.dto.jira.request.IssueDto;
+import com.bbva.dto.jira.request.IssueFeatureDto;
+import com.bbva.dto.jira.request.IssueUpdate;
 import com.bbva.dto.jira.response.IssueBulkResponse;
+import com.bbva.dto.jira.response.IssueResponse;
 import com.bbva.entities.feature.JiraFeatureEntity;
+import com.bbva.entities.feature.JiraFeatureEntity2;
 import com.bbva.entities.issueticket.WorkOrder;
+import com.bbva.entities.issueticket.WorkOrder2;
 import com.bbva.entities.issueticket.WorkOrderDetail;
 import com.bbva.util.GsonConfig;
 import com.google.gson.Gson;
@@ -124,6 +130,136 @@ public class IssueTicketService {
         }
         return new SuccessDataResult(null);
     }
+    public IDataResult insert2(List<WorkOrderDtoRequest2> dtoList) throws Exception {
+        List<Map<String, Object>> successFeatures = new ArrayList<>();
+        List<String> failedFeatures = new ArrayList<>();
+
+        for (WorkOrderDtoRequest2 dto : dtoList) {
+            try {
+                // Validaciones...
+                if(dto.workOrderDetail==null || dto.workOrderDetail.isEmpty()){
+                    failedFeatures.add(dto.feature + ": Sin templates seleccionados");
+                    continue;
+                }
+
+                var workOrderRequest = new WorkOrder2(0, dto.feature, dto.folio, dto.boardId, dto.projectId,
+                        dto.sourceId, dto.sourceName, dto.flowType, dto.faseId, dto.sprintEst,
+                        1, 1, dto.registerUserId, new Date(), null, 0);
+
+                var countWorkOrder = issueTicketDao.findRecordWorkOrder2(workOrderRequest);
+                if (countWorkOrder > 0) {
+                    failedFeatures.add(dto.feature + ": Ya existe registro duplicado");
+                    continue;
+                }
+
+                // CREAR FEATURE DESDE CERO (Epic en Jira y guardar en BD)
+                JiraFeatureEntity2 completedFeature = createJiraFeature(dto, workOrderRequest);
+
+                // CREAR STORIES CON FEATURE ANTERIOR - REUTILIZADO
+                var workOrderDetailsRequest = dto.workOrderDetail.stream()
+                        .map(s -> new WorkOrderDetail(0, 0, s.templateId, "", "ready", dto.registerUserId, new Date(), null))
+                        .collect(Collectors.toList());
+
+                var issuesRequests = issueTicketDao.getDataRequestIssueJira4(
+                        workOrderRequest, workOrderDetailsRequest, completedFeature);
+
+                createTicketJira3(dto, issuesRequests, workOrderDetailsRequest);
+
+                workOrderDetailsRequest = workOrderDetailsRequest.stream()
+                        .filter(w -> !StringUtils.isNullOrEmpty(w.issue_code))
+                        .collect(Collectors.toList());
+
+                issueTicketDao.insertWorkOrderAndDetail2(workOrderRequest, workOrderDetailsRequest);
+
+                // RESPUESTA CON DATOS COMPLETOS DEL FEATURE
+                successFeatures.add(Map.of(
+                        "featureName", completedFeature.featureName,
+                        "featureKey", completedFeature.featureKey,
+                        "storiesCreated", workOrderDetailsRequest.size()
+                ));
+
+            } catch (Exception ex) {
+                failedFeatures.add(dto.feature + ": " + ex.getMessage());
+            }
+        }
+
+        return new SuccessDataResult(Map.of(
+                "success", successFeatures,
+                "failed", failedFeatures
+        ));
+    }
+    private JiraFeatureEntity2 createJiraFeature(WorkOrderDtoRequest2 objAuth, WorkOrder2 workOrder) throws Exception {
+        //Preparar Feature para la petición al api de jira (revisar los endpoints)
+        var tempFeature = new JiraFeatureEntity2(0, "", workOrder.feature, "", "", objAuth.jiraProjectId, objAuth.jiraProjectName);
+
+        // Obtener petición  para Jiraaa
+        var featureRequest = issueTicketDao.getDataRequestFeatureJira(workOrder, tempFeature);
+
+        //Crear Feature en Jira
+        IssueResponse jiraResponse = callJiraCreateFeatureSingle(objAuth, featureRequest);
+
+        //MAP PARA RESPONSEE ---------------
+        JiraFeatureEntity2 completedFeature = mapJiraResponseToFeature(jiraResponse, objAuth, workOrder);
+
+        //guardar en BD----(OBSERVADE)
+        JiraFeatureEntity2 savedFeature = issueTicketDao.insertFeatureInDatabase(completedFeature);
+
+        return savedFeature;
+    }
+
+    private JiraFeatureEntity2 mapJiraResponseToFeature(IssueResponse jiraResponse, WorkOrderDtoRequest2 objAuth, WorkOrder2 workOrder) {
+        JiraFeatureEntity2 feature = new JiraFeatureEntity2();
+
+        //respuesta de Jira
+        feature.featureKey = jiraResponse.key;
+        feature.featureName = jiraResponse.fields != null ? jiraResponse.fields.summary : workOrder.feature;
+
+        // request
+        feature.jiraProjectId = objAuth.jiraProjectId;
+        feature.jiraProjectName = objAuth.jiraProjectName;
+        feature.sdatoolId = String.valueOf(workOrder.project_id);
+
+        //
+        feature.teamBacklog = issueTicketDao.getTeamBacklogByBoardId(workOrder.board_id);
+
+        return feature;
+    }
+
+    //REUTILIZADO (REVISAR)
+    private IssueResponse callJiraCreateFeatureSingle(WorkOrderDtoRequest2 objAuth, IssueFeatureDto featureRequest) throws Exception {
+        Gson gson = GsonConfig.createGson();
+        String jsonString = gson.toJson(featureRequest);
+
+        HttpPost httpPost = new HttpPost(URL_API_JIRA  + "?expand=fields");
+        //HttpPost httpPost = new HttpPost(URL_API_JIRA_ISSUE + "?expand=fields");
+        StringEntity requestEntity = new StringEntity(jsonString, "UTF-8");
+        httpPost.setEntity(requestEntity);
+        httpPost.setHeader("Content-Type", "application/json");
+
+        Integer responseCode = 0;
+        String responseBodyString = "";
+        HttpEntity entity = null;
+
+        try(CloseableHttpClient httpclient = HttpClients.createDefault()){
+            getBasicSession(objAuth.username, objAuth.token, httpclient);
+            httpPost.setHeader("Cookie", createCookieHeader(cookieStore.getCookies()));
+            CloseableHttpResponse response = httpclient.execute(httpPost);
+            responseCode = response.getStatusLine().getStatusCode();
+            entity = response.getEntity();
+            responseBodyString = EntityUtils.toString(entity);
+            response.close();
+        }
+
+        if (responseCode.equals(302)) {
+            throw new HandledException(responseCode.toString(), "Token Expirado");
+        }
+        if (responseCode >= 400 && responseCode <= 500) {
+            throw new HandledException(responseCode.toString(), "Error al crear Feature en Jira: " + responseBodyString);
+        }
+
+        var issueCreated = gson.fromJson(responseBodyString, IssueResponse.class);
+        return issueCreated;
+    }
 
     public IDataResult update(WorkOrderDtoRequest dto)
             throws Exception {
@@ -217,6 +353,14 @@ public class IssueTicketService {
             workOrderDetail.get(i).setIssue_code(issuesGenerates.issues.get(i).getKey());
         }
     }
+    private void createTicketJira3(WorkOrderDtoRequest2 objAuth, IssueBulkDto issuesRequests, List<WorkOrderDetail> workOrderDetail)
+            throws Exception
+    {
+        var issuesGenerates = PostResponseAsync4(objAuth, issuesRequests);
+        for (int i = 0; i < issuesGenerates.issues.size() && i < workOrderDetail.size(); i++) {
+            workOrderDetail.get(i).setIssue_code(issuesGenerates.issues.get(i).getKey());
+        }
+    }
 
     private List<String> updateTicketJira(WorkOrderDtoRequest dto, WorkOrder workOrder, List<WorkOrderDetail> workOrderDetail)
             throws Exception
@@ -243,6 +387,42 @@ public class IssueTicketService {
     }
 
     private IssueBulkResponse PostResponseAsync3(WorkOrderDtoRequest objAuth, IssueBulkDto issueJira)
+            throws Exception
+    {
+        // NOTA: el api bulk de jira permite hasta 50 issues por petición
+        //var gson = new GsonBuilder().setPrettyPrinting().create();
+        Gson gson = GsonConfig.createGson();
+        String jsonString = gson.toJson(issueJira);
+
+        HttpPost httpPost = new HttpPost(URL_API_JIRA_BULK);
+        StringEntity requestEntity = new StringEntity(jsonString, "UTF-8");
+        httpPost.setEntity(requestEntity);
+        httpPost.setHeader("Content-Type", "application/json");
+
+        Integer responseCode =0;
+        String responseBodyString = "";
+        HttpEntity entity = null;
+        try(CloseableHttpClient httpclient = HttpClients.createDefault()){
+            getBasicSession(objAuth.username, objAuth.token, httpclient);
+            httpPost.setHeader("Cookie", createCookieHeader(cookieStore.getCookies()));
+            CloseableHttpResponse response = httpclient.execute(httpPost);
+            responseCode = response.getStatusLine().getStatusCode();
+            entity = response.getEntity();
+            responseBodyString = EntityUtils.toString(entity);
+            response.close();
+        }
+
+        if (responseCode.equals(302)) {
+            throw new HandledException(responseCode.toString(), "Token Expirado");
+        }
+        if (responseCode>=400 && responseCode<=500) {
+            throw new HandledException(responseCode.toString(), "Error al intentar generar tickets, revise los datos ingresados");
+        }
+        var issueCreated = gson.fromJson(responseBodyString, IssueBulkResponse.class);
+        return issueCreated;
+    }
+
+    private IssueBulkResponse PostResponseAsync4(WorkOrderDtoRequest2 objAuth, IssueBulkDto issueJira)
             throws Exception
     {
         // NOTA: el api bulk de jira permite hasta 50 issues por petición

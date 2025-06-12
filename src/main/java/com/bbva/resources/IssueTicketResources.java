@@ -1,7 +1,9 @@
 package com.bbva.resources;
 
 import com.bbva.core.abstracts.IDataResult;
+import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dto.issueticket.request.WorkOrderDtoRequest;
+import com.bbva.dto.issueticket.request.WorkOrderDtoRequest2;
 import com.bbva.dto.issueticket.request.sourceTicketDtoRequest;
 import com.bbva.dto.issueticket.response.sourceTicketDtoResponse;
 import com.bbva.dto.issueticket.response.issueTicketDtoResponse;
@@ -9,20 +11,33 @@ import com.bbva.service.IssueTicketService;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import java.util.ArrayList;
+import java.util.List;
 
 @Path("/issue_ticket")
 @Produces(MediaType.APPLICATION_JSON)
 public class IssueTicketResources {
     private IssueTicketService issueTicketService = new IssueTicketService();
 
+//    @POST
+//    @Path("/insert")
+//    @Consumes(MediaType.APPLICATION_JSON)
+//    @Produces(MediaType.APPLICATION_JSON)
+//    public IDataResult insert(WorkOrderDtoRequest dto)
+//            throws Exception
+//    {
+//        return issueTicketService.insert(dto);
+//    }
+
     @POST
-    @Path("/insert")
+    @Path("/insert2")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public IDataResult insert(WorkOrderDtoRequest dto)
-            throws Exception
-    {
-        return issueTicketService.insert(dto);
+    public IDataResult insertFeatures(List<WorkOrderDtoRequest2> dtoList)
+            throws Exception {
+        //return issueTicketService.insertFeatures(dtoList);
+        System.out.println("holass");
+        return issueTicketService.insert2(dtoList);
     }
 
     @PUT
