@@ -1,7 +1,6 @@
 package com.bbva.dao;
 
 import com.bbva.database.MyBatisConnectionFactory;
-import com.bbva.database.mappers.ExceptionsMapper;
 import com.bbva.dto.exception.response.ExceptionEntityResponseDTO;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
