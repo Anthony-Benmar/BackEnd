@@ -54,6 +54,18 @@ public class EfectivityBaseDao {
         }
         return totalCount;
     }
+    public EfectivityBaseDataDtoResponse getBaseEfectivityById(String singleId) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        EfectivityBaseDataDtoResponse result = null;
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            EfectivityBaseMapper mapper = session.getMapper(EfectivityBaseMapper.class);
+            result = mapper.getBaseEfectivityById(singleId);
+            log.info("EfectivityBaseDao - Registro obtenido por ID: " + (result != null ? result.getId() : "null"));
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "Error en getBaseEfectivityById: " + e.getMessage(), e);
+        }
+        return result;
+    }
 
     // Métodos para combos
     public List<String> getDistinctSdatoolProjects() {

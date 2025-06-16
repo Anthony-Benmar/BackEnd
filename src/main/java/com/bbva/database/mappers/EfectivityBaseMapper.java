@@ -60,4 +60,23 @@ public interface EfectivityBaseMapper {
             "UNION SELECT DISTINCT registration_observations FROM rulings WHERE registration_observations IS NOT NULL " +
             "UNION SELECT DISTINCT registration_observations FROM reuse_analysis WHERE registration_observations IS NOT NULL")
     List<String> getDistinctEfficiencies();
+
+    @Select("SELECT * FROM v_efectivity WHERE id = #{efectivityBaseId} LIMIT 1")
+    @Results({
+            @Result(property = "id", column = "id"),
+            @Result(property = "ticketCode", column = "ticket_code"),
+            @Result(property = "sprintDate", column = "sprint_date"),
+            @Result(property = "sdatoolProject", column = "sdatool_project"),
+            @Result(property = "sdatoolFinalProject", column = "sdatool_final_project"),
+            @Result(property = "folio", column = "folio"),
+            @Result(property = "tdsDescription", column = "tds_description"),
+            @Result(property = "registerDate", column = "register_date"),
+            @Result(property = "analystAmbassador", column = "analyst_ambassador"),
+            @Result(property = "registrationResponsible", column = "registration_responsible"),
+            @Result(property = "buildObservations", column = "build_observations"),
+            @Result(property = "registrationObservations", column = "registration_observations"),
+            @Result(property = "sourceTable", column = "source_table")
+    })
+    EfectivityBaseDataDtoResponse getBaseEfectivityById(@Param("efectivityBaseId") String efectivityBaseId);
+
 }
