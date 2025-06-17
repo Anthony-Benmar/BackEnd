@@ -27,7 +27,7 @@ public class SingleBaseResources {
     public IDataResult<SingleBasePaginatedResponseDTO> getBaseUnicaWithSource(
             @QueryParam("limit") String limit,
             @QueryParam("offset") String offset,
-            @QueryParam("id") Integer id,
+            @QueryParam("id") String id,
             @QueryParam("projectName") String projectName,
             @QueryParam("tipoFolio") String tipoFolio,
             @QueryParam("folio") String folio,

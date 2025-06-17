@@ -15,9 +15,13 @@ import java.util.logging.Logger;
 
 public class ExceptionBaseDao {
     private static final Logger log = Logger.getLogger(ExceptionBaseDao.class.getName());
+    private final SqlSessionFactory sqlSessionFactory;
+
+    public ExceptionBaseDao(SqlSessionFactory sqlSessionFactory){
+        this.sqlSessionFactory = sqlSessionFactory;
+    }
 
     public List<ExceptionBaseDataDtoResponse> getExceptionsWithSource(ExceptionBasePaginationDtoRequest dto) {
-        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         List<ExceptionBaseDataDtoResponse> result = null;
         try (SqlSession session = sqlSessionFactory.openSession()) {
             ExceptionBaseMapper mapper = session.getMapper(ExceptionBaseMapper.class);
@@ -40,7 +44,6 @@ public class ExceptionBaseDao {
     }
 
     public int getExceptionsTotalCount(ExceptionBasePaginationDtoRequest dto) {
-        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         int totalCount = 0;
         try (SqlSession session = sqlSessionFactory.openSession()) {
             ExceptionBaseMapper mapper = session.getMapper(ExceptionBaseMapper.class);
@@ -57,12 +60,16 @@ public class ExceptionBaseDao {
         return totalCount;
     }
 
-    public ExceptionBaseReadOnlyDtoResponse getExceptionById(Integer exceptionId) {
-        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+    public ExceptionBaseDataDtoResponse getExceptionById(String exceptionId) {
+        ExceptionBaseDataDtoResponse result = null;
         try (SqlSession session = sqlSessionFactory.openSession()) {
             ExceptionBaseMapper mapper = session.getMapper(ExceptionBaseMapper.class);
-            return mapper.getExceptionById(exceptionId);
+            result = mapper.getExceptionById(exceptionId);
+            log.info("ExceptionBaseDao - Registro obtenido por ID: " + (result != null ? result.getId() : "null"));
+        } catch (Exception e) {
+        log.log(Level.SEVERE, "Error en getExceptionById: " + e.getMessage(), e);
         }
+        return result;
     }
 
     // Métodos para combos

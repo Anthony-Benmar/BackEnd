@@ -13,9 +13,13 @@ import java.util.logging.Logger;
 
 public class EfectivityBaseDao {
     private static final Logger log = Logger.getLogger(EfectivityBaseDao.class.getName());
+    private final SqlSessionFactory sqlSessionFactory;
+
+    public EfectivityBaseDao(SqlSessionFactory sqlSessionFactory) {
+        this.sqlSessionFactory = sqlSessionFactory;
+    }
 
     public List<EfectivityBaseDataDtoResponse> getBaseEfectivityWithSource(EfectivityBasePaginationDtoRequest dto) {
-        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         List<EfectivityBaseDataDtoResponse> result = null;
         try (SqlSession session = sqlSessionFactory.openSession()) {
             EfectivityBaseMapper mapper = session.getMapper(EfectivityBaseMapper.class);
@@ -38,7 +42,6 @@ public class EfectivityBaseDao {
     }
 
     public int getBaseEfectivityTotalCount(EfectivityBasePaginationDtoRequest dto) {
-        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         int totalCount = 0;
         try (SqlSession session = sqlSessionFactory.openSession()) {
             EfectivityBaseMapper mapper = session.getMapper(EfectivityBaseMapper.class);
@@ -55,7 +58,6 @@ public class EfectivityBaseDao {
         return totalCount;
     }
     public EfectivityBaseDataDtoResponse getBaseEfectivityById(String singleId) {
-        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         EfectivityBaseDataDtoResponse result = null;
         try (SqlSession session = sqlSessionFactory.openSession()) {
             EfectivityBaseMapper mapper = session.getMapper(EfectivityBaseMapper.class);

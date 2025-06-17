@@ -139,5 +139,5 @@ public interface SourceWithParameterMapper {
             @Result(property = "tag4", column = "tag4"),
             @Result(property = "rawPath", column = "raw_path")
     })
-    SourceWithParameterDataDtoResponse getSourceWithParameterById(@Param("sourceWithParameterId") Integer sourceWithParameterId);
+    SourceWithParameterDataDtoResponse getSourceWithParameterById(@Param("sourceWithParameterId") String sourceWithParameterId);
 }

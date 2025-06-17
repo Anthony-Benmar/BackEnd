@@ -3,6 +3,7 @@ package com.bbva.service;
 import com.bbva.core.abstracts.IDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dao.SourceWithParameterDao;
+import com.bbva.dto.source_with_parameter.request.SourceWithReadyOnlyDtoRequest;
 import com.bbva.dto.source_with_parameter.response.SourceWithParameterPaginatedResponseDTO;
 import com.bbva.dto.source_with_parameter.response.SourceWithParameterDataDtoResponse;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.when;
 
 class SourceWithParameterServiceTest {
@@ -39,5 +41,12 @@ class SourceWithParameterServiceTest {
 
         // Assert
         assertEquals(SuccessDataResult.class, result.getClass());
+    }
+    @Test
+    void testReadOnly() {
+        when(sourceWithParameterDao.getSourceWithParameterById(String.valueOf(1)))
+                .thenReturn(new SourceWithParameterDataDtoResponse());
+        IDataResult<?> result = sourceWithParameterService.readOnly(new SourceWithReadyOnlyDtoRequest());
+        assertNotNull(result);
     }
 }

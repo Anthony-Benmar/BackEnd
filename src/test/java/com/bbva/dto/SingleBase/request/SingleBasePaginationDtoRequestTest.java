@@ -11,7 +11,7 @@ class SingleBasePaginationDtoRequestTest {
         // Set values
         dto.setLimit(10);
         dto.setOffset(0);
-        dto.setId(1);
+        dto.setId("1");
         dto.setProjectName("Project A");
         dto.setTipoFolio("Type A");
         dto.setFolio("F123");
@@ -24,7 +24,7 @@ class SingleBasePaginationDtoRequestTest {
     private void assertBasicFields(SingleBasePaginationDtoRequest dto) {
         assert dto.getLimit() == 10;
         assert dto.getOffset() == 0;
-        assert dto.getId() == 1;
+        assert "1".equals(dto.getId());
         assert "Project A".equals(dto.getProjectName());
         assert "Type A".equals(dto.getTipoFolio());
         assert "F123".equals(dto.getFolio());

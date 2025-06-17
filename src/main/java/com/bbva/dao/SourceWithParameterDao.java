@@ -2,6 +2,7 @@ package com.bbva.dao;
 
 import com.bbva.database.MyBatisConnectionFactory;
 import com.bbva.database.mappers.SourceWithParameterMapper;
+import com.bbva.dto.exception_base.response.ExceptionBaseDataDtoResponse;
 import com.bbva.dto.source_with_parameter.request.SourceWithParameterPaginationDtoRequest;
 import com.bbva.dto.source_with_parameter.response.SourceWithParameterDataDtoResponse;
 import org.apache.ibatis.session.SqlSession;
@@ -13,10 +14,14 @@ import java.util.logging.Logger;
 
 public class SourceWithParameterDao {
     private static final Logger log = Logger.getLogger(SourceWithParameterDao.class.getName());
+    private final SqlSessionFactory sqlSessionFactory;
+
+    public SourceWithParameterDao(SqlSessionFactory sqlSessionFactory) {
+        this.sqlSessionFactory = sqlSessionFactory;
+    }
 
     public List<SourceWithParameterDataDtoResponse> getSourceWithParameter(SourceWithParameterPaginationDtoRequest dto){
         List<SourceWithParameterDataDtoResponse> result = null;
-        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         try(SqlSession session = sqlSessionFactory.openSession()) {
             SourceWithParameterMapper mapper = session.getMapper(SourceWithParameterMapper.class);
             result = mapper.getSourcesWithParameterWithFilters(
@@ -37,7 +42,6 @@ public class SourceWithParameterDao {
         return result;
     }
     public int getSourceWithParameterTotalCount(SourceWithParameterPaginationDtoRequest dto) {
-        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         int totalCount = 0;
         try (SqlSession session = sqlSessionFactory.openSession()) {
             SourceWithParameterMapper mapper = session.getMapper(SourceWithParameterMapper.class);
@@ -57,15 +61,16 @@ public class SourceWithParameterDao {
         }
         return totalCount;
     }
-    public SourceWithParameterDataDtoResponse getSourceWithParameterById(Integer singleId){
-        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+    public SourceWithParameterDataDtoResponse getSourceWithParameterById(String singleId){
+        SourceWithParameterDataDtoResponse result = null;
         try (SqlSession session = sqlSessionFactory.openSession()) {
             SourceWithParameterMapper mapper = session.getMapper(SourceWithParameterMapper.class);
-            return mapper.getSourceWithParameterById(singleId);
+            result = mapper.getSourceWithParameterById(singleId);
         } catch (Exception e) {
             log.log(Level.SEVERE, "Error en getSourceWithParameterById: " + e.getMessage(), e);
             return null;
         }
+        return result;
     }
     // Métodos para combos
     public List<String> getDistinctStatuses() {

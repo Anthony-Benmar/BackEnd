@@ -19,7 +19,7 @@ import java.util.logging.Logger;
 public class MyBatisConnectionFactory {
     private static final Logger LOGGER = Logger.getLogger(MyBatisConnectionFactory.class.getName());
 
-    private static SqlSessionFactory sqlSessionFactory;
+    public static SqlSessionFactory sqlSessionFactory;
 
     private MyBatisConnectionFactory() {}
 

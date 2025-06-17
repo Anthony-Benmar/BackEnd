@@ -10,7 +10,7 @@ class SingleBaseDataDtoResponseTest {
         SingleBaseDataDtoResponse dto = new SingleBaseDataDtoResponse();
 
         // Set values
-        dto.setId(1);
+        dto.setId("1");
         dto.setFolio("F123");
         dto.setProjectName("Project A");
         dto.setUcSourceName("UC Source");
@@ -32,7 +32,7 @@ class SingleBaseDataDtoResponseTest {
         assertBasicFields(dto);
     }
     private void assertBasicFields(SingleBaseDataDtoResponse dto){
-        assert dto.getId() == 1;
+        assert dto.getId() == "1";
         assert "F123".equals(dto.getFolio());
         assert "Project A".equals(dto.getProjectName());
         assert "UC Source".equals(dto.getUcSourceName());

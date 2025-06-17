@@ -10,9 +10,9 @@ class SourceWithReadyOnlyDtoRequestTest {
         SourceWithReadyOnlyDtoRequest sourceWithReadyOnlyDtoRequest = new SourceWithReadyOnlyDtoRequest();
 
         // When
-        sourceWithReadyOnlyDtoRequest.setSourceWithParameterId(1);
+        sourceWithReadyOnlyDtoRequest.setSourceWithParameterId("1");
 
         // Then
-        assert sourceWithReadyOnlyDtoRequest.getSourceWithParameterId() == 1;
+        assert sourceWithReadyOnlyDtoRequest.getSourceWithParameterId() == "1";
     }
 }

@@ -11,7 +11,7 @@ class SourceWithParameterReadOnlyDtoResponseTest {
         SourceWithParameterReadOnlyDtoResponse dto = new SourceWithParameterReadOnlyDtoResponse();
 
         // Set values
-        dto.setId(1);
+        dto.setId("1");
         dto.setTdsDescription("Test Description");
         dto.setTdsSource("Test Source");
         dto.setSourceOrigin("Test Origin");
@@ -61,7 +61,7 @@ class SourceWithParameterReadOnlyDtoResponseTest {
          assertCriticalFields(dto);
     }
     private void assertBasicFields(SourceWithParameterReadOnlyDtoResponse dto) {
-        assertEquals(1, dto.getId());
+        assertEquals("1", dto.getId());
         assertEquals("Test Description", dto.getTdsDescription());
         assertEquals("Test Source", dto.getTdsSource());
         assertEquals("Test Origin", dto.getSourceOrigin());

@@ -7,7 +7,7 @@ import java.util.Date;
 @Getter
 @Setter
 public class SingleBaseDataDtoResponse {
-    private Integer id;
+    private String id;
     private String folio;
     private String projectName;
     private String ucSourceName;

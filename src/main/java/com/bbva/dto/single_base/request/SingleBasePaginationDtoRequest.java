@@ -8,7 +8,7 @@ import lombok.Setter;
 public class SingleBasePaginationDtoRequest {
     private Integer limit;
     private Integer offset;
-    private Integer id;
+    private String id;
     private String projectName;
     private String tipoFolio;
     private String folio;

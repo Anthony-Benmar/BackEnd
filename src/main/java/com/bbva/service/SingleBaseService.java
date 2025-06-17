@@ -11,8 +11,10 @@ import com.bbva.dto.single_base.response.SingleBaseReadOnlyDtoResponse;
 
 import java.util.List;
 
+import static com.bbva.database.MyBatisConnectionFactory.sqlSessionFactory;
+
 public class SingleBaseService {
-    private final SingleBaseDao singleBaseDao = new SingleBaseDao();
+    private final SingleBaseDao singleBaseDao = new SingleBaseDao(sqlSessionFactory);
 
     public IDataResult<SingleBasePaginatedResponseDTO> getBaseUnicaWithSource(SingleBasePaginationDtoRequest dto) {
         // El DTO ya contiene el campo registeredFolioDate, así que no necesitas cambiar nada aquí

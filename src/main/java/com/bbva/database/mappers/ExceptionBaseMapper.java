@@ -72,5 +72,5 @@ public interface ExceptionBaseMapper {
             @Result(property = "shutdownCommitmentStatus", column = "shutdown_commitment_status"),
             @Result(property = "shutdownProject", column = "shutdown_project")
     })
-    ExceptionBaseReadOnlyDtoResponse getExceptionById(@Param("exceptionId") Integer exceptionId);
+    ExceptionBaseDataDtoResponse getExceptionById(@Param("exceptionId") String exceptionId);
 }

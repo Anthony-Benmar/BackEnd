@@ -5,7 +5,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class SourceWithParameterReadOnlyDtoResponse {
-    private Integer id;
+    private String id;
     private String tdsDescription;
     private String tdsSource;
     private String sourceOrigin;

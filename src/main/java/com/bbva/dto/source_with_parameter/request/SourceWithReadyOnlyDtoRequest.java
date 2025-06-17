@@ -5,5 +5,5 @@ import lombok.Setter;
 @Getter
 @Setter
 public class SourceWithReadyOnlyDtoRequest {
-    private Integer sourceWithParameterId;
+    private String sourceWithParameterId;
 }

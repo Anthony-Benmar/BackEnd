@@ -33,7 +33,7 @@ public interface SingleBaseMapper {
     List<SingleBaseDataDtoResponse> getBaseUnicaDataWithFilters(
             @Param("limit") int limit,
             @Param("offset") int offset,
-            @Param("id") Integer id,
+            @Param("id") String id,
             @Param("projectName") String projectName,
             @Param("tipoFolio") String tipoFolio,
             @Param("folio") String folio,
@@ -43,7 +43,7 @@ public interface SingleBaseMapper {
 
     @Select("CALL GET_BASE_UNICA_TOTAL(#{id}, #{projectName}, #{tipoFolio}, #{folio}, #{registeredFolioDate}, #{oldSourceId})")
     int getBaseUnicaTotalCountWithFilters(
-            @Param("id") Integer id,
+            @Param("id") String id,
             @Param("projectName") String projectName,
             @Param("tipoFolio") String tipoFolio,
             @Param("folio") String folio,
@@ -88,5 +88,5 @@ public interface SingleBaseMapper {
             @Result(property = "ucFinalistDesc", column = "uc_finalist_desc"),
             @Result(property = "catalogId", column = "catalog_id")
     })
-    SingleBaseDataDtoResponse getSingleBaseById(@Param("singleBaseId") Integer singleBaseId);
+    SingleBaseDataDtoResponse getSingleBaseById(@Param("singleBaseId") String singleBaseId);
 }

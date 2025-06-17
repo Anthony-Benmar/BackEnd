@@ -9,7 +9,7 @@ public class ExceptionBaseReadOnlyDtoResponseTest {
     @Test
     void gettersAndSetters() {
         ExceptionBaseReadOnlyDtoResponse response = new ExceptionBaseReadOnlyDtoResponse();
-        response.setId(123);
+        response.setId("123");
         response.setSourceId("123");
         response.setTdsDescription("Description of TDS");
         response.setTdsSource("Source A");
@@ -27,7 +27,7 @@ public class ExceptionBaseReadOnlyDtoResponseTest {
         assertBasicFields(response);
     }
     private void assertBasicFields(ExceptionBaseReadOnlyDtoResponse dto) {
-        assertEquals(123, dto.getId());
+        assertEquals("123", dto.getId());
         assertEquals("123", dto.getSourceId());
         assertEquals("Description of TDS", dto.getTdsDescription());
         assertEquals("Source A", dto.getTdsSource());

@@ -9,9 +9,9 @@ class SingleBaseReadOnlyDtoRequestTest {
         SingleBaseReadOnlyDtoRequest dto = new SingleBaseReadOnlyDtoRequest();
 
         // Set value
-        dto.setSingleBaseId(1);
+        dto.setSingleBaseId("1");
 
         // Assert value
-        assert dto.getSingleBaseId() == 1;
+        assert dto.getSingleBaseId() == "1";
     }
 }

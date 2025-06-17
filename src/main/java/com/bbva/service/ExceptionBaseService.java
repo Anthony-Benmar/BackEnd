@@ -11,8 +11,10 @@ import com.bbva.dto.exception_base.response.ExceptionBaseReadOnlyDtoResponse;
 
 import java.util.List;
 
+import static com.bbva.database.MyBatisConnectionFactory.sqlSessionFactory;
+
 public class ExceptionBaseService {
-    private final ExceptionBaseDao exceptionBaseDao = new ExceptionBaseDao();
+    private final ExceptionBaseDao exceptionBaseDao = new ExceptionBaseDao(sqlSessionFactory);
 
     public IDataResult<ExceptionBasePaginatedResponseDTO> getExceptionsWithSource(ExceptionBasePaginationDtoRequest dto) {
         List<ExceptionBaseDataDtoResponse> data = exceptionBaseDao.getExceptionsWithSource(dto);
@@ -26,8 +28,22 @@ public class ExceptionBaseService {
     }
 
     public IDataResult<ExceptionBaseReadOnlyDtoResponse> readOnly(ExceptionBaseReadOnlyDtoRequest request) {
-        ExceptionBaseReadOnlyDtoResponse data = exceptionBaseDao.getExceptionById(request.getId());
-        return new SuccessDataResult<>(data);
+        ExceptionBaseDataDtoResponse data = exceptionBaseDao.getExceptionById(request.getId());
+        ExceptionBaseReadOnlyDtoResponse response = new ExceptionBaseReadOnlyDtoResponse();
+        if (data != null){
+            response.setId(data.getId());
+            response.setSourceId(data.getSourceId());
+            response.setTdsDescription(data.getTdsDescription());
+            response.setTdsSource(data.getTdsSource());
+            response.setRequestingProject(data.getRequestingProject());
+            response.setApprovalResponsible(data.getApprovalResponsible());
+            response.setRegistrationDate(data.getRegistrationDate());
+            response.setQuarterYearSprint(data.getQuarterYearSprint());
+            response.setShutdownCommitmentStatus(data.getShutdownCommitmentStatus());
+            response.setShutdownCommitmentDate(data.getShutdownCommitmentDate());
+            response.setShutdownProject(data.getShutdownProject());
+        }
+        return new SuccessDataResult<>(response);
     }
 
     // Métodos para combos

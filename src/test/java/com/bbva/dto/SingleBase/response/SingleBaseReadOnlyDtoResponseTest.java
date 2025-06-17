@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
         SingleBaseReadOnlyDtoResponse dto = new SingleBaseReadOnlyDtoResponse();
 
         // Set values
-        dto.setId(1);
+        dto.setId("1");
         dto.setFolio("FOLIO123");
         dto.setProjectName("Project A");
         dto.setUcSourceName("Source Name");
@@ -28,7 +28,7 @@ import org.junit.jupiter.api.Test;
         dto.setCatalogId("Catalog123");
 
         // Assert values
-        assert dto.getId() == 1;
+        assert dto.getId() == "1";
         assert "FOLIO123".equals(dto.getFolio());
         assert "Project A".equals(dto.getProjectName());
     }

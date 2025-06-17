@@ -10,7 +10,7 @@ class ExceptionBaseDataDtoResponseTest {
     @Test
     void gettersAndSetters() {
         ExceptionBaseDataDtoResponse response = new ExceptionBaseDataDtoResponse();
-        response.setId(1);
+        response.setId("1");
         response.setSourceId("source-123");
         response.setTdsDescription("Test TDS Description");
         response.setTdsSource("Test TDS Source");
@@ -26,7 +26,7 @@ class ExceptionBaseDataDtoResponseTest {
         assertBasicFields(response);
     }
     private void assertBasicFields(ExceptionBaseDataDtoResponse dto) {
-        assertEquals(1, dto.getId());
+        assertEquals("1", dto.getId());
         assertEquals("source-123", dto.getSourceId());
         assertEquals("Test TDS Description", dto.getTdsDescription());
         assertEquals("Test TDS Source", dto.getTdsSource());

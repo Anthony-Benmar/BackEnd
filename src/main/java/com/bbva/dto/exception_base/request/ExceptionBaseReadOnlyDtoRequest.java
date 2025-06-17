@@ -6,5 +6,5 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ExceptionBaseReadOnlyDtoRequest {
-    private Integer id;
+    private String id;
 }

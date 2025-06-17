@@ -13,9 +13,12 @@ import java.util.logging.Logger;
 
 public class SingleBaseDao {
     private static final Logger log = Logger.getLogger(SingleBaseDao.class.getName());
+    private final SqlSessionFactory sqlSessionFactory;
+    public SingleBaseDao(SqlSessionFactory sqlSessionFactory) {
+        this.sqlSessionFactory = sqlSessionFactory;
+    }
 
     public List<SingleBaseDataDtoResponse> getBaseUnicaWithSource(SingleBasePaginationDtoRequest dto) {
-        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         List<SingleBaseDataDtoResponse> result = null;
         try (SqlSession session = sqlSessionFactory.openSession()) {
             SingleBaseMapper mapper = session.getMapper(SingleBaseMapper.class);
@@ -40,7 +43,6 @@ public class SingleBaseDao {
     }
 
     public int getBaseUnicaTotalCount(SingleBasePaginationDtoRequest dto) {
-        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         int totalCount = 0;
         try (SqlSession session = sqlSessionFactory.openSession()) {
             SingleBaseMapper mapper = session.getMapper(SingleBaseMapper.class);
@@ -60,12 +62,16 @@ public class SingleBaseDao {
     }
 
     // ----------- AGREGADO: Método para detalle por ID -----------
-    public SingleBaseDataDtoResponse getSingleBaseById(Integer singleBaseId) {
-        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+    public SingleBaseDataDtoResponse getSingleBaseById(String singleBaseId) {
+        SingleBaseDataDtoResponse result = null;
         try (SqlSession session = sqlSessionFactory.openSession()) {
             SingleBaseMapper mapper = session.getMapper(SingleBaseMapper.class);
-            return mapper.getSingleBaseById(singleBaseId);
+            result = mapper.getSingleBaseById(singleBaseId);
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "Error en getSourceWithParameterById: " + e.getMessage(), e);
+            return null;
         }
+        return result;
     }
 
     // Métodos para combos

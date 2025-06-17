@@ -4,7 +4,6 @@ import com.bbva.core.abstracts.IDataResult;
 import com.bbva.dto.source_with_parameter.request.SourceWithParameterPaginationDtoRequest;
 import com.bbva.dto.source_with_parameter.request.SourceWithReadyOnlyDtoRequest;
 import com.bbva.dto.source_with_parameter.response.SourceWithParameterPaginatedResponseDTO;
-import com.bbva.dto.source_with_parameter.response.SourceWithParameterDataDtoResponse;
 import com.bbva.dto.source_with_parameter.response.SourceWithParameterReadOnlyDtoResponse;
 import com.bbva.service.SourceWithParameterService;
 import com.bbva.util.Helper;
@@ -35,8 +34,7 @@ public class SourceWithParameterResources {
             @QueryParam("modelOwner") String modelOwner,
             @QueryParam("status") String status,
             @QueryParam("originType") String originType,
-            @QueryParam("tdsOpinionDebt") String tdsOpinionDebt,
-            @QueryParam("effectivenessDebt") String effectivenessDebt
+            @QueryParam("tdsOpinionDebt") String tdsOpinionDebt
     ) {
         LOGGER.info("getSourceWithParameter paginated request");
         Integer limitFinal = helper.parseIntegerOrDefault(limit, 30);
@@ -51,7 +49,6 @@ public class SourceWithParameterResources {
         dto.setStatus(status);
         dto.setOriginType(originType);
         dto.setTdsOpinionDebt(tdsOpinionDebt);
-        dto.setEffectivenessDebt(effectivenessDebt);
 
         return sourceWithParameterService.getSourceWithParameter(dto);
     }
