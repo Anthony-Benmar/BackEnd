@@ -136,14 +136,23 @@ public class IssueTicketService {
 
         for (WorkOrderDtoRequest2 dto : dtoList) {
             try {
-                // Validaciones...
+                // Primero Validar datos del Feature a crear
+                if (dto.getFeature().isEmpty() || dto.getJiraProjectName().isEmpty()){
+                    failedFeatures.add(dto.feature +": No se tienen datos del Feature a crear");
+                    continue;
+                }
+                // Validaciones del los tickets asociados
                 if(dto.workOrderDetail==null || dto.workOrderDetail.isEmpty()){
                     failedFeatures.add(dto.feature + ": Sin templates seleccionados");
                     continue;
                 }
 
-                var workOrderRequest = new WorkOrder2(0, dto.feature, dto.folio, dto.boardId, dto.projectId,
-                        dto.sourceId, dto.sourceName, dto.flowType, dto.faseId, dto.sprintEst,
+                // CREAR FEATURE DESDE CERO (Feature en Jira) - Sacar el key de acá
+                IssueResponse completedFeature = createJiraFeature(dto);
+
+                //Observado - Se supone que primero debo validar lo del feature
+                var workOrderRequest = new WorkOrder2(0, completedFeature.key, dto.folio, dto.boardId, dto.projectId,
+                        dto.sourceId, dto.sourceName, dto.flowType,
                         1, 1, dto.registerUserId, new Date(), null, 0);
 
                 var countWorkOrder = issueTicketDao.findRecordWorkOrder2(workOrderRequest);
@@ -152,16 +161,19 @@ public class IssueTicketService {
                     continue;
                 }
 
-                // CREAR FEATURE DESDE CERO (Epic en Jira y guardar en BD)
-                JiraFeatureEntity2 completedFeature = createJiraFeature(dto, workOrderRequest);
+                // CREAR FEATURE DESDE CERO (Epic en Jira y guardar en BD) --- creo que solo sería un objeto
+                //JiraFeatureEntity2 completedFeature = createJiraFeature(dto, workOrderRequest);
 
                 // CREAR STORIES CON FEATURE ANTERIOR - REUTILIZADO
                 var workOrderDetailsRequest = dto.workOrderDetail.stream()
                         .map(s -> new WorkOrderDetail(0, 0, s.templateId, "", "ready", dto.registerUserId, new Date(), null))
                         .collect(Collectors.toList());
 
+                var objFeature = new JiraFeatureEntity(0, completedFeature.key,"","","",dto.jiraProjectId, dto.jiraProjectName);
+
                 var issuesRequests = issueTicketDao.getDataRequestIssueJira4(
-                        workOrderRequest, workOrderDetailsRequest, completedFeature);
+                        workOrderRequest, workOrderDetailsRequest, objFeature);
+
 
                 createTicketJira3(dto, issuesRequests, workOrderDetailsRequest);
 
@@ -171,11 +183,14 @@ public class IssueTicketService {
 
                 issueTicketDao.insertWorkOrderAndDetail2(workOrderRequest, workOrderDetailsRequest);
 
-                // RESPUESTA CON DATOS COMPLETOS DEL FEATURE
+                // RESPUESTA CON DATOS COMPLETOS DEL FEATURE -- Falta el link apuntando al Feature
+                // Validar que no haya errores, y si los hay, captar en donde
+                //Devolver el nombre o summary - junto con el link
                 successFeatures.add(Map.of(
-                        "featureName", completedFeature.featureName,
-                        "featureKey", completedFeature.featureKey,
-                        "storiesCreated", workOrderDetailsRequest.size()
+                        "featureName", dto.feature,
+                        "featureKey", completedFeature.key,
+                        "storiesCreated", workOrderDetailsRequest.size(),
+                        "featureLink", "https://jira.globaldevtools.bbva.com/browse/"+completedFeature.key
                 ));
 
             } catch (Exception ex) {
@@ -188,47 +203,67 @@ public class IssueTicketService {
                 "failed", failedFeatures
         ));
     }
-    private JiraFeatureEntity2 createJiraFeature(WorkOrderDtoRequest2 objAuth, WorkOrder2 workOrder) throws Exception {
-        //Preparar Feature para la petición al api de jira (revisar los endpoints)
-        var tempFeature = new JiraFeatureEntity2(0, "", workOrder.feature, "", "", objAuth.jiraProjectId, objAuth.jiraProjectName);
-
-        // Obtener petición  para Jiraaa
-        var featureRequest = issueTicketDao.getDataRequestFeatureJira(workOrder, tempFeature);
+    private IssueResponse createJiraFeature(WorkOrderDtoRequest2 dto) throws Exception {
+        // Obtener petición  para Jiraaa -- se crean los Fields
+        var featureRequest = issueTicketDao.getDataRequestFeatureJira(dto);
 
         //Crear Feature en Jira
-        IssueResponse jiraResponse = callJiraCreateFeatureSingle(objAuth, featureRequest);
+        IssueResponse jiraResponse = callJiraCreateFeatureSingle(dto, featureRequest);
 
-        //MAP PARA RESPONSEE ---------------
-        JiraFeatureEntity2 completedFeature = mapJiraResponseToFeature(jiraResponse, objAuth, workOrder);
-
-        //guardar en BD----(OBSERVADE)
-        JiraFeatureEntity2 savedFeature = issueTicketDao.insertFeatureInDatabase(completedFeature);
-
-        return savedFeature;
-    }
-
-    private JiraFeatureEntity2 mapJiraResponseToFeature(IssueResponse jiraResponse, WorkOrderDtoRequest2 objAuth, WorkOrder2 workOrder) {
-        JiraFeatureEntity2 feature = new JiraFeatureEntity2();
-
-        //respuesta de Jira
-        feature.featureKey = jiraResponse.key;
-        feature.featureName = jiraResponse.fields != null ? jiraResponse.fields.summary : workOrder.feature;
-
-        // request
-        feature.jiraProjectId = objAuth.jiraProjectId;
-        feature.jiraProjectName = objAuth.jiraProjectName;
-        feature.sdatoolId = String.valueOf(workOrder.project_id);
-
-        //
-        feature.teamBacklog = issueTicketDao.getTeamBacklogByBoardId(workOrder.board_id);
-
-        return feature;
+        return jiraResponse;
     }
 
     //REUTILIZADO (REVISAR)
     private IssueResponse callJiraCreateFeatureSingle(WorkOrderDtoRequest2 objAuth, IssueFeatureDto featureRequest) throws Exception {
         Gson gson = GsonConfig.createGson();
         String jsonString = gson.toJson(featureRequest);
+
+        //Se debe cambiar la key a PAD3???
+        //Asociar a un sdatool?
+        //Debe tener un SDA Project
+        //Falta el TeamBacklog
+        //---------------------
+        // La key se pondrá en automático, solo es necesario el key del project "PAD 3" o "DEDATIOENG"
+        //-------------
+//        String jsonString = "{\n" +
+//                " \"fields\": {\n" +
+//                " \"project\": {\n" +
+//                " \"key\": \"PAD3\"\n" +
+//                " },\n" +
+//                " \"issuetype\": {\n" +
+//                " \"name\": \"Feature\"\n" +
+//                " },\n" +
+//                " \"summary\": \"TEST - Feature TEST 3\",\n" +
+//                " \"description\": \"Feature de prueba para validar la creación desde backend\",\n" +
+//                " \"priority\": {\n" +
+//                " \"name\": \"Medium\"\n" +
+//                " },\n" +
+//                " \"customfield_13300\": [\"381\"],\n" +
+//                " \"customfield_10272\": {\n" +
+//                " \"value\": \"Sprint 3\"\n" +
+//                " },\n" +
+//                " \"customfield_10265\": {\n" +
+//                " \"value\": \"Committed\"\n" +
+//                " },\n" +
+//                " \"customfield_10006\": \"TEST Feature Name 3\",\n" +
+//                " \"customfield_19001\": {\n" +
+//                " \"value\": \"Enabler Delivery\"\n" +
+//                " },\n" +
+//                " \"customfield_10260\": \"Criterios de aceptación a definir\",\n" +
+//                " \"customfield_12323\": \"49109\",\n" +
+//                " \"labels\": [\n" +
+//                " \"proyDatio\",\n" +
+//                " \"DE_PROD\",\n" +
+//                " \"TTV_FULLPROD\",\n" +
+//                " \"TEST-FEATURE\",\n" +
+//                " \"ONBOARDING\"\n" +
+//                " ]\n" +
+//                " }\n" +
+//                "}";
+
+        System.out.println("=== JSON ENVIADO A JIRA ===");
+        System.out.println(jsonString);
+        System.out.println("===========================");
 
         HttpPost httpPost = new HttpPost(URL_API_JIRA  + "?expand=fields");
         //HttpPost httpPost = new HttpPost(URL_API_JIRA_ISSUE + "?expand=fields");

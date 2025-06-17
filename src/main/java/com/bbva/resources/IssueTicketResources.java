@@ -19,15 +19,15 @@ import java.util.List;
 public class IssueTicketResources {
     private IssueTicketService issueTicketService = new IssueTicketService();
 
-//    @POST
-//    @Path("/insert")
-//    @Consumes(MediaType.APPLICATION_JSON)
-//    @Produces(MediaType.APPLICATION_JSON)
-//    public IDataResult insert(WorkOrderDtoRequest dto)
-//            throws Exception
-//    {
-//        return issueTicketService.insert(dto);
-//    }
+    @POST
+    @Path("/insert")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult insert(WorkOrderDtoRequest dto)
+            throws Exception
+    {
+        return issueTicketService.insert(dto);
+    }
 
     @POST
     @Path("/insert2")

@@ -6,6 +6,7 @@ import com.bbva.dto.issueticket.request.WorkOrderDtoRequest2;
 import com.bbva.dto.issueticket.request.sourceTicketDtoRequest;
 import com.bbva.dto.issueticket.response.*;
 import com.bbva.dto.jira.request.*;
+import com.bbva.dto.jira.response.IssueResponse;
 import com.bbva.entities.board.Board;
 import com.bbva.entities.common.CatalogEntity;
 import com.bbva.entities.feature.JiraFeatureEntity;
@@ -290,7 +291,7 @@ public class IssueTicketDao {
         return result;
     }
 
-    public IssueBulkDto getDataRequestIssueJira4(WorkOrder2 workOrder, List<WorkOrderDetail> workOrderDetail, JiraFeatureEntity2 feature) {
+    public IssueBulkDto getDataRequestIssueJira4(WorkOrder2 workOrder, List<WorkOrderDetail> workOrderDetail, JiraFeatureEntity feature) {
         var result = new IssueBulkDto();
         result.issueUpdates = new ArrayList<IssueUpdate>();
 
@@ -383,55 +384,137 @@ public class IssueTicketDao {
         }
     }
 
-    public IssueFeatureDto getDataRequestFeatureJira(WorkOrder2 workOrder, JiraFeatureEntity2 feature) {
+    public IssueFeatureDto getDataRequestFeatureJira(WorkOrderDtoRequest2 dto) {
         var result = new IssueFeatureDto();
 
-        //observado##################
-
-        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
-        Board board = null;
-        try (SqlSession session = sqlSessionFactory.openSession()) {
-            BoardMapper boardMapper = session.getMapper(BoardMapper.class);
-            board = boardMapper.boardById(workOrder.board_id);
-        }
+        // OBTENER BOARD INFO
+        Board board = getBoardById(dto.boardId);
 
         var fields = new Fields();
+
+        // CAMPOS BÁSICOS
         fields.project = new Project();
-        fields.project.id = feature.jiraProjectId.toString();
-        fields.project.key = feature.jiraProjectName;
-
-        Board finalBoard = board;
-        fields.customfield_13300 = new ArrayList<String>(){{
-            add(finalBoard.board_jira_id);
-        }};
-
-        fields.customfield_10270 = new Customfield();
-        fields.customfield_10270.value = "Technical";
-        fields.customfield_10270.id = "20247";
-        fields.customfield_10270.disabled = false;
+        //fields.project.id = feature.jiraProjectId.toString();
+        fields.project.key = dto.jiraProjectName;
 
         fields.issuetype = new Issuetype();
         fields.issuetype.name = "Feature";
 
-        fields.summary = workOrder.feature;
-        fields.description = String.format("Feature generado automáticamente para: %s - Folio: %s - Fase: %s",
-                workOrder.source_name, workOrder.folio, workOrder.fase_id);
+        fields.summary = dto.feature;
+        fields.description = generateFeatureDescription(dto, board.board_jira_id);
 
-        fields.customfield_10004 = workOrder.feature;
-
-        fields.labels = new ArrayList<String>() {{
-            add(String.format("FEATURE-%s", workOrder.folio));
-            add(String.format("PROJ-%s", workOrder.project_id));
-            add(String.format("ID-%s", workOrder.source_id));
-            add(String.format("FASE-%s", workOrder.fase_id));
-            add(String.format("SPRINT-EST-%s", workOrder.sprint_est));
-        }};
-
+        // PRIORITY
         fields.priority = new Priority();
-        fields.priority.name = "medium";
+        fields.priority.name = "Medium"; //Por defecto
+
+        // ASSIGNEE (opcional)
+//        if (dto.assignee != null && !dto.assignee.isEmpty()) {
+//            fields.assignee = new Assignee();
+//            fields.assignee.name = dto.assignee;
+//        }
+
+        //CUSTOM FIELDS ESPECÍFICOS PARA FEATURES
+
+        // Sprint Estimate (customfield_10272)
+        if (dto.sprintEst != null) {
+            fields.customfield_10272 = createSelectField(dto.sprintEst);
+        }
+
+        // Type of Delivery (customfield_19001) - Siempre "Enabler"
+        fields.customfield_19001 = createSelectField("Enabler Delivery"); //Por defecto
+
+        // Commitment type (customfield_10265) - Siempre "Committed"
+        fields.customfield_10265 = createSelectField("Committed");
+
+        // Team Backlog (customfield_13300) - Desde boardId
+        if (board != null) {
+            fields.customfield_13300 = Arrays.asList(board.board_jira_id);
+        }
+
+        // Definition of Ready (customfield_10601) - Array vacío para completar después
+        //fields.customfield_10601 = new ArrayList<>();
+
+        // Definition of Done (customfield_10600) - Array vacío para completar después
+        //fields.customfield_10600 = new ArrayList<>();
+
+        // Acceptance Criteria (customfield_10260) - Descripción básica
+        fields.customfield_10260 = "Criterios de aceptación a definir";
+
+        // Feature Name (customfield_10006) - Campo existente
+        fields.customfield_10006 = dto.feature;
+
+        // Technical Type (customfield_10270) - Campo existente
+//        fields.customfield_10270 = new Customfield();
+//        fields.customfield_10270.value = "Technical";
+//        fields.customfield_10270.id = "20247";
+//        fields.customfield_10270.disabled = false;
+        //SDA?############
+        //fields.customfield_12323 = createSelectField();
+        // LABELS ESTÁNDAR PARA FEATURES
+        fields.labels = createFeatureLabels(dto);
 
         result.fields = fields;
         return result;
+    }
+    private Customfield createSelectField(String value) {
+        Customfield field = new Customfield();
+        field.value = value;
+        return field;
+    }
+    private String generateFeatureDescription(WorkOrderDtoRequest2 dto, String board) {
+        return String.format(
+                "Feature generado automáticamente para onboarding\n\n" +
+                        "**Información del Source:**\n" +
+                        "- Fuente: %s\n" +
+                        "- ID Fuente: %s\n" +
+                        "- Folio: %s\n" +
+                        "- Fase: %s\n" +
+                        "- Sprint Estimado: Sprint %s\n" +
+                        "- Tipología: %s\n\n" +
+                        "**Proyecto:**\n" +
+                        "- Proyecto ID: %s\n" +
+                        "- Board ID: %s\n\n" +
+                        "Esta feature agrupa las stories necesarias para el onboarding de la fuente especificada.",
+                dto.sourceName,
+                dto.sourceId,
+                dto.folio,
+                dto.faseId,
+                dto.sprintEst,
+                dto.flowType,
+                dto.jiraProjectName,
+                board
+        );
+    }
+
+    private Board getBoardById(int boardId) {
+        try {
+            SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+            try (SqlSession session = sqlSessionFactory.openSession()) {
+                BoardMapper boardMapper = session.getMapper(BoardMapper.class);
+                return boardMapper.boardById(boardId);
+            }
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "Error obteniendo board: " + boardId, e);
+            return null;
+        }
+    }
+    private List<String> createFeatureLabels(WorkOrderDtoRequest2 dto) {
+        List<String> labels = new ArrayList<>();
+
+        // Labels estándar
+//        labels.add("#proyDatio");
+//        labels.add("DE_PROD");
+//        labels.add("TTV_FULLPROD");
+
+        // Labels específicos
+        //labels.add("FEATURE-" + workOrder.folio);
+        //labels.add("PROJ-" + workOrder.project_id);
+        //labels.add("SOURCE-" + workOrder.source_id);
+        labels.add("FASE-" + dto.faseId);
+        labels.add(dto.sourceId);
+        //labels.add("ONBOARDING");
+
+        return labels;
     }
     public Map<String, IssueDto> getDataRequestIssueJiraEdit(WorkOrder workOrder, List<WorkOrderDetail> workOrderDetail, JiraFeatureEntity feature)
     {

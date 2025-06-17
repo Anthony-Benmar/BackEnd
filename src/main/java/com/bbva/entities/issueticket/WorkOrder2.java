@@ -20,8 +20,9 @@ public class WorkOrder2 {
     public String source_name;
     public int flow_type;
 
-    public Integer fase_id;
-    public Integer sprint_est;
+    // Usar solo en el DTO
+    // public Integer fase_id;
+    // public String sprint_est; //Sprint 3
 
     public int work_order_type;
     public int status_type;
@@ -32,4 +33,12 @@ public class WorkOrder2 {
     public Date end_date;
     @Nullable
     public Integer records_count;
+
+    //Revisar si se agregan campos
+    //public String summary; //Nombre de la feature, compuesto
+    //public String projectKey; // DEDATIO - PAD3
+    //public String teamBacklog; //Debe ir con nombre
+
+
+
 }

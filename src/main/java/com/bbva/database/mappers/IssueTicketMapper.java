@@ -42,15 +42,14 @@ public interface IssueTicketMapper {
             "AND jw.project_id= #{project_id} ")
     int findRecordWorkOrder(WorkOrder workOrder);
 
+    //Observado, al final deben ser los mismos campos los que se consulten
     @Select("SELECT COUNT(jw.work_order_id) as result FROM jira_workorder jw " +
             "WHERE jw.feature = #{feature} " +
             "AND jw.folio = #{folio} " +
             "AND jw.source_name = #{source_name} " +
             "AND jw.source_id = #{source_id} " +
             "AND jw.flow_type = #{flow_type} " +
-            "AND jw.project_id= #{project_id} " +
-            "AND jw.fase_id = #{fase_id} " +
-            "AND jw.sprint_est = #{sprint_est}")
+            "AND jw.project_id= #{project_id} ")
     int findRecordWorkOrder2(WorkOrder2 workOrder);
 
 

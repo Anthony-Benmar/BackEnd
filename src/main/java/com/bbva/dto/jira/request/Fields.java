@@ -47,11 +47,11 @@ public class Fields {
     public Issuetype issuetype;
     public Customfield customfield_10270;
     public Object customfield_10271;
-    public Object customfield_10272;
+    public Object customfield_10272; //Sprint Estimate
     public Project project;
     @Nullable
     public Double customfield_11000;
-    public List<String> customfield_13300;
+    public List<String> customfield_13300; //Team Backlog - List?
     public Object customfield_13302;
     public Object customfield_13301;
     public Object customfield_17900;
@@ -251,4 +251,12 @@ public class Fields {
     public Customfield customfield_12143;
     public Customfield customfield_13900;
     public Customfield customfield_11604;
+    public Customfield customfield_10265; //Commitment type
+    public Customfield customfield_19001; //Type of delivery - String u object?
+    public List<Customfield> customfield_10601; //Definition of Ready (DoR) - List?
+    public List<Customfield> customfield_10600; //Definition of Ready (DoD) - List?
+//    public List<Customfield> customfield_10006; //Feature Name
+    public String customfield_10006; //Feature Name
+    public List<Customfield> customfield_12323; //SDA Project - SDA PROJECT - Deliverable
+
 }
