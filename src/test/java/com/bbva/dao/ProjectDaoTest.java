@@ -124,7 +124,6 @@ class ProjectDaoTest {
         verify(projectMapperMock).getProjectStatusTracking(projectId);
         verify(sqlSessionMock).close();
     }
-
     @Test
     void testValidateInfoProjectByProjectId_missingParticipantAndDocument() {
         int projectId = 1;
