@@ -1,10 +1,13 @@
 package com.bbva.dao;
 
 import com.bbva.database.MyBatisConnectionFactory;
+import com.bbva.database.mappers.CatalogMapper;
 import com.bbva.database.mappers.ProjectMapper;
 import com.bbva.dto.project.request.ProjectInfoFilterRequest;
 import com.bbva.dto.project.response.ProjectInfoFilterResponse;
 import com.bbva.dto.project.response.ProjectInfoSelectResponse;
+import com.bbva.dto.project.response.ProjectValidationParamsDtoResponse;
+import com.bbva.entities.common.CatalogEntity;
 import com.bbva.entities.project.ProjectStatusEntity;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -14,9 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.MockitoAnnotations;
 
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -27,6 +28,7 @@ class ProjectDaoTest {
     private SqlSessionFactory sqlSessionFactoryMock;
     private SqlSession sqlSessionMock;
     private ProjectMapper projectMapperMock;
+    private CatalogMapper catalogMapperMock;
     private MockedStatic<MyBatisConnectionFactory> mockedFactory;
 
     @BeforeEach
@@ -35,12 +37,14 @@ class ProjectDaoTest {
         sqlSessionFactoryMock = mock(SqlSessionFactory.class);
         sqlSessionMock = mock(SqlSession.class);
         projectMapperMock = mock(ProjectMapper.class);
+        catalogMapperMock = mock(CatalogMapper.class);
 
         mockedFactory = mockStatic(MyBatisConnectionFactory.class);
         mockedFactory.when(MyBatisConnectionFactory::getInstance).thenReturn(sqlSessionFactoryMock);
 
         when(sqlSessionFactoryMock.openSession()).thenReturn(sqlSessionMock);
         when(sqlSessionMock.getMapper(ProjectMapper.class)).thenReturn(projectMapperMock);
+        when(sqlSessionMock.getMapper(CatalogMapper.class)).thenReturn(catalogMapperMock);
         projectDao = new ProjectDao();
     }
 
@@ -119,5 +123,30 @@ class ProjectDaoTest {
         verify(sqlSessionMock).getMapper(ProjectMapper.class);
         verify(projectMapperMock).getProjectStatusTracking(projectId);
         verify(sqlSessionMock).close();
+    }
+    @Test
+    void testValidateInfoProjectByProjectId_missingParticipantAndDocument() {
+        int projectId = 1;
+
+        List<CatalogEntity> mockCatalogData = new ArrayList<>();
+
+        mockCatalogData.add(new CatalogEntity(1037, 1037, "DESCRIPTION_PARTICIPANTS", 1));
+        mockCatalogData.add(new CatalogEntity(1037, 1, "Participante 1", 2));
+
+        mockCatalogData.add(new CatalogEntity(1036, 1036, "DESCRIPTION_DOCUMENTS", 1));
+        mockCatalogData.add(new CatalogEntity(1036, 2, "Documento 2", 2));
+
+        when(catalogMapperMock.getListByCatalog(any(int[].class))).thenReturn(new ArrayList<>(mockCatalogData));
+
+        when(projectMapperMock.getProjectParticipants(projectId)).thenReturn(Collections.emptyList());
+        when(projectMapperMock.getDocument(projectId, 0)).thenReturn(Collections.emptyList());
+
+        List<ProjectValidationParamsDtoResponse> result = projectDao.validateInfoProjectByProjectId(projectId);
+
+        assertNotNull(result);
+        assertEquals(2, result.size());
+
+        assertTrue(result.stream().anyMatch(e -> e.getMessage().contains("Participante 1")));
+        assertFalse(result.stream().anyMatch(e -> e.getMessage().contains("Documento 2")));
     }
 }
