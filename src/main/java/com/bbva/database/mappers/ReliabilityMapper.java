@@ -109,7 +109,9 @@ public interface ReliabilityMapper {
             "#{projectId}," +
             "#{creatorUserId}," +
             "#{pdfLink}," +
-            "#{jobCount})")
+            "#{jobCount}," +
+            "#{statusId}" +
+            ")")
     void insertTranfer(TransferInputDtoRequest dto);
 
     @Insert("CALL SP_INSERT_JOB_STOCK(" +

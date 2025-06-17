@@ -16,5 +16,6 @@ public class TransferInputDtoRequest {
     private Integer creatorUserId;
     private String pdfLink;
     private Integer jobCount;
+    private Integer statusId;
     private List<JobTransferInputDtoRequest> transferInputDtoRequests;
 }
