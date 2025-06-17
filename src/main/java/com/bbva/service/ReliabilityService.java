@@ -161,7 +161,7 @@ public class ReliabilityService {
             var result = reliabilityDao.getReliabilityPacks(dto);
             return new SuccessDataResult<>(result);
         } catch (Exception e) {
-            log.severe("Error updating job stock: " + e.getMessage());
+            log.severe("Error get reliability stock: " + e.getMessage());
             return new ErrorDataResult<>(null, "500", e.getMessage());
         }
     }
@@ -171,7 +171,7 @@ public class ReliabilityService {
             reliabilityDao.updateStatusReliabilityPacksJobStock(packs);
             return new SuccessDataResult<>(null, "ReliabilityPacks and JobStock updated successfully");
         } catch (Exception e) {
-            log.severe("Error updating job stock: " + e.getMessage());
+            log.severe("Error updating reliability packs and Job stock: " + e.getMessage());
             return new ErrorDataResult<>(null, "500", e.getMessage());
         }
     }
