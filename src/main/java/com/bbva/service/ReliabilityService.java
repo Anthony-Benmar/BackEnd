@@ -7,6 +7,7 @@ import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dao.ReliabilityDao;
 import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
 import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
+import com.bbva.dto.reliability.request.ReliabilityPackInputFilterRequest;
 import com.bbva.dto.reliability.response.ExecutionValidationDtoResponse;
 import com.bbva.dto.reliability.response.InventoryInputsFilterDtoResponse;
 import com.bbva.dto.reliability.response.PendingCustodyJobsDtoResponse;
@@ -153,5 +154,25 @@ public class ReliabilityService {
 
     private String nullSafe(String value) {
         return value != null ? value : "";
+    }
+
+    public IDataResult<PaginationReliabilityPackResponse> getReliabilityPacks(ReliabilityPackInputFilterRequest dto) {
+        try {
+            var result = reliabilityDao.getReliabilityPacks(dto);
+            return new SuccessDataResult<>(result);
+        } catch (Exception e) {
+            log.severe("Error updating job stock: " + e.getMessage());
+            return new ErrorDataResult<>(null, "500", e.getMessage());
+        }
+    }
+
+    public IDataResult<Void> updateStatusReliabilityPacksJobStock(List<String> packs) {
+        try {
+            reliabilityDao.updateStatusReliabilityPacksJobStock(packs);
+            return new SuccessDataResult<>(null, "ReliabilityPacks and JobStock updated successfully");
+        } catch (Exception e) {
+            log.severe("Error updating job stock: " + e.getMessage());
+            return new ErrorDataResult<>(null, "500", e.getMessage());
+        }
     }
 }

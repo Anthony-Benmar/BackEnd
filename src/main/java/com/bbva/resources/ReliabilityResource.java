@@ -5,6 +5,7 @@ import com.bbva.common.HttpStatusCodes;
 import com.bbva.core.abstracts.IDataResult;
 import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
 import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
+import com.bbva.dto.reliability.request.ReliabilityPackInputFilterRequest;
 import com.bbva.dto.reliability.request.TransferInputDtoRequest;
 import com.bbva.dto.reliability.response.*;
 import com.bbva.service.ReliabilityService;
@@ -95,5 +96,22 @@ public class ReliabilityResource {
                 .header("Access-Control-Expose-Headers", CONTENTDISPOSITION)
                 .build();
     }
+    @POST
+    @Path("/info/reliability_packs")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<PaginationReliabilityPackResponse> getReliabilityPacks(ReliabilityPackInputFilterRequest dto)
+    {
+        return reliabilityService.getReliabilityPacks(dto);
+    }
 
+    @PUT
+    @Path("/update_status/reliability_packs_job_stock")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<Void> updateStatusReliabilityPacksJobStock(@Context HttpServletRequest request,
+                                                 List<String> packs)
+    {
+        return reliabilityService.updateStatusReliabilityPacksJobStock(packs);
+    }
 }

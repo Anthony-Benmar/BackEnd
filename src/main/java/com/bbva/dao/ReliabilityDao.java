@@ -2,10 +2,13 @@ package com.bbva.dao;
 
 import com.bbva.database.MyBatisConnectionFactory;
 import com.bbva.database.mappers.ReliabilityMapper;
+import com.bbva.database.mappers.UseCaseMapper;
 import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
 import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
+import com.bbva.dto.reliability.request.ReliabilityPackInputFilterRequest;
 import com.bbva.dto.reliability.request.TransferInputDtoRequest;
 import com.bbva.dto.reliability.response.*;
+import com.bbva.dto.use_case.response.UseCaseInputsFilterDtoResponse;
 import com.bbva.util.JSONUtils;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -171,6 +174,49 @@ public class ReliabilityDao {
         }catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
             return List.of();
+        }
+    }
+
+    public PaginationReliabilityPackResponse getReliabilityPacks(ReliabilityPackInputFilterRequest dto) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        List<ReliabilityPacksDtoResponse> lista;
+        Integer recordsCount = 0;
+        Integer pagesAmount = 0;
+        var response = new PaginationReliabilityPackResponse();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ReliabilityMapper mapper = session.getMapper(ReliabilityMapper.class);
+            lista = mapper.getReliabilityPacks(
+                    dto.getDomainName(),
+                    dto.getUseCase()
+            );
+        }
+        recordsCount = (lista.isEmpty()) ? 0 : (int) lista.size();
+        pagesAmount = dto.getRecordsAmount() > 0 ? (int) Math.ceil(recordsCount.floatValue() / dto.getRecordsAmount().floatValue()) : 1;
+
+        if (dto.getRecordsAmount() > 0) {
+            lista = lista.stream()
+                    .skip((long) dto.getRecordsAmount() * (dto.getPage() - 1))
+                    .limit(dto.getRecordsAmount())
+                    .toList();
+        }
+
+        response.setCount(recordsCount);
+        response.setPagesAmount(pagesAmount);
+        response.setData(lista);
+        return response;
+    }
+
+    public void updateStatusReliabilityPacksJobStock(List<String> packs) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ReliabilityMapper reliabilityMapper = session.getMapper(ReliabilityMapper.class);
+            packs.forEach(pack -> {
+                reliabilityMapper.updateReliabilityStatus(pack, 1);
+                reliabilityMapper.updateProjectInfoStatus(pack, 1);
+            });
+            session.commit();
+        }catch (Exception e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
         }
     }
 }

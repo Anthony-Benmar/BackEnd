@@ -8,6 +8,7 @@ import lombok.Setter;
 public class InventoryJobUpdateDtoRequest {
     private String jobName;
     private String componentName;
+    private String bitBucketUrl;
     private int frequencyId;
     private String inputPaths;
     private String outputPath;
