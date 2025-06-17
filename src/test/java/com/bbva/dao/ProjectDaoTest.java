@@ -25,7 +25,6 @@ import static org.mockito.Mockito.*;
 class ProjectDaoTest {
 
     private ProjectDao projectDao;
-    private CatalogDao catalogDao;
     private SqlSessionFactory sqlSessionFactoryMock;
     private SqlSession sqlSessionMock;
     private ProjectMapper projectMapperMock;
@@ -47,7 +46,6 @@ class ProjectDaoTest {
         when(sqlSessionMock.getMapper(ProjectMapper.class)).thenReturn(projectMapperMock);
         when(sqlSessionMock.getMapper(CatalogMapper.class)).thenReturn(catalogMapperMock);
         projectDao = new ProjectDao();
-        catalogDao = new CatalogDao();
     }
 
     @AfterEach
