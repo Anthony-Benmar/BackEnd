@@ -1,6 +1,5 @@
 package com.bbva.dao;
 
-import com.bbva.core.abstracts.IDataResult;
 import com.bbva.database.MyBatisConnectionFactory;
 import com.bbva.database.mappers.ReliabilityMapper;
 import com.bbva.dto.reliability.request.*;

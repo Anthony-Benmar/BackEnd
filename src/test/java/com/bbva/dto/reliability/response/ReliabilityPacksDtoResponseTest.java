@@ -2,7 +2,7 @@ package com.bbva.dto.reliability.response;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
-public class ReliabilityPacksDtoResponseTest {
+class ReliabilityPacksDtoResponseTest {
 
     @Test
     void testBuilderAndGetters() {
