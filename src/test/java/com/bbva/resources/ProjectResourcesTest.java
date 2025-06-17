@@ -4,6 +4,7 @@ import com.bbva.core.abstracts.IDataResult;
 import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dto.project.request.InsertProjectParticipantDTO;
+import com.bbva.dto.project.response.ProjectValidationParamsDtoResponse;
 import com.bbva.entities.project.ProjectStatusEntity;
 import com.bbva.service.ProjectService;
 import org.junit.jupiter.api.BeforeEach;
@@ -98,5 +99,19 @@ class ProjectResourcesTest {
         assertNotNull(result);
         assertEquals(mockResult, result);
         verify(projectServiceMock).getProjectParticipants(projectId);
+    }
+    @Test
+    void testGetValidateError() {
+        int projectId = 1;
+        String errorMessage = "Error fetching project participants";
+        IDataResult<List<ProjectValidationParamsDtoResponse>> mockResult = new ErrorDataResult<>(errorMessage);
+
+        when(projectServiceMock.validateInfoProjectByProjectId(projectId)).thenReturn(mockResult);
+
+        IDataResult<List<ProjectValidationParamsDtoResponse>> result = projectResources.validateInfoProjectByProjectId(requestMock, projectId);
+
+        assertNotNull(result);
+        assertEquals(mockResult, result);
+        verify(projectServiceMock).validateInfoProjectByProjectId(projectId);
     }
 }
