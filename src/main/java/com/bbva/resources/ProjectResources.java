@@ -278,7 +278,7 @@ public class ProjectResources {
     @Path("/{projectId}/validate")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public IDataResult<List<ProjectValidationParamsDtoResponse>> validateInfoProjectByProjectId(@PathParam("projectId") int projectId){
+    public IDataResult<List<ProjectValidationParamsDtoResponse>> validateInfoProjectByProjectId(@Context HttpServletRequest request, @PathParam("projectId") int projectId){
         return projectService.validateInfoProjectByProjectId(projectId);
     }
 }

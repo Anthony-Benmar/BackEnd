@@ -584,6 +584,4 @@ public class ProjectDao {
                 )
                 .toList();
     }
-
-
 }

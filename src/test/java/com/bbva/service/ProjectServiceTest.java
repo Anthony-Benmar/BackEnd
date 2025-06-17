@@ -772,4 +772,27 @@ class ProjectServiceTest {
             return logRecords;
         }
     }
+
+    @Test
+    void testGetValidateProjectParamsSucess() {
+        int idProject = 1;
+        List<ProjectValidationParamsDtoResponse> expectedList = Collections.emptyList();
+        when(projectDaoMock.validateInfoProjectByProjectId(idProject)).thenReturn(Collections.emptyList());
+
+        IDataResult<List<ProjectValidationParamsDtoResponse>> result = projectService.validateInfoProjectByProjectId(idProject);
+
+        assertTrue(result.success);
+        assertEquals(expectedList, result.data);
+    }
+
+    @Test
+    void testGetValidateProjectParamsException() {
+        int projectId = 1;
+        when(projectDaoMock.validateInfoProjectByProjectId(projectId)).thenThrow(new RuntimeException("DB error"));
+
+        IDataResult<List<ProjectValidationParamsDtoResponse>> result = projectService.validateInfoProjectByProjectId(projectId);
+
+        assertFalse(result.success);
+        assertEquals(HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, result.status);
+    }
 }
