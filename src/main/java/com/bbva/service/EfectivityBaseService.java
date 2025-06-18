@@ -11,7 +11,8 @@ import com.bbva.dto.efectivity_base.response.EfectivityBasePaginatedResponseDTO;
 
 import java.util.List;
 
-import static com.bbva.database.MyBatisConnectionFactory.sqlSessionFactory;
+import static com.bbva.database.MyBatisConnectionFactory.getSqlSessionFactory;
+
 
 public class EfectivityBaseService {
     private final EfectivityBaseDao efectivityBaseDao;
@@ -19,7 +20,7 @@ public class EfectivityBaseService {
         this.efectivityBaseDao = efectivityBaseDao;
     }
     public EfectivityBaseService() {
-        this.efectivityBaseDao = new EfectivityBaseDao(sqlSessionFactory);
+        this.efectivityBaseDao = new EfectivityBaseDao(getSqlSessionFactory());
     }
 
     public IDataResult<EfectivityBasePaginatedResponseDTO> getBaseEfectivityWithSource(EfectivityBasePaginationDtoRequest dto) {

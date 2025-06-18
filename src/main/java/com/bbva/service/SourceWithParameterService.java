@@ -11,7 +11,7 @@ import com.bbva.dto.source_with_parameter.response.SourceWithParameterReadOnlyDt
 
 import java.util.List;
 
-import static com.bbva.database.MyBatisConnectionFactory.sqlSessionFactory;
+import static com.bbva.database.MyBatisConnectionFactory.getSqlSessionFactory;
 
 public class SourceWithParameterService {
     private  final SourceWithParameterDao sourceWithParameterDao;
@@ -19,7 +19,7 @@ public class SourceWithParameterService {
         this.sourceWithParameterDao = sourceWithParameterDao;
     }
     public SourceWithParameterService() {
-        this.sourceWithParameterDao = new SourceWithParameterDao(sqlSessionFactory);
+        this.sourceWithParameterDao = new SourceWithParameterDao(getSqlSessionFactory());
     }
     public IDataResult<SourceWithParameterPaginatedResponseDTO> getSourceWithParameter(SourceWithParameterPaginationDtoRequest dto) {
         List<SourceWithParameterDataDtoResponse> result = sourceWithParameterDao.getSourceWithParameter(dto);

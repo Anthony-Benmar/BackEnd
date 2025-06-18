@@ -2,6 +2,7 @@ package com.bbva.service;
 
 import com.bbva.core.abstracts.IDataResult;
 import com.bbva.core.results.SuccessDataResult;
+import com.bbva.dao.EfectivityBaseDao;
 import com.bbva.dao.ExceptionBaseDao;
 import com.bbva.dto.exception_base.request.ExceptionBasePaginationDtoRequest;
 import com.bbva.dto.exception_base.request.ExceptionBaseReadOnlyDtoRequest;
@@ -11,7 +12,7 @@ import com.bbva.dto.exception_base.response.ExceptionBaseReadOnlyDtoResponse;
 
 import java.util.List;
 
-import static com.bbva.database.MyBatisConnectionFactory.sqlSessionFactory;
+import static com.bbva.database.MyBatisConnectionFactory.getSqlSessionFactory;
 
 public class ExceptionBaseService {
     private final ExceptionBaseDao exceptionBaseDao;
@@ -20,7 +21,7 @@ public class ExceptionBaseService {
     }
 
     public ExceptionBaseService() {
-        this.exceptionBaseDao = new ExceptionBaseDao(sqlSessionFactory);
+        this.exceptionBaseDao = new ExceptionBaseDao(getSqlSessionFactory());
     }
     public IDataResult<ExceptionBasePaginatedResponseDTO> getExceptionsWithSource(ExceptionBasePaginationDtoRequest dto) {
         List<ExceptionBaseDataDtoResponse> data = exceptionBaseDao.getExceptionsWithSource(dto);

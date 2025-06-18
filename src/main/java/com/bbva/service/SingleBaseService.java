@@ -11,7 +11,7 @@ import com.bbva.dto.single_base.response.SingleBaseReadOnlyDtoResponse;
 
 import java.util.List;
 
-import static com.bbva.database.MyBatisConnectionFactory.sqlSessionFactory;
+import static com.bbva.database.MyBatisConnectionFactory.getSqlSessionFactory;
 
 public class SingleBaseService {
     private final SingleBaseDao singleBaseDao;
@@ -19,7 +19,7 @@ public class SingleBaseService {
         this.singleBaseDao = singleBaseDao;
     }
     public SingleBaseService() {
-        this.singleBaseDao = new SingleBaseDao(sqlSessionFactory);
+        this.singleBaseDao = new SingleBaseDao(getSqlSessionFactory());
     }
 
     public IDataResult<SingleBasePaginatedResponseDTO> getBaseUnicaWithSource(SingleBasePaginationDtoRequest dto) {
