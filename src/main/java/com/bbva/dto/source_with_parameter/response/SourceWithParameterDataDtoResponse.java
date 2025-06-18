@@ -3,6 +3,9 @@ package com.bbva.dto.source_with_parameter.response;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Arrays;
+import java.util.List;
+
 @Getter
 @Setter
 public class SourceWithParameterDataDtoResponse {
@@ -49,4 +52,27 @@ public class SourceWithParameterDataDtoResponse {
     private String tag3;
     private String tag4;
     private String rawPath;
+    public List<String> getTags() {
+        return Arrays.asList(tag1, tag2, tag3, tag4);
+    }
+
+    public List<String> getLoggingFlags() {
+        return Arrays.asList(l1t, hem, his, err, log, mlg);
+    }
+
+    public List<String> getUUAAInfo() {
+        return Arrays.asList(uuaaRaw, uuaaMaster);
+    }
+
+    public boolean hasIncompleteOpinion() {
+        return "yes".equalsIgnoreCase(incompleteOpinion);
+    }
+
+    public boolean hasMissingCertification() {
+        return "yes".equalsIgnoreCase(missingCertification) || "yes".equalsIgnoreCase(missingFieldProfiling);
+    }
+
+    public boolean isCritical() {
+        return "true".equalsIgnoreCase(criticalTable);
+    }
 }
