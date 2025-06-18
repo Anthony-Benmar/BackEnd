@@ -51,7 +51,6 @@ public interface SingleBaseMapper {
             @Param("oldSourceId") String oldSourceId // <-- Agregado para filtrar por TDS (ID FUENTE)
     );
 
-    // Métodos para combos
     @Select("SELECT DISTINCT folio FROM folios WHERE folio IS NOT NULL")
     List<String> getDistinctFolios();
 
@@ -67,7 +66,6 @@ public interface SingleBaseMapper {
     @Select("SELECT DISTINCT folio_type FROM folios WHERE folio_type IS NOT NULL")
     List<String> getDistinctFolioTypes();
 
-    // ----------- AGREGADO: Método para detalle por ID -----------
     @Select("SELECT * FROM folios WHERE id = #{singleBaseId}")
     @Results({
             @Result(property = "id", column = "id"),

@@ -9,7 +9,6 @@ import com.bbva.dto.efectivity_base.response.EfectivityBaseDataReadOnlyDtoRespon
 import com.bbva.dto.efectivity_base.response.EfectivityBasePaginatedResponseDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
 import java.sql.Date;

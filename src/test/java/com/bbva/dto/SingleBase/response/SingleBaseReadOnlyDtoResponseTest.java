@@ -26,10 +26,25 @@ import org.junit.jupiter.api.Test;
         dto.setOldSourceId(2.0);
         dto.setUcFinalistDesc("Finalist Description");
         dto.setCatalogId("Catalog123");
-
-        // Assert values
-        assert dto.getId() == "1";
+        assertBasicFields(dto);
+    }
+    private void assertBasicFields(SingleBaseReadOnlyDtoResponse dto) {
+        assert "1".equals(dto.getId());
         assert "FOLIO123".equals(dto.getFolio());
         assert "Project A".equals(dto.getProjectName());
+        assert "Source Name".equals(dto.getUcSourceName());
+        assert "Source Description".equals(dto.getUcSourceDesc());
+        assert dto.getRegisteredFolioDate() != null;
+        assert "Active".equals(dto.getStatusFolioType());
+        assert "Analyst123".equals(dto.getAnalystProjectId());
+        assert "CA123".equals(dto.getAnalystCaId());
+        assert "Type A".equals(dto.getResolutionSourceType());
+        assert dto.getResolutionSourceDate() != null;
+        assert "Reused123".equals(dto.getReusedFolioCode());
+        assert "Resolution Comment".equals(dto.getResolutionCommentDesc());
+        assert "Type B".equals(dto.getFolioType());
+        assert dto.getOldSourceId() == 2.0;
+        assert "Finalist Description".equals(dto.getUcFinalistDesc());
+        assert "Catalog123".equals(dto.getCatalogId());
     }
 }

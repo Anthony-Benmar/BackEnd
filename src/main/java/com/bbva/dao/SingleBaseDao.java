@@ -8,7 +8,6 @@ import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class SingleBaseDao {
@@ -35,9 +34,8 @@ public class SingleBaseDao {
             if (result == null) {
                 result = List.of();
             }
-            log.info("SingleBaseDao - Registros obtenidos: " + result.size());
         } catch (Exception e) {
-            log.log(Level.SEVERE, "Error en getBaseUnicaWithSource: " + e.getMessage(), e);
+            log.info("Error en getBaseUnicaWithSource: "+ e.getMessage());
         }
         return result;
     }
@@ -54,9 +52,8 @@ public class SingleBaseDao {
                     dto.getRegisteredFolioDate(),
                     dto.getOldSourceId() // <-- Agregado para filtrar por TDS (ID FUENTE)
             );
-            log.info("SingleBaseDao - Total filtrado: " + totalCount);
         } catch (Exception e) {
-            log.log(Level.SEVERE, "Error en getBaseUnicaTotalCount: " + e.getMessage(), e);
+            log.info("Error en SingleBasePaginationDtoRequest: "+ e.getMessage());
         }
         return totalCount;
     }
@@ -68,7 +65,7 @@ public class SingleBaseDao {
             SingleBaseMapper mapper = session.getMapper(SingleBaseMapper.class);
             result = mapper.getSingleBaseById(singleBaseId);
         } catch (Exception e) {
-            log.log(Level.SEVERE, "Error en getSourceWithParameterById: " + e.getMessage(), e);
+            log.info("Error en getSingleBaseById: "+ e.getMessage());
             return null;
         }
         return result;

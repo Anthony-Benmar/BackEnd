@@ -59,6 +59,7 @@ class SourceWithParameterReadOnlyDtoResponseTest {
          assertBasicFields(dto);
          assertTagsAndPaths(dto);
          assertCriticalFields(dto);
+         assertDebs(dto);
     }
     private void assertBasicFields(SourceWithParameterReadOnlyDtoResponse dto) {
         assertEquals("1", dto.getId());
@@ -89,5 +90,26 @@ class SourceWithParameterReadOnlyDtoResponseTest {
         assertEquals("LOG", dto.getLog());
         assertEquals("MLG", dto.getMlg());
         assertEquals("High", dto.getQuality());
+    }
+    private void assertDebs(SourceWithParameterReadOnlyDtoResponse dto) {
+        assertEquals("Raw", dto.getUuaaRaw());
+        assertEquals("Master", dto.getUuaaMaster());
+        assertEquals("Debt", dto.getTdsOpinionDebt());
+        assertEquals("High", dto.getDebtLevel());
+        assertEquals("Inherited123", dto.getInheritedSourceId());
+        assertEquals("Comments", dto.getOpinionDebtComments());
+        assertEquals("Certification", dto.getMissingCertification());
+        assertEquals("Profiling", dto.getMissingFieldProfiling());
+        assertEquals("Incomplete", dto.getIncompleteOpinion());
+        assertEquals("Use", dto.getPdcoProcessingUse());
+        assertEquals("Effective", dto.getEffectivenessDebt());
+        assertEquals("Type", dto.getIngestionType());
+        assertEquals("Layer", dto.getIngestionLayer());
+        assertEquals("Download", dto.getDatioDownloadType());
+        assertEquals("Table123", dto.getProcessingInputTableIds());
+        assertEquals("Monthly", dto.getPeriodicity());
+        assertEquals("Detail", dto.getPeriodicityDetail());
+        assertEquals("http://example.com", dto.getFolderUrl());
+        assertEquals("Typology", dto.getTypology());
     }
 }

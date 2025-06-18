@@ -1,7 +1,6 @@
 package com.bbva.database.mappers;
 
 import com.bbva.dto.exception_base.response.ExceptionBaseDataDtoResponse;
-import com.bbva.dto.exception_base.response.ExceptionBaseReadOnlyDtoResponse;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Result;
 import org.apache.ibatis.annotations.Results;
@@ -43,7 +42,6 @@ public interface ExceptionBaseMapper {
             @Param("quarterYearSprint") String quarterYearSprint
     );
 
-    // Métodos para combos
     @Select("CALL GET_DISTINCT_REQUESTING_PROJECTS()")
     List<String> getDistinctRequestingProjects();
 
@@ -56,7 +54,6 @@ public interface ExceptionBaseMapper {
     @Select("CALL GET_DISTINCT_QUARTER_YEAR_SPRINTS()")
     List<String> getDistinctQuarterYearSprints();
 
-    // Detalle por ID
     @Select("SELECT * FROM exceptions_new WHERE ID = #{exceptionId}")
     @Results({
             @Result(property = "id", column = "ID"),

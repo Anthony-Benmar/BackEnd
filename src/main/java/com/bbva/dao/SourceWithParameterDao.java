@@ -2,14 +2,12 @@ package com.bbva.dao;
 
 import com.bbva.database.MyBatisConnectionFactory;
 import com.bbva.database.mappers.SourceWithParameterMapper;
-import com.bbva.dto.exception_base.response.ExceptionBaseDataDtoResponse;
 import com.bbva.dto.source_with_parameter.request.SourceWithParameterPaginationDtoRequest;
 import com.bbva.dto.source_with_parameter.response.SourceWithParameterDataDtoResponse;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class SourceWithParameterDao {
@@ -37,7 +35,7 @@ public class SourceWithParameterDao {
                     dto.getEffectivenessDebt()
             );
         }catch (Exception e) {
-            log.log(Level.SEVERE, e.getMessage(), e);
+            log.info("Error en getSourceWithParameter: "+ e.getMessage());
         }
         return result;
     }
@@ -55,9 +53,8 @@ public class SourceWithParameterDao {
                     dto.getTdsOpinionDebt(),
                     dto.getEffectivenessDebt()
             );
-            log.info("SourceWithParameterDao - Total filtrado: " + totalCount);
         } catch (Exception e) {
-            log.log(Level.SEVERE, "Error en getSourceWithParameterTotalCount: " + e.getMessage(), e);
+            log.info("Error en getSourceWithParameterTotalCount: "+ e.getMessage());
         }
         return totalCount;
     }
@@ -67,7 +64,7 @@ public class SourceWithParameterDao {
             SourceWithParameterMapper mapper = session.getMapper(SourceWithParameterMapper.class);
             result = mapper.getSourceWithParameterById(singleId);
         } catch (Exception e) {
-            log.log(Level.SEVERE, "Error en getSourceWithParameterById: " + e.getMessage(), e);
+            log.info("Error en getSourceWithParameterById: "+ e.getMessage());
             return null;
         }
         return result;

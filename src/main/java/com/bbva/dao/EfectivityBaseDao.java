@@ -8,7 +8,6 @@ import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class EfectivityBaseDao {
@@ -34,9 +33,8 @@ public class EfectivityBaseDao {
             if (result == null) {
                 result = List.of();
             }
-            log.info("EfectivityBaseDao - Registros obtenidos: " + result.size());
         } catch (Exception e) {
-            log.log(Level.SEVERE, "Error en getBaseEfectivityWithSource: " + e.getMessage(), e);
+            log.info("EfectivityBaseDao - No se encontraron registros con los filtros proporcionados."+ e.getMessage());
         }
         return result;
     }
@@ -51,9 +49,8 @@ public class EfectivityBaseDao {
                     dto.getRegisterDate(),
                     dto.getEfficiency()
             );
-            log.info("EfectivityBaseDao - Total filtrado: " + totalCount);
         } catch (Exception e) {
-            log.log(Level.SEVERE, "Error en getBaseEfectivityTotalCount: " + e.getMessage(), e);
+            log.info("Error en getBaseEfectivityTotalCount "+ e.getMessage());
         }
         return totalCount;
     }
@@ -62,9 +59,8 @@ public class EfectivityBaseDao {
         try (SqlSession session = sqlSessionFactory.openSession()) {
             EfectivityBaseMapper mapper = session.getMapper(EfectivityBaseMapper.class);
             result = mapper.getBaseEfectivityById(singleId);
-            log.info("EfectivityBaseDao - Registro obtenido por ID: " + (result != null ? result.getId() : "null"));
         } catch (Exception e) {
-            log.log(Level.SEVERE, "Error en getBaseEfectivityById: " + e.getMessage(), e);
+            log.info("Error en getBaseEfectivityById: "+ e.getMessage());
         }
         return result;
     }

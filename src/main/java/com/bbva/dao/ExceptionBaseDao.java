@@ -4,13 +4,10 @@ import com.bbva.database.MyBatisConnectionFactory;
 import com.bbva.database.mappers.ExceptionBaseMapper;
 import com.bbva.dto.exception_base.request.ExceptionBasePaginationDtoRequest;
 import com.bbva.dto.exception_base.response.ExceptionBaseDataDtoResponse;
-import com.bbva.dto.exception_base.request.ExceptionBaseReadOnlyDtoRequest;
-import com.bbva.dto.exception_base.response.ExceptionBaseReadOnlyDtoResponse;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class ExceptionBaseDao {
@@ -36,9 +33,8 @@ public class ExceptionBaseDao {
             if (result == null) {
                 result = List.of();
             }
-            log.info("ExceptionBaseDao - Registros obtenidos: " + result.size());
         } catch (Exception e) {
-            log.log(Level.SEVERE, "Error en getExceptionsWithSource: " + e.getMessage(), e);
+            log.info("Error en getExceptionsWithSource: "+ e.getMessage());
         }
         return result;
     }
@@ -53,9 +49,8 @@ public class ExceptionBaseDao {
                     dto.getRegistrationDate(),
                     dto.getQuarterYearSprint()
             );
-            log.info("ExceptionBaseDao - Total filtrado: " + totalCount);
         } catch (Exception e) {
-            log.log(Level.SEVERE, "Error en getExceptionsTotalCount: " + e.getMessage(), e);
+            log.info("Error en getExceptionsTotalCount: "+ e.getMessage());
         }
         return totalCount;
     }
@@ -65,9 +60,8 @@ public class ExceptionBaseDao {
         try (SqlSession session = sqlSessionFactory.openSession()) {
             ExceptionBaseMapper mapper = session.getMapper(ExceptionBaseMapper.class);
             result = mapper.getExceptionById(exceptionId);
-            log.info("ExceptionBaseDao - Registro obtenido por ID: " + (result != null ? result.getId() : "null"));
         } catch (Exception e) {
-        log.log(Level.SEVERE, "Error en getExceptionById: " + e.getMessage(), e);
+            log.info("Error en getExceptionById: "+ e.getMessage());
         }
         return result;
     }
