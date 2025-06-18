@@ -55,7 +55,14 @@
         <sonar.java.source>17</sonar.java.source>
         <sonar.sources>src/main/java</sonar.sources>
         <sonar.coverage.exclusions>
-            src/main/java/com/dto/**/*.java,
+            src/main/java/com/dto/source_with_parameter/response/*.java,
+            src/main/java/com/dto/source_with_parameter/request/*.java,
+            src/main/java/com/dto/single_base/response/*.java,
+            src/main/java/com/dto/single_base/request/*.java,
+            src/main/java/com/dto/efectivity_base/response/*.java,
+            src/main/java/com/dto/efectivity_base/request/*.java,
+            src/main/java/com/dto/exception_base/response/*.java,
+            src/main/java/com/dto/exception_base/request/*.java,
         </sonar.coverage.exclusions>
     </properties>
 
