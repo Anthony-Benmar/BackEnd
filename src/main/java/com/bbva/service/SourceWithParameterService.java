@@ -14,7 +14,13 @@ import java.util.List;
 import static com.bbva.database.MyBatisConnectionFactory.sqlSessionFactory;
 
 public class SourceWithParameterService {
-    private  final SourceWithParameterDao sourceWithParameterDao = new SourceWithParameterDao(sqlSessionFactory);
+    private  final SourceWithParameterDao sourceWithParameterDao;
+    public SourceWithParameterService(SourceWithParameterDao sourceWithParameterDao) {
+        this.sourceWithParameterDao = sourceWithParameterDao;
+    }
+    public SourceWithParameterService() {
+        this.sourceWithParameterDao = new SourceWithParameterDao(sqlSessionFactory);
+    }
     public IDataResult<SourceWithParameterPaginatedResponseDTO> getSourceWithParameter(SourceWithParameterPaginationDtoRequest dto) {
         List<SourceWithParameterDataDtoResponse> result = sourceWithParameterDao.getSourceWithParameter(dto);
         int totalCount = sourceWithParameterDao.getSourceWithParameterTotalCount(dto);

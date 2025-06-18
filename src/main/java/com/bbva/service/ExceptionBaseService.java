@@ -14,8 +14,14 @@ import java.util.List;
 import static com.bbva.database.MyBatisConnectionFactory.sqlSessionFactory;
 
 public class ExceptionBaseService {
-    private final ExceptionBaseDao exceptionBaseDao = new ExceptionBaseDao(sqlSessionFactory);
+    private final ExceptionBaseDao exceptionBaseDao;
+    public ExceptionBaseService(ExceptionBaseDao exceptionBaseDao) {
+        this.exceptionBaseDao = exceptionBaseDao;
+    }
 
+    public ExceptionBaseService() {
+        this.exceptionBaseDao = new ExceptionBaseDao(sqlSessionFactory);
+    }
     public IDataResult<ExceptionBasePaginatedResponseDTO> getExceptionsWithSource(ExceptionBasePaginationDtoRequest dto) {
         List<ExceptionBaseDataDtoResponse> data = exceptionBaseDao.getExceptionsWithSource(dto);
         int totalCount = exceptionBaseDao.getExceptionsTotalCount(dto);

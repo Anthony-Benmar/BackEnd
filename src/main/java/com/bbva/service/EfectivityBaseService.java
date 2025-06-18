@@ -14,7 +14,13 @@ import java.util.List;
 import static com.bbva.database.MyBatisConnectionFactory.sqlSessionFactory;
 
 public class EfectivityBaseService {
-    private final EfectivityBaseDao efectivityBaseDao = new EfectivityBaseDao(sqlSessionFactory);
+    private final EfectivityBaseDao efectivityBaseDao;
+    public EfectivityBaseService(EfectivityBaseDao efectivityBaseDao) {
+        this.efectivityBaseDao = efectivityBaseDao;
+    }
+    public EfectivityBaseService() {
+        this.efectivityBaseDao = new EfectivityBaseDao(sqlSessionFactory);
+    }
 
     public IDataResult<EfectivityBasePaginatedResponseDTO> getBaseEfectivityWithSource(EfectivityBasePaginationDtoRequest dto) {
         List<EfectivityBaseDataDtoResponse> data = efectivityBaseDao.getBaseEfectivityWithSource(dto);

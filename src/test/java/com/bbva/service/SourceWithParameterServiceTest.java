@@ -1,52 +1,101 @@
 package com.bbva.service;
 
+
 import com.bbva.core.abstracts.IDataResult;
-import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dao.SourceWithParameterDao;
+import com.bbva.dto.source_with_parameter.request.SourceWithParameterPaginationDtoRequest;
 import com.bbva.dto.source_with_parameter.request.SourceWithReadyOnlyDtoRequest;
-import com.bbva.dto.source_with_parameter.response.SourceWithParameterPaginatedResponseDTO;
 import com.bbva.dto.source_with_parameter.response.SourceWithParameterDataDtoResponse;
+import com.bbva.dto.source_with_parameter.response.SourceWithParameterPaginatedResponseDTO;
+import com.bbva.dto.source_with_parameter.response.SourceWithParameterReadOnlyDtoResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-
-import java.util.ArrayList;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class SourceWithParameterServiceTest {
-    @Mock
     private SourceWithParameterDao sourceWithParameterDao;
 
-    @InjectMocks
     private SourceWithParameterService sourceWithParameterService;
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
+        sourceWithParameterDao = mock(SourceWithParameterDao.class);
+        sourceWithParameterService = new SourceWithParameterService(sourceWithParameterDao);
     }
     @Test
     void testGetExceptionsWithSource() {
-        List<SourceWithParameterDataDtoResponse> mockResponse = new ArrayList<>();
-        mockResponse.add(new SourceWithParameterDataDtoResponse()); // Add mock data as needed
-        when(sourceWithParameterDao.getSourceWithParameter(null)).thenReturn(mockResponse);
-        when(sourceWithParameterDao.getSourceWithParameterTotalCount(null)).thenReturn(mockResponse.size());
-        // Act
-        IDataResult<SourceWithParameterPaginatedResponseDTO> result = sourceWithParameterService.getSourceWithParameter(null);
+        SourceWithParameterPaginationDtoRequest request = new SourceWithParameterPaginationDtoRequest();
+        SourceWithParameterDataDtoResponse exception = new SourceWithParameterDataDtoResponse();
+        exception.setId("1");
 
-        // Assert
-        assertEquals(SuccessDataResult.class, result.getClass());
+        when(sourceWithParameterDao.getSourceWithParameter(request)).thenReturn(List.of(exception));
+        when(sourceWithParameterDao.getSourceWithParameterTotalCount(request)).thenReturn(1);
+
+        IDataResult<SourceWithParameterPaginatedResponseDTO> result = sourceWithParameterService.getSourceWithParameter(request);
+        assertNotNull(result);
+        assertTrue(result.success);
+        assertEquals(1, result.data.getTotalCount());
+        assertEquals("1", result.data.getData().get(0).getId());
     }
     @Test
-    void testReadOnly() {
-        when(sourceWithParameterDao.getSourceWithParameterById(String.valueOf(1)))
-                .thenReturn(new SourceWithParameterDataDtoResponse());
-        IDataResult<?> result = sourceWithParameterService.readOnly(new SourceWithReadyOnlyDtoRequest());
-        assertNotNull(result);
+    void testReadOnly_whenDataExists_returnsMappedResponse() {
+        SourceWithReadyOnlyDtoRequest request = new SourceWithReadyOnlyDtoRequest();
+        request.setSourceWithParameterId("123");
+
+        SourceWithParameterDataDtoResponse dbResponse = new SourceWithParameterDataDtoResponse();
+        dbResponse.setId("123");
+        dbResponse.setTdsDescription("desc");
+
+        when(sourceWithParameterDao.getSourceWithParameterById("123")).thenReturn(dbResponse);
+
+        IDataResult<SourceWithParameterReadOnlyDtoResponse> result = sourceWithParameterService.readOnly(request);
+        assertNotNull(result.data);
+        assertEquals("123", result.data.getId());
+        assertEquals("desc", result.data.getTdsDescription());
+    }
+    @Test
+    void testReadOnly_whenDataNull_returnsNullResponse() {
+        SourceWithReadyOnlyDtoRequest request = new SourceWithReadyOnlyDtoRequest();
+        request.setSourceWithParameterId("123");
+
+        when(sourceWithParameterDao.getSourceWithParameterById("123")).thenReturn(null);
+
+        IDataResult<SourceWithParameterReadOnlyDtoResponse> result = sourceWithParameterService.readOnly(request);
+        assertNotNull(result.data);
+        assertNull(result.data.getId());
+    }
+    @Test
+    void testgetDistinctStatuses() {
+       when(sourceWithParameterDao.getDistinctStatuses()).thenReturn(List.of("Active", "Inactive"));
+       List<String> statuses = sourceWithParameterService.getDistinctStatuses();
+        assertEquals(2, statuses.size());
+        assertTrue(statuses.contains("Active"));
+    }
+
+    @Test
+    void testGetDistinctOriginTypes() {
+        when(sourceWithParameterDao.getDistinctOriginTypes()).thenReturn(List.of("Type1", "Type2"));
+        List<String> originTypes = sourceWithParameterService.getDistinctOriginTypes();
+        assertEquals(2, originTypes.size());
+        assertTrue(originTypes.contains("Type1"));
+    }
+    @Test
+    void testGetDistinctTdsOpinionDebts() {
+        when(sourceWithParameterDao.getDistinctTdsOpinionDebts()).thenReturn(List.of("Debt1", "Debt2"));
+        List<String> tdsOpinionDebts = sourceWithParameterService.getDistinctTdsOpinionDebts();
+        assertEquals(2, tdsOpinionDebts.size());
+        assertTrue(tdsOpinionDebts.contains("Debt1"));
+    }
+    @Test
+    void testGetDistinctEffectivenessDebts(){
+        when(sourceWithParameterDao.getDistinctEffectivenessDebts()).thenReturn(List.of("Effective", "Ineffective"));
+        List<String> effectivenessDebts = sourceWithParameterService.getDistinctEffectivenessDebts();
+        assertEquals(2, effectivenessDebts.size());
+        assertTrue(effectivenessDebts.contains("Effective"));
     }
 }
