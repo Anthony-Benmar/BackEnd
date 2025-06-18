@@ -38,7 +38,6 @@
         <resteasy.version>5.0.7.Final</resteasy.version>
         <jetty.version>10.0.15</jetty.version>
 
-        <!-- Plugins -->
         <appengine.maven.plugin.version>2.4.4</appengine.maven.plugin.version>
         <jacoco.maven.plugin.version>0.8.10</jacoco.maven.plugin.version>
         <maven.clean.plugin.version>3.1.0</maven.clean.plugin.version>
