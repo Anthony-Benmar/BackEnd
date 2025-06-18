@@ -54,7 +54,9 @@
 
         <sonar.java.source>17</sonar.java.source>
         <sonar.sources>src/main/java</sonar.sources>
-
+        <sonar.coverage.exclusions>
+            src/main/java/com/dto/**/*.java,
+        </sonar.coverage.exclusions>
     </properties>
 
     <repositories>
