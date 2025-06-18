@@ -22,16 +22,18 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
         dto.setTdsOpinionDebt("Debt Opinion");
         dto.setEffectivenessDebt("Effective");
 
-        // Assert values
-        assertEquals(10, dto.getLimit());
-        assertEquals(0, dto.getOffset());
-        assertEquals("123", dto.getId());
-        assertEquals("Test Source", dto.getTdsSource());
-        assertEquals("Master UUAA", dto.getUuaaMaster());
-        assertEquals("Owner", dto.getModelOwner());
-        assertEquals("Active", dto.getStatus());
-        assertEquals("Type", dto.getOriginType());
-        assertEquals("Debt Opinion", dto.getTdsOpinionDebt());
-        assertEquals("Effective", dto.getEffectivenessDebt());
+        assertBasicFields(dto);
     }
+     private void assertBasicFields(SourceWithParameterPaginationDtoRequest dto) {
+         assertEquals(10, dto.getLimit());
+         assertEquals(0, dto.getOffset());
+         assertEquals("123", dto.getId());
+         assertEquals("Test Source", dto.getTdsSource());
+         assertEquals("Master UUAA", dto.getUuaaMaster());
+         assertEquals("Owner", dto.getModelOwner());
+         assertEquals("Active", dto.getStatus());
+         assertEquals("Type", dto.getOriginType());
+         assertEquals("Debt Opinion", dto.getTdsOpinionDebt());
+         assertEquals("Effective", dto.getEffectivenessDebt());
+     }
 }

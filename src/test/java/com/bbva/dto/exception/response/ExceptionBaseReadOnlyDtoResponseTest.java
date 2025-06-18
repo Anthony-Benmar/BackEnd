@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class ExceptionBaseReadOnlyDtoResponseTest {
+ class ExceptionBaseReadOnlyDtoResponseTest {
     @Test
     void gettersAndSetters() {
         ExceptionBaseReadOnlyDtoResponse response = new ExceptionBaseReadOnlyDtoResponse();

@@ -1,5 +1,6 @@
 package com.bbva.database.mappers;
 
+import com.bbva.dto.single_base.request.SingleBasePaginationDtoRequest;
 import com.bbva.dto.single_base.response.SingleBaseDataDtoResponse;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Result;
@@ -9,7 +10,7 @@ import java.util.List;
 
 public interface SingleBaseMapper {
 
-    @Select("CALL GET_BASE_UNICA(#{limit}, #{offset}, #{id}, #{projectName}, #{tipoFolio}, #{folio}, #{registeredFolioDate}, #{oldSourceId})")
+    @Select("CALL GET_BASE_UNICA(#{filter.limit}, #{filter.offset}, #{filter.id}, #{filter.projectName}, #{filter.tipoFolio}, #{filter.folio}, #{filter.registeredFolioDate}, #{filter.oldSourceId})")
             @Result(property = "id", column = "id")
             @Result(property = "folio", column = "folio")
             @Result(property = "projectName", column = "project_name")
@@ -28,16 +29,7 @@ public interface SingleBaseMapper {
             @Result(property = "ucFinalistDesc", column = "uc_finalist_desc")
             @Result(property = "catalogId", column = "catalog_id")
 
-    List<SingleBaseDataDtoResponse> getBaseUnicaDataWithFilters(
-            @Param("limit") int limit,
-            @Param("offset") int offset,
-            @Param("id") String id,
-            @Param("projectName") String projectName,
-            @Param("tipoFolio") String tipoFolio,
-            @Param("folio") String folio,
-            @Param("registeredFolioDate") String registeredFolioDate,
-            @Param("oldSourceId") String oldSourceId // <-- Agregado para filtrar por TDS (ID FUENTE)
-    );
+    List<SingleBaseDataDtoResponse> getBaseUnicaDataWithFilters(@Param("filter") SingleBasePaginationDtoRequest filter);
 
     @Select("CALL GET_BASE_UNICA_TOTAL(#{id}, #{projectName}, #{tipoFolio}, #{folio}, #{registeredFolioDate}, #{oldSourceId})")
     int getBaseUnicaTotalCountWithFilters(

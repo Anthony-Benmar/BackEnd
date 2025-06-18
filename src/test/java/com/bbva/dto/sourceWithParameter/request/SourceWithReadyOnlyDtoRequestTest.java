@@ -13,6 +13,7 @@ class SourceWithReadyOnlyDtoRequestTest {
         sourceWithReadyOnlyDtoRequest.setSourceWithParameterId("1");
 
         // Then
-        assert sourceWithReadyOnlyDtoRequest.getSourceWithParameterId() == "1";
+      assert sourceWithReadyOnlyDtoRequest.getSourceWithParameterId() == "1";
+      assert sourceWithReadyOnlyDtoRequest.getSourceWithParameterId().equals("1");
     }
 }

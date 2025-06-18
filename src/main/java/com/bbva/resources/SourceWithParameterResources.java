@@ -34,7 +34,8 @@ public class SourceWithParameterResources {
             @QueryParam("modelOwner") String modelOwner,
             @QueryParam("status") String status,
             @QueryParam("originType") String originType,
-            @QueryParam("tdsOpinionDebt") String tdsOpinionDebt
+            @QueryParam("tdsOpinionDebt") String tdsOpinionDebt,
+            @QueryParam("effectivenessDebt") String effectivenessDebt
     ) {
         LOGGER.info("getSourceWithParameter paginated request");
         Integer limitFinal = helper.parseIntegerOrDefault(limit, 30);
@@ -49,6 +50,7 @@ public class SourceWithParameterResources {
         dto.setStatus(status);
         dto.setOriginType(originType);
         dto.setTdsOpinionDebt(tdsOpinionDebt);
+        dto.setEffectivenessDebt(effectivenessDebt);
 
         return sourceWithParameterService.getSourceWithParameter(dto);
     }

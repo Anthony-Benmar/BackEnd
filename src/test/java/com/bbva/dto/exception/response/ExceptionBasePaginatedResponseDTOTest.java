@@ -9,7 +9,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class ExceptionBasePaginatedResponseDTOTest {
+ class ExceptionBasePaginatedResponseDTOTest {
     @Test
     void gettersAndSetters() {
         ExceptionBasePaginatedResponseDTO response = new ExceptionBasePaginatedResponseDTO();

@@ -22,18 +22,7 @@ public class SourceWithParameterDao {
         List<SourceWithParameterDataDtoResponse> result = null;
         try(SqlSession session = sqlSessionFactory.openSession()) {
             SourceWithParameterMapper mapper = session.getMapper(SourceWithParameterMapper.class);
-            result = mapper.getSourcesWithParameterWithFilters(
-                    dto.getLimit(),
-                    dto.getOffset(),
-                    dto.getId(),
-                    dto.getTdsSource(),
-                    dto.getUuaaMaster(),
-                    dto.getModelOwner(),
-                    dto.getStatus(),
-                    dto.getOriginType(),
-                    dto.getTdsOpinionDebt(),
-                    dto.getEffectivenessDebt()
-            );
+            result = mapper.getSourcesWithParameterWithFilters(dto);
         }catch (Exception e) {
             log.info("Error en getSourceWithParameter: "+ e.getMessage());
         }
@@ -43,16 +32,7 @@ public class SourceWithParameterDao {
         int totalCount = 0;
         try (SqlSession session = sqlSessionFactory.openSession()) {
             SourceWithParameterMapper mapper = session.getMapper(SourceWithParameterMapper.class);
-            totalCount = mapper.getSourcesWithParameterTotalCountWithFilters(
-                    dto.getId(),
-                    dto.getTdsSource(),
-                    dto.getUuaaMaster(),
-                    dto.getModelOwner(),
-                    dto.getStatus(),
-                    dto.getOriginType(),
-                    dto.getTdsOpinionDebt(),
-                    dto.getEffectivenessDebt()
-            );
+            totalCount = mapper.getSourcesWithParameterTotalCountWithFilters(dto);
         } catch (Exception e) {
             log.info("Error en getSourceWithParameterTotalCount: "+ e.getMessage());
         }

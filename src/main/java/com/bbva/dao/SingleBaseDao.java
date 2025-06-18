@@ -21,16 +21,7 @@ public class SingleBaseDao {
         List<SingleBaseDataDtoResponse> result = null;
         try (SqlSession session = sqlSessionFactory.openSession()) {
             SingleBaseMapper mapper = session.getMapper(SingleBaseMapper.class);
-            result = mapper.getBaseUnicaDataWithFilters(
-                    dto.getLimit(),
-                    dto.getOffset(),
-                    dto.getId(),
-                    dto.getProjectName(),
-                    dto.getTipoFolio(),
-                    dto.getFolio(),
-                    dto.getRegisteredFolioDate(),
-                    dto.getOldSourceId() // <-- Agregado para filtrar por TDS (ID FUENTE)
-            );
+            result = mapper.getBaseUnicaDataWithFilters(dto);
             if (result == null) {
                 result = List.of();
             }

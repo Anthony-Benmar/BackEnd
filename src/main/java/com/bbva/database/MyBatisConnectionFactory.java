@@ -26,6 +26,7 @@ public class MyBatisConnectionFactory {
         }
         return sqlSessionFactory;
     }
+
     private MyBatisConnectionFactory() {}
 
     public static void initialiceInstance(){
@@ -74,10 +75,7 @@ public class MyBatisConnectionFactory {
     }
 
     public static SqlSessionFactory getInstance() {
-        if (sqlSessionFactory == null){
-            initialiceInstance();
-        }
-        return sqlSessionFactory;
+        return getSqlSessionFactory();
     }
 
 }

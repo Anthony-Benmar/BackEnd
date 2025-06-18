@@ -40,18 +40,7 @@ class SourceWithParameterDaoTest {
      dto.setOffset(0);
 
      List<SourceWithParameterDataDtoResponse> mockResponse = List.of(new SourceWithParameterDataDtoResponse());
-     when(sourceWithParameterMapper.getSourcesWithParameterWithFilters(
-             dto.getLimit(),
-             dto.getOffset(),
-             dto.getId(),
-             dto.getTdsSource(),
-             dto.getUuaaMaster(),
-             dto.getModelOwner(),
-             dto.getStatus(),
-             dto.getOriginType(),
-             dto.getTdsOpinionDebt(),
-             dto.getEffectivenessDebt()
-     )).thenReturn(mockResponse);
+     when(sourceWithParameterMapper.getSourcesWithParameterWithFilters(dto)).thenReturn(mockResponse);
      List<SourceWithParameterDataDtoResponse> result = sourceWithParameterDao.getSourceWithParameter(dto);
      assertNotNull(result);
      assertEquals(1, result.size());
@@ -63,16 +52,7 @@ class SourceWithParameterDaoTest {
         dto.setId("testId");
         dto.setTdsSource("testSource");
 
-        when(sourceWithParameterMapper.getSourcesWithParameterTotalCountWithFilters(
-                dto.getId(),
-                dto.getTdsSource(),
-                dto.getUuaaMaster(),
-                dto.getModelOwner(),
-                dto.getStatus(),
-                dto.getOriginType(),
-                dto.getTdsOpinionDebt(),
-                dto.getEffectivenessDebt()
-        )).thenReturn(5);
+        when(sourceWithParameterMapper.getSourcesWithParameterTotalCountWithFilters(dto)).thenReturn(5);
 
         int count = sourceWithParameterDao.getSourceWithParameterTotalCount(dto);
         assertEquals(5, count);

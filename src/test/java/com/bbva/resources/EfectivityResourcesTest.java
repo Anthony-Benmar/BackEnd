@@ -67,6 +67,5 @@ class EfectivityResourcesTest {
                 .thenReturn(expectedResponse);
         IDataResult<EfectivityBaseDataReadOnlyDtoResponse> actualResponse = efectivityResources.readOnly(dto);
         org.junit.jupiter.api.Assertions.assertEquals(expectedResponse, actualResponse);
-        org.mockito.Mockito.verify(efectivityBaseServiceMock).readOnly(org.mockito.ArgumentMatchers.eq(dto));
-    }
+        org.mockito.Mockito.verify(efectivityBaseServiceMock).readOnly(dto);    }
 }

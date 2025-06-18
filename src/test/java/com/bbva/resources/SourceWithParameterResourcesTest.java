@@ -31,6 +31,7 @@ class SourceWithParameterResourcesTest {
     String status = "Folio123";
     String originType = "2023-01-01";
     String tdsOpinionDebt = "opinionDebt";
+    String effectivenessDebt = "effectivenessDebt";
 
     com.bbva.dto.source_with_parameter.request.SourceWithParameterPaginationDtoRequest dto =
         new com.bbva.dto.source_with_parameter.request.SourceWithParameterPaginationDtoRequest();
@@ -43,6 +44,7 @@ class SourceWithParameterResourcesTest {
     dto.setStatus(status);
     dto.setOriginType(originType);
     dto.setTdsOpinionDebt(tdsOpinionDebt);
+    dto.setEffectivenessDebt(effectivenessDebt);
 
     com.bbva.core.abstracts.IDataResult<com.bbva.dto.source_with_parameter.response.SourceWithParameterPaginatedResponseDTO> expectedResponse =
         org.mockito.Mockito.mock(com.bbva.core.abstracts.IDataResult.class);
@@ -52,7 +54,7 @@ class SourceWithParameterResourcesTest {
 
     // Act
     com.bbva.core.abstracts.IDataResult<com.bbva.dto.source_with_parameter.response.SourceWithParameterPaginatedResponseDTO> actualResponse =
-        sourceWithParameterResources.getSourceWithParameter(limit, offset, id, tdsSource, uuaaMaster, modelOwner, status, originType, tdsOpinionDebt);
+        sourceWithParameterResources.getSourceWithParameter(limit, offset, id, tdsSource, uuaaMaster, modelOwner, status, originType, tdsOpinionDebt,effectivenessDebt);
 
     // Assert
     org.junit.jupiter.api.Assertions.assertEquals(expectedResponse, actualResponse);
@@ -79,6 +81,6 @@ class SourceWithParameterResourcesTest {
 
         IDataResult<SourceWithParameterReadOnlyDtoResponse> actualResponse = sourceWithParameterResources.readOnly(request);
         org.junit.jupiter.api.Assertions.assertEquals(expectedResponse, actualResponse);
-        org.mockito.Mockito.verify(sourceWithParameterServiceMock).readOnly(org.mockito.ArgumentMatchers.eq(request));
+        org.mockito.Mockito.verify(sourceWithParameterServiceMock).readOnly(request);
     }
 }

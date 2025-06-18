@@ -18,5 +18,6 @@ class SingleBasePaginatedResponseDTOTest {
         // Assert values
         assert dto.getTotalCount() == 100;
         assert dto.getData() != null && !dto.getData().isEmpty();
+        assert dto.getData().get(0) instanceof SingleBaseDataDtoResponse;
     }
 }

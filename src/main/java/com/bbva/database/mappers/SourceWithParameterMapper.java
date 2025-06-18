@@ -1,5 +1,6 @@
 package com.bbva.database.mappers;
 
+import com.bbva.dto.source_with_parameter.request.SourceWithParameterPaginationDtoRequest;
 import com.bbva.dto.source_with_parameter.response.SourceWithParameterDataDtoResponse;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Result;
@@ -8,8 +9,8 @@ import org.apache.ibatis.annotations.Select;
 import java.util.List;
 
 public interface SourceWithParameterMapper {
-    @Select("CALL GET_SOURCES_WITH_PARAMETER(#{limit}, #{offset}, #{id}, #{tdsSource}, #{uuaaMaster}, #{modelOwner}," +
-            " #{status}, #{originType}, #{tdsOpinionDebt}, #{effectivenessDebt})")
+    @Select("CALL GET_SOURCES_WITH_PARAMETER(#{filter.limit}, #{filter.offset}, #{filter.id}, #{filter.tdsSource}, #{filter.uuaaMaster}, #{filter.modelOwner}," +
+            " #{filter.status}, #{filter.originType}, #{filter.tdsOpinionDebt}, #{filter.effectivenessDebt})")
             @Result(property = "id", column = "id")
             @Result(property = "tdsDescription", column = "tds_description")
             @Result(property = "tdsSource", column = "tds_source")
@@ -53,30 +54,12 @@ public interface SourceWithParameterMapper {
             @Result(property = "tag3", column = "tag3")
             @Result(property = "tag4", column = "tag4")
             @Result(property = "rawPath", column = "raw_path")
-    List<SourceWithParameterDataDtoResponse> getSourcesWithParameterWithFilters(
-            @Param("limit") int limit,
-            @Param("offset") int offset,
-            @Param("id") String id,
-            @Param("tdsSource") String tdsSource,
-            @Param("uuaaMaster") String uuaaMaster,
-            @Param("modelOwner") String modelOwner,
-            @Param("status") String status,
-            @Param("originType") String originType,
-            @Param("tdsOpinionDebt") String tdsOpinionDebt,
-            @Param("effectivenessDebt") String effectivenessDebt
-    );
-    @Select("CALL GET_SOURCES_WITH_PARAMETER_TOTAL(#{id}, #{tdsSource}, #{uuaaMaster}, #{modelOwner}, #{status}," +
-            " #{originType}, #{tdsOpinionDebt}, #{effectivenessDebt})")
+    List<SourceWithParameterDataDtoResponse> getSourcesWithParameterWithFilters(@Param("filter") SourceWithParameterPaginationDtoRequest filter);
+    @Select("CALL GET_SOURCES_WITH_PARAMETER_TOTAL(#{filter.id}, #{filter.tdsSource}, #{filter.uuaaMaster}, #{filter.modelOwner}, #{filter.status}," +
+            " #{filter.originType}, #{filter.tdsOpinionDebt}, #{filter.effectivenessDebt})")
     int getSourcesWithParameterTotalCountWithFilters(
-            @Param("id") String id,
-            @Param("tdsSource") String tdsSource,
-            @Param("uuaaMaster") String uuaaMaster,
-            @Param("modelOwner") String modelOwner,
-            @Param("status") String status,
-            @Param("originType") String originType,
-            @Param("tdsOpinionDebt") String tdsOpinionDebt,
-            @Param("effectivenessDebt") String effectivenessDebt
-    );
+            @Param("filter")SourceWithParameterPaginationDtoRequest filter
+            );
 
     @Select("SELECT DISTINCT status FROM sources WHERE tds_source IS NOT NULL")
     List<String> getStatus();

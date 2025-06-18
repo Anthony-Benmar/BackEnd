@@ -43,16 +43,7 @@ class SingleBaseDaoTest {
         dto.setOffset(0);
 
         List<SingleBaseDataDtoResponse> mockResponse = List.of(new SingleBaseDataDtoResponse());
-        when(singleBaseMapper.getBaseUnicaDataWithFilters(
-                dto.getLimit(),
-                dto.getOffset(),
-                dto.getId(),
-                dto.getProjectName(),
-                dto.getTipoFolio(),
-                dto.getFolio(),
-                dto.getRegisteredFolioDate(),
-                dto.getOldSourceId()
-        )).thenReturn(mockResponse);
+        when(singleBaseMapper.getBaseUnicaDataWithFilters(dto)).thenReturn(mockResponse);
 
         List<SingleBaseDataDtoResponse> result = singleBaseDao.getBaseUnicaWithSource(dto);
         assertNotNull(result);

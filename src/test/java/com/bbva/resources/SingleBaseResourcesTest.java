@@ -75,6 +75,7 @@ class SingleBaseResourcesTest {
 
         // Assert
         org.junit.jupiter.api.Assertions.assertEquals(expectedResponse, actualResponse);
-        org.mockito.Mockito.verify(singleBaseServiceMock).readOnly(org.mockito.ArgumentMatchers.eq(request));
+        org.mockito.Mockito.verify(singleBaseServiceMock).readOnly(request);
+
     }
 }

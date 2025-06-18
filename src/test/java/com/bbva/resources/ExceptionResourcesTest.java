@@ -70,6 +70,6 @@ class ExceptionResourcesTest {
                 .thenReturn(expectedResponse);
         IDataResult<ExceptionBaseReadOnlyDtoResponse> actualResponse = exceptionBaseResources.readOnly(dto);
         org.junit.jupiter.api.Assertions.assertEquals(expectedResponse, actualResponse);
-        org.mockito.Mockito.verify(exceptionBaseServiceMock).readOnly(org.mockito.ArgumentMatchers.eq(dto));
+        org.mockito.Mockito.verify(exceptionBaseServiceMock).readOnly(dto);
     }
 }
