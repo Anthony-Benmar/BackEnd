@@ -25,4 +25,5 @@ public class ProjectInfoDTO {
     private Integer countryPriorityType;
     private String createAuditUser;
     private Integer statusType;
+    private Integer useCaseId;
 }

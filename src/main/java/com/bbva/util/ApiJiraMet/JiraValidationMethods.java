@@ -177,13 +177,15 @@ public class JiraValidationMethods {
         );
     }
 
-    public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMessage, String group) {
+    public Map<String, Object> getValidationPR(String tipoDesarrollo, String helpMessage,String teamBackLogId, String group, List<InfoJiraProject> infoJiraProjectList) {
         String message;
         boolean isValid;
         boolean isWarning = false;
 
         List<String> prsStatusException = List.of("DECLINED");
         List<String> prsStatusWarning = List.of("MERGED");
+
+        List<String> smFpRoles = Arrays.asList("1", "2", "3");
 
         JsonObject jiraTicketResultPrs = jiraTicketResult.getAsJsonObject(FIELDS);
 
@@ -197,9 +199,22 @@ public class JiraValidationMethods {
 
         List<String> tipoDesarrolloPRs = getDevelopmentTypes();
         if (isValidDevelopmentType(tipoDesarrollo, tipoDesarrolloPRs)) {
-            message = generateValidationMessage(cantidadPrsValidas, cantidadPrsWarning, prValid, prWarning);
-            isValid = cantidadPrsValidas == 1;
-            isWarning = cantidadPrsWarning > 0;
+            if (cantidadPrsValidas == 1) {
+                boolean isApprovedBySMorFP = validateApprovalBySMorFP(teamBackLogId, infoJiraProjectList, smFpRoles);
+                isValid = true;
+                message = isApprovedBySMorFP
+                        ? "Con PR asociada y aprobada por Scrum Master o Focal Point: " + prValid.keySet()
+                        : "Con PR asociada: " + prValid.keySet();
+            } else {
+                message = "No se detectó una PR válida asociada.";
+                message += " Atención: Si la PR fue asociada correctamente, falta dar permisos de acceso.";
+                isValid = false;
+            }
+
+            if (cantidadPrsWarning > 0) {
+                isWarning = true;
+                message += " Atención: Se encontraron " + cantidadPrsWarning + " PRs asociadas en MERGED: " + prWarning.keySet();
+            }
         } else {
             if (cantidadPrsValidas == 0) {
                 message = "Sin PR asociada.";
@@ -215,27 +230,6 @@ public class JiraValidationMethods {
 
     private boolean isValidDevelopmentType(String tipoDesarrollo, List<String> tipoDesarrolloPRs) {
         return tipoDesarrollo.equalsIgnoreCase("PRs") || tipoDesarrollo.equalsIgnoreCase(MALLAS) || tipoDesarrolloPRs.contains(tipoDesarrollo.toLowerCase());
-    }
-
-    private String generateValidationMessage(int cantidadPrsValidas, int cantidadPrsWarning, Map<String, String> prValid, Map<String, String> prWarning) {
-        StringBuilder message = new StringBuilder();
-
-        if (cantidadPrsValidas == 1) {
-            message.append("Con PR asociada: ").append(prValid.keySet());
-        } else if (cantidadPrsValidas > 1) {
-            message.append("Se encontraron ").append(cantidadPrsValidas).append(" PRs asociadas: ").append(prValid.keySet())
-                    .append("\nAtención: No se puede tener más de una PR asociada.");
-        } else {
-            message.append("No se detectó una PR valida asociada.")
-                    .append("\nAtención: Si la PR fue asociada correctamente, falta dar permisos de acceso a los QEs.");
-        }
-
-        if (cantidadPrsWarning > 0) {
-            message.append("\nAtención: Se encontraron ").append(cantidadPrsWarning)
-                    .append(" PRs asociadas en MERGED: ").append(prWarning.keySet());
-        }
-
-        return message.toString();
     }
 
     private Map<String, Map<String, String>> classifyPRs(JsonObject jiraTicketResultPrs, List<String> prsStatusException, List<String> prsStatusWarning) {
@@ -274,6 +268,29 @@ public class JiraValidationMethods {
                 .toList();
     }
 
+    private boolean validateApprovalBySMorFP(String teamBackLogId, List<InfoJiraProject> infoJiraProjectList, List<String> smFpRoles) {
+        JsonObject prDetails = jiraTicketResult.getAsJsonObject(FIELDS)
+            .getAsJsonArray("prs").get(0).getAsJsonObject();
+        JsonArray reviewers = prDetails.getAsJsonArray("reviewers");
+        List<String> validApprovers = infoJiraProjectList.stream()
+            .filter(project -> project.getTeamBackLogId().equals(teamBackLogId)
+                    && smFpRoles.contains(project.getProjectRolType()))
+            .map(InfoJiraProject::getParticipantEmail)
+            .map(email -> email.split("@")[0]) // Extraer username del email
+            .toList();
+
+        for (JsonElement reviewerElement : reviewers) {
+            JsonObject reviewer = reviewerElement.getAsJsonObject();
+            boolean isApproved = reviewer.get("approved").getAsBoolean();
+            String username = reviewer.get("user").getAsString();
+            if (isApproved && validApprovers.contains(username)) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
     public Map<String, Object> getValidationPRBranch(String helpMessage, String group) {
         String message = "";
         boolean isValid = false;
@@ -287,6 +304,7 @@ public class JiraValidationMethods {
                 "Teradata", "SmartCleaner","SparkCompactor", "JSON Global");
 
         tipoDesarrolloPRs.replaceAll(String::toLowerCase);
+
 
         if (jiraTicketResultPrs.get("prs") != null) {
             int cantidadPRs = jiraTicketResultPrs.get("prs").getAsJsonArray().size();
@@ -314,7 +332,12 @@ public class JiraValidationMethods {
     public Map<String, Object> getValidationValidateSubTask(String tipoDesarrollo, String helpMessage, String group) {
         List<String> aditionalSpecialSubtask = List.of(VB_KM, VB_SO);
         List<String> aditionalSpecialLabels = List.of("datioRutaCritica", "JobsHuerfanos");
+
         List<String> requiredSubTasks = SUBTASKS_BY_DEVELOP_TYPES.get(tipoDesarrollo);
+        if(!containsAnyBranch(jiraTicketResult.getAsJsonObject(FIELDS), List.of("master"))){
+            requiredSubTasks.remove(VB_ADA);
+        }
+
         JsonArray labels = jiraTicketResult.getAsJsonObject(FIELDS).getAsJsonArray(LABELS);
         JsonArray subTasks = jiraTicketResult.getAsJsonObject(FIELDS).getAsJsonArray(SUBTASKS);
 
@@ -491,6 +514,18 @@ public class JiraValidationMethods {
 
         String message = String.join(".\n", mergeMessageLists(messageGoodList, messageBadList));
         return buildValidationResult(message, isValid, false, helpMessage, group);
+    }
+
+    private boolean containsAnyBranch(JsonObject jiraTicketResultPrs, List<String> branches) {
+        if (jiraTicketResultPrs.get("prs") != null) {
+            for (JsonElement prObj : jiraTicketResultPrs.get("prs").getAsJsonArray()) {
+                String branch = prObj.getAsJsonObject().get("destinyBranch").getAsString();
+                if (branches.contains(branch)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private void processSubtasksPerson(List<String> results, Map<String, JsonObject> subtaskMetadataMap,

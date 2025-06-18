@@ -66,6 +66,7 @@ public interface ProjectMapper {
     @Result(property = "statusId", column = "status_id")
     @Result(property = "statusName", column = "status_name")
     @Result(property = "startDate", column = "start_date")
+    @Result(property = "piLargeName", column = "pi_large_name")
     List<ProjectStatusEntity> getProjectStatusTracking(@Param("projectId") int projectId);
 
     @Select({"SELECT project_id, sdatool_id, project_name, status_type FROM data_project " +
@@ -100,7 +101,7 @@ public interface ProjectMapper {
     @Select("CALL SP_UPDATE_PROJECT_INFO(" +
             "#{sdatoolId}, #{projectName}, #{projectDesc}, #{portafolioCode}, #{regulatoryType}, #{ttvType}, #{domainId}, " +
             "#{projectType}, #{categoryType}, #{classificationType}, #{startPiId}, #{endPiId}, #{finalStartPiId}, #{finalEndPiId}, " +
-            "#{wowType}, #{countryPriorityType}, #{statusType}, #{createAuditUser}, #{projectId})")
+            "#{wowType}, #{countryPriorityType}, #{statusType}, #{createAuditUser}, #{projectId}, #{useCaseId})")
     void updateProjectInfo(ProjectInfoDTO dto);
 
     @Delete("Delete from data_project WHERE project_id = #{projectId}")
@@ -210,7 +211,9 @@ public interface ProjectMapper {
             "#{wowType}," +
             "#{countryPriorityType}," +
             "#{createAuditUser}," +
-            "#{statusType})")
+            "#{statusType}," +
+            "#{useCaseId})"
+    )
     @Results({
             @Result(property = "last_insert_id", column = "last_insert_id"),
             @Result(property = "new_register", column = "new_register")
@@ -253,7 +256,8 @@ public interface ProjectMapper {
             @Result(property = "createAuditDate", column = "create_audit_date"),
             @Result(property = "createAuditUser", column = "create_audit_user"),
             @Result(property = "updateAuditDate", column = "update_audit_date"),
-            @Result(property = "updateAuditUser", column = "update_audit_user")
+            @Result(property = "updateAuditUser", column = "update_audit_user"),
+            @Result(property = "useCaseId", column = "use_case_id")
     })
     List<ProjectInfoSelectResponse> projectInfoFilter(@Param("dto") ProjectInfoFilterRequest dto);
 
@@ -369,6 +373,14 @@ public interface ProjectMapper {
 
     @Select("SELECT project_id, sdatool_id, project_name FROM project_info WHERE domain_id = #{domain_id}")
     List<ProjectInfoSelectResponse> listProjectsByDomain(@Param("domain_id") int domain_id);
+
+    @Select("SELECT project_id, sdatool_id, project_name FROM project_info")
+
+    @Result(property = "projectId", column = "project_id")
+    @Result(property = "sdatoolId", column = "sdatool_id")
+    @Result(property = "projectName", column = "project_name")
+    @Result(property = "domainId", column = "domain_id")
+    List<ProjectByDomainIdDTO> listProjects();
 
     @Select("CALL SP_LIST_PROJECT_BY_DOMAINS(#{domainId})")
     @Results({

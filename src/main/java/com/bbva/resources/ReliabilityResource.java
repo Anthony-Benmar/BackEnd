@@ -1,0 +1,99 @@
+package com.bbva.resources;
+
+
+import com.bbva.common.HttpStatusCodes;
+import com.bbva.core.abstracts.IDataResult;
+import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
+import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
+import com.bbva.dto.reliability.request.TransferInputDtoRequest;
+import com.bbva.dto.reliability.response.*;
+import com.bbva.service.ReliabilityService;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.util.List;
+
+@Path("/reliability")
+@Produces(MediaType.APPLICATION_JSON)
+public class ReliabilityResource {
+    private final ReliabilityService reliabilityService = new ReliabilityService();
+    private static final String CONTENTDISPOSITION = "Content-Disposition";
+
+    @POST
+    @Path("/info/filter")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<InventoryInputsFilterDtoResponse> inventoryInputsFilter(InventoryInputsFilterDtoRequest dto) {
+        return reliabilityService.inventoryInputsFilter(dto);
+    }
+    @GET
+    @Path("/pending_custody_jobs/{sdatoolId}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<List<PendingCustodyJobsDtoResponse>> getPendingCustodyJobs(@Context HttpStatusCodes request,
+                                                                                  @PathParam("sdatoolId") String sdatoolId)
+    {
+        return reliabilityService.getPendingCustodyJobs(sdatoolId);
+    }
+    @GET
+    @Path("/project_custody_info/{sdatoolId}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<List<ProjectCustodyInfoDtoResponse>> getProjectCustodyInfo(@Context HttpServletRequest request,
+                                                                                  @PathParam("sdatoolId") String sdatoolId)
+    {
+        return reliabilityService.getProjectCustodyInfo(sdatoolId);
+    }
+    @GET
+    @Path("/execution_validation/{jobName}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<ExecutionValidationDtoResponse> getExecutionValidation(@Context HttpServletRequest request,
+                                                                              @PathParam("jobName") String jobName)
+    {
+        return reliabilityService.getExecutionValidation(jobName);
+    }
+
+    @POST
+    @Path("/execution_validation_all")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<List<ExecutionValidationAllDtoResponse>> getExecutionValidationAll(@Context HttpServletRequest request,
+                                                                                          List<String> jobsNames)
+    {
+        return reliabilityService.getExecutionValidationAll(jobsNames);
+    }
+
+    @POST
+    @Path("/job/update")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<Void> updateInventoryJobStock(InventoryJobUpdateDtoRequest dto) {
+        return reliabilityService.updateInventoryJobStock(dto);
+    }
+
+    @POST
+    @Path("/transfer/insert")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<Void> insertTransfer(TransferInputDtoRequest dto) {
+        return reliabilityService.insertTransfer(dto);
+    }
+
+    @POST
+    @Path("/documentGenerator/inventory")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    public Response generateDocumentMeshTracking(InventoryInputsFilterDtoRequest dto) {
+        byte[] documentoModificado = reliabilityService.generateDocumentInventory(dto);
+        String nombreDocumento = "job_control";
+        return Response.ok(documentoModificado)
+                .header(CONTENTDISPOSITION, "attachment; filename=\"Inventario_" + nombreDocumento + "_v1.xlsx\"")
+                .header("Access-Control-Expose-Headers", CONTENTDISPOSITION)
+                .build();
+    }
+
+}

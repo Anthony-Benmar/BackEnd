@@ -41,4 +41,5 @@ public class ProjectInfoSelectResponse {
 
 
     public String statusTypeDesc;
+    private Integer useCaseId;
 }

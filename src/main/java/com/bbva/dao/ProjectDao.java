@@ -7,6 +7,9 @@ import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.database.MyBatisConnectionFactory;
 import com.bbva.database.mappers.ProjectMapper;
+import com.bbva.dto.catalog.request.ListByCatalogIdDtoRequest;
+import com.bbva.dto.catalog.response.ListByCatalogIdDtoResponse;
+import com.bbva.dto.catalog.response.ListByCatalogIdGroupByCatalogGroupByElementDtoResponse;
 import com.bbva.dto.project.request.*;
 import com.bbva.dto.project.response.*;
 import com.bbva.entities.InsertEntity;
@@ -22,8 +25,7 @@ import com.bbva.util.JSONUtils;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -33,7 +35,7 @@ import static com.bbva.util.types.FechaUtil.convertDateToString;
 public class ProjectDao {
     private static final Logger log = Logger.getLogger(ProjectDao.class.getName());
     private static final String DATE_FORMAT = "dd/MM/yyyy HH:mm:ss";
-
+    private CatalogDao catalogDao = new CatalogDao();
     public ProjectFilterByNameOrSdatoolDtoResponse filter(ProjectFilterByNameOrSdatoolDtoRequest dto) {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         List<ProjectFilterEntity> lista;
@@ -518,5 +520,68 @@ public class ProjectDao {
             }
             return projectStatusesList;
         }
+    }
+
+    public List<ProjectByDomainIdDTO> getAllProjects() {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ProjectMapper mapper = session.getMapper(ProjectMapper.class);
+            return mapper.listProjects();
+        }
+    }
+
+    public List<ProjectValidationParamsDtoResponse> validateInfoProjectByProjectId(int projectId) {
+        ListByCatalogIdDtoRequest requestParticipant = new ListByCatalogIdDtoRequest();
+        requestParticipant.setCatalog(new int[]{1037});
+        ListByCatalogIdDtoResponse listParticipant = catalogDao.getCatalogoByCatalogoId(requestParticipant);
+
+        ListByCatalogIdDtoRequest requestDocuments = new ListByCatalogIdDtoRequest();
+        requestDocuments.setCatalog(new int[]{1036});
+        ListByCatalogIdDtoResponse listDocuments = catalogDao.getCatalogoByCatalogoId(requestDocuments);
+
+        List<InsertProjectParticipantDTO> projectParticipantDTOS = getProjectParticipants(projectId);
+        List<InsertProjectDocumentDTO> documentDTOS = getDocument(projectId, 0);
+
+        List<Integer> idsParticipantsProyect = projectParticipantDTOS.stream()
+                .map(InsertProjectParticipantDTO::getProjectRolType)
+                .toList();
+
+        List<Integer> idsDocumentsProyect = documentDTOS.stream()
+                .map(InsertProjectDocumentDTO::getDocumentType)
+                .toList();
+
+        List<ProjectValidationParamsDtoResponse> errors = new ArrayList<>();
+        errors.addAll(validate(
+                Arrays.asList(1, 5),
+                listParticipant.getCatalog().get(0).getElement(),
+                idsParticipantsProyect
+        ));
+
+        errors.addAll(validate(
+                Arrays.asList(1, 2, 3),
+                listDocuments.getCatalog().get(0).getElement(),
+                idsDocumentsProyect
+        ));
+        return errors;
+    }
+
+    public List<ProjectValidationParamsDtoResponse> validate(
+            List<Integer> idsRequired,
+            List<ListByCatalogIdGroupByCatalogGroupByElementDtoResponse> catalog,
+            List<Integer> idsProyect
+    ) {
+        Set<Integer> idsPresents = new HashSet<>(idsProyect);
+        return idsRequired.stream()
+                .filter(id -> !idsPresents.contains(id))
+                .flatMap(x ->
+                        catalog.stream()
+                                .filter(e -> e.getElementId() == x)
+                                .findFirst().stream().map(e -> ProjectValidationParamsDtoResponse
+                                        .builder()
+                                        .type(e.getDescription())
+                                        .message("No cuenta con " + e.getDescription())
+                                        .build())
+                )
+                .toList();
     }
 }
