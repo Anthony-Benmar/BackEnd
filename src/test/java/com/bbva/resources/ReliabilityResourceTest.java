@@ -4,9 +4,11 @@ import com.bbva.core.abstracts.IDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
 import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
+import com.bbva.dto.reliability.request.ReliabilityPackInputFilterRequest;
 import com.bbva.dto.reliability.request.TransferInputDtoRequest;
 import com.bbva.dto.reliability.response.*;
 import com.bbva.service.ReliabilityService;
+import com.google.common.collect.Lists;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -153,5 +155,37 @@ class ReliabilityResourceTest {
         assertNotNull(result);
         assertEquals(dataResult, result);
         verify(reliabilityServiceMock).insertTransfer(dto);
+    }
+
+    @Test
+    void testGetReliabilityPacks() {
+        ReliabilityPackInputFilterRequest dto = new ReliabilityPackInputFilterRequest();
+        dto.setPage(1);
+        dto.setRecordsAmount(10);
+        dto.setDomainName("SDATOOL123");
+        dto.setUseCase("ReliabilityPackInputFilterUseCase");
+
+        PaginationReliabilityPackResponse projectCustodyInfo = new PaginationReliabilityPackResponse();
+        IDataResult<PaginationReliabilityPackResponse> dataResult = new SuccessDataResult<>(projectCustodyInfo);
+
+        when(reliabilityServiceMock.getReliabilityPacks(dto)).thenReturn(dataResult);
+
+        IDataResult<PaginationReliabilityPackResponse> result = reliabilityResource.getReliabilityPacks(dto);
+
+        assertNotNull(result);
+        assertEquals(projectCustodyInfo, result.data);
+        verify(reliabilityServiceMock).getReliabilityPacks(dto);
+    }
+
+    @Test
+    void testUpdateStatusReliabilityPacksJobStock() {
+        List<String> packs = Lists.newArrayList("pack1", "pack2", "pack3", "pack4", "pack5", "pack6");
+        IDataResult<Void> dataResult = new SuccessDataResult<>(null, "ReliabilityPacks and JobStock updated successfully");
+
+        when(reliabilityServiceMock.updateStatusReliabilityPacksJobStock(packs)).thenReturn(dataResult);
+
+        IDataResult<Void> result = reliabilityResource.updateStatusReliabilityPacksJobStock(null,packs);
+
+        assertNotNull(result);
     }
 }

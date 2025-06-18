@@ -6,6 +6,7 @@ import com.bbva.dao.ReliabilityDao;
 import com.bbva.database.mappers.ReliabilityMapper;
 import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
 import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
+import com.bbva.dto.reliability.request.ReliabilityPackInputFilterRequest;
 import com.bbva.dto.reliability.request.TransferInputDtoRequest;
 import com.bbva.dto.reliability.response.*;
 import org.apache.ibatis.session.SqlSession;
@@ -349,4 +350,50 @@ class ReliabilityServiceTest {
         }
     }
 
+    @Test
+    void testGetReliabilityPacks() {
+        ReliabilityPackInputFilterRequest validDto = new ReliabilityPackInputFilterRequest();
+        validDto.setDomainName("com.example.package");
+        validDto.setPage(1);
+        validDto.setRecordsAmount(100);
+        validDto.setUseCase("UseCase1");
+
+        IDataResult<PaginationReliabilityPackResponse> result = reliabilityService.getReliabilityPacks(validDto);
+
+        assertTrue(result.success);
+        verify(reliabilityDaoMock, times(1)).getReliabilityPacks(any());
+    }
+
+    @Test
+    void testGetReliabilityPacksException() {
+        ReliabilityPackInputFilterRequest validDto = new ReliabilityPackInputFilterRequest();
+        validDto.setDomainName("DomainName");
+        validDto.setPage(1);
+        validDto.setRecordsAmount(100);
+        validDto.setUseCase("UseCase2");
+
+        doThrow(new RuntimeException("Database error")).when(reliabilityDaoMock).getReliabilityPacks(validDto);
+        IDataResult<PaginationReliabilityPackResponse> result = reliabilityService.getReliabilityPacks(validDto);
+        assertFalse(result.success);
+        verify(reliabilityDaoMock, times(1)).getReliabilityPacks(any());
+    }
+
+    @Test
+    void testUpdateStatusReliabilityPacksJobStock() {
+        List<String> packs = List.of("pack1", "pack2", "pack3", "pack4");
+        IDataResult<Void> result = reliabilityService.updateStatusReliabilityPacksJobStock(packs);
+
+        assertTrue(result.success);
+        verify(reliabilityDaoMock, times(1)).updateStatusReliabilityPacksJobStock(any());
+    }
+
+    @Test
+    void testUpdateStatusReliabilityPacksJobStockException() {
+        List<String> packs = List.of("pack1", "pack2", "pack3", "pack4");
+
+        doThrow(new RuntimeException("Database error")).when(reliabilityDaoMock).updateStatusReliabilityPacksJobStock(packs);
+        IDataResult<Void> result = reliabilityService.updateStatusReliabilityPacksJobStock(packs);
+        assertFalse(result.success);
+        verify(reliabilityDaoMock, times(1)).updateStatusReliabilityPacksJobStock(any());
+    }
 }

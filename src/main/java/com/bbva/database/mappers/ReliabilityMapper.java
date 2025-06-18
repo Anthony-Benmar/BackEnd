@@ -3,11 +3,8 @@ package com.bbva.database.mappers;
 import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
 import com.bbva.dto.reliability.request.JobTransferInputDtoRequest;
 import com.bbva.dto.reliability.request.TransferInputDtoRequest;
-import com.bbva.dto.reliability.response.ExecutionValidationDtoResponse;
-import com.bbva.dto.reliability.response.InventoryInputsDtoResponse;
+import com.bbva.dto.reliability.response.*;
 import org.apache.ibatis.annotations.*;
-import com.bbva.dto.reliability.response.PendingCustodyJobsDtoResponse;
-import com.bbva.dto.reliability.response.ProjectCustodyInfoDtoResponse;
 
 import java.util.List;
 
@@ -50,8 +47,9 @@ public interface ReliabilityMapper {
     @Update("CALL SP_UPDATE_INVENTORY_JOB_STOCK(" +
             "#{jobName}," +
             "#{componentName}," +
+            "#{bitBucketUrl}," +
             "#{frequencyId}," +
-            "#{inputPath}," +
+            "#{inputPaths}," +
             "#{outputPath}," +
             "#{jobTypeId}," +
             "#{useCaseId}," +
@@ -81,6 +79,24 @@ public interface ReliabilityMapper {
     @Result(property = "productOwner", column = "product_owner")
     List<ProjectCustodyInfoDtoResponse> getProjectCustodyInfo(@Param("sdatoolId") String sdatoolId);
 
+    @Select("CALL SP_GET_RELIABILITY_PACKS(" +
+            "#{domainName}," +
+            "#{useCase})"
+    )
+    @Result(property = "pack", column = "pack")
+    @Result(property = "domainId", column = "domainId")
+    @Result(property = "domainName", column = "domain_name")
+    @Result(property = "productOwnerUserId", column = "productOwnerUserId")
+    @Result(property = "useCaseId", column = "useCaseId")
+    @Result(property = "useCase", column = "use_case")
+    @Result(property = "projectId", column = "projectId")
+    @Result(property = "sdaToolId", column = "sdaToolId")
+    @Result(property = "creatorUserId", column = "creatorUserId")
+    @Result(property = "pdfLink", column = "pdfLink")
+    @Result(property = "jobCount", column = "jobCount")
+    List<ReliabilityPacksDtoResponse> getReliabilityPacks(@Param("domainName") String domainName,
+                                                          @Param("useCase") String useCase);
+
     @Select("CALL SP_GET_EXECUTION_VALIDATION(#{jobName})")
     @Result(property = "validation", column = "validacion")
     ExecutionValidationDtoResponse getExecutionValidation(@Param("jobName") String jobName);
@@ -93,7 +109,9 @@ public interface ReliabilityMapper {
             "#{projectId}," +
             "#{creatorUserId}," +
             "#{pdfLink}," +
-            "#{jobCount})")
+            "#{jobCount}," +
+            "#{statusId}" +
+            ")")
     void insertTranfer(TransferInputDtoRequest dto);
 
     @Insert("CALL SP_INSERT_JOB_STOCK(" +
@@ -116,4 +134,9 @@ public interface ReliabilityMapper {
             ")")
     void insertJobStock(JobTransferInputDtoRequest dto);
 
+    @Update("UPDATE reliability_packs SET status_id = #{estado} WHERE pack = #{pack}")
+    void updateReliabilityStatus(@Param("pack") String pack, @Param("estado") int estado);
+
+    @Update("UPDATE job_stock SET status_id = #{estado} WHERE pack = #{pack}")
+    void updateProjectInfoStatus(@Param("pack") String pack, @Param("estado") int estado);
 }
