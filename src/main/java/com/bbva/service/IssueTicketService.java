@@ -49,7 +49,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class IssueTicketService {
-    private final IssueTicketDao issueTicketDao = new IssueTicketDao();
+    protected final IssueTicketDao issueTicketDao = new IssueTicketDao();
     private static final String URL_API_BASE = "https://jira.globaldevtools.bbva.com";
     private static final String URL_API_JIRA_ISSUE = "/rest/api/2/issue/";
     private static final String URL_API_JIRA = URL_API_BASE + URL_API_JIRA_ISSUE;
