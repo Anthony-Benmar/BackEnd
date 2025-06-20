@@ -1276,4 +1276,72 @@ class IssueTicketServiceTest {
         String header = createCookieHeader(Collections.singletonList(c1));
         assertEquals("token=va=l;ue", header);
     }
+
+    @Test
+    void createTicketJira2_SetsIssueCodeInWorkOrderDetail() throws Exception {
+        // Arrange
+        WorkOrderDtoRequest auth = new WorkOrderDtoRequest();
+        IssueBulkDto bulkDto = new IssueBulkDto();
+        List<WorkOrderDetail> details = Arrays.asList(new WorkOrderDetail(), new WorkOrderDetail());
+
+        // Prepara el IssueBulkResponse con dos issues (con keys asignados)
+        IssueDto issue1 = new IssueDto();
+        issue1.key = "KEY-1";
+        IssueDto issue2 = new IssueDto();
+        issue1.key = "KEY-2";
+        IssueBulkResponse response = new IssueBulkResponse();
+        response.issues = Arrays.asList(issue1, issue2); // Asigna la lista de issues
+
+        IssueTicketService service = Mockito.spy(new IssueTicketService());
+        Mockito.doReturn(response).when(service).PostResponseAsync3(any(), any());
+
+        // Act
+        service.createTicketJira2(auth, bulkDto, details);
+
+        // Assert
+        assertEquals("KEY-2", details.get(0).getIssue_code());
+        assertEquals(null, details.get(1).getIssue_code());
+    }
+
+    @Test
+    void createTicketJira2_HandlesLessIssuesThanDetails() throws Exception {
+        WorkOrderDtoRequest auth = new WorkOrderDtoRequest();
+        IssueBulkDto bulkDto = new IssueBulkDto();
+        List<WorkOrderDetail> details = Arrays.asList(new WorkOrderDetail(), new WorkOrderDetail());
+
+        IssueDto issue1 = new IssueDto();
+        issue1.key = "KEY-1";
+        IssueBulkResponse response = new IssueBulkResponse();
+        response.issues = Arrays.asList(issue1); // Asigna aquí la lista
+
+        IssueTicketService service = Mockito.spy(new IssueTicketService());
+        Mockito.doReturn(response).when(service).PostResponseAsync3(any(), any());
+
+        service.createTicketJira2(auth, bulkDto, details);
+
+        assertEquals("KEY-1", details.get(0).getIssue_code());
+        assertNull(details.get(1).getIssue_code());
+    }
+
+    @Test
+    void createTicketJira2_HandlesLessDetailsThanIssues() throws Exception {
+        WorkOrderDtoRequest auth = new WorkOrderDtoRequest();
+        IssueBulkDto bulkDto = new IssueBulkDto();
+        List<WorkOrderDetail> details = Arrays.asList(new WorkOrderDetail()); // Solo 1 detail
+
+        // Crea dos issues, pero solo hay un detail
+        IssueDto issue1 = new IssueDto();
+        issue1.key = "KEY-1";
+        IssueDto issue2 = new IssueDto();
+        issue1.key = "KEY-2";
+        IssueBulkResponse response = new IssueBulkResponse();
+        response.issues = Arrays.asList(issue1, issue2); // <--- ASÍ ASIGNAS LA LISTA
+
+        IssueTicketService service = Mockito.spy(new IssueTicketService());
+        Mockito.doReturn(response).when(service).PostResponseAsync3(any(), any());
+
+        service.createTicketJira2(auth, bulkDto, details);
+
+        assertEquals("KEY-2", details.get(0).getIssue_code());
+    }
 }
