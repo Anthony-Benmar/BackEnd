@@ -465,7 +465,7 @@ public class IssueTicketService {
     private void createTicketJira2(WorkOrderDtoRequest objAuth, IssueBulkDto issuesRequests, List<WorkOrderDetail> workOrderDetail)
             throws Exception
     {
-        var issuesGenerates = PostResponseAsync3(objAuth, issuesRequests);
+        var issuesGenerates = postResponseAsync3(objAuth, issuesRequests);
         for (int i = 0; i < issuesGenerates.issues.size() && i < workOrderDetail.size(); i++) {
             workOrderDetail.get(i).setIssue_code(issuesGenerates.issues.get(i).getKey());
         }
@@ -473,7 +473,6 @@ public class IssueTicketService {
     private void createTicketJira3(WorkOrderDtoRequest2 objAuth, IssueBulkDto issuesRequests, List<WorkOrderDetail> workOrderDetail)
             throws Exception
     {
-        //var issuesGenerates = PostResponseAsync4(objAuth, issuesRequests);
         var issuesGenerates = createIssuesInBatches(objAuth, issuesRequests);
         for (int i = 0; i < issuesGenerates.issues.size() && i < workOrderDetail.size(); i++) {
             workOrderDetail.get(i).setIssue_code(issuesGenerates.issues.get(i).getKey());
@@ -504,11 +503,9 @@ public class IssueTicketService {
         return ticketsUpdates;
     }
 
-    private IssueBulkResponse PostResponseAsync3(WorkOrderDtoRequest objAuth, IssueBulkDto issueJira)
+    private IssueBulkResponse postResponseAsync3(WorkOrderDtoRequest objAuth, IssueBulkDto issueJira)
             throws Exception
     {
-        // NOTA: el api bulk de jira permite hasta 50 issues por petición
-        //var gson = new GsonBuilder().setPrettyPrinting().create();
         Gson gson = GsonConfig.createGson();
         String jsonString = gson.toJson(issueJira);
 
@@ -536,15 +533,13 @@ public class IssueTicketService {
         if (responseCode>=400 && responseCode<=500) {
             throw new HandledException(responseCode.toString(), "Error al intentar generar tickets, revise los datos ingresados");
         }
-        var issueCreated = gson.fromJson(responseBodyString, IssueBulkResponse.class);
-        return issueCreated;
+        return gson.fromJson(responseBodyString, IssueBulkResponse.class);
     }
 
-    private IssueBulkResponse PostResponseAsync4(WorkOrderDtoRequest2 objAuth, IssueBulkDto issueJira)
+    private IssueBulkResponse postResponseAsync4(WorkOrderDtoRequest2 objAuth, IssueBulkDto issueJira)
             throws Exception
     {
         // NOTA: el api bulk de jira permite hasta 50 issues por petición
-        //var gson = new GsonBuilder().setPrettyPrinting().create();
         Gson gson = GsonConfig.createGson();
         String jsonString = gson.toJson(issueJira);
 
@@ -572,8 +567,7 @@ public class IssueTicketService {
         if (responseCode>=400 && responseCode<=500) {
             throw new HandledException(responseCode.toString(), "Error al intentar generar tickets, revise los datos ingresados");
         }
-        var issueCreated = gson.fromJson(responseBodyString, IssueBulkResponse.class);
-        return issueCreated;
+        return gson.fromJson(responseBodyString, IssueBulkResponse.class);
     }
 
     public IssueBulkResponse createIssuesInBatches(WorkOrderDtoRequest2 objAuth, IssueBulkDto issueJira) throws Exception {
@@ -586,21 +580,17 @@ public class IssueTicketService {
         List<IssueBulkResponse> responses = new ArrayList<>();
         final int BATCH_SIZE = 30;
 
-        System.out.println("Creando " + allIssues.size() + " issues en batches de " + BATCH_SIZE);
-
         // Dividir en chunks de 30
         for (int i = 0; i < allIssues.size(); i += BATCH_SIZE) {
             int endIndex = Math.min(i + BATCH_SIZE, allIssues.size());
             List<IssueUpdate> batch = allIssues.subList(i, endIndex);
-
-            System.out.println("Procesando batch " + (i/BATCH_SIZE + 1) + " - Issues " + (i+1) + " al " + endIndex);
 
             // Crear DTO para este batch
             IssueBulkDto batchDto = new IssueBulkDto();
             batchDto.setIssueUpdates(batch);
 
             // Hacer la petición
-            IssueBulkResponse batchResponse = PostResponseAsync4(objAuth, batchDto);
+            IssueBulkResponse batchResponse = postResponseAsync4(objAuth, batchDto);
             responses.add(batchResponse);
 
             // Pausa entre requests para no saturar
@@ -624,8 +614,6 @@ public class IssueTicketService {
         }
 
         combined.issues = allIssues;
-
-        System.out.println("Total issues creados exitosamente: " + allIssues.size());
 
         return combined;
     }

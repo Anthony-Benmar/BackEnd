@@ -2,16 +2,8 @@ package com.bbva.service;
 
 import com.bbva.core.abstracts.IDataResult;
 import com.bbva.core.results.ErrorDataResult;
-import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dto.issueticket.request.WorkOrderDtoRequest;
 import com.bbva.dto.issueticket.request.WorkOrderDtoRequest2;
-import com.bbva.dto.issueticket.request.sourceTicketDtoRequest;
-import com.bbva.dto.issueticket.response.issueTicketDtoResponse;
-import com.bbva.dto.issueticket.response.sourceTicketDtoResponse;
-import com.bbva.entities.issueticket.WorkOrderDetail;
-import com.bbva.dto.jira.response.IssueResponse;
-import com.bbva.dto.jira.request.IssueBulkDto;
-import com.bbva.entities.feature.JiraFeatureEntity;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.impl.cookie.BasicClientCookie;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,7 +14,6 @@ import java.time.Instant;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 class IssueTicketServiceTest {
 

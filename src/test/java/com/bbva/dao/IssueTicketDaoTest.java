@@ -50,6 +50,7 @@ class IssueTicketDaoTest {
         when(sqlSessionMock.getMapper(BoardMapper.class)).thenReturn(boardMapperMock);
         when(sqlSessionMock.getMapper(TemplateMapper.class)).thenReturn(templateMapperMock);
         when(sqlSessionMock.getMapper(IssueTicketMapper.class)).thenReturn(issueTicketMapperMock);
+        when(sqlSessionMock.getMapper(CatalogMapper.class)).thenReturn(catalogMapperMock);
 
         dao = Mockito.spy(new IssueTicketDao());
     }
@@ -163,7 +164,6 @@ class IssueTicketDaoTest {
         WorkOrderDetail detail2 = new WorkOrderDetail(
                 null, null, null, null, null, null, null, null
         );
-        List<WorkOrderDetail> details = Arrays.asList(detail1, detail2);
 
         WorkOrderDetail spyDetail1 = spy(detail1);
         WorkOrderDetail spyDetail2 = spy(detail2);
@@ -425,105 +425,6 @@ class IssueTicketDaoTest {
         verify(sqlSessionMock).close();
     }
 
-//    @Test
-//    void getDataRequestIssueJira_noMatchingBoard_setsBoardFieldsToNull() {
-//        // workOrder with a board_id that does not match
-//        WorkOrder workOrder = new WorkOrder();
-//        workOrder.board_id = 999;
-//        workOrder.folio = "FOLIO";
-//        workOrder.source_id = "SRCID";
-//        workOrder.feature = "FEATURE";
-//        workOrder.source_name = "FUENTE";
-//        List<WorkOrderDetail> workOrderDetails = List.of(new WorkOrderDetail(null, null, 100, null, null, null, null, null));
-//        Board board = new Board();
-//        board.board_id = 1; // different
-//        List<Board> boards = List.of(board);
-//
-//        Template template = new Template();
-//        template.template_id = 100;
-//        template.label_one = "LABEL1";
-//        template.name = "Plantilla [fuente]";
-//        template.description = "desc1";
-//        List<Template> templates = List.of(template);
-//
-//        when(sqlSessionMock.getMapper(BoardMapper.class)).thenReturn(boardMapperMock);
-//        when(boardMapperMock.list()).thenReturn(boards);
-//
-//        when(sqlSessionMock.getMapper(TemplateMapper.class)).thenReturn(templateMapperMock);
-//        when(templateMapperMock.list()).thenReturn(templates);
-//
-//        Map<Integer, IssueDto> result = dao.getDataRequestIssueJira(workOrder, workOrderDetails);
-//
-//        assertNotNull(result);
-//        assertEquals(1, result.size());
-//        IssueDto dto = result.get(100);
-//        // Ahora los campos del board deben ser null y las listas deben contener null.
-//        assertNull(dto.fields.project.id);
-//        assertNull(dto.fields.project.key);
-//        assertNotNull(dto.fields.customfield_13300);
-//        assertEquals(1, dto.fields.customfield_13300.size());
-//        assertNull(dto.fields.customfield_13300.get(0));
-//        // Las demás propiedades de template deben seguir funcionando
-//        assertTrue(dto.fields.labels.contains("P-LABEL1"));
-//        assertTrue(dto.fields.labels.contains("F-FOLIO"));
-//        assertTrue(dto.fields.labels.contains("ID-SRCID"));
-//        assertEquals("Plantilla FUENTE", dto.fields.summary);
-//        assertEquals("desc1", dto.fields.description);
-//        verify(boardMapperMock).list();
-//        verify(templateMapperMock).list();
-//        verify(sqlSessionMock).close();
-//    }
-//
-//
-//    @Test
-//    void getDataRequestIssueJira_noTemplatesMatchingDetails_setsTemplateFieldsToNull() {
-//        WorkOrder workOrder = new WorkOrder();
-//        workOrder.board_id = 1;
-//        workOrder.folio = "FOLIO";
-//        workOrder.source_id = "SRCID";
-//        workOrder.feature = "FEATURE";
-//        workOrder.source_name = "FUENTE";
-//        List<WorkOrderDetail> workOrderDetails = List.of(new WorkOrderDetail(null, null, 222, null, null, null, null, null));
-//        Board board = new Board();
-//        board.board_id = 1;
-//        board.project_jira_id = "JIRA123";
-//        board.project_jira_key = "JK";
-//        board.board_jira_id = "BID-11";
-//        List<Board> boards = List.of(board);
-//
-//        // templates with ids that do not match workOrderDetails
-//        Template template = new Template();
-//        template.template_id = 100;
-//        template.label_one = "LABEL1";
-//        template.name = "Plantilla [fuente]";
-//        template.description = "desc1";
-//        List<Template> templates = List.of(template);
-//
-//        when(sqlSessionMock.getMapper(BoardMapper.class)).thenReturn(boardMapperMock);
-//        when(boardMapperMock.list()).thenReturn(boards);
-//
-//        when(sqlSessionMock.getMapper(TemplateMapper.class)).thenReturn(templateMapperMock);
-//        when(templateMapperMock.list()).thenReturn(templates);
-//
-//        Map<Integer, IssueDto> result = dao.getDataRequestIssueJira(workOrder, workOrderDetails);
-//
-//        assertNotNull(result);
-//        assertEquals(1, result.size());
-//        IssueDto dto = result.get(222);
-//        // Ahora los campos del template deben ser null o no generados
-//        assertEquals("JIRA123", dto.fields.project.id);
-//        assertEquals("JK", dto.fields.project.key);
-//        assertNotNull(dto.fields.customfield_13300);
-//        assertEquals(1, dto.fields.customfield_13300.size());
-//        assertEquals("BID-11", dto.fields.customfield_13300.get(0));
-//        // Campos de template deben ser null
-//        assertNull(dto.fields.summary);
-//        assertNull(dto.fields.description);
-//        verify(boardMapperMock).list();
-//        verify(templateMapperMock).list();
-//        verify(sqlSessionMock).close();
-//    }
-
     @Test
     void getDataRequestIssueJira2_happyPath_buildsIssueBulkDtoCorrectly() {
         // Prep workOrder
@@ -626,18 +527,6 @@ class IssueTicketDaoTest {
         verify(templateMapperMock).listById(List.of(100));
         verify(sqlSessionMock).close();
     }
-
-//    @Test
-//    void getTeamBacklogByBoardId_boardIsNull_returnsEmptyString() {
-//        when(sqlSessionMock.getMapper(BoardMapper.class)).thenReturn(boardMapperMock);
-//        when(boardMapperMock.boardById(15)).thenReturn(null);
-//
-//        String result = dao.getTeamBacklogByBoardId(15);
-//
-//        assertEquals("", result);
-//        verify(boardMapperMock).boardById(15);
-//        verify(sqlSessionMock).close();
-//    }
 
     @Test
     void getDataRequestFeatureJira_happyPath_mapsAllFields() {
@@ -838,8 +727,8 @@ class IssueTicketDaoTest {
     void getDataRequestIssueJiraEdit_happyPath_returnsMap_2() {
         WorkOrder workOrder = new WorkOrder();
         workOrder.board_id = 1;
-        workOrder.folio = "F-01";
-        workOrder.source_id = "SRC-33";
+        workOrder.folio = "F-011";
+        workOrder.source_id = "SRC-331";
         workOrder.source_name = "SCE";
         workOrder.feature = "Mi Feature";
 
@@ -879,70 +768,13 @@ class IssueTicketDaoTest {
         assertEquals("20247", dto.fields.customfield_10270.id);
         assertFalse(dto.fields.customfield_10270.disabled);
         assertTrue(dto.fields.labels.contains("P-SOMELABEL"));
-        assertTrue(dto.fields.labels.contains("F-F-01"));
-        assertTrue(dto.fields.labels.contains("ID-SRC-33"));
+        assertTrue(dto.fields.labels.contains("F-F-011"));
+        assertTrue(dto.fields.labels.contains("ID-SRC-331"));
         assertEquals("Mi Feature", dto.fields.customfield_10004);
         assertEquals("plantilla SCE", dto.fields.summary); // lower y replace
         assertEquals("Desc. de plantilla", dto.fields.description);
         assertEquals("Story", dto.fields.issuetype.name);
     }
-
-//    @Test
-//    void listSources_returnsEmpty_whenNoWorkOrders() {
-//        sourceTicketDtoRequest dto = new sourceTicketDtoRequest();
-//        dto.page = 1;
-//        dto.records_amount = 10;
-//        dto.projectId = 1;
-//
-//        when(boardMapperMock.list()).thenReturn(Collections.emptyList());
-//        when(issueTicketMapperMock.ListWorkOrder(1,0,0,1)).thenReturn(Collections.emptyList());
-//        when(catalogMapperMock.getListByCatalog(new int[]{1023})).thenReturn(new ArrayList<>());
-//
-//        sourceTicketDtoResponse response = dao.listSources(dto);
-//
-//        assertNotNull(response);
-//        assertEquals(0, response.count);
-//        assertTrue(response.data.isEmpty());
-//    }
-
-//    @Test
-//    void listSources_returnsSingleResult_whenOneWorkOrder() {
-//        sourceTicketDtoRequest dto = new sourceTicketDtoRequest();
-//        dto.page = 1;
-//        dto.records_amount = 10;
-//        dto.projectId = 1;
-//
-//        Board board = new Board();
-//        board.board_id = 10;
-//        board.name = "BoardTest";
-//        when(boardMapperMock.list()).thenReturn(Arrays.asList(board));
-//
-//        CatalogEntity catalog = new CatalogEntity(1, 99, "FlowName", 0);
-//        catalog.setElementId(99);
-//        catalog.setElementName("FlowName");
-//        ArrayList<CatalogEntity> catalogList = new ArrayList<>();
-//        catalogList.add(catalog);
-//        when(catalogMapperMock.getListByCatalog(any(int[].class))).thenReturn(catalogList);        WorkOrder wo = new WorkOrder();
-//        wo.work_order_id = 5;
-//        wo.board_id = 10;
-//        wo.flow_type = 99;
-//        wo.source_id = "SRC";
-//        wo.folio = "FOL";
-//        wo.source_name = "SN";
-//        wo.feature = "FT";
-//        wo.project_id = 1;
-//        wo.register_date = new Date();
-//
-//        when(issueTicketMapperMock.ListWorkOrder(1,0,0,1)).thenReturn(Arrays.asList(wo));
-//
-//        sourceTicketDtoResponse response = dao.listSources(dto);
-//
-//        assertNotNull(response);
-//        assertEquals(1, response.count);
-//        assertEquals(1, response.data.size());
-//        sourceTicketGroupByDtoResponse group = response.data.get(0);
-//        // Aquí puedes agregar asserts según los campos públicos del group
-//    }
 
     @Test
     void listIssuesGenerated_returnsEmpty_whenNoTemplatesOrWorkOrder() {

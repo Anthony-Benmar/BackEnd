@@ -145,13 +145,10 @@ class ProjectDaoTest {
         assertNotNull(result);
         assertEquals(2, result.size());
         assertTrue(result.stream().anyMatch(e -> e.getMessage().contains("Participante 1")));
-        // If your validate method implementation expects "Documento 2" to be missing, update this accordingly:
-        // assertTrue(result.stream().anyMatch(e -> e.getMessage().contains("Documento 2")));
     }
 
     @Test
     void listProjectCatalog_ReturnsMappedList() {
-        // Use the setUp mocks, do not nest another MockedStatic, to avoid static registration exceptions.
         List<ProjectCatalogEntity> entityList = new ArrayList<>();
         ProjectCatalogEntity entity = new ProjectCatalogEntity();
         entity.setSdatoolId("SDT001");
