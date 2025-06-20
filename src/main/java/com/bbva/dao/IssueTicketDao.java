@@ -385,6 +385,7 @@ public class IssueTicketDao {
     }
 
     public IssueFeatureDto getDataRequestFeatureJira(WorkOrderDtoRequest2 dto) {
+        // Agregar labels y e2e
         var result = new IssueFeatureDto();
 
         // OBTENER BOARD INFO

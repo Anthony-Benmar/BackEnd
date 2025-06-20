@@ -35,8 +35,6 @@ public class IssueTicketResources {
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult insertFeatures(List<WorkOrderDtoRequest2> dtoList)
             throws Exception {
-        //return issueTicketService.insertFeatures(dtoList);
-        System.out.println("holass");
         return issueTicketService.insert2(dtoList);
     }
 

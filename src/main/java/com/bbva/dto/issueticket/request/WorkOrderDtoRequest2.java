@@ -27,7 +27,8 @@ public class WorkOrderDtoRequest2 {
     public String token;
     public Long expireTokenDate;
     public List<WorkOrderDetailDtoRequest> workOrderDetail;
-
+    public List<String> labels;
+    public String e2e;
     //Revisar los campos
     // public String featureName; // Nombre dinámico desde front
     // public String priority; // High/Medium/Low (opcional, default: Medium) -- Trbajar desde el back

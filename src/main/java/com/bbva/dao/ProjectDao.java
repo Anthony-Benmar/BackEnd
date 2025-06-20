@@ -14,10 +14,7 @@ import com.bbva.entities.common.PeriodPEntity;
 import com.bbva.entities.common.ProjectByPeriodEntity;
 import com.bbva.entities.common.ProjectEntity;
 import com.bbva.entities.feature.JiraFeatureEntity;
-import com.bbva.entities.project.ProjectFilterEntity;
-import com.bbva.entities.project.ProjectPortafolioEntity;
-import com.bbva.entities.project.ProjectPortafolioFilterEntity;
-import com.bbva.entities.project.ProjectStatusEntity;
+import com.bbva.entities.project.*;
 import com.bbva.util.JSONUtils;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -84,6 +81,32 @@ public class ProjectDao {
                 projectList.add(objectProject);
             });
             return projectList;
+        } catch (Exception e) {
+            log.log(Level.SEVERE, e.getMessage(), e);
+            return null;
+        }
+    }
+
+    public List<ProjectCatalogDtoResponse> listProjectCatalog(String sdatoolId) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ProjectMapper mapper = session.getMapper(ProjectMapper.class);
+            List<ProjectCatalogDtoResponse> projectCatalogList = new ArrayList<>();
+            List<ProjectCatalogEntity> projectEntityList = mapper.listProjectCatalog(sdatoolId);
+
+            projectEntityList.forEach(projectCatalogEntity -> {
+                ProjectCatalogDtoResponse objectProject = new ProjectCatalogDtoResponse();
+                objectProject.setSdatoolId(projectCatalogEntity.getSdatool_id());
+                objectProject.setProjectName(projectCatalogEntity.getProject_name());
+                objectProject.setSn1(projectCatalogEntity.getSn1());
+                objectProject.setSn1Desc(projectCatalogEntity.getSn1_desc());
+                objectProject.setSn2(projectCatalogEntity.getSn2());
+                objectProject.setSn2ProjectId(projectCatalogEntity.getSn2_projectId());
+                objectProject.setCodigo5Digitos(projectCatalogEntity.getCodigo_5_digitos());
+                projectCatalogList.add(objectProject);
+            });
+
+            return projectCatalogList;
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
             return null;

@@ -161,9 +161,6 @@ public class IssueTicketService {
                     continue;
                 }
 
-                // CREAR FEATURE DESDE CERO (Epic en Jira y guardar en BD) --- creo que solo sería un objeto
-                //JiraFeatureEntity2 completedFeature = createJiraFeature(dto, workOrderRequest);
-
                 // CREAR STORIES CON FEATURE ANTERIOR - REUTILIZADO
                 var workOrderDetailsRequest = dto.workOrderDetail.stream()
                         .map(s -> new WorkOrderDetail(0, 0, s.templateId, "", "ready", dto.registerUserId, new Date(), null))
@@ -216,7 +213,7 @@ public class IssueTicketService {
     //REUTILIZADO (REVISAR)
     private IssueResponse callJiraCreateFeatureSingle(WorkOrderDtoRequest2 objAuth, IssueFeatureDto featureRequest) throws Exception {
         Gson gson = GsonConfig.createGson();
-        String jsonString = gson.toJson(featureRequest);
+        //String jsonString = gson.toJson(featureRequest);
 
         //Se debe cambiar la key a PAD3???
         //Asociar a un sdatool?
@@ -225,41 +222,41 @@ public class IssueTicketService {
         //---------------------
         // La key se pondrá en automático, solo es necesario el key del project "PAD 3" o "DEDATIOENG"
         //-------------
-//        String jsonString = "{\n" +
-//                " \"fields\": {\n" +
-//                " \"project\": {\n" +
-//                " \"key\": \"PAD3\"\n" +
-//                " },\n" +
-//                " \"issuetype\": {\n" +
-//                " \"name\": \"Feature\"\n" +
-//                " },\n" +
-//                " \"summary\": \"TEST - Feature TEST 3\",\n" +
-//                " \"description\": \"Feature de prueba para validar la creación desde backend\",\n" +
-//                " \"priority\": {\n" +
-//                " \"name\": \"Medium\"\n" +
-//                " },\n" +
-//                " \"customfield_13300\": [\"381\"],\n" +
-//                " \"customfield_10272\": {\n" +
-//                " \"value\": \"Sprint 3\"\n" +
-//                " },\n" +
-//                " \"customfield_10265\": {\n" +
-//                " \"value\": \"Committed\"\n" +
-//                " },\n" +
-//                " \"customfield_10006\": \"TEST Feature Name 3\",\n" +
-//                " \"customfield_19001\": {\n" +
-//                " \"value\": \"Enabler Delivery\"\n" +
-//                " },\n" +
-//                " \"customfield_10260\": \"Criterios de aceptación a definir\",\n" +
-//                " \"customfield_12323\": \"49109\",\n" +
-//                " \"labels\": [\n" +
-//                " \"proyDatio\",\n" +
-//                " \"DE_PROD\",\n" +
-//                " \"TTV_FULLPROD\",\n" +
-//                " \"TEST-FEATURE\",\n" +
-//                " \"ONBOARDING\"\n" +
-//                " ]\n" +
-//                " }\n" +
-//                "}";
+        String jsonString = "{\n" +
+                " \"fields\": {\n" +
+                " \"project\": {\n" +
+                " \"key\": \"PAD3\"\n" +
+                " },\n" +
+                " \"issuetype\": {\n" +
+                " \"name\": \"Feature\"\n" +
+                " },\n" +
+                " \"summary\": \"TEST - Feature TEST 10\",\n" +
+                " \"description\": \"Feature de prueba para validar la creación desde backend 10\",\n" +
+                " \"priority\": {\n" +
+                " \"name\": \"Medium\"\n" +
+                " },\n" +
+                " \"customfield_13300\": [\"381\"],\n" +
+                " \"customfield_10272\": {\n" +
+                " \"value\": \"Sprint 3\"\n" +
+                " },\n" +
+                " \"customfield_10265\": {\n" +
+                " \"value\": \"Committed\"\n" +
+                " },\n" +
+                " \"customfield_10006\": \"TEST Feature Name 10\",\n" +
+                " \"customfield_19001\": {\n" +
+                " \"value\": \"Enabler Delivery\"\n" +
+                " },\n" +
+                " \"customfield_12323\": \"E2E-283738\",\n" +
+                " \"customfield_10264\": [\"2025-Q2\"],\n" +
+                " \"labels\": [\n" +
+                " \"proyDatio\",\n" +
+                " \"DE_PROD\",\n" +
+                " \"TTV_FULLPROD\",\n" +
+                " \"TEST-FEATURE\",\n" +
+                " \"ONBOARDING\"\n" +
+                " ]\n" +
+                " }\n" +
+                "}";
 
         System.out.println("=== JSON ENVIADO A JIRA ===");
         System.out.println(jsonString);
