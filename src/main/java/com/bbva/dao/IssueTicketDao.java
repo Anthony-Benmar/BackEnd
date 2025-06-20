@@ -432,6 +432,9 @@ public class IssueTicketDao {
             fields.customfield_13300 = Arrays.asList(board.board_jira_id);
         }
 
+        fields.customfield_12323 = dto.getE2e();
+        //fields.customfield_10264 = dto.getPeriod();
+
         // Definition of Ready (customfield_10601) - Array vacío para completar después
         //fields.customfield_10601 = new ArrayList<>();
 
@@ -443,6 +446,8 @@ public class IssueTicketDao {
 
         // Feature Name (customfield_10006) - Campo existente
         fields.customfield_10006 = dto.feature;
+        fields.customfield_10264 = dto.getPeriod();
+
 
         // Technical Type (customfield_10270) - Campo existente
 //        fields.customfield_10270 = new Customfield();
@@ -500,22 +505,10 @@ public class IssueTicketDao {
         }
     }
     private List<String> createFeatureLabels(WorkOrderDtoRequest2 dto) {
-        List<String> labels = new ArrayList<>();
-
-        // Labels estándar
-//        labels.add("#proyDatio");
-//        labels.add("DE_PROD");
-//        labels.add("TTV_FULLPROD");
-
-        // Labels específicos
-        //labels.add("FEATURE-" + workOrder.folio);
-        //labels.add("PROJ-" + workOrder.project_id);
-        //labels.add("SOURCE-" + workOrder.source_id);
-        labels.add("FASE-" + dto.faseId);
-        labels.add(dto.sourceId);
-        //labels.add("ONBOARDING");
-
-        return labels;
+        if (dto.getLabels() == null) {
+            return new ArrayList<>();
+        }
+        return new ArrayList<>(dto.getLabels());
     }
     public Map<String, IssueDto> getDataRequestIssueJiraEdit(WorkOrder workOrder, List<WorkOrderDetail> workOrderDetail, JiraFeatureEntity feature)
     {

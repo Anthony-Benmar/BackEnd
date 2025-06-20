@@ -33,4 +33,7 @@ public class WorkOrderDtoRequest2 {
     // public String featureName; // Nombre dinámico desde front
     // public String priority; // High/Medium/Low (opcional, default: Medium) -- Trbajar desde el back
     // public String assignee; // Usuario asignado - revisarr
+
+
+    public List<String> period;
 }

@@ -25,6 +25,7 @@ import com.bbva.entities.issueticket.WorkOrderDetail;
 import com.bbva.util.GsonConfig;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mysql.cj.util.StringUtils;
 import org.apache.http.Header;
@@ -201,19 +202,62 @@ public class IssueTicketService {
         ));
     }
     private IssueResponse createJiraFeature(WorkOrderDtoRequest2 dto) throws Exception {
-        // Obtener petición  para Jiraaa -- se crean los Fields
+
+        dto.setE2e("E2E-283738");
+        String idSdaProject = callJiraGetIdSda(dto);
+        dto.setE2e(idSdaProject);
+
+        List<String> period = new ArrayList<>();
+        period.add("2025-Q3");
+
+        dto.setPeriod(period);
+
         var featureRequest = issueTicketDao.getDataRequestFeatureJira(dto);
 
-        //Crear Feature en Jira
         IssueResponse jiraResponse = callJiraCreateFeatureSingle(dto, featureRequest);
 
         return jiraResponse;
     }
+    private String callJiraGetIdSda(WorkOrderDtoRequest2 dto) throws Exception {
+        Gson gson = GsonConfig.createGson();
 
-    //REUTILIZADO (REVISAR)
+        String issueKey = dto.getE2e();
+        String url = URL_API_JIRA + issueKey + "?fields=id";
+
+        HttpGet httpGet = new HttpGet(url);
+        httpGet.setHeader("Content-Type", "application/json");
+
+        Integer responseCode = 0;
+        String responseBodyString = "";
+        HttpEntity entity = null;
+
+        try (CloseableHttpClient httpclient = HttpClients.createDefault()) {
+            getBasicSession(dto.username, dto.token, httpclient);
+            httpGet.setHeader("Cookie", createCookieHeader(cookieStore.getCookies()));
+
+            CloseableHttpResponse response = httpclient.execute(httpGet);
+            responseCode = response.getStatusLine().getStatusCode();
+            entity = response.getEntity();
+            responseBodyString = EntityUtils.toString(entity);
+            response.close();
+        }
+
+        if (responseCode.equals(302)) {
+            throw new HandledException(responseCode.toString(), "Token Expirado");
+        }
+        if (responseCode >= 400 && responseCode <= 500) {
+            throw new HandledException(responseCode.toString(), "Error al obtener Issue de Jira: " + responseBodyString);
+        }
+
+        JsonObject jsonResponse = gson.fromJson(responseBodyString, JsonObject.class);
+        String issueId = jsonResponse.get("id").getAsString();
+
+        System.out.println("stop");
+        return issueId;
+    }
     private IssueResponse callJiraCreateFeatureSingle(WorkOrderDtoRequest2 objAuth, IssueFeatureDto featureRequest) throws Exception {
         Gson gson = GsonConfig.createGson();
-        //String jsonString = gson.toJson(featureRequest);
+        String jsonString = gson.toJson(featureRequest);
 
         //Se debe cambiar la key a PAD3???
         //Asociar a un sdatool?
@@ -222,41 +266,41 @@ public class IssueTicketService {
         //---------------------
         // La key se pondrá en automático, solo es necesario el key del project "PAD 3" o "DEDATIOENG"
         //-------------
-        String jsonString = "{\n" +
-                " \"fields\": {\n" +
-                " \"project\": {\n" +
-                " \"key\": \"PAD3\"\n" +
-                " },\n" +
-                " \"issuetype\": {\n" +
-                " \"name\": \"Feature\"\n" +
-                " },\n" +
-                " \"summary\": \"TEST - Feature TEST 10\",\n" +
-                " \"description\": \"Feature de prueba para validar la creación desde backend 10\",\n" +
-                " \"priority\": {\n" +
-                " \"name\": \"Medium\"\n" +
-                " },\n" +
-                " \"customfield_13300\": [\"381\"],\n" +
-                " \"customfield_10272\": {\n" +
-                " \"value\": \"Sprint 3\"\n" +
-                " },\n" +
-                " \"customfield_10265\": {\n" +
-                " \"value\": \"Committed\"\n" +
-                " },\n" +
-                " \"customfield_10006\": \"TEST Feature Name 10\",\n" +
-                " \"customfield_19001\": {\n" +
-                " \"value\": \"Enabler Delivery\"\n" +
-                " },\n" +
-                " \"customfield_12323\": \"E2E-283738\",\n" +
-                " \"customfield_10264\": [\"2025-Q2\"],\n" +
-                " \"labels\": [\n" +
-                " \"proyDatio\",\n" +
-                " \"DE_PROD\",\n" +
-                " \"TTV_FULLPROD\",\n" +
-                " \"TEST-FEATURE\",\n" +
-                " \"ONBOARDING\"\n" +
-                " ]\n" +
-                " }\n" +
-                "}";
+//        String jsonString = "{\n" +
+//                " \"fields\": {\n" +
+//                " \"project\": {\n" +
+//                " \"key\": \"PAD3\"\n" +
+//                " },\n" +
+//                " \"issuetype\": {\n" +
+//                " \"name\": \"Feature\"\n" +
+//                " },\n" +
+//                " \"summary\": \"TEST - Feature TEST 10\",\n" +
+//                " \"description\": \"Feature de prueba para validar la creación desde backend 10\",\n" +
+//                " \"priority\": {\n" +
+//                " \"name\": \"Medium\"\n" +
+//                " },\n" +
+//                " \"customfield_13300\": [\"381\"],\n" +
+//                " \"customfield_10272\": {\n" +
+//                " \"value\": \"Sprint 3\"\n" +
+//                " },\n" +
+//                " \"customfield_10265\": {\n" +
+//                " \"value\": \"Committed\"\n" +
+//                " },\n" +
+//                " \"customfield_10006\": \"TEST Feature Name 10\",\n" +
+//                " \"customfield_19001\": {\n" +
+//                " \"value\": \"Enabler Delivery\"\n" +
+//                " },\n" +
+//                " \"customfield_12323\": \"10084920\",\n" +
+//                " \"customfield_10264\": [\"2025-Q2\"],\n" +
+//                " \"labels\": [\n" +
+//                " \"proyDatio\",\n" +
+//                " \"DE_PROD\",\n" +
+//                " \"TTV_FULLPROD\",\n" +
+//                " \"TEST-FEATURE\",\n" +
+//                " \"ONBOARDING\"\n" +
+//                " ]\n" +
+//                " }\n" +
+//                "}";
 
         System.out.println("=== JSON ENVIADO A JIRA ===");
         System.out.println(jsonString);

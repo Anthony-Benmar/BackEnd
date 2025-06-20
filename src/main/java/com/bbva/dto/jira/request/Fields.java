@@ -70,7 +70,7 @@ public class Fields {
     public Object customfield_12321;
     public Object customfield_10263;
     public Object customfield_12320;
-    public Object customfield_10264; // Program Increment???
+    public List<String> customfield_10264; // Program Increment??? - Era Object ojito
     public List<Object> customfield_14623;
     public Object customfield_18302;
     public Object customfield_12322;
@@ -257,7 +257,7 @@ public class Fields {
     public List<Customfield> customfield_10600; //Definition of Ready (DoD) - List?
 //    public List<Customfield> customfield_10006; //Feature Name
     public String customfield_10006; //Feature Name
-    public Customfield customfield_12323; //SDA Project - SDA PROJECT - Deliverable
+    public String customfield_12323; //SDA Project - SDA PROJECT - Deliverable
     // public List<Customfield> customfield_12323; //SDA Project - SDA PROJECT - Deliverable
 
 }
