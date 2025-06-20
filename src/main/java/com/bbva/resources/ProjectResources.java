@@ -281,7 +281,11 @@ public class ProjectResources {
     {
         return projectService.getAllProjects();
     }
-
-
-
+    @GET
+    @Path("/{projectId}/validate")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<List<ProjectValidationParamsDtoResponse>> validateInfoProjectByProjectId(@Context HttpServletRequest request, @PathParam("projectId") int projectId){
+        return projectService.validateInfoProjectByProjectId(projectId);
+    }
 }

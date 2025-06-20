@@ -2,10 +2,7 @@ package com.bbva.dao;
 
 import com.bbva.database.MyBatisConnectionFactory;
 import com.bbva.database.mappers.ReliabilityMapper;
-import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
-import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
-import com.bbva.dto.reliability.request.JobTransferInputDtoRequest;
-import com.bbva.dto.reliability.request.TransferInputDtoRequest;
+import com.bbva.dto.reliability.request.*;
 import com.bbva.dto.reliability.response.*;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -61,7 +58,7 @@ class ReliabilityDaoTest {
                 new InventoryInputsDtoResponse()
         );
 
-        when(reliabilityMapperMock.inventoryInputsFilter(any(), any(), any(), any(), any(), any())).thenReturn(mockList);
+        when(reliabilityMapperMock.inventoryInputsFilter(any(), any(), any(), any(), any(), any(), any())).thenReturn(mockList);
 
         InventoryInputsFilterDtoResponse response = reliabilityDao.inventoryInputsFilter(dto);
 
@@ -72,7 +69,7 @@ class ReliabilityDaoTest {
 
         verify(sqlSessionFactoryMock).openSession();
         verify(sqlSessionMock).getMapper(ReliabilityMapper.class);
-        verify(reliabilityMapperMock).inventoryInputsFilter(any(), any(), any(), any(), any(), any());
+        verify(reliabilityMapperMock).inventoryInputsFilter(any(), any(), any(), any(), any(), any(), any());
         verify(sqlSessionMock).close();
     }
 
@@ -224,5 +221,36 @@ class ReliabilityDaoTest {
         reliabilityDao.insertTransfer(dto);
 
         verify(sqlSessionMock, never()).commit();
+    }
+
+    @Test
+    void testGetReliabilityPacksSuccess() {
+        ReliabilityPackInputFilterRequest request = new ReliabilityPackInputFilterRequest();
+        request.setPage(1);
+        request.setRecordsAmount(10);
+        request.setDomainName("Dominio");
+        request.setUseCase("Reliability");
+
+        when(sqlSessionMock.getMapper(ReliabilityMapper.class)).thenReturn(reliabilityMapperMock);
+
+        PaginationReliabilityPackResponse result = reliabilityDao.getReliabilityPacks(request);
+
+        assertNotNull(result);
+        verify(sqlSessionFactoryMock).openSession();
+        verify(sqlSessionMock).getMapper(ReliabilityMapper.class);
+        verify(sqlSessionMock).close();
+    }
+
+    @Test
+    void testUpdateStatusReliabilityPacksJobStock() {
+        List<String> packs = List.of("com.example", "com.example", "com.example", "com.example", "com.example");
+
+        when(sqlSessionMock.getMapper(ReliabilityMapper.class)).thenReturn(reliabilityMapperMock);
+
+        reliabilityDao.updateStatusReliabilityPacksJobStock(packs);
+
+        verify(sqlSessionFactoryMock).openSession();
+        verify(sqlSessionMock).getMapper(ReliabilityMapper.class);
+        verify(sqlSessionMock).close();
     }
 }
