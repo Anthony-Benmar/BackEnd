@@ -1,14 +1,9 @@
 package com.bbva.database.mappers;
 
-import com.bbva.entities.User;
 import com.bbva.entities.issueticket.WorkOrder;
-import com.bbva.entities.issueticket.WorkOrder2;
 import com.bbva.entities.issueticket.WorkOrderDetail;
-import com.bbva.entities.issueticket.WorkOrderInsertResult;
-import com.bbva.entities.template.TemplateEntity;
 import org.apache.ibatis.annotations.*;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,28 +37,10 @@ public interface IssueTicketMapper {
             "AND jw.project_id= #{project_id} ")
     int findRecordWorkOrder(WorkOrder workOrder);
 
-    //Observado, al final deben ser los mismos campos los que se consulten
-    @Select("SELECT COUNT(jw.work_order_id) as result FROM jira_workorder jw " +
-            "WHERE jw.feature = #{feature} " +
-            "AND jw.folio = #{folio} " +
-            "AND jw.source_name = #{source_name} " +
-            "AND jw.source_id = #{source_id} " +
-            "AND jw.flow_type = #{flow_type} " +
-            "AND jw.project_id= #{project_id} ")
-    int findRecordWorkOrder2(WorkOrder2 workOrder);
-
-
     @Insert("INSERT INTO jira_workorder(feature, folio, board_id, project_id, source_id, source_name, flow_type, work_order_type, status_type, register_user_id, register_date) " +
             "VALUES (#{feature},#{folio},#{board_id}, #{project_id}, #{source_id},#{source_name}, #{flow_type}, #{work_order_type}, #{status_type}, #{register_user_id}, #{register_date})")
     @Options(useGeneratedKeys = true, keyProperty = "work_order_id", keyColumn = "work_order_id")
     void insertWorkOrder(WorkOrder workOrder);
-
-    @Insert("INSERT INTO jira_workorder(feature, folio, board_id, project_id, source_id, source_name, " +
-            "flow_type, fase_id, sprint_est, work_order_type, status_type, register_user_id, register_date) " +
-            "VALUES (#{feature},#{folio},#{board_id}, #{project_id}, #{source_id},#{source_name}, " +
-            "#{flow_type}, #{fase_id}, #{sprint_est}, #{work_order_type}, #{status_type}, #{register_user_id}, #{register_date})")
-    @Options(useGeneratedKeys = true, keyProperty = "work_order_id", keyColumn = "work_order_id")
-    void insertWorkOrder2(WorkOrder2 workOrder);
 
     @Update("UPDATE jira_workorder " +
             "SET feature= #{feature}, folio=#{folio}, board_id=#{board_id}, project_id=#{project_id}, source_id=#{source_id}, "+

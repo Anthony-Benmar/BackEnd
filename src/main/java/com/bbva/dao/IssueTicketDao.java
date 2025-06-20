@@ -6,13 +6,10 @@ import com.bbva.dto.issueticket.request.WorkOrderDtoRequest2;
 import com.bbva.dto.issueticket.request.sourceTicketDtoRequest;
 import com.bbva.dto.issueticket.response.*;
 import com.bbva.dto.jira.request.*;
-import com.bbva.dto.jira.response.IssueResponse;
 import com.bbva.entities.board.Board;
 import com.bbva.entities.common.CatalogEntity;
 import com.bbva.entities.feature.JiraFeatureEntity;
-import com.bbva.entities.feature.JiraFeatureEntity2;
 import com.bbva.entities.issueticket.WorkOrder;
-import com.bbva.entities.issueticket.WorkOrder2;
 import com.bbva.entities.issueticket.WorkOrderDetail;
 import com.bbva.entities.template.Template;
 import org.apache.ibatis.session.SqlSession;
@@ -52,21 +49,6 @@ public class IssueTicketDao {
         }
     }
 
-    public int findRecordWorkOrder2(WorkOrder2 item) {
-        int result = 0;
-        try {
-            SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
-            try (SqlSession session = sqlSessionFactory.openSession()) {
-                IssueTicketMapper issueMapper = session.getMapper(IssueTicketMapper.class);
-                result = issueMapper.findRecordWorkOrder2(item);
-                return result;
-            }
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, e.getMessage(), e);
-            return result;
-        }
-    }
-
     public void insertWorkOrderAndDetail(WorkOrder workorder, List<WorkOrderDetail> workerDetails) {
         try {
             SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
@@ -74,26 +56,6 @@ public class IssueTicketDao {
                 IssueTicketMapper issueMapper = session.getMapper(IssueTicketMapper.class);
                 try {
                     issueMapper.insertWorkOrder(workorder);
-                    workerDetails.forEach(wod -> wod.setWork_order_id(workorder.work_order_id));
-                    issueMapper.InsertDetailList(workerDetails);
-                    session.commit();
-                } catch (Exception e) {
-                    session.rollback();
-                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
-                }
-            }
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, e.getMessage(), e);
-        }
-    }
-
-    public void insertWorkOrderAndDetail2(WorkOrder2 workorder, List<WorkOrderDetail> workerDetails) {
-        try {
-            SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
-            try (SqlSession session = sqlSessionFactory.openSession()) {
-                IssueTicketMapper issueMapper = session.getMapper(IssueTicketMapper.class);
-                try {
-                    issueMapper.insertWorkOrder2(workorder);
                     workerDetails.forEach(wod -> wod.setWork_order_id(workorder.work_order_id));
                     issueMapper.InsertDetailList(workerDetails);
                     session.commit();
@@ -289,99 +251,6 @@ public class IssueTicketDao {
         }
 
         return result;
-    }
-
-    public IssueBulkDto getDataRequestIssueJira4(WorkOrder2 workOrder, List<WorkOrderDetail> workOrderDetail, JiraFeatureEntity feature) {
-        var result = new IssueBulkDto();
-        result.issueUpdates = new ArrayList<IssueUpdate>();
-
-        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
-        Board board = null;
-        List<Template> templates = new ArrayList<Template>();
-        try (SqlSession session = sqlSessionFactory.openSession()) {
-            BoardMapper boardMapper = session.getMapper(BoardMapper.class);
-            board = boardMapper.boardById(workOrder.board_id);
-            var acceptableTemplate_id = workOrderDetail.stream().map(w -> w.template_id)
-                    .collect(Collectors.toList());
-
-            TemplateMapper templateMapper = session.getMapper(TemplateMapper.class);
-            templates = templateMapper.listById(acceptableTemplate_id);
-        }
-
-        for (WorkOrderDetail item : workOrderDetail) {
-            IssueUpdate issueUpdate = new IssueUpdate();
-            var template = templates.stream().filter(t -> t.template_id.equals(item.template_id))
-                    .findFirst().orElse(null);
-
-            var fields = new Fields();
-            fields.project = new Project();
-            fields.project.id = feature.jiraProjectId.toString();
-            fields.project.key = feature.jiraProjectName;
-
-            Board finalBoard = board;
-            fields.customfield_13300 = new ArrayList<String>() {{
-                add(finalBoard.board_jira_id);
-            }};
-            fields.customfield_10270 = new Customfield();
-            fields.customfield_10270.value = "Technical";
-            fields.customfield_10270.id = "20247";
-            fields.customfield_10270.disabled = false;
-            fields.labels = new ArrayList<String>() {{
-                add(String.format("P-%s", template.label_one));
-                add(String.format("F-%s", workOrder.folio));
-                add(String.format("ID-%s", workOrder.source_id));
-            }};
-
-            fields.customfield_10004 = workOrder.feature;
-            fields.summary = template.name.toLowerCase().replace("[fuente]", workOrder.source_name);
-            fields.description = template.description;
-
-            fields.issuetype = new Issuetype();
-            fields.issuetype.name = "Story";
-
-            issueUpdate.fields = fields;
-            result.issueUpdates.add(issueUpdate);
-        }
-
-        return result;
-    }
-
-    public String getTeamBacklogByBoardId(int boardId) {
-        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
-        try (SqlSession session = sqlSessionFactory.openSession()) {
-            BoardMapper boardMapper = session.getMapper(BoardMapper.class);
-            Board board = boardMapper.boardById(boardId);
-            return board != null ? board.name : "";
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Error al consultar team backlog: " + e.getMessage(), e);
-            return "";
-        }
-    }
-
-    public JiraFeatureEntity2 insertFeatureInDatabase(JiraFeatureEntity2 feature) {
-        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
-        try (SqlSession session = sqlSessionFactory.openSession()) {
-            FeatureMapper featureMapper = session.getMapper(FeatureMapper.class);
-            featureMapper.insertFeature(feature);
-            session.commit();
-
-            // Retornar el feature con el ID generado ----------
-            return feature;
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Error al insertar feature en BD: " + e.getMessage(), e);
-            throw new RuntimeException("Error al guardar feature en base de datos", e);
-        }
-    }
-
-    public JiraFeatureEntity2 getFeatureByKey(String featureKey) {
-        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
-        try (SqlSession session = sqlSessionFactory.openSession()) {
-            FeatureMapper featureMapper = session.getMapper(FeatureMapper.class);
-            return featureMapper.getFeatureByKey(featureKey);
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Error al consultar feature: " + e.getMessage(), e);
-            return null;
-        }
     }
 
     public IssueFeatureDto getDataRequestFeatureJira(WorkOrderDtoRequest2 dto) {
