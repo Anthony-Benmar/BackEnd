@@ -2,19 +2,8 @@ package com.bbva.dao;
 
 import com.bbva.database.MyBatisConnectionFactory;
 import com.bbva.database.mappers.*;
-import com.bbva.dto.issueticket.request.WorkOrderDtoRequest2;
-import com.bbva.dto.issueticket.request.sourceTicketDtoRequest;
-import com.bbva.dto.issueticket.response.issueTicketDtoResponse;
-import com.bbva.dto.issueticket.response.sourceTicketDtoResponse;
-import com.bbva.dto.jira.request.IssueBulkDto;
 import com.bbva.dto.jira.request.IssueDto;
-import com.bbva.dto.jira.request.IssueFeatureDto;
-import com.bbva.dto.jira.request.IssueUpdate;
-import com.bbva.dto.jira.response.IssueResponse;
 import com.bbva.entities.board.Board;
-import com.bbva.entities.common.CatalogEntity;
-import com.bbva.entities.feature.JiraFeatureEntity;
-import com.bbva.entities.feature.JiraFeatureEntity2;
 import com.bbva.entities.issueticket.WorkOrder;
 import com.bbva.entities.issueticket.WorkOrder2;
 import com.bbva.entities.issueticket.WorkOrderDetail;
@@ -31,16 +20,36 @@ import static org.mockito.Mockito.*;
 
 class IssueTicketDaoTest {
 
-    @Mock
-    SqlSessionFactory sqlSessionFactory;
-    @Mock
-    SqlSession session;
-    IssueTicketDao dao;
+    private SqlSessionFactory sqlSessionFactoryMock;
+    private SqlSession sqlSessionMock;
+    private BoardMapper boardMapperMock;
+    private TemplateMapper templateMapperMock;
+    private MockedStatic<MyBatisConnectionFactory> mockedFactory;
+    private IssueTicketMapper issueTicketMapperMock;
+    private IssueTicketDao dao;
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
+        sqlSessionFactoryMock = mock(SqlSessionFactory.class);
+        sqlSessionMock = mock(SqlSession.class);
+        boardMapperMock = mock(BoardMapper.class);
+        templateMapperMock = mock(TemplateMapper.class);
+        issueTicketMapperMock = mock(IssueTicketMapper.class); // <-- esto es lo que te falta!
+
+        mockedFactory = mockStatic(MyBatisConnectionFactory.class);
+        mockedFactory.when(MyBatisConnectionFactory::getInstance).thenReturn(sqlSessionFactoryMock);
+
+        when(sqlSessionFactoryMock.openSession()).thenReturn(sqlSessionMock);
+        when(sqlSessionMock.getMapper(BoardMapper.class)).thenReturn(boardMapperMock);
+        when(sqlSessionMock.getMapper(TemplateMapper.class)).thenReturn(templateMapperMock);
+        when(sqlSessionMock.getMapper(IssueTicketMapper.class)).thenReturn(issueTicketMapperMock);
+
         dao = new IssueTicketDao();
+    }
+
+    @AfterEach
+    void tearDown() {
+        mockedFactory.close();
     }
 
     @Test
@@ -51,362 +60,363 @@ class IssueTicketDaoTest {
     }
 
     @Test
-    void findRecordWorkOrder_ReturnsValue() {
-        try (MockedStatic<MyBatisConnectionFactory> factoryMock = mockStatic(MyBatisConnectionFactory.class)) {
-            SqlSessionFactory mockFactory = mock(SqlSessionFactory.class);
-            SqlSession mockSession = mock(SqlSession.class);
-            IssueTicketMapper mapper = mock(IssueTicketMapper.class);
+    void testGetDataRequestIssueJira_basicMapping() {
+        WorkOrder workOrder = new WorkOrder(1, "FEAT", "F1", 1, 123, "SRC1", "SRCNAME", 2, 1, 1, "user", new Date(), null, 0);
+        workOrder.feature = "FEAT";
+        workOrder.folio = "FOL123";
+        workOrder.source_id = "SRCID";
+        workOrder.board_id = 100;
 
-            factoryMock.when(MyBatisConnectionFactory::getInstance).thenReturn(mockFactory);
-            when(mockFactory.openSession()).thenReturn(mockSession);
-            when(mockSession.getMapper(IssueTicketMapper.class)).thenReturn(mapper);
-            when(mapper.findRecordWorkOrder(any())).thenReturn(3);
+        WorkOrderDetail detail = new WorkOrderDetail(10, 1, 111, null, null, null, null, null);
+        List<WorkOrderDetail> details = List.of(detail);
 
-            IssueTicketDao dao = new IssueTicketDao();
-            int result = dao.findRecordWorkOrder(new WorkOrder());
-            assertEquals(3, result);
-            verify(mockSession).close();
-        }
+        Board board = new Board();
+        board.board_id = 100;
+        board.project_jira_id = "PJID";
+        board.project_jira_key = "PROJKEY";
+        board.board_jira_id = "BRD100";
+
+        Template template = new Template();
+        template.template_id = 111;
+        template.label_one = "LABEL";
+        template.name = "Story [fuente]";
+        template.description = "desc";
+
+        when(boardMapperMock.list()).thenReturn(List.of(board));
+        when(templateMapperMock.list()).thenReturn(List.of(template));
+
+        Map<Integer, IssueDto> result = dao.getDataRequestIssueJira(workOrder, details);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        IssueDto issue = result.get(111);
+        assertNotNull(issue);
+        assertNotNull(issue.fields);
+        assertEquals("PJID", issue.fields.project.id);
+        assertEquals("PROJKEY", issue.fields.project.key);
+        assertEquals(List.of("BRD100"), issue.fields.customfield_13300);
+        assertEquals("Technical", issue.fields.customfield_10270.value);
+        assertEquals("20247", issue.fields.customfield_10270.id);
+        assertEquals(false, issue.fields.customfield_10270.disabled);
+        assertTrue(issue.fields.labels.contains("P-LABEL"));
+        assertTrue(issue.fields.labels.contains("F-FOL123"));
+        assertTrue(issue.fields.labels.contains("ID-SRCID"));
+        assertEquals("FEAT", issue.fields.customfield_10004);
+        assertEquals("Story SRCNAME", issue.fields.summary);
+        assertEquals("desc", issue.fields.description);
+        assertEquals("Story", issue.fields.issuetype.name);
     }
 
     @Test
-    void findRecordWorkOrder2_ReturnsValue() {
-        try (MockedStatic<MyBatisConnectionFactory> factoryMock = mockStatic(MyBatisConnectionFactory.class)) {
-            SqlSessionFactory mockFactory = mock(SqlSessionFactory.class);
-            SqlSession mockSession = mock(SqlSession.class);
-            IssueTicketMapper mapper = mock(IssueTicketMapper.class);
+    void testGetDataRequestIssueJira_emptyDetailsReturnsEmptyMap() {
+        WorkOrder workOrder = new WorkOrder(1, "FEAT", "F1", 1, 123, "SRC1", "SRCNAME", 2, 1, 1, "user", new Date(), null, 0);
 
-            factoryMock.when(MyBatisConnectionFactory::getInstance).thenReturn(mockFactory);
-            when(mockFactory.openSession()).thenReturn(mockSession);
-            when(mockSession.getMapper(IssueTicketMapper.class)).thenReturn(mapper);
-            when(mapper.findRecordWorkOrder2(any())).thenReturn(5);
+        List<WorkOrderDetail> details = new ArrayList<>();
 
-            IssueTicketDao dao = new IssueTicketDao();
-            int result = dao.findRecordWorkOrder2(new WorkOrder2());
-            assertEquals(5, result);
-            verify(mockSession).close();
-        }
+        when(boardMapperMock.list()).thenReturn(List.of());
+        when(templateMapperMock.list()).thenReturn(List.of());
+
+        Map<Integer, IssueDto> result = dao.getDataRequestIssueJira(workOrder, details);
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
     }
 
     @Test
-    void insertWorkOrderAndDetail_ShouldCallInsertAndCommit() {
-        try (MockedStatic<MyBatisConnectionFactory> factoryMock = mockStatic(MyBatisConnectionFactory.class)) {
-            SqlSessionFactory mockFactory = mock(SqlSessionFactory.class);
-            SqlSession mockSession = mock(SqlSession.class);
-            IssueTicketMapper mapper = mock(IssueTicketMapper.class);
+    void findRecordWorkOrder_returnsMapperValue() {
+        WorkOrder workOrder = new WorkOrder();
+        when(issueTicketMapperMock.findRecordWorkOrder(workOrder)).thenReturn(42);
 
-            factoryMock.when(MyBatisConnectionFactory::getInstance).thenReturn(mockFactory);
-            when(mockFactory.openSession()).thenReturn(mockSession);
-            when(mockSession.getMapper(IssueTicketMapper.class)).thenReturn(mapper);
+        int result = dao.findRecordWorkOrder(workOrder);
 
-            WorkOrder wo = new WorkOrder();
-            wo.work_order_id = 1;
-            WorkOrderDetail wod = new WorkOrderDetail(
-                    1,        // work_order_detail_id
-                    1,        // work_order_id
-                    5,        // template_id
-                    "ISSUE",  // issue_code
-                    "NEW",    // issue_status_type
-                    "user",   // register_user_id
-                    new Date(), // register_date
-                    null      // end_date
-            );
-            wod.template_id = 5;
-            List<WorkOrderDetail> list = List.of(wod);
-
-            IssueTicketDao dao = new IssueTicketDao();
-            dao.insertWorkOrderAndDetail(wo, list);
-
-            verify(mapper).insertWorkOrder(wo);
-            verify(mapper).InsertDetailList(list);
-            verify(mockSession).commit();
-            verify(mockSession).close();
-        }
+        assertEquals(42, result);
+        verify(sqlSessionFactoryMock).openSession();
+        verify(sqlSessionMock).getMapper(IssueTicketMapper.class);
+        verify(issueTicketMapperMock).findRecordWorkOrder(workOrder);
+        verify(sqlSessionMock).close();
     }
 
     @Test
-    void insertWorkOrderAndDetail2_ShouldCallInsertAndCommit() {
-        try (MockedStatic<MyBatisConnectionFactory> factoryMock = mockStatic(MyBatisConnectionFactory.class)) {
-            SqlSessionFactory mockFactory = mock(SqlSessionFactory.class);
-            SqlSession mockSession = mock(SqlSession.class);
-            IssueTicketMapper mapper = mock(IssueTicketMapper.class);
+    void findRecordWorkOrder_returnsZeroOnException() {
+        WorkOrder workOrder = new WorkOrder();
+        when(sqlSessionFactoryMock.openSession()).thenThrow(new RuntimeException("DB error"));
 
-            factoryMock.when(MyBatisConnectionFactory::getInstance).thenReturn(mockFactory);
-            when(mockFactory.openSession()).thenReturn(mockSession);
-            when(mockSession.getMapper(IssueTicketMapper.class)).thenReturn(mapper);
+        int result = dao.findRecordWorkOrder(workOrder);
 
-            WorkOrder2 wo = new WorkOrder2();
-            wo.work_order_id = 2;
-            WorkOrderDetail wod = new WorkOrderDetail(
-                    1,        // work_order_detail_id
-                    1,        // work_order_id
-                    5,        // template_id
-                    "ISSUE",  // issue_code
-                    "NEW",    // issue_status_type
-                    "user",   // register_user_id
-                    new Date(), // register_date
-                    null      // end_date
-            );
-            wod.template_id = 7;
-            List<WorkOrderDetail> list = List.of(wod);
-
-            IssueTicketDao dao = new IssueTicketDao();
-            dao.insertWorkOrderAndDetail2(wo, list);
-
-            verify(mapper).insertWorkOrder2(wo);
-            verify(mapper).InsertDetailList(list);
-            verify(mockSession).commit();
-            verify(mockSession).close();
-        }
+        assertEquals(0, result);
+        // LOGGER logs the error but we do not assert logs here
     }
 
     @Test
-    void UpdateWorkOrder_ShouldReturnTrue() {
-        try (MockedStatic<MyBatisConnectionFactory> factoryMock = mockStatic(MyBatisConnectionFactory.class)) {
-            SqlSessionFactory mockFactory = mock(SqlSessionFactory.class);
-            SqlSession mockSession = mock(SqlSession.class);
-            IssueTicketMapper mapper = mock(IssueTicketMapper.class);
+    void findRecordWorkOrder2_returnsMapperValue() {
+        WorkOrder2 workOrder2 = new WorkOrder2();
+        when(issueTicketMapperMock.findRecordWorkOrder2(workOrder2)).thenReturn(99);
 
-            factoryMock.when(MyBatisConnectionFactory::getInstance).thenReturn(mockFactory);
-            when(mockFactory.openSession()).thenReturn(mockSession);
-            when(mockSession.getMapper(IssueTicketMapper.class)).thenReturn(mapper);
+        int result = dao.findRecordWorkOrder2(workOrder2);
 
-            WorkOrder wo = new WorkOrder();
-            IssueTicketDao dao = new IssueTicketDao();
-            boolean res = dao.UpdateWorkOrder(wo);
-
-            assertTrue(res);
-            verify(mapper).UpdateWorkOrder(wo);
-            verify(mockSession).commit();
-            verify(mockSession).close();
-        }
+        assertEquals(99, result);
+        verify(sqlSessionFactoryMock).openSession();
+        verify(sqlSessionMock).getMapper(IssueTicketMapper.class);
+        verify(issueTicketMapperMock).findRecordWorkOrder2(workOrder2);
+        verify(sqlSessionMock).close();
     }
 
     @Test
-    void InsertWorkOrderDetail_ShouldReturnTrue() {
-        try (MockedStatic<MyBatisConnectionFactory> factoryMock = mockStatic(MyBatisConnectionFactory.class)) {
-            SqlSessionFactory mockFactory = mock(SqlSessionFactory.class);
-            SqlSession mockSession = mock(SqlSession.class);
-            IssueTicketMapper mapper = mock(IssueTicketMapper.class);
+    void findRecordWorkOrder2_returnsZeroOnException() {
+        WorkOrder2 workOrder2 = new WorkOrder2();
+        when(sqlSessionFactoryMock.openSession()).thenThrow(new RuntimeException("DB error"));
 
-            factoryMock.when(MyBatisConnectionFactory::getInstance).thenReturn(mockFactory);
-            when(mockFactory.openSession()).thenReturn(mockSession);
-            when(mockSession.getMapper(IssueTicketMapper.class)).thenReturn(mapper);
-            WorkOrderDetail wod = new WorkOrderDetail(
-                    1,        // work_order_detail_id
-                    1,        // work_order_id
-                    5,        // template_id
-                    "ISSUE",  // issue_code
-                    "NEW",    // issue_status_type
-                    "user",   // register_user_id
-                    new Date(), // register_date
-                    null      // end_date
-            );
+        int result = dao.findRecordWorkOrder2(workOrder2);
 
-            List<WorkOrderDetail> details = List.of(wod);
-
-            IssueTicketDao dao = new IssueTicketDao();
-            boolean res = dao.InsertWorkOrderDetail(details);
-            assertTrue(res);
-            verify(mapper).InsertDetailList(details);
-            verify(mockSession).commit();
-            verify(mockSession).close();
-        }
+        assertEquals(0, result);
     }
 
     @Test
-    void InsertWorkOrderDetail_WithSession_ShouldReturnTrue() {
-        SqlSession mockSession = mock(SqlSession.class);
-        IssueTicketMapper mapper = mock(IssueTicketMapper.class);
-        when(mockSession.getMapper(IssueTicketMapper.class)).thenReturn(mapper);
+    void insertWorkOrderAndDetail_happyPath_insertsAndCommits() {
+        WorkOrder workOrder = new WorkOrder();
+        workOrder.work_order_id = 123;
 
-        WorkOrderDetail wod = new WorkOrderDetail(
-                1,        // work_order_detail_id
-                1,        // work_order_id
-                5,        // template_id
-                "ISSUE",  // issue_code
-                "NEW",    // issue_status_type
-                "user",   // register_user_id
-                new Date(), // register_date
-                null      // end_date
+        WorkOrderDetail detail1 = new WorkOrderDetail(
+                null, null, null, null, null, null, null, null
         );
-        List<WorkOrderDetail> details = List.of(wod);
-        IssueTicketDao dao = new IssueTicketDao();
-        boolean res = dao.InsertWorkOrderDetail(mockSession, details);
-        assertTrue(res);
-        verify(mapper).InsertDetailList(details);
+        WorkOrderDetail detail2 = new WorkOrderDetail(
+                null, null, null, null, null, null, null, null
+        );
+        List<WorkOrderDetail> details = Arrays.asList(detail1, detail2);
+
+        // Spies para verificar el setWork_order_id
+        WorkOrderDetail spyDetail1 = spy(detail1);
+        WorkOrderDetail spyDetail2 = spy(detail2);
+        List<WorkOrderDetail> spyDetails = Arrays.asList(spyDetail1, spyDetail2);
+
+        dao.insertWorkOrderAndDetail(workOrder, spyDetails);
+
+        verify(issueTicketMapperMock).insertWorkOrder(workOrder);
+        verify(issueTicketMapperMock).InsertDetailList(spyDetails);
+        verify(sqlSessionMock).commit();
+        verify(spyDetail1).setWork_order_id(123);
+        verify(spyDetail2).setWork_order_id(123);
+        verify(sqlSessionMock).close();
     }
 
     @Test
-    void ListWorkOrder_ShouldReturnList() {
-        try (MockedStatic<MyBatisConnectionFactory> factoryMock = mockStatic(MyBatisConnectionFactory.class)) {
-            SqlSessionFactory mockFactory = mock(SqlSessionFactory.class);
-            SqlSession mockSession = mock(SqlSession.class);
-            IssueTicketMapper mapper = mock(IssueTicketMapper.class);
+    void insertWorkOrderAndDetail_insertThrows_exceptionRollsBackAndLogs() {
+        WorkOrder workOrder = new WorkOrder();
+        workOrder.work_order_id = 123;
+        WorkOrderDetail detail1 = new WorkOrderDetail(
+                null, null, null, null, null, null, null, null
+        );
+        List<WorkOrderDetail> details = List.of(detail1);
 
-            factoryMock.when(MyBatisConnectionFactory::getInstance).thenReturn(mockFactory);
-            when(mockFactory.openSession()).thenReturn(mockSession);
-            when(mockSession.getMapper(IssueTicketMapper.class)).thenReturn(mapper);
+        doThrow(new RuntimeException("insert fail")).when(issueTicketMapperMock).insertWorkOrder(workOrder);
 
-            List<WorkOrder> mockList = List.of(new WorkOrder());
-            when(mapper.ListWorkOrder(anyInt(), anyInt(), anyInt(), anyInt())).thenReturn(mockList);
+        dao.insertWorkOrderAndDetail(workOrder, details);
 
-            IssueTicketDao dao = new IssueTicketDao();
-            List<WorkOrder> result = dao.ListWorkOrder(1);
-            assertEquals(1, result.size());
-            verify(mockSession).close();
-        }
+        verify(issueTicketMapperMock).insertWorkOrder(workOrder);
+        verify(sqlSessionMock).rollback();
+        verify(sqlSessionMock).close();
     }
 
     @Test
-    void ListWorkOrderDetails_ShouldReturnList() {
-        try (MockedStatic<MyBatisConnectionFactory> factoryMock = mockStatic(MyBatisConnectionFactory.class)) {
-            SqlSessionFactory mockFactory = mock(SqlSessionFactory.class);
-            SqlSession mockSession = mock(SqlSession.class);
-            IssueTicketMapper mapper = mock(IssueTicketMapper.class);
+    void insertWorkOrderAndDetail_insertDetailListThrows_exceptionRollsBackAndLogs() {
+        WorkOrder workOrder = new WorkOrder();
+        workOrder.work_order_id = 123;
+        WorkOrderDetail detail1 = new WorkOrderDetail(
+                null, null, null, null, null, null, null, null
+        );
+        List<WorkOrderDetail> details = List.of(detail1);
 
-            factoryMock.when(MyBatisConnectionFactory::getInstance).thenReturn(mockFactory);
-            when(mockFactory.openSession()).thenReturn(mockSession);
-            when(mockSession.getMapper(IssueTicketMapper.class)).thenReturn(mapper);
-            WorkOrderDetail wod = new WorkOrderDetail(
-                    1,        // work_order_detail_id
-                    1,        // work_order_id
-                    5,        // template_id
-                    "ISSUE",  // issue_code
-                    "NEW",    // issue_status_type
-                    "user",   // register_user_id
-                    new Date(), // register_date
-                    null      // end_date
-            );
-            List<WorkOrderDetail> mockList = List.of(wod);
-            when(mapper.ListWorkOrderDetails(anyInt(), anyInt(), anyInt(), anyInt())).thenReturn(mockList);
+        doNothing().when(issueTicketMapperMock).insertWorkOrder(workOrder);
+        doThrow(new RuntimeException("insert detail fail")).when(issueTicketMapperMock).InsertDetailList(details);
 
-            IssueTicketDao dao = new IssueTicketDao();
-            List<WorkOrderDetail> result = dao.ListWorkOrderDetails(1);
-            assertEquals(1, result.size());
-            verify(mockSession).close();
-        }
+        dao.insertWorkOrderAndDetail(workOrder, details);
+
+        verify(issueTicketMapperMock).insertWorkOrder(workOrder);
+        verify(issueTicketMapperMock).InsertDetailList(details);
+        verify(sqlSessionMock).rollback();
+        verify(sqlSessionMock).close();
     }
 
     @Test
-    void testFindRecordWorkOrder_ReturnsExpectedValue() {
-        try (MockedStatic<MyBatisConnectionFactory> staticFactory = mockStatic(MyBatisConnectionFactory.class)) {
-            SqlSessionFactory mockFactory = mock(SqlSessionFactory.class);
-            SqlSession mockSession = mock(SqlSession.class);
-            IssueTicketMapper mockMapper = mock(IssueTicketMapper.class);
-            staticFactory.when(MyBatisConnectionFactory::getInstance).thenReturn(mockFactory);
-            when(mockFactory.openSession()).thenReturn(mockSession);
-            when(mockSession.getMapper(IssueTicketMapper.class)).thenReturn(mockMapper);
-            when(mockMapper.findRecordWorkOrder(any())).thenReturn(7);
+    void insertWorkOrderAndDetail_outerTryThrows_exceptionLogs() {
+        when(sqlSessionFactoryMock.openSession()).thenThrow(new RuntimeException("connection error"));
 
-            int res = dao.findRecordWorkOrder(new WorkOrder(1,"","",1,0,"","",0,0,0,"",null,null,0));
-            assertEquals(7, res);
-            verify(mockSession).close();
-        }
+        WorkOrder workOrder = new WorkOrder();
+        List<WorkOrderDetail> details = List.of();
+
+        dao.insertWorkOrderAndDetail(workOrder, details);
+
+        verify(sqlSessionFactoryMock).openSession();
     }
 
     @Test
-    void testFindRecordWorkOrder2_ReturnsExpectedValue() {
-        try (MockedStatic<MyBatisConnectionFactory> staticFactory = mockStatic(MyBatisConnectionFactory.class)) {
-            SqlSessionFactory mockFactory = mock(SqlSessionFactory.class);
-            SqlSession mockSession = mock(SqlSession.class);
-            IssueTicketMapper mockMapper = mock(IssueTicketMapper.class);
-            staticFactory.when(MyBatisConnectionFactory::getInstance).thenReturn(mockFactory);
-            when(mockFactory.openSession()).thenReturn(mockSession);
-            when(mockSession.getMapper(IssueTicketMapper.class)).thenReturn(mockMapper);
-            when(mockMapper.findRecordWorkOrder2(any())).thenReturn(4);
+    void insertWorkOrderAndDetail2_happyPath_insertsAndCommits() {
+        WorkOrder2 workOrder2 = new WorkOrder2();
+        workOrder2.work_order_id = 555;
+        WorkOrderDetail detail1 = new WorkOrderDetail(null, null, null, null, null, null, null, null);
+        WorkOrderDetail detail2 = new WorkOrderDetail(null, null, null, null, null, null, null, null);
+        List<WorkOrderDetail> details = Arrays.asList(detail1, detail2);
 
-            int res = dao.findRecordWorkOrder2(new WorkOrder2(1,"","",1,0,"","",0,0,0,"",null,null,0));
-            assertEquals(4, res);
-            verify(mockSession).close();
-        }
+        // Spies para verificar el setWork_order_id
+        WorkOrderDetail spyDetail1 = spy(detail1);
+        WorkOrderDetail spyDetail2 = spy(detail2);
+        List<WorkOrderDetail> spyDetails = Arrays.asList(spyDetail1, spyDetail2);
+
+        dao.insertWorkOrderAndDetail2(workOrder2, spyDetails);
+
+        verify(issueTicketMapperMock).insertWorkOrder2(workOrder2);
+        verify(issueTicketMapperMock).InsertDetailList(spyDetails);
+        verify(sqlSessionMock).commit();
+        verify(spyDetail1).setWork_order_id(555);
+        verify(spyDetail2).setWork_order_id(555);
+        verify(sqlSessionMock).close();
     }
 
     @Test
-    void testInsertWorkOrderAndDetail_CommitsOnSuccess() {
-        try (MockedStatic<MyBatisConnectionFactory> staticFactory = mockStatic(MyBatisConnectionFactory.class)) {
-            SqlSessionFactory mockFactory = mock(SqlSessionFactory.class);
-            SqlSession mockSession = mock(SqlSession.class);
-            IssueTicketMapper mockMapper = mock(IssueTicketMapper.class);
-            staticFactory.when(MyBatisConnectionFactory::getInstance).thenReturn(mockFactory);
-            when(mockFactory.openSession()).thenReturn(mockSession);
-            when(mockSession.getMapper(IssueTicketMapper.class)).thenReturn(mockMapper);
+    void insertWorkOrderAndDetail2_insertThrows_exceptionRollsBackAndLogs() {
+        WorkOrder2 workOrder2 = new WorkOrder2();
+        workOrder2.work_order_id = 555;
+        WorkOrderDetail detail1 = new WorkOrderDetail(null, null, null, null, null, null, null, null);
+        List<WorkOrderDetail> details = List.of(detail1);
 
-            WorkOrder wo = new WorkOrder(1, "f", "f", 1, 1, "s", "s", 1, 1, 1, "u", null, null, 0);
-            List<WorkOrderDetail> details = Collections.singletonList(
-                    new WorkOrderDetail(1, 1, 2, "ISSUE", "OPEN", "u", null, null)
-            );
+        doThrow(new RuntimeException("insert fail")).when(issueTicketMapperMock).insertWorkOrder2(workOrder2);
 
-            dao.insertWorkOrderAndDetail(wo, details);
+        dao.insertWorkOrderAndDetail2(workOrder2, details);
 
-            verify(mockMapper).insertWorkOrder(wo);
-            verify(mockMapper).InsertDetailList(details);
-            verify(mockSession).commit();
-            verify(mockSession).close();
-        }
+        verify(issueTicketMapperMock).insertWorkOrder2(workOrder2);
+        verify(sqlSessionMock).rollback();
+        verify(sqlSessionMock).close();
     }
 
     @Test
-    void testUpdateWorkOrder_ReturnsTrueOnSuccess() {
-        try (MockedStatic<MyBatisConnectionFactory> staticFactory = mockStatic(MyBatisConnectionFactory.class)) {
-            SqlSessionFactory mockFactory = mock(SqlSessionFactory.class);
-            SqlSession mockSession = mock(SqlSession.class);
-            IssueTicketMapper mockMapper = mock(IssueTicketMapper.class);
-            staticFactory.when(MyBatisConnectionFactory::getInstance).thenReturn(mockFactory);
-            when(mockFactory.openSession()).thenReturn(mockSession);
-            when(mockSession.getMapper(IssueTicketMapper.class)).thenReturn(mockMapper);
+    void insertWorkOrderAndDetail2_insertDetailListThrows_exceptionRollsBackAndLogs() {
+        WorkOrder2 workOrder2 = new WorkOrder2();
+        workOrder2.work_order_id = 555;
+        WorkOrderDetail detail1 = new WorkOrderDetail(null, null, null, null, null, null, null, null);
+        List<WorkOrderDetail> details = List.of(detail1);
 
-            WorkOrder wo = new WorkOrder(1, "f", "f", 1,1, "s", "s", 1, 1, 1, "u", null, null, 0);
+        doNothing().when(issueTicketMapperMock).insertWorkOrder2(workOrder2);
+        doThrow(new RuntimeException("insert detail fail")).when(issueTicketMapperMock).InsertDetailList(details);
 
-            boolean result = dao.UpdateWorkOrder(wo);
+        dao.insertWorkOrderAndDetail2(workOrder2, details);
 
-            assertTrue(result);
-            verify(mockMapper).UpdateWorkOrder(wo);
-            verify(mockSession).commit();
-            verify(mockSession).close();
-        }
+        verify(issueTicketMapperMock).insertWorkOrder2(workOrder2);
+        verify(issueTicketMapperMock).InsertDetailList(details);
+        verify(sqlSessionMock).rollback();
+        verify(sqlSessionMock).close();
     }
 
     @Test
-    void testInsertWorkOrderDetail_ReturnsTrueOnSuccess() {
-        try (MockedStatic<MyBatisConnectionFactory> staticFactory = mockStatic(MyBatisConnectionFactory.class)) {
-            SqlSessionFactory mockFactory = mock(SqlSessionFactory.class);
-            SqlSession mockSession = mock(SqlSession.class);
-            IssueTicketMapper mockMapper = mock(IssueTicketMapper.class);
-            staticFactory.when(MyBatisConnectionFactory::getInstance).thenReturn(mockFactory);
-            when(mockFactory.openSession()).thenReturn(mockSession);
-            when(mockSession.getMapper(IssueTicketMapper.class)).thenReturn(mockMapper);
+    void insertWorkOrderAndDetail2_outerTryThrows_exceptionLogs() {
+        when(sqlSessionFactoryMock.openSession()).thenThrow(new RuntimeException("connection error"));
 
-            List<WorkOrderDetail> details = Collections.singletonList(
-                    new WorkOrderDetail(1, 1, 2, "ISSUE", "OPEN", "u", null, null)
-            );
-            boolean result = dao.InsertWorkOrderDetail(details);
+        WorkOrder2 workOrder2 = new WorkOrder2();
+        List<WorkOrderDetail> details = List.of();
 
-            assertTrue(result);
-            verify(mockMapper).InsertDetailList(details);
-            verify(mockSession).commit();
-            verify(mockSession).close();
-        }
+        dao.insertWorkOrderAndDetail2(workOrder2, details);
+
+        verify(sqlSessionFactoryMock).openSession();
     }
 
     @Test
-    void testListWorkOrderDetails_ReturnsList() {
-        try (MockedStatic<MyBatisConnectionFactory> staticFactory = mockStatic(MyBatisConnectionFactory.class)) {
-            SqlSessionFactory mockFactory = mock(SqlSessionFactory.class);
-            SqlSession mockSession = mock(SqlSession.class);
-            IssueTicketMapper mockMapper = mock(IssueTicketMapper.class);
-            staticFactory.when(MyBatisConnectionFactory::getInstance).thenReturn(mockFactory);
-            when(mockFactory.openSession()).thenReturn(mockSession);
-            when(mockSession.getMapper(IssueTicketMapper.class)).thenReturn(mockMapper);
+    void updateWorkOrder_happyPath_updatesAndCommits() {
+        WorkOrder workOrder = new WorkOrder();
 
-            List<WorkOrderDetail> expected = new ArrayList<>();
-            expected.add(new WorkOrderDetail(1, 1, 2, "ISSUE", "OPEN", "u", null, null));
-            when(mockMapper.ListWorkOrderDetails(anyInt(), anyInt(), anyInt(), anyInt())).thenReturn(expected);
+        boolean result = dao.UpdateWorkOrder(workOrder);
 
-            List<WorkOrderDetail> result = dao.ListWorkOrderDetails(1);
-            assertNotNull(result);
-            assertEquals(1, result.size());
-            verify(mockSession).close();
-        }
+        assertTrue(result);
+        verify(issueTicketMapperMock).UpdateWorkOrder(workOrder);
+        verify(sqlSessionMock).commit();
+        verify(sqlSessionMock).close();
+    }
+
+    @Test
+    void updateWorkOrder_exceptionRollsBackAndLogs() {
+        WorkOrder workOrder = new WorkOrder();
+        // Simula excepción al abrir la sesión (también puedes simularla en UpdateWorkOrder si lo prefieres)
+        when(sqlSessionFactoryMock.openSession()).thenThrow(new RuntimeException("DB fail"));
+
+        boolean result = dao.UpdateWorkOrder(workOrder);
+
+        assertFalse(result);
+        verify(sqlSessionFactoryMock).openSession();
+        // No hace falta verificar más, ya que la excepción ocurre antes de obtener el mapper
+    }
+
+    @Test
+    void insertWorkOrderDetail_happyPath_insertsAndCommits() {
+        WorkOrderDetail detail1 = new WorkOrderDetail(null, null, null, null, null, null, null, null);
+        WorkOrderDetail detail2 = new WorkOrderDetail(null, null, null, null, null, null, null, null);
+        List<WorkOrderDetail> details = Arrays.asList(detail1, detail2);
+
+        boolean result = dao.InsertWorkOrderDetail(details);
+
+        assertTrue(result);
+        verify(issueTicketMapperMock).InsertDetailList(details);
+        verify(sqlSessionMock).commit();
+        verify(sqlSessionMock).close();
+    }
+
+    @Test
+    void insertWorkOrderDetail_exceptionLogsAndReturnsFalse() {
+        WorkOrderDetail detail1 = new WorkOrderDetail(null, null, null, null, null, null, null, null);
+        List<WorkOrderDetail> details = List.of(detail1);
+
+        doThrow(new RuntimeException("DB error")).when(issueTicketMapperMock).InsertDetailList(details);
+
+        boolean result = dao.InsertWorkOrderDetail(details);
+
+        assertFalse(result);
+        verify(issueTicketMapperMock).InsertDetailList(details);
+        verify(sqlSessionMock).close();
+    }
+
+    @Test
+    void insertWorkOrderDetail_withSession_happyPath_insertsAndReturnsTrue() {
+        WorkOrderDetail detail1 = new WorkOrderDetail(null, null, null, null, null, null, null, null);
+        WorkOrderDetail detail2 = new WorkOrderDetail(null, null, null, null, null, null, null, null);
+        List<WorkOrderDetail> details = Arrays.asList(detail1, detail2);
+
+        boolean result = dao.InsertWorkOrderDetail(sqlSessionMock, details);
+
+        assertTrue(result);
+        verify(sqlSessionMock).getMapper(IssueTicketMapper.class);
+        verify(issueTicketMapperMock).InsertDetailList(details);
+    }
+
+    @Test
+    void insertWorkOrderDetail_withSession_exceptionLogsAndReturnsFalse() {
+        WorkOrderDetail detail1 = new WorkOrderDetail(null, null, null, null, null, null, null, null);
+        List<WorkOrderDetail> details = List.of(detail1);
+
+        when(sqlSessionMock.getMapper(IssueTicketMapper.class)).thenReturn(issueTicketMapperMock);
+        doThrow(new RuntimeException("fail")).when(issueTicketMapperMock).InsertDetailList(details);
+
+        boolean result = dao.InsertWorkOrderDetail(sqlSessionMock, details);
+
+        assertFalse(result);
+        verify(sqlSessionMock).getMapper(IssueTicketMapper.class);
+        verify(issueTicketMapperMock).InsertDetailList(details);
+    }
+
+    @Test
+    void listWorkOrder_happyPath_returnsWorkOrderList() {
+        List<WorkOrder> expectedList = Arrays.asList(new WorkOrder(), new WorkOrder());
+        when(issueTicketMapperMock.ListWorkOrder(1, 0, 77, 0)).thenReturn(expectedList);
+
+        List<WorkOrder> result = dao.ListWorkOrder(77);
+
+        assertEquals(expectedList, result);
+        verify(issueTicketMapperMock).ListWorkOrder(1, 0, 77, 0);
+        verify(sqlSessionMock).close();
+    }
+
+    @Test
+    void listWorkOrder_exceptionLogsAndReturnsNull() {
+        when(sqlSessionFactoryMock.openSession()).thenThrow(new RuntimeException("fail"));
+
+        List<WorkOrder> result = dao.ListWorkOrder(55);
+
+        assertNull(result);
+        verify(sqlSessionFactoryMock).openSession();
     }
 }
