@@ -1142,7 +1142,7 @@ class IssueTicketServiceTest {
     }
 
     @Test
-    void PutResponseEditAsync_ReturnsResponseCode_OnSuccess() throws Exception {
+    void PutResponseEditAsync_ReturnsResponseCode_OnSuccess2() throws Exception {
         WorkOrderDtoRequest objAuth = new WorkOrderDtoRequest();
         objAuth.username = "user";
         objAuth.token = "token";
@@ -1180,7 +1180,7 @@ class IssueTicketServiceTest {
     }
 
     @Test
-    void PutResponseEditAsync_SetsCookieHeaderAndContentType() throws Exception {
+    void PutResponseEditAsync_SetsCookieHeaderAndContentType2() throws Exception {
         WorkOrderDtoRequest objAuth = new WorkOrderDtoRequest();
         objAuth.username = "user";
         objAuth.token = "token";
@@ -1506,7 +1506,7 @@ class IssueTicketServiceTest {
     }
 
     @Test
-    void PostResponseAsync3_ThrowsHandledException_On302() throws Exception {
+    void PostResponseAsync3_ThrowsHandledException_On3022() throws Exception {
         WorkOrderDtoRequest objAuth = new WorkOrderDtoRequest();
         objAuth.username = "user";
         objAuth.token = "token";
@@ -1538,7 +1538,7 @@ class IssueTicketServiceTest {
     }
 
     @Test
-    void PostResponseAsync3_ThrowsHandledException_On400() throws Exception {
+    void PostResponseAsync3_ThrowsHandledException_On4002() throws Exception {
         WorkOrderDtoRequest objAuth = new WorkOrderDtoRequest();
         objAuth.username = "user";
         objAuth.token = "token";
@@ -1571,7 +1571,7 @@ class IssueTicketServiceTest {
     }
 
     @Test
-    void PostResponseAsync3_ThrowsHandledException_On500() throws Exception {
+    void PostResponseAsync3_ThrowsHandledException_On5002() throws Exception {
         WorkOrderDtoRequest objAuth = new WorkOrderDtoRequest();
         objAuth.username = "user";
         objAuth.token = "token";
@@ -1600,6 +1600,335 @@ class IssueTicketServiceTest {
 
         JsonIOException ex = assertThrows(JsonIOException.class, () -> service.PostResponseAsync3(objAuth, bulkDto));
         assertEquals("Failed making field 'java.time.LocalDateTime#date' accessible; either increase its visibility or write a custom TypeAdapter for its declaring type.", ex.getMessage());
+        Mockito.clearAllCaches();
+    }
+
+    @Test
+    void PostResponseAsync3_ThrowsHandledException_On302() throws Exception {
+        WorkOrderDtoRequest objAuth = new WorkOrderDtoRequest();
+        objAuth.username = "user";
+        objAuth.token = "token";
+        IssueBulkDto bulkDto = new IssueBulkDto();
+
+        IssueTicketService service = Mockito.spy(new IssueTicketService());
+        doNothing().when(service).getBasicSession(anyString(), anyString(), any(CloseableHttpClient.class));
+
+        CloseableHttpClient mockHttpClient = mock(CloseableHttpClient.class);
+        CloseableHttpResponse mockResponse = mock(CloseableHttpResponse.class);
+        StatusLine mockStatusLine = mock(StatusLine.class);
+        HttpEntity mockEntity = mock(HttpEntity.class);
+
+        Mockito.mockStatic(org.apache.http.impl.client.HttpClients.class)
+                .when(org.apache.http.impl.client.HttpClients::createDefault)
+                .thenReturn(mockHttpClient);
+
+        when(mockHttpClient.execute(any(HttpPost.class))).thenReturn(mockResponse);
+        when(mockResponse.getStatusLine()).thenReturn(mockStatusLine);
+        when(mockStatusLine.getStatusCode()).thenReturn(302);
+        when(mockResponse.getEntity()).thenReturn(mockEntity);
+        Mockito.mockStatic(org.apache.http.util.EntityUtils.class)
+                .when(() -> org.apache.http.util.EntityUtils.toString(mockEntity))
+                .thenReturn("");
+
+        HandledException ex = assertThrows(HandledException.class, () -> service.PostResponseAsync3(objAuth, bulkDto));
+        assertEquals("302", ex.getCode());
+        assertEquals("Token Expirado", ex.getMessage());
+        Mockito.clearAllCaches();
+    }
+
+    @Test
+    void PostResponseAsync3_ThrowsHandledException_On400() throws Exception {
+        WorkOrderDtoRequest objAuth = new WorkOrderDtoRequest();
+        objAuth.username = "user";
+        objAuth.token = "token";
+        IssueBulkDto bulkDto = new IssueBulkDto();
+
+        IssueTicketService service = Mockito.spy(new IssueTicketService());
+        doNothing().when(service).getBasicSession(anyString(), anyString(), any(CloseableHttpClient.class));
+
+        CloseableHttpClient mockHttpClient = mock(CloseableHttpClient.class);
+        CloseableHttpResponse mockResponse = mock(CloseableHttpResponse.class);
+        StatusLine mockStatusLine = mock(StatusLine.class);
+        HttpEntity mockEntity = mock(HttpEntity.class);
+
+        Mockito.mockStatic(org.apache.http.impl.client.HttpClients.class)
+                .when(org.apache.http.impl.client.HttpClients::createDefault)
+                .thenReturn(mockHttpClient);
+
+        when(mockHttpClient.execute(any(HttpPost.class))).thenReturn(mockResponse);
+        when(mockResponse.getStatusLine()).thenReturn(mockStatusLine);
+        when(mockStatusLine.getStatusCode()).thenReturn(400);
+        when(mockResponse.getEntity()).thenReturn(mockEntity);
+        Mockito.mockStatic(org.apache.http.util.EntityUtils.class)
+                .when(() -> org.apache.http.util.EntityUtils.toString(mockEntity))
+                .thenReturn("");
+
+        HandledException ex = assertThrows(HandledException.class, () -> service.PostResponseAsync3(objAuth, bulkDto));
+        assertEquals("400", ex.getCode());
+        assertEquals("Error al intentar generar tickets, revise los datos ingresados", ex.getMessage());
+        Mockito.clearAllCaches();
+    }
+
+    @Test
+    void PostResponseAsync3_ThrowsHandledException_On500() throws Exception {
+        WorkOrderDtoRequest objAuth = new WorkOrderDtoRequest();
+        objAuth.username = "user";
+        objAuth.token = "token";
+        IssueBulkDto bulkDto = new IssueBulkDto();
+
+        IssueTicketService service = Mockito.spy(new IssueTicketService());
+        doNothing().when(service).getBasicSession(anyString(), anyString(), any(CloseableHttpClient.class));
+
+        CloseableHttpClient mockHttpClient = mock(CloseableHttpClient.class);
+        CloseableHttpResponse mockResponse = mock(CloseableHttpResponse.class);
+        StatusLine mockStatusLine = mock(StatusLine.class);
+        HttpEntity mockEntity = mock(HttpEntity.class);
+
+        Mockito.mockStatic(org.apache.http.impl.client.HttpClients.class)
+                .when(org.apache.http.impl.client.HttpClients::createDefault)
+                .thenReturn(mockHttpClient);
+
+        when(mockHttpClient.execute(any(HttpPost.class))).thenReturn(mockResponse);
+        when(mockResponse.getStatusLine()).thenReturn(mockStatusLine);
+        when(mockStatusLine.getStatusCode()).thenReturn(500);
+        when(mockResponse.getEntity()).thenReturn(mockEntity);
+        Mockito.mockStatic(org.apache.http.util.EntityUtils.class)
+                .when(() -> org.apache.http.util.EntityUtils.toString(mockEntity))
+                .thenReturn("");
+
+        HandledException ex = assertThrows(HandledException.class, () -> service.PostResponseAsync3(objAuth, bulkDto));
+        assertEquals("500", ex.getCode());
+        assertEquals("Error al intentar generar tickets, revise los datos ingresados", ex.getMessage());
+        Mockito.clearAllCaches();
+    }
+
+    @Test
+    void PostResponseAsync4_ReturnsBulkResponse_On200() throws Exception {
+        WorkOrderDtoRequest2 objAuth = new WorkOrderDtoRequest2();
+        objAuth.username = "user";
+        objAuth.token = "token";
+        IssueBulkDto bulkDto = new IssueBulkDto();
+
+        IssueTicketService service = Mockito.spy(new IssueTicketService());
+        doNothing().when(service).getBasicSession(anyString(), anyString(), any(CloseableHttpClient.class));
+
+        CloseableHttpClient mockHttpClient = mock(CloseableHttpClient.class);
+        CloseableHttpResponse mockResponse = mock(CloseableHttpResponse.class);
+        StatusLine mockStatusLine = mock(StatusLine.class);
+        HttpEntity mockEntity = mock(HttpEntity.class);
+
+        // Patch HttpClients.createDefault to return mock
+        Mockito.mockStatic(org.apache.http.impl.client.HttpClients.class)
+                .when(org.apache.http.impl.client.HttpClients::createDefault)
+                .thenReturn(mockHttpClient);
+
+        when(mockHttpClient.execute(any(HttpPost.class))).thenReturn(mockResponse);
+        when(mockResponse.getStatusLine()).thenReturn(mockStatusLine);
+        when(mockStatusLine.getStatusCode()).thenReturn(200);
+        when(mockResponse.getEntity()).thenReturn(mockEntity);
+        String jsonResponse = "{\"issues\":[]}";
+        Mockito.mockStatic(org.apache.http.util.EntityUtils.class)
+                .when(() -> org.apache.http.util.EntityUtils.toString(mockEntity))
+                .thenReturn(jsonResponse);
+
+        IssueBulkResponse resp = service.PostResponseAsync4(objAuth, bulkDto);
+
+        assertNotNull(resp);
+        Mockito.clearAllCaches();
+    }
+
+    @Test
+    void PostResponseAsync4_ThrowsHandledException_On302() throws Exception {
+        WorkOrderDtoRequest2 objAuth = new WorkOrderDtoRequest2();
+        objAuth.username = "user";
+        objAuth.token = "token";
+        IssueBulkDto bulkDto = new IssueBulkDto();
+
+        IssueTicketService service = Mockito.spy(new IssueTicketService());
+        doNothing().when(service).getBasicSession(anyString(), anyString(), any(CloseableHttpClient.class));
+
+        CloseableHttpClient mockHttpClient = mock(CloseableHttpClient.class);
+        CloseableHttpResponse mockResponse = mock(CloseableHttpResponse.class);
+        StatusLine mockStatusLine = mock(StatusLine.class);
+        HttpEntity mockEntity = mock(HttpEntity.class);
+
+        Mockito.mockStatic(org.apache.http.impl.client.HttpClients.class)
+                .when(org.apache.http.impl.client.HttpClients::createDefault)
+                .thenReturn(mockHttpClient);
+
+        when(mockHttpClient.execute(any(HttpPost.class))).thenReturn(mockResponse);
+        when(mockResponse.getStatusLine()).thenReturn(mockStatusLine);
+        when(mockStatusLine.getStatusCode()).thenReturn(302);
+        when(mockResponse.getEntity()).thenReturn(mockEntity);
+        Mockito.mockStatic(org.apache.http.util.EntityUtils.class)
+                .when(() -> org.apache.http.util.EntityUtils.toString(mockEntity))
+                .thenReturn("");
+
+        HandledException ex = assertThrows(HandledException.class, () -> service.PostResponseAsync4(objAuth, bulkDto));
+        assertEquals("302", ex.getCode());
+        assertEquals("Token Expirado", ex.getMessage());
+        Mockito.clearAllCaches();
+    }
+
+    @Test
+    void PostResponseAsync4_ThrowsHandledException_On400() throws Exception {
+        WorkOrderDtoRequest2 objAuth = new WorkOrderDtoRequest2();
+        objAuth.username = "user";
+        objAuth.token = "token";
+        IssueBulkDto bulkDto = new IssueBulkDto();
+
+        IssueTicketService service = Mockito.spy(new IssueTicketService());
+        doNothing().when(service).getBasicSession(anyString(), anyString(), any(CloseableHttpClient.class));
+
+        CloseableHttpClient mockHttpClient = mock(CloseableHttpClient.class);
+        CloseableHttpResponse mockResponse = mock(CloseableHttpResponse.class);
+        StatusLine mockStatusLine = mock(StatusLine.class);
+        HttpEntity mockEntity = mock(HttpEntity.class);
+
+        Mockito.mockStatic(org.apache.http.impl.client.HttpClients.class)
+                .when(org.apache.http.impl.client.HttpClients::createDefault)
+                .thenReturn(mockHttpClient);
+
+        when(mockHttpClient.execute(any(HttpPost.class))).thenReturn(mockResponse);
+        when(mockResponse.getStatusLine()).thenReturn(mockStatusLine);
+        when(mockStatusLine.getStatusCode()).thenReturn(400);
+        when(mockResponse.getEntity()).thenReturn(mockEntity);
+        Mockito.mockStatic(org.apache.http.util.EntityUtils.class)
+                .when(() -> org.apache.http.util.EntityUtils.toString(mockEntity))
+                .thenReturn("");
+
+        HandledException ex = assertThrows(HandledException.class, () -> service.PostResponseAsync4(objAuth, bulkDto));
+        assertEquals("400", ex.getCode());
+        assertEquals("Error al intentar generar tickets, revise los datos ingresados", ex.getMessage());
+        Mockito.clearAllCaches();
+    }
+
+    @Test
+    void PostResponseAsync4_ThrowsHandledException_On500() throws Exception {
+        WorkOrderDtoRequest2 objAuth = new WorkOrderDtoRequest2();
+        objAuth.username = "user";
+        objAuth.token = "token";
+        IssueBulkDto bulkDto = new IssueBulkDto();
+
+        IssueTicketService service = Mockito.spy(new IssueTicketService());
+        doNothing().when(service).getBasicSession(anyString(), anyString(), any(CloseableHttpClient.class));
+
+        CloseableHttpClient mockHttpClient = mock(CloseableHttpClient.class);
+        CloseableHttpResponse mockResponse = mock(CloseableHttpResponse.class);
+        StatusLine mockStatusLine = mock(StatusLine.class);
+        HttpEntity mockEntity = mock(HttpEntity.class);
+
+        Mockito.mockStatic(org.apache.http.impl.client.HttpClients.class)
+                .when(org.apache.http.impl.client.HttpClients::createDefault)
+                .thenReturn(mockHttpClient);
+
+        when(mockHttpClient.execute(any(HttpPost.class))).thenReturn(mockResponse);
+        when(mockResponse.getStatusLine()).thenReturn(mockStatusLine);
+        when(mockStatusLine.getStatusCode()).thenReturn(500);
+        when(mockResponse.getEntity()).thenReturn(mockEntity);
+        Mockito.mockStatic(org.apache.http.util.EntityUtils.class)
+                .when(() -> org.apache.http.util.EntityUtils.toString(mockEntity))
+                .thenReturn("");
+
+        HandledException ex = assertThrows(HandledException.class, () -> service.PostResponseAsync4(objAuth, bulkDto));
+        assertEquals("500", ex.getCode());
+        assertEquals("Error al intentar generar tickets, revise los datos ingresados", ex.getMessage());
+        Mockito.clearAllCaches();
+    }
+
+    @Test
+    void PutResponseEditAsync_ReturnsResponseCode_OnSuccess() throws Exception {
+        WorkOrderDtoRequest objAuth = new WorkOrderDtoRequest();
+        objAuth.username = "user";
+        objAuth.token = "token";
+        IssueDto issueJira = new IssueDto();
+        String ticketCode = "ISSUE-123";
+
+        IssueTicketService service = Mockito.spy(new IssueTicketService());
+        doNothing().when(service).getBasicSession(anyString(), anyString(), any(CloseableHttpClient.class));
+
+        CloseableHttpClient mockHttpClient = mock(CloseableHttpClient.class);
+        CloseableHttpResponse mockResponse = mock(CloseableHttpResponse.class);
+        StatusLine mockStatusLine = mock(StatusLine.class);
+        HttpEntity mockEntity = mock(HttpEntity.class);
+
+        Mockito.mockStatic(org.apache.http.impl.client.HttpClients.class)
+                .when(org.apache.http.impl.client.HttpClients::createDefault)
+                .thenReturn(mockHttpClient);
+
+        when(mockHttpClient.execute(any(HttpPut.class))).thenReturn(mockResponse);
+        when(mockResponse.getStatusLine()).thenReturn(mockStatusLine);
+        when(mockStatusLine.getStatusCode()).thenReturn(204); // Normal Jira PUT success code
+        when(mockResponse.getEntity()).thenReturn(mockEntity);
+
+        Integer result = service.PutResponseEditAsync(objAuth, ticketCode, issueJira);
+
+        assertEquals(204, result);
+        Mockito.clearAllCaches();
+    }
+
+    @Test
+    void PutResponseEditAsync_ThrowsHandledException_OnTokenExpired302() throws Exception {
+        WorkOrderDtoRequest objAuth = new WorkOrderDtoRequest();
+        objAuth.username = "user";
+        objAuth.token = "token";
+        IssueDto issueJira = new IssueDto();
+        String ticketCode = "ISSUE-123";
+
+        IssueTicketService service = Mockito.spy(new IssueTicketService());
+        doNothing().when(service).getBasicSession(anyString(), anyString(), any(CloseableHttpClient.class));
+
+        CloseableHttpClient mockHttpClient = mock(CloseableHttpClient.class);
+        CloseableHttpResponse mockResponse = mock(CloseableHttpResponse.class);
+        StatusLine mockStatusLine = mock(StatusLine.class);
+        HttpEntity mockEntity = mock(HttpEntity.class);
+
+        Mockito.mockStatic(org.apache.http.impl.client.HttpClients.class)
+                .when(org.apache.http.impl.client.HttpClients::createDefault)
+                .thenReturn(mockHttpClient);
+
+        when(mockHttpClient.execute(any(HttpPut.class))).thenReturn(mockResponse);
+        when(mockResponse.getStatusLine()).thenReturn(mockStatusLine);
+        when(mockStatusLine.getStatusCode()).thenReturn(302);
+        when(mockResponse.getEntity()).thenReturn(mockEntity);
+
+        HandledException ex = assertThrows(HandledException.class, () -> service.PutResponseEditAsync(objAuth, ticketCode, issueJira));
+        assertEquals("302", ex.getCode());
+        assertEquals("Token Expirado", ex.getMessage());
+        Mockito.clearAllCaches();
+    }
+
+    @Test
+    void PutResponseEditAsync_SetsCookieHeaderAndContentType() throws Exception {
+        WorkOrderDtoRequest objAuth = new WorkOrderDtoRequest();
+        objAuth.username = "user";
+        objAuth.token = "token";
+        IssueDto issueJira = new IssueDto();
+        String ticketCode = "ISSUE-123";
+
+        IssueTicketService service = Mockito.spy(new IssueTicketService());
+        doNothing().when(service).getBasicSession(anyString(), anyString(), any(CloseableHttpClient.class));
+
+        CloseableHttpClient mockHttpClient = mock(CloseableHttpClient.class);
+        CloseableHttpResponse mockResponse = mock(CloseableHttpResponse.class);
+        StatusLine mockStatusLine = mock(StatusLine.class);
+        HttpEntity mockEntity = mock(HttpEntity.class);
+
+        Mockito.mockStatic(org.apache.http.impl.client.HttpClients.class)
+                .when(org.apache.http.impl.client.HttpClients::createDefault)
+                .thenReturn(mockHttpClient);
+
+        when(mockHttpClient.execute(any(HttpPut.class))).thenReturn(mockResponse);
+        when(mockResponse.getStatusLine()).thenReturn(mockStatusLine);
+        when(mockStatusLine.getStatusCode()).thenReturn(204);
+        when(mockResponse.getEntity()).thenReturn(mockEntity);
+
+        // Act
+        Integer result = service.PutResponseEditAsync(objAuth, ticketCode, issueJira);
+
+        // Assert
+        assertEquals(204, result);
+        // Optionally, you can use ArgumentCaptor to capture the HttpPut and check headers
         Mockito.clearAllCaches();
     }
 }
