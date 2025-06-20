@@ -19,8 +19,6 @@ import com.bbva.entities.issueticket.WorkOrder;
 import com.bbva.entities.issueticket.WorkOrderDetail;
 import com.bbva.dto.jira.response.IssueResponse;
 import com.bbva.dto.jira.request.IssueBulkDto;
-import com.bbva.entities.feature.JiraFeatureEntity;
-import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -38,10 +36,7 @@ import org.apache.http.util.EntityUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-
-import java.io.ByteArrayInputStream;
 import java.time.Instant;
 import java.util.*;
 
@@ -1200,7 +1195,7 @@ class IssueTicketServiceTest {
     }
 
     @Test
-    void GetResponseAsync_ReturnsResponseBody_OnSuccess() throws Exception {
+    void GetResponseAsync_ReturnsResponseBody_OnSuccess2() throws Exception {
         String username = "user";
         String password = "pass";
         String apiPath = "/endpoint";
@@ -1221,7 +1216,7 @@ class IssueTicketServiceTest {
     }
 
     @Test
-    void GetResponseAsync_ThrowsHandledException_OnTokenExpired302() throws Exception {
+    void GetResponseAsync_ThrowsHandledException_OnTokenExpired3022() throws Exception {
         String username = "user";
         String password = "pass";
         String apiPath = "/endpoint";
@@ -1236,7 +1231,7 @@ class IssueTicketServiceTest {
     }
 
     @Test
-    void GetResponseAsync_ThrowsHandledException_OnClientError400() throws Exception {
+    void GetResponseAsync_ThrowsHandledException_OnClientError4002() throws Exception {
         String username = "user";
         String password = "pass";
         String apiPath = "/endpoint";
@@ -1929,6 +1924,110 @@ class IssueTicketServiceTest {
         // Assert
         assertEquals(204, result);
         // Optionally, you can use ArgumentCaptor to capture the HttpPut and check headers
+        Mockito.clearAllCaches();
+    }
+
+
+    @Test
+    void GetResponseAsync_ReturnsResponseBody_OnSuccess() throws Exception {
+        String username = "user";
+        String password = "pass";
+        String apiPath = "/endpoint";
+        String expectedResponse = "{\"result\":\"ok\"}";
+
+        IssueTicketService service = Mockito.spy(new IssueTicketService());
+        doNothing().when(service).getBasicSession(anyString(), anyString(), any(CloseableHttpClient.class));
+
+        CloseableHttpClient mockHttpClient = mock(CloseableHttpClient.class);
+        CloseableHttpResponse mockResponse = mock(CloseableHttpResponse.class);
+        StatusLine mockStatusLine = mock(StatusLine.class);
+        HttpEntity mockEntity = mock(HttpEntity.class);
+
+        Mockito.mockStatic(org.apache.http.impl.client.HttpClients.class)
+                .when(org.apache.http.impl.client.HttpClients::createDefault)
+                .thenReturn(mockHttpClient);
+
+        when(mockHttpClient.execute(any(HttpGet.class))).thenReturn(mockResponse);
+        when(mockResponse.getStatusLine()).thenReturn(mockStatusLine);
+        when(mockStatusLine.getStatusCode()).thenReturn(200);
+        when(mockResponse.getEntity()).thenReturn(mockEntity);
+
+        Mockito.mockStatic(org.apache.http.util.EntityUtils.class)
+                .when(() -> org.apache.http.util.EntityUtils.toString(mockEntity))
+                .thenReturn(expectedResponse);
+
+        String result = service.GetResponseAsync(username, password, apiPath);
+
+        assertEquals(expectedResponse, result);
+
+        Mockito.clearAllCaches();
+    }
+
+    @Test
+    void GetResponseAsync_ThrowsHandledException_OnTokenExpired302() throws Exception {
+        String username = "user";
+        String password = "pass";
+        String apiPath = "/endpoint";
+
+        IssueTicketService service = Mockito.spy(new IssueTicketService());
+        doNothing().when(service).getBasicSession(anyString(), anyString(), any(CloseableHttpClient.class));
+
+        CloseableHttpClient mockHttpClient = mock(CloseableHttpClient.class);
+        CloseableHttpResponse mockResponse = mock(CloseableHttpResponse.class);
+        StatusLine mockStatusLine = mock(StatusLine.class);
+        HttpEntity mockEntity = mock(HttpEntity.class);
+
+        Mockito.mockStatic(org.apache.http.impl.client.HttpClients.class)
+                .when(org.apache.http.impl.client.HttpClients::createDefault)
+                .thenReturn(mockHttpClient);
+
+        when(mockHttpClient.execute(any(HttpGet.class))).thenReturn(mockResponse);
+        when(mockResponse.getStatusLine()).thenReturn(mockStatusLine);
+        when(mockStatusLine.getStatusCode()).thenReturn(302);
+        when(mockResponse.getEntity()).thenReturn(mockEntity);
+
+        Mockito.mockStatic(org.apache.http.util.EntityUtils.class)
+                .when(() -> org.apache.http.util.EntityUtils.toString(mockEntity))
+                .thenReturn("");
+
+        HandledException ex = assertThrows(HandledException.class, () -> service.GetResponseAsync(username, password, apiPath));
+        assertEquals("302", ex.getCode());
+        assertEquals("Token Expirado", ex.getMessage());
+
+        Mockito.clearAllCaches();
+    }
+
+    @Test
+    void GetResponseAsync_ThrowsHandledException_OnClientError400() throws Exception {
+        String username = "user";
+        String password = "pass";
+        String apiPath = "/endpoint";
+
+        IssueTicketService service = Mockito.spy(new IssueTicketService());
+        doNothing().when(service).getBasicSession(anyString(), anyString(), any(CloseableHttpClient.class));
+
+        CloseableHttpClient mockHttpClient = mock(CloseableHttpClient.class);
+        CloseableHttpResponse mockResponse = mock(CloseableHttpResponse.class);
+        StatusLine mockStatusLine = mock(StatusLine.class);
+        HttpEntity mockEntity = mock(HttpEntity.class);
+
+        Mockito.mockStatic(org.apache.http.impl.client.HttpClients.class)
+                .when(org.apache.http.impl.client.HttpClients::createDefault)
+                .thenReturn(mockHttpClient);
+
+        when(mockHttpClient.execute(any(HttpGet.class))).thenReturn(mockResponse);
+        when(mockResponse.getStatusLine()).thenReturn(mockStatusLine);
+        when(mockStatusLine.getStatusCode()).thenReturn(400);
+        when(mockResponse.getEntity()).thenReturn(mockEntity);
+
+        Mockito.mockStatic(org.apache.http.util.EntityUtils.class)
+                .when(() -> org.apache.http.util.EntityUtils.toString(mockEntity))
+                .thenReturn("");
+
+        HandledException ex = assertThrows(HandledException.class, () -> service.GetResponseAsync(username, password, apiPath));
+        assertEquals("400", ex.getCode());
+        assertEquals("El feature no existe", ex.getMessage());
+
         Mockito.clearAllCaches();
     }
 }
