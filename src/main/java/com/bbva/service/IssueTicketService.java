@@ -192,7 +192,7 @@ public class IssueTicketService {
                 "failed", failedFeatures
         ));
     }
-    private IssueResponse createJiraFeature(WorkOrderDtoRequest2 dto) throws Exception {
+    IssueResponse createJiraFeature(WorkOrderDtoRequest2 dto) throws Exception {
 
         String idSdaProject = callJiraGetIdSda(dto);
         dto.setE2e(idSdaProject);
@@ -211,7 +211,7 @@ public class IssueTicketService {
         return jiraResponse;
     }
 
-    private String convertPIToQuarter(String piFormat) {
+    String convertPIToQuarter(String piFormat) {
         if (piFormat == null || !piFormat.matches("PI[1-4]-\\d{2}")) {
             throw new IllegalArgumentException("Formato inválido. Se esperaba PIX-YY (ej: PI2-25)");
         }
@@ -221,7 +221,7 @@ public class IssueTicketService {
         return fullYear + "-Q" + quarter;
     }
 
-    private String callJiraGetIdSda(WorkOrderDtoRequest2 dto) throws Exception {
+    String callJiraGetIdSda(WorkOrderDtoRequest2 dto) throws Exception {
         Gson gson = GsonConfig.createGson();
 
         String issueKey = dto.getE2e();
@@ -258,7 +258,7 @@ public class IssueTicketService {
         System.out.println("stop");
         return issueId;
     }
-    private IssueResponse callJiraCreateFeatureSingle(WorkOrderDtoRequest2 objAuth, IssueFeatureDto featureRequest) throws Exception {
+    IssueResponse callJiraCreateFeatureSingle(WorkOrderDtoRequest2 objAuth, IssueFeatureDto featureRequest) throws Exception {
         Gson gson = GsonConfig.createGson();
         String jsonString = gson.toJson(featureRequest);
 
@@ -375,7 +375,7 @@ public class IssueTicketService {
         return new SuccessDataResult(modelo);
     }
 
-    private void createTicketJira2(WorkOrderDtoRequest objAuth, IssueBulkDto issuesRequests, List<WorkOrderDetail> workOrderDetail)
+    void createTicketJira2(WorkOrderDtoRequest objAuth, IssueBulkDto issuesRequests, List<WorkOrderDetail> workOrderDetail)
             throws Exception
     {
         var issuesGenerates = PostResponseAsync3(objAuth, issuesRequests);
@@ -383,7 +383,7 @@ public class IssueTicketService {
             workOrderDetail.get(i).setIssue_code(issuesGenerates.issues.get(i).getKey());
         }
     }
-    private void createTicketJira3(WorkOrderDtoRequest2 objAuth, IssueBulkDto issuesRequests, List<WorkOrderDetail> workOrderDetail)
+    void createTicketJira3(WorkOrderDtoRequest2 objAuth, IssueBulkDto issuesRequests, List<WorkOrderDetail> workOrderDetail)
             throws Exception
     {
         //var issuesGenerates = PostResponseAsync4(objAuth, issuesRequests);
@@ -393,7 +393,7 @@ public class IssueTicketService {
         }
     }
 
-    private List<String> updateTicketJira(WorkOrderDtoRequest dto, WorkOrder workOrder, List<WorkOrderDetail> workOrderDetail)
+    List<String> updateTicketJira(WorkOrderDtoRequest dto, WorkOrder workOrder, List<WorkOrderDetail> workOrderDetail)
             throws Exception
     {
         httpClient = HttpClient.newHttpClient();
@@ -417,7 +417,7 @@ public class IssueTicketService {
         return ticketsUpdates;
     }
 
-    private IssueBulkResponse PostResponseAsync3(WorkOrderDtoRequest objAuth, IssueBulkDto issueJira)
+    IssueBulkResponse PostResponseAsync3(WorkOrderDtoRequest objAuth, IssueBulkDto issueJira)
             throws Exception
     {
         // NOTA: el api bulk de jira permite hasta 50 issues por petición
@@ -453,7 +453,7 @@ public class IssueTicketService {
         return issueCreated;
     }
 
-    private IssueBulkResponse PostResponseAsync4(WorkOrderDtoRequest2 objAuth, IssueBulkDto issueJira)
+    IssueBulkResponse PostResponseAsync4(WorkOrderDtoRequest2 objAuth, IssueBulkDto issueJira)
             throws Exception
     {
         // NOTA: el api bulk de jira permite hasta 50 issues por petición
@@ -526,7 +526,7 @@ public class IssueTicketService {
         return combineResponses(responses);
     }
 
-    private IssueBulkResponse combineResponses(List<IssueBulkResponse> responses) {
+    IssueBulkResponse combineResponses(List<IssueBulkResponse> responses) {
         IssueBulkResponse combined = new IssueBulkResponse();
         List<IssueDto> allIssues = new ArrayList<>();
 
@@ -543,7 +543,7 @@ public class IssueTicketService {
         return combined;
     }
 
-    private Integer PutResponseEditAsync(WorkOrderDtoRequest objAuth,String issueTicketCode, IssueDto issueJira)
+    Integer PutResponseEditAsync(WorkOrderDtoRequest objAuth, String issueTicketCode, IssueDto issueJira)
             throws Exception
     {
         Gson gson = GsonConfig.createGson();
@@ -572,7 +572,7 @@ public class IssueTicketService {
         return responseCode;
     }
 
-    private String GetResponseAsync(String username, String password, String apiPath)
+    String GetResponseAsync(String username, String password, String apiPath)
             throws Exception
     {
         HttpGet httpGet = new HttpGet(URL_API_BASE + apiPath);
@@ -600,7 +600,7 @@ public class IssueTicketService {
         return responseBodyString;
     }
 
-    private static String createCookieHeader(List<Cookie> cookieList) {
+    static String createCookieHeader(List<Cookie> cookieList) {
         StringBuilder cookieHeader = new StringBuilder();
         for (Cookie responseCookie : cookieList) {
             cookieHeader.append(responseCookie.getName()).append("=").append(responseCookie.getValue()).append("; ");
