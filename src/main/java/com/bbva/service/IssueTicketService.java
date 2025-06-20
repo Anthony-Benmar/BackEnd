@@ -130,26 +130,23 @@ public class IssueTicketService {
         return new SuccessDataResult(null);
     }
     public IDataResult insert2(List<WorkOrderDtoRequest2> dtoList) throws Exception {
+        // Inicio insert
         List<Map<String, Object>> successFeatures = new ArrayList<>();
         List<String> failedFeatures = new ArrayList<>();
 
         for (WorkOrderDtoRequest2 dto : dtoList) {
             try {
-                // Primero Validar datos del Feature a crear
                 if (dto.getFeature().isEmpty() || dto.getJiraProjectName().isEmpty()){
                     failedFeatures.add(dto.feature +": No se tienen datos del Feature a crear");
                     continue;
                 }
-                // Validaciones del los tickets asociados
                 if(dto.workOrderDetail==null || dto.workOrderDetail.isEmpty()){
                     failedFeatures.add(dto.feature + ": Sin templates seleccionados");
                     continue;
                 }
 
-                // CREAR FEATURE DESDE CERO (Feature en Jira) - Sacar el key de acá
                 IssueResponse completedFeature = createJiraFeature(dto);
 
-                //Observado - Se supone que primero debo validar lo del feature
                 var workOrderRequest = new WorkOrder(0, completedFeature.key, dto.folio, dto.boardId, dto.projectId,
                         dto.sourceId, dto.sourceName, dto.flowType,
                         1, 1, dto.registerUserId, new Date(), null, 0);
@@ -160,7 +157,6 @@ public class IssueTicketService {
                     continue;
                 }
 
-                // CREAR STORIES CON FEATURE ANTERIOR - REUTILIZADO
                 var workOrderDetailsRequest = dto.workOrderDetail.stream()
                         .map(s -> new WorkOrderDetail(0, 0, s.templateId, "", "ready", dto.registerUserId, new Date(), null))
                         .collect(Collectors.toList());
@@ -198,16 +194,11 @@ public class IssueTicketService {
     }
     private IssueResponse createJiraFeature(WorkOrderDtoRequest2 dto) throws Exception {
 
-        //dto.setE2e("E2E-283738");
         String idSdaProject = callJiraGetIdSda(dto);
         dto.setE2e(idSdaProject);
 
         List<String> period = new ArrayList<>();
-        //List<String> period2 = new ArrayList<>();
-        //period2.add("PI2-25");
-        //dto.setPeriod(period2);
 
-        // Método para convertir PI2-25 a 2025-Q3
         String originalPeriod = dto.getPeriod().get(0);
         String convertedPeriod = convertPIToQuarter(originalPeriod);
         period.add(convertedPeriod);
@@ -271,55 +262,7 @@ public class IssueTicketService {
         Gson gson = GsonConfig.createGson();
         String jsonString = gson.toJson(featureRequest);
 
-        //Se debe cambiar la key a PAD3???
-        //Asociar a un sdatool?
-        //Debe tener un SDA Project
-        //Falta el TeamBacklog
-        //---------------------
-        // La key se pondrá en automático, solo es necesario el key del project "PAD 3" o "DEDATIOENG"
-        //-------------
-//        String jsonString = "{\n" +
-//                " \"fields\": {\n" +
-//                " \"project\": {\n" +
-//                " \"key\": \"PAD3\"\n" +
-//                " },\n" +
-//                " \"issuetype\": {\n" +
-//                " \"name\": \"Feature\"\n" +
-//                " },\n" +
-//                " \"summary\": \"TEST - Feature TEST 10\",\n" +
-//                " \"description\": \"Feature de prueba para validar la creación desde backend 10\",\n" +
-//                " \"priority\": {\n" +
-//                " \"name\": \"Medium\"\n" +
-//                " },\n" +
-//                " \"customfield_13300\": [\"381\"],\n" +
-//                " \"customfield_10272\": {\n" +
-//                " \"value\": \"Sprint 3\"\n" +
-//                " },\n" +
-//                " \"customfield_10265\": {\n" +
-//                " \"value\": \"Committed\"\n" +
-//                " },\n" +
-//                " \"customfield_10006\": \"TEST Feature Name 10\",\n" +
-//                " \"customfield_19001\": {\n" +
-//                " \"value\": \"Enabler Delivery\"\n" +
-//                " },\n" +
-//                " \"customfield_12323\": \"10084920\",\n" +
-//                " \"customfield_10264\": [\"2025-Q2\"],\n" +
-//                " \"labels\": [\n" +
-//                " \"proyDatio\",\n" +
-//                " \"DE_PROD\",\n" +
-//                " \"TTV_FULLPROD\",\n" +
-//                " \"TEST-FEATURE\",\n" +
-//                " \"ONBOARDING\"\n" +
-//                " ]\n" +
-//                " }\n" +
-//                "}";
-
-        System.out.println("=== JSON ENVIADO A JIRA ===");
-        System.out.println(jsonString);
-        System.out.println("===========================");
-
         HttpPost httpPost = new HttpPost(URL_API_JIRA  + "?expand=fields");
-        //HttpPost httpPost = new HttpPost(URL_API_JIRA_ISSUE + "?expand=fields");
         StringEntity requestEntity = new StringEntity(jsonString, "UTF-8");
         httpPost.setEntity(requestEntity);
         httpPost.setHeader("Content-Type", "application/json");
@@ -360,7 +303,6 @@ public class IssueTicketService {
                 return new ErrorDataResult(null,"500","Es necesario el código de registro (workOrderId) para la edición");
             }
 
-            //consultar si feature existe
             var issueMetadataJson = GetResponseAsync(dto.username, dto.token,URL_API_JIRA_ISSUE + dto.feature);
             var issueMetadata = JsonParser.parseString(issueMetadataJson).getAsJsonObject();
             var issueKey = issueMetadata.get("key").getAsString();

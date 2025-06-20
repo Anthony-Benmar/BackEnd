@@ -254,17 +254,13 @@ public class IssueTicketDao {
     }
 
     public IssueFeatureDto getDataRequestFeatureJira(WorkOrderDtoRequest2 dto) {
-        // Agregar labels y e2e
         var result = new IssueFeatureDto();
 
-        // OBTENER BOARD INFO
         Board board = getBoardById(dto.boardId);
 
         var fields = new Fields();
 
-        // CAMPOS BÁSICOS
         fields.project = new Project();
-        //fields.project.id = feature.jiraProjectId.toString();
         fields.project.key = dto.jiraProjectName;
 
         fields.issuetype = new Issuetype();
@@ -273,59 +269,28 @@ public class IssueTicketDao {
         fields.summary = dto.feature;
         fields.description = generateFeatureDescription(dto, board.board_jira_id);
 
-        // PRIORITY
         fields.priority = new Priority();
-        fields.priority.name = "Medium"; //Por defecto
+        fields.priority.name = "Medium";
 
-        // ASSIGNEE (opcional)
-//        if (dto.assignee != null && !dto.assignee.isEmpty()) {
-//            fields.assignee = new Assignee();
-//            fields.assignee.name = dto.assignee;
-//        }
-
-        //CUSTOM FIELDS ESPECÍFICOS PARA FEATURES
-
-        // Sprint Estimate (customfield_10272)
         if (dto.sprintEst != null) {
             fields.customfield_10272 = createSelectField(dto.sprintEst);
         }
 
-        // Type of Delivery (customfield_19001) - Siempre "Enabler"
-        fields.customfield_19001 = createSelectField("Enabler Delivery"); //Por defecto
+        fields.customfield_19001 = createSelectField("Enabler Delivery");
 
-        // Commitment type (customfield_10265) - Siempre "Committed"
         fields.customfield_10265 = createSelectField("Committed");
 
-        // Team Backlog (customfield_13300) - Desde boardId
         if (board != null) {
             fields.customfield_13300 = Arrays.asList(board.board_jira_id);
         }
 
         fields.customfield_12323 = dto.getE2e();
-        //fields.customfield_10264 = dto.getPeriod();
 
-        // Definition of Ready (customfield_10601) - Array vacío para completar después
-        //fields.customfield_10601 = new ArrayList<>();
-
-        // Definition of Done (customfield_10600) - Array vacío para completar después
-        //fields.customfield_10600 = new ArrayList<>();
-
-        // Acceptance Criteria (customfield_10260) - Descripción básica
         fields.customfield_10260 = "Criterios de aceptación a definir";
 
-        // Feature Name (customfield_10006) - Campo existente
         fields.customfield_10006 = dto.feature;
         fields.customfield_10264 = dto.getPeriod();
 
-
-        // Technical Type (customfield_10270) - Campo existente
-//        fields.customfield_10270 = new Customfield();
-//        fields.customfield_10270.value = "Technical";
-//        fields.customfield_10270.id = "20247";
-//        fields.customfield_10270.disabled = false;
-        //SDA?############
-        //fields.customfield_12323 = createSelectField();
-        // LABELS ESTÁNDAR PARA FEATURES
         fields.labels = createFeatureLabels(dto);
 
         result.fields = fields;

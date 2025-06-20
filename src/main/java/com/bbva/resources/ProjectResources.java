@@ -88,7 +88,7 @@ public class ProjectResources {
         return result;
     }
 
-    @POST
+    @GET
     @Path("/{sdatoolId}/listprojectcatalog")
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<List<ProjectCatalogDtoResponse>> projectCatalogList(@PathParam("sdatoolId") String sdatoolId) {
