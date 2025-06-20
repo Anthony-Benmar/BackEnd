@@ -21,4 +21,8 @@ public class WorkOrderDetail {
     public Date register_date;
     @Nullable
     public Date end_date;
+
+    public WorkOrderDetail() {
+
+    }
 }

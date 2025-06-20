@@ -492,7 +492,7 @@ public class IssueTicketDao {
         );
     }
 
-    private Board getBoardById(int boardId) {
+    protected Board getBoardById(int boardId) {
         try {
             SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
             try (SqlSession session = sqlSessionFactory.openSession()) {
@@ -707,6 +707,7 @@ public class IssueTicketDao {
         }
 
         return new issueTicketDtoResponse(count.intValue(), pages_amount, result);
-
     }
+
+
 }
