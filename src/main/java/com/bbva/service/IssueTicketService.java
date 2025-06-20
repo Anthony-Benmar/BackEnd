@@ -18,9 +18,7 @@ import com.bbva.dto.jira.request.IssueUpdate;
 import com.bbva.dto.jira.response.IssueBulkResponse;
 import com.bbva.dto.jira.response.IssueResponse;
 import com.bbva.entities.feature.JiraFeatureEntity;
-import com.bbva.entities.feature.JiraFeatureEntity2;
 import com.bbva.entities.issueticket.WorkOrder;
-import com.bbva.entities.issueticket.WorkOrder2;
 import com.bbva.entities.issueticket.WorkOrderDetail;
 import com.bbva.util.GsonConfig;
 import com.google.gson.Gson;
@@ -152,11 +150,11 @@ public class IssueTicketService {
                 IssueResponse completedFeature = createJiraFeature(dto);
 
                 //Observado - Se supone que primero debo validar lo del feature
-                var workOrderRequest = new WorkOrder2(0, completedFeature.key, dto.folio, dto.boardId, dto.projectId,
+                var workOrderRequest = new WorkOrder(0, completedFeature.key, dto.folio, dto.boardId, dto.projectId,
                         dto.sourceId, dto.sourceName, dto.flowType,
                         1, 1, dto.registerUserId, new Date(), null, 0);
 
-                var countWorkOrder = issueTicketDao.findRecordWorkOrder2(workOrderRequest);
+                var countWorkOrder = issueTicketDao.findRecordWorkOrder(workOrderRequest);
                 if (countWorkOrder > 0) {
                     failedFeatures.add(dto.feature + ": Ya existe registro duplicado");
                     continue;
@@ -169,7 +167,7 @@ public class IssueTicketService {
 
                 var objFeature = new JiraFeatureEntity(0, completedFeature.key,"","","",dto.jiraProjectId, dto.jiraProjectName);
 
-                var issuesRequests = issueTicketDao.getDataRequestIssueJira4(
+                var issuesRequests = issueTicketDao.getDataRequestIssueJira2(
                         workOrderRequest, workOrderDetailsRequest, objFeature);
 
 
@@ -179,11 +177,8 @@ public class IssueTicketService {
                         .filter(w -> !StringUtils.isNullOrEmpty(w.issue_code))
                         .collect(Collectors.toList());
 
-                issueTicketDao.insertWorkOrderAndDetail2(workOrderRequest, workOrderDetailsRequest);
+                issueTicketDao.insertWorkOrderAndDetail(workOrderRequest, workOrderDetailsRequest);
 
-                // RESPUESTA CON DATOS COMPLETOS DEL FEATURE -- Falta el link apuntando al Feature
-                // Validar que no haya errores, y si los hay, captar en donde
-                //Devolver el nombre o summary - junto con el link
                 successFeatures.add(Map.of(
                         "featureName", dto.feature,
                         "featureKey", completedFeature.key,
@@ -203,13 +198,19 @@ public class IssueTicketService {
     }
     private IssueResponse createJiraFeature(WorkOrderDtoRequest2 dto) throws Exception {
 
-        dto.setE2e("E2E-283738");
+        //dto.setE2e("E2E-283738");
         String idSdaProject = callJiraGetIdSda(dto);
         dto.setE2e(idSdaProject);
 
         List<String> period = new ArrayList<>();
-        period.add("2025-Q3");
+        //List<String> period2 = new ArrayList<>();
+        //period2.add("PI2-25");
+        //dto.setPeriod(period2);
 
+        // Método para convertir PI2-25 a 2025-Q3
+        String originalPeriod = dto.getPeriod().get(0);
+        String convertedPeriod = convertPIToQuarter(originalPeriod);
+        period.add(convertedPeriod);
         dto.setPeriod(period);
 
         var featureRequest = issueTicketDao.getDataRequestFeatureJira(dto);
@@ -218,6 +219,17 @@ public class IssueTicketService {
 
         return jiraResponse;
     }
+
+    private String convertPIToQuarter(String piFormat) {
+        if (piFormat == null || !piFormat.matches("PI[1-4]-\\d{2}")) {
+            throw new IllegalArgumentException("Formato inválido. Se esperaba PIX-YY (ej: PI2-25)");
+        }
+        int quarter = Integer.parseInt(piFormat.substring(2, 3));
+        String yearSuffix = piFormat.substring(4);
+        int fullYear = 2000 + Integer.parseInt(yearSuffix);
+        return fullYear + "-Q" + quarter;
+    }
+
     private String callJiraGetIdSda(WorkOrderDtoRequest2 dto) throws Exception {
         Gson gson = GsonConfig.createGson();
 
@@ -432,7 +444,8 @@ public class IssueTicketService {
     private void createTicketJira3(WorkOrderDtoRequest2 objAuth, IssueBulkDto issuesRequests, List<WorkOrderDetail> workOrderDetail)
             throws Exception
     {
-        var issuesGenerates = PostResponseAsync4(objAuth, issuesRequests);
+        //var issuesGenerates = PostResponseAsync4(objAuth, issuesRequests);
+        var issuesGenerates = createIssuesInBatches(objAuth, issuesRequests);
         for (int i = 0; i < issuesGenerates.issues.size() && i < workOrderDetail.size(); i++) {
             workOrderDetail.get(i).setIssue_code(issuesGenerates.issues.get(i).getKey());
         }
@@ -532,6 +545,60 @@ public class IssueTicketService {
         }
         var issueCreated = gson.fromJson(responseBodyString, IssueBulkResponse.class);
         return issueCreated;
+    }
+
+    public IssueBulkResponse createIssuesInBatches(WorkOrderDtoRequest2 objAuth, IssueBulkDto issueJira) throws Exception {
+        List<IssueUpdate> allIssues = issueJira.getIssueUpdates();
+
+        if (allIssues == null || allIssues.isEmpty()) {
+            throw new IllegalArgumentException("No hay issues para crear");
+        }
+
+        List<IssueBulkResponse> responses = new ArrayList<>();
+        final int BATCH_SIZE = 30;
+
+        System.out.println("Creando " + allIssues.size() + " issues en batches de " + BATCH_SIZE);
+
+        // Dividir en chunks de 30
+        for (int i = 0; i < allIssues.size(); i += BATCH_SIZE) {
+            int endIndex = Math.min(i + BATCH_SIZE, allIssues.size());
+            List<IssueUpdate> batch = allIssues.subList(i, endIndex);
+
+            System.out.println("Procesando batch " + (i/BATCH_SIZE + 1) + " - Issues " + (i+1) + " al " + endIndex);
+
+            // Crear DTO para este batch
+            IssueBulkDto batchDto = new IssueBulkDto();
+            batchDto.setIssueUpdates(batch);
+
+            // Hacer la petición
+            IssueBulkResponse batchResponse = PostResponseAsync4(objAuth, batchDto);
+            responses.add(batchResponse);
+
+            // Pausa entre requests para no saturar
+            if (i + BATCH_SIZE < allIssues.size()) {
+                Thread.sleep(500); // 500ms entre batches
+            }
+        }
+
+        // Combinar todas las respuestas
+        return combineResponses(responses);
+    }
+
+    private IssueBulkResponse combineResponses(List<IssueBulkResponse> responses) {
+        IssueBulkResponse combined = new IssueBulkResponse();
+        List<IssueDto> allIssues = new ArrayList<>();
+
+        for (IssueBulkResponse response : responses) {
+            if (response.issues != null) {
+                allIssues.addAll(response.issues);
+            }
+        }
+
+        combined.issues = allIssues;
+
+        System.out.println("Total issues creados exitosamente: " + allIssues.size());
+
+        return combined;
     }
 
     private Integer PutResponseEditAsync(WorkOrderDtoRequest objAuth,String issueTicketCode, IssueDto issueJira)
