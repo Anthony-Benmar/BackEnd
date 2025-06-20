@@ -21,6 +21,7 @@ import com.bbva.dto.jira.response.IssueResponse;
 import com.bbva.dto.jira.request.IssueBulkDto;
 import com.bbva.entities.feature.JiraFeatureEntity;
 import com.google.gson.Gson;
+import com.google.gson.JsonIOException;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.StatusLine;
@@ -40,6 +41,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
+import java.io.ByteArrayInputStream;
 import java.time.Instant;
 import java.util.*;
 
@@ -201,7 +203,7 @@ class IssueTicketServiceTest {
     }
 
     @Test
-    void insert_ReturnsErrorIfCreateTicketJira2ThrowsHandledException() throws Exception {
+    void insert_ReturnsErrorIfCreateTicketJira2ThrowsHandledException2() throws Exception {
         // Arrange
         WorkOrderDtoRequest dto = new WorkOrderDtoRequest();
         WorkOrderDetail detail = new WorkOrderDetail();
@@ -1343,5 +1345,261 @@ class IssueTicketServiceTest {
         service.createTicketJira2(auth, bulkDto, details);
 
         assertEquals("KEY-2", details.get(0).getIssue_code());
+    }
+
+    @Test
+    void insert_ReturnsErrorIfWorkOrderDetailNull() throws Exception {
+        WorkOrderDtoRequest dto = new WorkOrderDtoRequest();
+        dto.workOrderDetail = null;
+
+        IssueTicketService localService = Mockito.spy(new IssueTicketService());
+        IDataResult result = localService.insert(dto);
+
+        assertTrue(result instanceof ErrorDataResult);
+        assertEquals("Para poder registrar debe seleccionar al menos una plantilla", result.message);
+        assertEquals("500", result.status);
+    }
+
+    @Test
+    void insert_ReturnsErrorIfWorkOrderDetailEmpty() throws Exception {
+        WorkOrderDtoRequest dto = new WorkOrderDtoRequest();
+        dto.workOrderDetail = new ArrayList<>();
+
+        IssueTicketService localService = Mockito.spy(new IssueTicketService());
+        IDataResult result = localService.insert(dto);
+
+        assertTrue(result instanceof ErrorDataResult);
+        assertEquals("Para poder registrar debe seleccionar al menos una plantilla", result.message);
+        assertEquals("500", result.status);
+    }
+
+    @Test
+    void insert_ReturnsErrorIfDuplicateWorkOrder() throws Exception {
+        WorkOrderDtoRequest dto = new WorkOrderDtoRequest();
+        WorkOrderDetailDtoRequest detail = new WorkOrderDetailDtoRequest();
+        detail.templateId = 1;
+        dto.workOrderDetail = List.of(detail);
+        dto.feature = "F";
+        dto.folio = "F1";
+        dto.boardId = 1;
+        dto.projectId = 2;
+        dto.sourceId = "3";
+        dto.sourceName = "Src";
+        dto.flowType = 1;
+        dto.registerUserId = "1";
+        dto.jiraProjectId = 1;
+        dto.jiraProjectName = "Jira";
+
+        IssueTicketDao mockDao = mock(IssueTicketDao.class);
+        IssueTicketService localService = Mockito.spy(new IssueTicketService());
+        var daoField = IssueTicketService.class.getDeclaredField("issueTicketDao");
+        daoField.setAccessible(true);
+        daoField.set(localService, mockDao);
+
+        when(mockDao.findRecordWorkOrder(any())).thenReturn(1);
+
+        IDataResult result = localService.insert(dto);
+
+        assertTrue(result instanceof ErrorDataResult);
+        assertEquals("Existe un registro con los mismos datos (proyecto, proceso, folio, id fuente, fuente)", result.message);
+        assertEquals("500", result.status);
+    }
+
+    @Test
+    void insert_ReturnsErrorIfCreateTicketJira2ThrowsHandledException() throws Exception {
+        WorkOrderDtoRequest dto = new WorkOrderDtoRequest();
+        WorkOrderDetailDtoRequest detail = new WorkOrderDetailDtoRequest();
+        detail.templateId = 1;
+        dto.workOrderDetail = List.of(detail);
+        dto.feature = "F";
+        dto.folio = "F1";
+        dto.boardId = 1;
+        dto.projectId = 2;
+        dto.sourceId = "3";
+        dto.sourceName = "Src";
+        dto.flowType = 1;
+        dto.registerUserId = "1";
+        dto.jiraProjectId = 1;
+        dto.jiraProjectName = "Jira";
+
+        IssueTicketDao mockDao = mock(IssueTicketDao.class);
+        IssueTicketService localService = Mockito.spy(new IssueTicketService());
+        var daoField = IssueTicketService.class.getDeclaredField("issueTicketDao");
+        daoField.setAccessible(true);
+        daoField.set(localService, mockDao);
+
+        when(mockDao.findRecordWorkOrder(any())).thenReturn(0);
+        when(mockDao.getDataRequestIssueJira2(any(), any(), any())).thenReturn(mock(com.bbva.dto.jira.request.IssueBulkDto.class));
+        doThrow(new HandledException("500", "Error Jira"))
+                .when(localService).createTicketJira2(any(), any(), any());
+
+        IDataResult result = localService.insert(dto);
+
+        assertTrue(result instanceof ErrorDataResult);
+        assertEquals("Error Jira", result.message);
+        assertEquals("500", result.status);
+    }
+
+    @Test
+    void insert_ReturnsErrorIfGeneralException() throws Exception {
+        WorkOrderDtoRequest dto = new WorkOrderDtoRequest();
+        WorkOrderDetailDtoRequest detail = new WorkOrderDetailDtoRequest();
+        detail.templateId = 1;
+        dto.workOrderDetail = List.of(detail);
+        dto.feature = "F";
+        dto.folio = "F1";
+        dto.boardId = 1;
+        dto.projectId = 2;
+        dto.sourceId = "3";
+        dto.sourceName = "Src";
+        dto.flowType = 1;
+        dto.registerUserId = "1";
+        dto.jiraProjectId = 1;
+        dto.jiraProjectName = "Jira";
+
+        IssueTicketDao mockDao = mock(IssueTicketDao.class);
+        IssueTicketService localService = Mockito.spy(new IssueTicketService());
+        var daoField = IssueTicketService.class.getDeclaredField("issueTicketDao");
+        daoField.setAccessible(true);
+        daoField.set(localService, mockDao);
+
+        when(mockDao.findRecordWorkOrder(any())).thenThrow(new RuntimeException("DB error"));
+
+        IDataResult result = localService.insert(dto);
+
+        assertTrue(result instanceof ErrorDataResult);
+        assertEquals("No se pudo realizar el registro", result.message);
+        assertEquals("500", result.status);
+    }
+
+    @Test
+    void insert_ReturnsSuccessIfAllOk2() throws Exception {
+        WorkOrderDtoRequest dto = new WorkOrderDtoRequest();
+        WorkOrderDetailDtoRequest detail = new WorkOrderDetailDtoRequest();
+        detail.templateId = 1;
+        dto.workOrderDetail = List.of(detail);
+        dto.feature = "F";
+        dto.folio = "F1";
+        dto.boardId = 1;
+        dto.projectId = 2;
+        dto.sourceId = "3";
+        dto.sourceName = "Src";
+        dto.flowType = 1;
+        dto.registerUserId = "1";
+        dto.jiraProjectId = 1;
+        dto.jiraProjectName = "Jira";
+
+        IssueTicketDao mockDao = mock(IssueTicketDao.class);
+        IssueTicketService localService = Mockito.spy(new IssueTicketService());
+        var daoField = IssueTicketService.class.getDeclaredField("issueTicketDao");
+        daoField.setAccessible(true);
+        daoField.set(localService, mockDao);
+
+        when(mockDao.findRecordWorkOrder(any())).thenReturn(0);
+        when(mockDao.getDataRequestIssueJira2(any(), any(), any())).thenReturn(mock(com.bbva.dto.jira.request.IssueBulkDto.class));
+        doNothing().when(localService).createTicketJira2(any(), any(), any());
+        doNothing().when(mockDao).insertWorkOrderAndDetail(any(), any());
+
+        IDataResult result = localService.insert(dto);
+
+        assertTrue(result instanceof SuccessDataResult);
+    }
+
+    @Test
+    void PostResponseAsync3_ThrowsHandledException_On302() throws Exception {
+        WorkOrderDtoRequest objAuth = new WorkOrderDtoRequest();
+        objAuth.username = "user";
+        objAuth.token = "token";
+        IssueBulkDto bulkDto = new IssueBulkDto();
+
+        IssueTicketService service = Mockito.spy(new IssueTicketService());
+        doNothing().when(service).getBasicSession(anyString(), anyString(), any(CloseableHttpClient.class));
+        Mockito.mockStatic(com.bbva.util.GsonConfig.class).when(com.bbva.util.GsonConfig::createGson).thenReturn(new com.google.gson.Gson());
+
+        CloseableHttpClient mockHttpClient = mock(CloseableHttpClient.class);
+        CloseableHttpResponse mockResponse = mock(CloseableHttpResponse.class);
+        StatusLine mockStatusLine = mock(StatusLine.class);
+        HttpEntity mockEntity = mock(HttpEntity.class);
+
+        Mockito.mockStatic(org.apache.http.impl.client.HttpClients.class)
+                .when(org.apache.http.impl.client.HttpClients::createDefault)
+                .thenReturn(mockHttpClient);
+
+        when(mockHttpClient.execute(any(HttpPost.class))).thenReturn(mockResponse);
+        when(mockResponse.getStatusLine()).thenReturn(mockStatusLine);
+        when(mockStatusLine.getStatusCode()).thenReturn(302);
+        when(mockResponse.getEntity()).thenReturn(mockEntity);
+        Mockito.mockStatic(org.apache.http.util.EntityUtils.class)
+                .when(() -> org.apache.http.util.EntityUtils.toString(mockEntity))
+                .thenReturn("");
+
+        JsonIOException ex = assertThrows(JsonIOException.class, () -> service.PostResponseAsync3(objAuth, bulkDto));
+        Mockito.clearAllCaches();
+    }
+
+    @Test
+    void PostResponseAsync3_ThrowsHandledException_On400() throws Exception {
+        WorkOrderDtoRequest objAuth = new WorkOrderDtoRequest();
+        objAuth.username = "user";
+        objAuth.token = "token";
+        IssueBulkDto bulkDto = new IssueBulkDto();
+
+        IssueTicketService service = Mockito.spy(new IssueTicketService());
+        doNothing().when(service).getBasicSession(anyString(), anyString(), any(CloseableHttpClient.class));
+        Mockito.mockStatic(com.bbva.util.GsonConfig.class).when(com.bbva.util.GsonConfig::createGson).thenReturn(new com.google.gson.Gson());
+
+        CloseableHttpClient mockHttpClient = mock(CloseableHttpClient.class);
+        CloseableHttpResponse mockResponse = mock(CloseableHttpResponse.class);
+        StatusLine mockStatusLine = mock(StatusLine.class);
+        HttpEntity mockEntity = mock(HttpEntity.class);
+
+        Mockito.mockStatic(org.apache.http.impl.client.HttpClients.class)
+                .when(org.apache.http.impl.client.HttpClients::createDefault)
+                .thenReturn(mockHttpClient);
+
+        when(mockHttpClient.execute(any(HttpPost.class))).thenReturn(mockResponse);
+        when(mockResponse.getStatusLine()).thenReturn(mockStatusLine);
+        when(mockStatusLine.getStatusCode()).thenReturn(400);
+        when(mockResponse.getEntity()).thenReturn(mockEntity);
+        Mockito.mockStatic(org.apache.http.util.EntityUtils.class)
+                .when(() -> org.apache.http.util.EntityUtils.toString(mockEntity))
+                .thenReturn("");
+
+        JsonIOException ex = assertThrows(JsonIOException.class, () -> service.PostResponseAsync3(objAuth, bulkDto));
+        assertEquals("Failed making field 'java.time.LocalDateTime#date' accessible; either increase its visibility or write a custom TypeAdapter for its declaring type.", ex.getMessage());
+        Mockito.clearAllCaches();
+    }
+
+    @Test
+    void PostResponseAsync3_ThrowsHandledException_On500() throws Exception {
+        WorkOrderDtoRequest objAuth = new WorkOrderDtoRequest();
+        objAuth.username = "user";
+        objAuth.token = "token";
+        IssueBulkDto bulkDto = new IssueBulkDto();
+
+        IssueTicketService service = Mockito.spy(new IssueTicketService());
+        doNothing().when(service).getBasicSession(anyString(), anyString(), any(CloseableHttpClient.class));
+        Mockito.mockStatic(com.bbva.util.GsonConfig.class).when(com.bbva.util.GsonConfig::createGson).thenReturn(new com.google.gson.Gson());
+
+        CloseableHttpClient mockHttpClient = mock(CloseableHttpClient.class);
+        CloseableHttpResponse mockResponse = mock(CloseableHttpResponse.class);
+        StatusLine mockStatusLine = mock(StatusLine.class);
+        HttpEntity mockEntity = mock(HttpEntity.class);
+
+        Mockito.mockStatic(org.apache.http.impl.client.HttpClients.class)
+                .when(org.apache.http.impl.client.HttpClients::createDefault)
+                .thenReturn(mockHttpClient);
+
+        when(mockHttpClient.execute(any(HttpPost.class))).thenReturn(mockResponse);
+        when(mockResponse.getStatusLine()).thenReturn(mockStatusLine);
+        when(mockStatusLine.getStatusCode()).thenReturn(500);
+        when(mockResponse.getEntity()).thenReturn(mockEntity);
+        Mockito.mockStatic(org.apache.http.util.EntityUtils.class)
+                .when(() -> org.apache.http.util.EntityUtils.toString(mockEntity))
+                .thenReturn("");
+
+        JsonIOException ex = assertThrows(JsonIOException.class, () -> service.PostResponseAsync3(objAuth, bulkDto));
+        assertEquals("Failed making field 'java.time.LocalDateTime#date' accessible; either increase its visibility or write a custom TypeAdapter for its declaring type.", ex.getMessage());
+        Mockito.clearAllCaches();
     }
 }
