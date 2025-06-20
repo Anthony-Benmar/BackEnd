@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.util.Date;
 
 @AllArgsConstructor
+@NoArgsConstructor
 @Setter
 @Getter
 @Data
@@ -21,8 +22,4 @@ public class WorkOrderDetail {
     public Date register_date;
     @Nullable
     public Date end_date;
-
-    public WorkOrderDetail() {
-
-    }
 }

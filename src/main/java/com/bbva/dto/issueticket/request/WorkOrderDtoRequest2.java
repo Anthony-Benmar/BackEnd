@@ -8,32 +8,24 @@ import java.util.List;
 @Getter
 @Setter
 public class WorkOrderDtoRequest2 {
-    public int workOrderId;
-    public String feature; // Será el nombre compuesto o summary?
-    public Integer jiraProjectId; // Código del Project PAD3, ETC..
-    public String jiraProjectName; // Key del proyecto PAD 3 - DEDATIOCL3
-    public String folio;
-    public int boardId;
-    public int projectId;
-    public String sourceId;
-    public String sourceName;
-    public int flowType;
-
-    public String faseId; //--- String también, para ya no hacer la consulta a BD
-    public String sprintEst; //--- String
-
-    public String registerUserId;
-    public String username;
-    public String token;
-    public Long expireTokenDate;
-    public List<WorkOrderDetailDtoRequest> workOrderDetail;
-    public List<String> labels;
-    public String e2e;
-    //Revisar los campos
-    // public String featureName; // Nombre dinámico desde front
-    // public String priority; // High/Medium/Low (opcional, default: Medium) -- Trbajar desde el back
-    // public String assignee; // Usuario asignado - revisarr
-
-
-    public List<String> period;
+    private int workOrderId;
+    private String feature;
+    private Integer jiraProjectId;
+    private String jiraProjectName;
+    private String folio;
+    private int boardId;
+    private int projectId;
+    private String sourceId;
+    private String sourceName;
+    private int flowType;
+    private String faseId;
+    private String sprintEst;
+    private String registerUserId;
+    private String username;
+    private String token;
+    private Long expireTokenDate;
+    private List<WorkOrderDetailDtoRequest> workOrderDetail;
+    private List<String> labels;
+    private String e2e;
+    private List<String> period;
 }

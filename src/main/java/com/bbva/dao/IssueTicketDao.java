@@ -256,24 +256,24 @@ public class IssueTicketDao {
     public IssueFeatureDto getDataRequestFeatureJira(WorkOrderDtoRequest2 dto) {
         var result = new IssueFeatureDto();
 
-        Board board = getBoardById(dto.boardId);
+        Board board = getBoardById(dto.getBoardId());
 
         var fields = new Fields();
 
         fields.project = new Project();
-        fields.project.key = dto.jiraProjectName;
+        fields.project.key = dto.getJiraProjectName();
 
         fields.issuetype = new Issuetype();
         fields.issuetype.name = "Feature";
 
-        fields.summary = dto.feature;
+        fields.summary = dto.getFeature();
         fields.description = generateFeatureDescription(dto, board.board_jira_id);
 
         fields.priority = new Priority();
         fields.priority.name = "Medium";
 
-        if (dto.sprintEst != null) {
-            fields.customfield_10272 = createSelectField(dto.sprintEst);
+        if (dto.getSprintEst() != null) {
+            fields.customfield_10272 = createSelectField(dto.getSprintEst());
         }
 
         fields.customfield_19001 = createSelectField("Enabler Delivery");
@@ -288,12 +288,12 @@ public class IssueTicketDao {
 
         fields.customfield_10260 = "Criterios de aceptación a definir";
 
-        fields.customfield_10006 = dto.feature;
+        fields.customfield_10006 = dto.getFeature();
         fields.customfield_10264 = dto.getPeriod();
 
         fields.labels = createFeatureLabels(dto);
 
-        result.fields = fields;
+        result.setFields(fields);
         return result;
     }
     private Customfield createSelectField(String value) {
@@ -315,13 +315,13 @@ public class IssueTicketDao {
                         "- Proyecto ID: %s\n" +
                         "- Board ID: %s\n\n" +
                         "Esta feature agrupa las stories necesarias para el onboarding de la fuente especificada.",
-                dto.sourceName,
-                dto.sourceId,
-                dto.folio,
-                dto.faseId,
-                dto.sprintEst,
-                dto.flowType,
-                dto.jiraProjectName,
+                dto.getSourceName(),
+                dto.getSourceId(),
+                dto.getFolio(),
+                dto.getFaseId(),
+                dto.getSprintEst(),
+                dto.getFlowType(),
+                dto.getJiraProjectName(),
                 board
         );
     }

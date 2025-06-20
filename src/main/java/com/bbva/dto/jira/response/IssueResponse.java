@@ -7,9 +7,9 @@ import lombok.Setter;
 @Setter
 @Getter
 public class IssueResponse {
-    public String expand;
-    public String id;
-    public String self;
-    public String key;
-    public Fields fields;
+    private String expand;
+    private String id;
+    private String self;
+    private String key;
+    private Fields fields;
 }

@@ -6,6 +6,6 @@ import lombok.Setter;
 @Setter
 @Getter
 public class IssueFeatureDto {
-    public Fields fields;
+    private Fields fields;
 }
 

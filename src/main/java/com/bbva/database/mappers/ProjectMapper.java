@@ -81,7 +81,16 @@ public interface ProjectMapper {
     List<ProjectByPeriodEntity> listProjectsByPeriod(@Param("period_id") String period_id);
 
     @Select("CALL SP_LIST_PROJECT_CATALOG_BY_PARAMS(#{sdatool_id}, NULL, NULL)")
-    List<ProjectCatalogEntity> listProjectCatalog(@Param("sdatool_id") String sdatool_id);
+    @Results({
+            @Result(property = "sdatoolId", column = "sdatool_id"),
+            @Result(property = "projectName", column = "project_name"),
+            @Result(property = "sn1", column = "sn1"),
+            @Result(property = "sn1Desc", column = "sn1_desc"),
+            @Result(property = "sn2", column = "sn2"),
+            @Result(property = "sn2ProjectId", column = "sn2_projectId"),
+            @Result(property = "codigo5Digitos", column = "codigo_5_digitos")
+    })
+    List<ProjectCatalogEntity> listProjectCatalog(@Param("sdatool_id") String sdatoolId);
 
     @Insert("INSERT INTO data_project(project_name, project_desc, sdatool_id, status_type, product_owner_id, portafolio_code, " +
             "project_type, project_domain_type, sponsor_owner_id, rule_associated_link, " +

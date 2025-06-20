@@ -1,6 +1,5 @@
 package com.bbva.dto.jira.request;
 
-import com.bbva.dto.jira.request.*;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -37,7 +36,7 @@ public class Fields {
     public Object customfield_17801;
     public Customfield customfield_12115;
     public Object customfield_17800;
-    public Object customfield_12900; // Deliverable??
+    public Object customfield_12900;
     public List<Subtask> subtasks;
     public Reporter reporter;
     public String customfield_12100;
@@ -47,11 +46,11 @@ public class Fields {
     public Issuetype issuetype;
     public Customfield customfield_10270;
     public Object customfield_10271;
-    public Object customfield_10272; //Sprint Estimate
+    public Object customfield_10272;
     public Project project;
     @Nullable
     public Double customfield_11000;
-    public List<String> customfield_13300; //Team Backlog - List?
+    public List<String> customfield_13300;
     public Object customfield_13302;
     public Object customfield_13301;
     public Object customfield_17900;
@@ -70,7 +69,7 @@ public class Fields {
     public Object customfield_12321;
     public Object customfield_10263;
     public Object customfield_12320;
-    public List<String> customfield_10264; // Program Increment??? - Era Object ojito
+    public List<String> customfield_10264;
     public List<Object> customfield_14623;
     public Object customfield_18302;
     public Object customfield_12322;
@@ -251,13 +250,10 @@ public class Fields {
     public Customfield customfield_12143;
     public Customfield customfield_13900;
     public Customfield customfield_11604;
-    public Customfield customfield_10265; //Commitment type
-    public Customfield customfield_19001; //Type of delivery - String u object?
-    public List<Customfield> customfield_10601; //Definition of Ready (DoR) - List?
-    public List<Customfield> customfield_10600; //Definition of Ready (DoD) - List?
-//    public List<Customfield> customfield_10006; //Feature Name
-    public String customfield_10006; //Feature Name
-    public String customfield_12323; //SDA Project - SDA PROJECT - Deliverable
-    // public List<Customfield> customfield_12323; //SDA Project - SDA PROJECT - Deliverable
-
+    public Customfield customfield_10265;
+    public Customfield customfield_19001;
+    public List<Customfield> customfield_10601;
+    public List<Customfield> customfield_10600;
+    public String customfield_10006;
+    public String customfield_12323;
 }

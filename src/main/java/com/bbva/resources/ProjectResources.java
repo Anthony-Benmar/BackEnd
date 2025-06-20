@@ -92,8 +92,7 @@ public class ProjectResources {
     @Path("/{sdatoolId}/listprojectcatalog")
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<List<ProjectCatalogDtoResponse>> projectCatalogList(@PathParam("sdatoolId") String sdatoolId) {
-        IDataResult<List<ProjectCatalogDtoResponse>> result = projectService.listProjectCatalog(sdatoolId);
-        return result;
+        return projectService.listProjectCatalog(sdatoolId);
     }
 
     @POST

@@ -154,13 +154,13 @@ class ProjectDaoTest {
         // Use the setUp mocks, do not nest another MockedStatic, to avoid static registration exceptions.
         List<ProjectCatalogEntity> entityList = new ArrayList<>();
         ProjectCatalogEntity entity = new ProjectCatalogEntity();
-        entity.setSdatool_id("SDT001");
-        entity.setProject_name("Project 1");
+        entity.setSdatoolId("SDT001");
+        entity.setProjectName("Project 1");
         entity.setSn1("SN1");
-        entity.setSn1_desc("Desc1");
+        entity.setSn1Desc("Desc1");
         entity.setSn2("SN2");
-        entity.setSn2_projectId("SN2ID");
-        entity.setCodigo_5_digitos("C5DIG");
+        entity.setSn2ProjectId("SN2ID");
+        entity.setCodigo5Digitos("C5DIG");
         entityList.add(entity);
 
         when(projectMapperMock.listProjectCatalog("SDT001")).thenReturn(entityList);

@@ -98,20 +98,20 @@ public class ProjectDao {
 
             projectEntityList.forEach(projectCatalogEntity -> {
                 ProjectCatalogDtoResponse objectProject = new ProjectCatalogDtoResponse();
-                objectProject.setSdatoolId(projectCatalogEntity.getSdatool_id());
-                objectProject.setProjectName(projectCatalogEntity.getProject_name());
+                objectProject.setSdatoolId(projectCatalogEntity.getSdatoolId());
+                objectProject.setProjectName(projectCatalogEntity.getProjectName());
                 objectProject.setSn1(projectCatalogEntity.getSn1());
-                objectProject.setSn1Desc(projectCatalogEntity.getSn1_desc());
+                objectProject.setSn1Desc(projectCatalogEntity.getSn1Desc());
                 objectProject.setSn2(projectCatalogEntity.getSn2());
-                objectProject.setSn2ProjectId(projectCatalogEntity.getSn2_projectId());
-                objectProject.setCodigo5Digitos(projectCatalogEntity.getCodigo_5_digitos());
+                objectProject.setSn2ProjectId(projectCatalogEntity.getSn2ProjectId());
+                objectProject.setCodigo5Digitos(projectCatalogEntity.getCodigo5Digitos());
                 projectCatalogList.add(objectProject);
             });
 
             return projectCatalogList;
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
-            return null;
+            return Collections.emptyList();
         }
     }
 
