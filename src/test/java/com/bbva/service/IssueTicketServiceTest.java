@@ -57,8 +57,8 @@ class IssueTicketServiceTest {
     @Test
     void insert2_ReturnsFailedIfNoFeatureData() throws Exception {
         WorkOrderDtoRequest2 dto = new WorkOrderDtoRequest2();
-        dto.feature = "";
-        dto.jiraProjectName = "";
+        dto.setFeature("");
+        dto.setJiraProjectName("");
         List<WorkOrderDtoRequest2> list = List.of(dto);
         IDataResult result = service.insert2(list);
         Map<String, Object> data = (Map<String, Object>) result.data;
@@ -70,9 +70,9 @@ class IssueTicketServiceTest {
     @Test
     void insert2_ReturnsFailedIfNoWorkOrderDetail() throws Exception {
         WorkOrderDtoRequest2 dto = new WorkOrderDtoRequest2();
-        dto.feature = "featX";
-        dto.jiraProjectName = "JP";
-        dto.workOrderDetail = new ArrayList<>();
+        dto.setFeature("featX");
+        dto.setJiraProjectName("JP");
+        dto.setWorkOrderDetail( Arrays.asList());
         List<WorkOrderDtoRequest2> list = List.of(dto);
         IDataResult result = service.insert2(list);
         Map<String, Object> data = (Map<String, Object>) result.data;

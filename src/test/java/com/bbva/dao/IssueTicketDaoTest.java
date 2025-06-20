@@ -5,11 +5,8 @@ import com.bbva.database.mappers.*;
 import com.bbva.dto.issueticket.request.WorkOrderDtoRequest2;
 import com.bbva.dto.issueticket.request.sourceTicketDtoRequest;
 import com.bbva.dto.issueticket.response.issueTicketDtoResponse;
-import com.bbva.dto.issueticket.response.sourceTicketDtoResponse;
-import com.bbva.dto.issueticket.response.sourceTicketGroupByDtoResponse;
 import com.bbva.dto.jira.request.*;
 import com.bbva.entities.board.Board;
-import com.bbva.entities.common.CatalogEntity;
 import com.bbva.entities.feature.JiraFeatureEntity;
 import com.bbva.entities.issueticket.WorkOrder;
 import com.bbva.entities.issueticket.WorkOrderDetail;
@@ -43,7 +40,7 @@ class IssueTicketDaoTest {
         sqlSessionMock = mock(SqlSession.class);
         boardMapperMock = mock(BoardMapper.class);
         templateMapperMock = mock(TemplateMapper.class);
-        issueTicketMapperMock = mock(IssueTicketMapper.class); // <-- esto es lo que te falta!
+        issueTicketMapperMock = mock(IssueTicketMapper.class);
         catalogMapperMock = mock(CatalogMapper.class);
 
         mockedFactory = mockStatic(MyBatisConnectionFactory.class);
@@ -153,7 +150,6 @@ class IssueTicketDaoTest {
         int result = dao.findRecordWorkOrder(workOrder);
 
         assertEquals(0, result);
-        // LOGGER logs the error but we do not assert logs here
     }
 
     @Test
@@ -169,7 +165,6 @@ class IssueTicketDaoTest {
         );
         List<WorkOrderDetail> details = Arrays.asList(detail1, detail2);
 
-        // Spies para verificar el setWork_order_id
         WorkOrderDetail spyDetail1 = spy(detail1);
         WorkOrderDetail spyDetail2 = spy(detail2);
         List<WorkOrderDetail> spyDetails = Arrays.asList(spyDetail1, spyDetail2);
@@ -648,10 +643,10 @@ class IssueTicketDaoTest {
     void getDataRequestFeatureJira_happyPath_mapsAllFields() {
         // Dummies para dependencias
         WorkOrderDtoRequest2 dto = new WorkOrderDtoRequest2();
-        dto.boardId = 1;
-        dto.jiraProjectName = "JIRAKEY";
-        dto.feature = "Feature X";
-        dto.sprintEst = "Sprint 5";
+        dto.setBoardId(1);
+        dto.setJiraProjectName("JIRAKEY");
+        dto.setFeature("Feature X");
+        dto.setSprintEst("Sprint 5");
         dto.setE2e("e2e-1");
         dto.setPeriod(Arrays.asList("2025-Q3"));
         // Mock de getBoardById
@@ -662,8 +657,8 @@ class IssueTicketDaoTest {
         IssueFeatureDto result = dao.getDataRequestFeatureJira(dto);
 
         assertNotNull(result);
-        assertNotNull(result.fields);
-        Fields fields = result.fields;
+        assertNotNull(result.getFields());
+        Fields fields = result.getFields();
         assertEquals("JIRAKEY", fields.project.key);
         assertEquals("Feature", fields.issuetype.name);
         assertEquals("Feature X", fields.summary);
@@ -676,39 +671,23 @@ class IssueTicketDaoTest {
         assertEquals("e2e-1", fields.customfield_12323);
         assertEquals(Arrays.asList("2025-Q3"), fields.customfield_10264);
         assertNotNull(fields.labels);
-        // Si tu helper crea labels tipo "feature-feature_x"
         assertNotNull(fields.description);
-        // Verifica que la descripción contiene datos del board si aplica
         assertTrue(fields.description.contains("BJID-123"));
     }
-
-//    @Test
-//    void getDataRequestFeatureJira_boardNull_doesNotSetCustomField13300() {
-//        WorkOrderDtoRequest2 dto = new WorkOrderDtoRequest2();
-//        dto.boardId = 2;
-//        dto.jiraProjectName = "JIRAKEY";
-//        dto.feature = "Feature Y";
-//        when(dao.getBoardById(2)).thenReturn(null);
-//
-//        IssueFeatureDto result = dao.getDataRequestFeatureJira(dto);
-//
-//        assertNotNull(result);
-//        assertNull(result.fields.customfield_13300);
-//    }
 
     @Test
     void getDataRequestFeatureJira_sprintEstimateNull_doesNotSetCustomField10272() {
         WorkOrderDtoRequest2 dto = new WorkOrderDtoRequest2();
-        dto.boardId = 3;
-        dto.jiraProjectName = "JIRAKEY";
-        dto.feature = "Feature Z";
-        dto.sprintEst = null;
+        dto.setBoardId(3);
+        dto.setJiraProjectName("JIRAKEY");
+        dto.setFeature("Feature Z");
+        dto.setSprintEst(null);
         when(dao.getBoardById(3)).thenReturn(new Board());
 
         IssueFeatureDto result = dao.getDataRequestFeatureJira(dto);
 
         assertNotNull(result);
-        assertNull(result.fields.customfield_10272);
+        assertNull(result.getFields().customfield_10272);
     }
 
     @Test
@@ -725,13 +704,13 @@ class IssueTicketDaoTest {
         Method m = IssueTicketDao.class.getDeclaredMethod("generateFeatureDescription", WorkOrderDtoRequest2.class, String.class);
         m.setAccessible(true);
         WorkOrderDtoRequest2 dto = new WorkOrderDtoRequest2();
-        dto.sourceName = "FuenteA";
-        dto.sourceId = "SRC-1";
-        dto.folio = "FOL-77";
-        dto.faseId = "PRE";
-        dto.sprintEst = "5";
-        dto.flowType = 1;
-        dto.jiraProjectName = "JKEY";
+        dto.setSourceName("FuenteA");
+        dto.setSourceId("SRC-1");
+        dto.setFolio("FOL-77");
+        dto.setFaseId("PRE");
+        dto.setSprintEst("5");
+        dto.setFlowType(1);
+        dto.setJiraProjectName("JKEY");
         String board = "BID-11";
         String desc = (String) m.invoke(dao, dto, board);
 

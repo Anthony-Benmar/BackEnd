@@ -196,6 +196,6 @@ class ProjectDaoTest {
 
         List<ProjectCatalogDtoResponse> result = projectDao.listProjectCatalog("EXCEPTION");
 
-        assertNull(result);
+        assertEquals(result, List.of());
     }
 }
