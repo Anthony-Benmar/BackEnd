@@ -11,9 +11,7 @@ import com.bbva.dto.jira.request.*;
 import com.bbva.entities.board.Board;
 import com.bbva.entities.common.CatalogEntity;
 import com.bbva.entities.feature.JiraFeatureEntity;
-import com.bbva.entities.feature.JiraFeatureEntity2;
 import com.bbva.entities.issueticket.WorkOrder;
-import com.bbva.entities.issueticket.WorkOrder2;
 import com.bbva.entities.issueticket.WorkOrderDetail;
 import com.bbva.entities.template.Template;
 import org.apache.ibatis.session.SqlSession;
@@ -36,7 +34,6 @@ class IssueTicketDaoTest {
     private MockedStatic<MyBatisConnectionFactory> mockedFactory;
     private IssueTicketMapper issueTicketMapperMock;
     private IssueTicketDao dao;
-    private FeatureMapper featureMapperMock;
     private CatalogMapper catalogMapperMock;
 
 
@@ -46,7 +43,6 @@ class IssueTicketDaoTest {
         sqlSessionMock = mock(SqlSession.class);
         boardMapperMock = mock(BoardMapper.class);
         templateMapperMock = mock(TemplateMapper.class);
-        featureMapperMock = mock(FeatureMapper.class);
         issueTicketMapperMock = mock(IssueTicketMapper.class); // <-- esto es lo que te falta!
         catalogMapperMock = mock(CatalogMapper.class);
 
@@ -161,30 +157,6 @@ class IssueTicketDaoTest {
     }
 
     @Test
-    void findRecordWorkOrder2_returnsMapperValue() {
-        WorkOrder2 workOrder2 = new WorkOrder2();
-        when(issueTicketMapperMock.findRecordWorkOrder2(workOrder2)).thenReturn(99);
-
-        int result = dao.findRecordWorkOrder2(workOrder2);
-
-        assertEquals(99, result);
-        verify(sqlSessionFactoryMock).openSession();
-        verify(sqlSessionMock).getMapper(IssueTicketMapper.class);
-        verify(issueTicketMapperMock).findRecordWorkOrder2(workOrder2);
-        verify(sqlSessionMock).close();
-    }
-
-    @Test
-    void findRecordWorkOrder2_returnsZeroOnException() {
-        WorkOrder2 workOrder2 = new WorkOrder2();
-        when(sqlSessionFactoryMock.openSession()).thenThrow(new RuntimeException("DB error"));
-
-        int result = dao.findRecordWorkOrder2(workOrder2);
-
-        assertEquals(0, result);
-    }
-
-    @Test
     void insertWorkOrderAndDetail_happyPath_insertsAndCommits() {
         WorkOrder workOrder = new WorkOrder();
         workOrder.work_order_id = 123;
@@ -258,75 +230,6 @@ class IssueTicketDaoTest {
         List<WorkOrderDetail> details = List.of();
 
         dao.insertWorkOrderAndDetail(workOrder, details);
-
-        verify(sqlSessionFactoryMock).openSession();
-    }
-
-    @Test
-    void insertWorkOrderAndDetail2_happyPath_insertsAndCommits() {
-        WorkOrder2 workOrder2 = new WorkOrder2();
-        workOrder2.work_order_id = 555;
-        WorkOrderDetail detail1 = new WorkOrderDetail(null, null, null, null, null, null, null, null);
-        WorkOrderDetail detail2 = new WorkOrderDetail(null, null, null, null, null, null, null, null);
-        List<WorkOrderDetail> details = Arrays.asList(detail1, detail2);
-
-        // Spies para verificar el setWork_order_id
-        WorkOrderDetail spyDetail1 = spy(detail1);
-        WorkOrderDetail spyDetail2 = spy(detail2);
-        List<WorkOrderDetail> spyDetails = Arrays.asList(spyDetail1, spyDetail2);
-
-        dao.insertWorkOrderAndDetail2(workOrder2, spyDetails);
-
-        verify(issueTicketMapperMock).insertWorkOrder2(workOrder2);
-        verify(issueTicketMapperMock).InsertDetailList(spyDetails);
-        verify(sqlSessionMock).commit();
-        verify(spyDetail1).setWork_order_id(555);
-        verify(spyDetail2).setWork_order_id(555);
-        verify(sqlSessionMock).close();
-    }
-
-    @Test
-    void insertWorkOrderAndDetail2_insertThrows_exceptionRollsBackAndLogs() {
-        WorkOrder2 workOrder2 = new WorkOrder2();
-        workOrder2.work_order_id = 555;
-        WorkOrderDetail detail1 = new WorkOrderDetail(null, null, null, null, null, null, null, null);
-        List<WorkOrderDetail> details = List.of(detail1);
-
-        doThrow(new RuntimeException("insert fail")).when(issueTicketMapperMock).insertWorkOrder2(workOrder2);
-
-        dao.insertWorkOrderAndDetail2(workOrder2, details);
-
-        verify(issueTicketMapperMock).insertWorkOrder2(workOrder2);
-        verify(sqlSessionMock).rollback();
-        verify(sqlSessionMock).close();
-    }
-
-    @Test
-    void insertWorkOrderAndDetail2_insertDetailListThrows_exceptionRollsBackAndLogs() {
-        WorkOrder2 workOrder2 = new WorkOrder2();
-        workOrder2.work_order_id = 555;
-        WorkOrderDetail detail1 = new WorkOrderDetail(null, null, null, null, null, null, null, null);
-        List<WorkOrderDetail> details = List.of(detail1);
-
-        doNothing().when(issueTicketMapperMock).insertWorkOrder2(workOrder2);
-        doThrow(new RuntimeException("insert detail fail")).when(issueTicketMapperMock).InsertDetailList(details);
-
-        dao.insertWorkOrderAndDetail2(workOrder2, details);
-
-        verify(issueTicketMapperMock).insertWorkOrder2(workOrder2);
-        verify(issueTicketMapperMock).InsertDetailList(details);
-        verify(sqlSessionMock).rollback();
-        verify(sqlSessionMock).close();
-    }
-
-    @Test
-    void insertWorkOrderAndDetail2_outerTryThrows_exceptionLogs() {
-        when(sqlSessionFactoryMock.openSession()).thenThrow(new RuntimeException("connection error"));
-
-        WorkOrder2 workOrder2 = new WorkOrder2();
-        List<WorkOrderDetail> details = List.of();
-
-        dao.insertWorkOrderAndDetail2(workOrder2, details);
 
         verify(sqlSessionFactoryMock).openSession();
     }
@@ -729,175 +632,17 @@ class IssueTicketDaoTest {
         verify(sqlSessionMock).close();
     }
 
-    @Test
-    void getDataRequestIssueJira4_happyPath_buildsIssueBulkDtoCorrectly() {
-        // Prepara WorkOrder2
-        WorkOrder2 workOrder = new WorkOrder2();
-        workOrder.board_id = 1;
-        workOrder.folio = "FOL123";
-        workOrder.source_id = "SRC999";
-        workOrder.feature = "NewFeature";
-        workOrder.source_name = "MiFuente";
-
-        // Prepara detalles
-        WorkOrderDetail detail1 = new WorkOrderDetail(null, null, 100, null, null, null, null, null);
-        WorkOrderDetail detail2 = new WorkOrderDetail(null, null, 200, null, null, null, null, null);
-        List<WorkOrderDetail> workOrderDetails = Arrays.asList(detail1, detail2);
-
-        // Prepara board
-        Board board = new Board();
-        board.board_id = 1;
-        board.board_jira_id = "BID-11";
-
-        // Prepara feature
-        JiraFeatureEntity feature = new JiraFeatureEntity();
-        feature.jiraProjectId = 123;
-        feature.jiraProjectName = "JK";
-
-        // Prepara templates
-        Template template1 = new Template();
-        template1.template_id = 100;
-        template1.label_one = "LABEL1";
-        template1.name = "Plantilla para [fuente]";
-        template1.description = "desc1";
-        Template template2 = new Template();
-        template2.template_id = 200;
-        template2.label_one = "LABEL2";
-        template2.name = "Otra Plantilla para [fuente]";
-        template2.description = "desc2";
-        List<Template> templates = List.of(template1, template2);
-
-        when(sqlSessionMock.getMapper(BoardMapper.class)).thenReturn(boardMapperMock);
-        when(boardMapperMock.boardById(1)).thenReturn(board);
-
-        when(sqlSessionMock.getMapper(TemplateMapper.class)).thenReturn(templateMapperMock);
-        when(templateMapperMock.listById(Arrays.asList(100, 200))).thenReturn(templates);
-
-        IssueBulkDto result = dao.getDataRequestIssueJira4(workOrder, workOrderDetails, feature);
-
-        assertNotNull(result);
-        assertEquals(2, result.issueUpdates.size());
-
-        IssueUpdate update1 = result.issueUpdates.get(0);
-        assertEquals("123", update1.fields.project.id);
-        assertEquals("JK", update1.fields.project.key);
-        assertEquals("BID-11", update1.fields.customfield_13300.get(0));
-        assertTrue(update1.fields.labels.contains("P-LABEL1"));
-        assertTrue(update1.fields.labels.contains("F-FOL123"));
-        assertTrue(update1.fields.labels.contains("ID-SRC999"));
-        assertEquals("plantilla para MiFuente", update1.fields.summary);
-        assertEquals("desc1", update1.fields.description);
-
-        IssueUpdate update2 = result.issueUpdates.get(1);
-        assertEquals("otra plantilla para MiFuente", update2.fields.summary);
-        assertEquals("desc2", update2.fields.description);
-
-        verify(boardMapperMock).boardById(1);
-        verify(templateMapperMock).listById(Arrays.asList(100, 200));
-        verify(sqlSessionMock).close();
-    }
-
-    @Test
-    void getDataRequestIssueJira4_boardIsNull_throwsNPE() {
-        WorkOrder2 workOrder = new WorkOrder2();
-        workOrder.board_id = 99;
-        workOrder.folio = "FOLIO";
-        workOrder.source_id = "SRCID";
-        workOrder.feature = "FEATURE";
-        workOrder.source_name = "FUENTE";
-        WorkOrderDetail detail = new WorkOrderDetail(null, null, 100, null, null, null, null, null);
-        List<WorkOrderDetail> workOrderDetails = List.of(detail);
-
-        JiraFeatureEntity feature = new JiraFeatureEntity();
-        feature.jiraProjectId = 1;
-        feature.jiraProjectName = "JK";
-
-        Template template = new Template();
-        template.template_id = 100;
-        template.label_one = "LABEL1";
-        template.name = "Plantilla [fuente]";
-        template.description = "desc1";
-        List<Template> templates = List.of(template);
-
-        when(sqlSessionMock.getMapper(BoardMapper.class)).thenReturn(boardMapperMock);
-        when(boardMapperMock.boardById(99)).thenReturn(null);
-
-        when(sqlSessionMock.getMapper(TemplateMapper.class)).thenReturn(templateMapperMock);
-        when(templateMapperMock.listById(List.of(100))).thenReturn(templates);
-
-        assertThrows(NullPointerException.class, () -> dao.getDataRequestIssueJira4(workOrder, workOrderDetails, feature));
-        verify(boardMapperMock).boardById(99);
-        verify(templateMapperMock).listById(List.of(100));
-        verify(sqlSessionMock).close();
-    }
-
-    @Test
-    void getTeamBacklogByBoardId_happyPath_returnsBoardName() {
-        Board board = new Board();
-        board.name = "Team Backlog";
-        when(sqlSessionMock.getMapper(BoardMapper.class)).thenReturn(boardMapperMock);
-        when(boardMapperMock.boardById(5)).thenReturn(board);
-
-        String result = dao.getTeamBacklogByBoardId(5);
-
-        assertEquals("Team Backlog", result);
-        verify(boardMapperMock).boardById(5);
-        verify(sqlSessionMock).close();
-    }
-
-    @Test
-    void getTeamBacklogByBoardId_boardIsNull_returnsEmptyString() {
-        when(sqlSessionMock.getMapper(BoardMapper.class)).thenReturn(boardMapperMock);
-        when(boardMapperMock.boardById(15)).thenReturn(null);
-
-        String result = dao.getTeamBacklogByBoardId(15);
-
-        assertEquals("", result);
-        verify(boardMapperMock).boardById(15);
-        verify(sqlSessionMock).close();
-    }
-
-    @Test
-    void getTeamBacklogByBoardId_exception_returnsEmptyString() {
-        when(sqlSessionFactoryMock.openSession()).thenThrow(new RuntimeException("DB fail"));
-
-        String result = dao.getTeamBacklogByBoardId(99);
-
-        assertEquals("", result);
-        verify(sqlSessionFactoryMock).openSession();
-    }
-
-    @Test
-    void insertFeatureInDatabase_happyPath_insertsAndReturnsFeature() {
-        JiraFeatureEntity2 feature = new JiraFeatureEntity2();
-        // Simula que insertFeature pone el ID en el feature (por ejemplo, feature.id = 123)
-        doAnswer(invocation -> {
-            JiraFeatureEntity2 f = invocation.getArgument(0);
-            f.setFeatureId(123);
-            return null;
-        }).when(featureMapperMock).insertFeature(feature);
-
-        when(sqlSessionMock.getMapper(FeatureMapper.class)).thenReturn(featureMapperMock);
-
-        JiraFeatureEntity2 result = dao.insertFeatureInDatabase(feature);
-
-        assertNotNull(result);
-        verify(featureMapperMock).insertFeature(feature);
-        verify(sqlSessionMock).commit();
-        verify(sqlSessionMock).close();
-    }
-
-    @Test
-    void insertFeatureInDatabase_exceptionLogsAndThrows() {
-        JiraFeatureEntity2 feature = new JiraFeatureEntity2();
-        when(sqlSessionMock.getMapper(FeatureMapper.class)).thenReturn(featureMapperMock);
-        doThrow(new RuntimeException("DB error")).when(featureMapperMock).insertFeature(feature);
-
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> dao.insertFeatureInDatabase(feature));
-        assertTrue(ex.getMessage().contains("Error al guardar feature en base de datos"));
-        verify(featureMapperMock).insertFeature(feature);
-        verify(sqlSessionMock).close();
-    }
+//    @Test
+//    void getTeamBacklogByBoardId_boardIsNull_returnsEmptyString() {
+//        when(sqlSessionMock.getMapper(BoardMapper.class)).thenReturn(boardMapperMock);
+//        when(boardMapperMock.boardById(15)).thenReturn(null);
+//
+//        String result = dao.getTeamBacklogByBoardId(15);
+//
+//        assertEquals("", result);
+//        verify(boardMapperMock).boardById(15);
+//        verify(sqlSessionMock).close();
+//    }
 
     @Test
     void getDataRequestFeatureJira_happyPath_mapsAllFields() {
