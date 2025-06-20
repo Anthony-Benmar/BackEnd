@@ -404,4 +404,13 @@ public class ProjectService {
         }
     }
 
+    public IDataResult<List<ProjectValidationParamsDtoResponse>> validateInfoProjectByProjectId(int projectId) {
+        try {
+            List<ProjectValidationParamsDtoResponse> result = projectDao.validateInfoProjectByProjectId(projectId);
+            return new SuccessDataResult<>(result);
+        } catch (Exception e) {
+            log.log(Level.SEVERE, e.getMessage(), e);
+            return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
 }

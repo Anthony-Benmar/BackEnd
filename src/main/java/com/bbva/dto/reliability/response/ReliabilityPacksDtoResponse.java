@@ -1,21 +1,22 @@
-package com.bbva.dto.reliability.request;
+package com.bbva.dto.reliability.response;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
-import java.util.List;
-
-@Setter
 @Getter
-public class TransferInputDtoRequest {
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+public class ReliabilityPacksDtoResponse {
     private String pack;
     private Integer domainId;
+    private String domainName;
     private Integer productOwnerUserId;
     private Integer useCaseId;
+    private String useCase;
     private Integer projectId;
+    private String sdaToolId;
     private Integer creatorUserId;
     private String pdfLink;
     private Integer jobCount;
-    private Integer statusId;
-    private List<JobTransferInputDtoRequest> transferInputDtoRequests;
 }

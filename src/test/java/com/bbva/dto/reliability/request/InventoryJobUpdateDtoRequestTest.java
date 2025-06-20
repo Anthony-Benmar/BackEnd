@@ -11,6 +11,7 @@ class InventoryJobUpdateDtoRequestTest {
         request.setJobName("Daily ETL Job");
         request.setComponentName("IngestionComponent");
         request.setFrequencyId(3);
+        request.setBitBucketUrl("https://www.google.com");
         request.setInputPaths("/data/input/");
         request.setOutputPath("/data/output/");
         request.setJobTypeId(2);
@@ -21,6 +22,7 @@ class InventoryJobUpdateDtoRequestTest {
         assertEquals("Daily ETL Job", request.getJobName());
         assertEquals("IngestionComponent", request.getComponentName());
         assertEquals(3, request.getFrequencyId());
+        assertEquals("https://www.google.com", request.getBitBucketUrl());
         assertEquals("/data/input/", request.getInputPaths());
         assertEquals("/data/output/", request.getOutputPath());
         assertEquals(2, request.getJobTypeId());
