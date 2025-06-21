@@ -81,7 +81,7 @@ public interface ProjectMapper {
     List<ProjectByPeriodEntity> listProjectsByPeriod(@Param("period_id") String period_id);
 
     @Select("CALL SP_LIST_PROJECT_CATALOG_BY_PARAMS(#{sdatool_id}, NULL, NULL)")
-    @Results({
+    @Results({ // NOSONAR - MyBatis requires @Results wrapper for multiple @Result annotations
             @Result(property = "sdatoolId", column = "sdatool_id"),
             @Result(property = "projectName", column = "project_name"),
             @Result(property = "sn1", column = "sn1"),

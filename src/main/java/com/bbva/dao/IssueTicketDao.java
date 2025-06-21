@@ -280,9 +280,7 @@ public class IssueTicketDao {
 
         fields.customfield_10265 = createSelectField("Committed");
 
-        if (board != null) {
-            fields.customfield_13300 = Arrays.asList(board.board_jira_id);
-        }
+        fields.customfield_13300 = Arrays.asList(board.board_jira_id);
 
         fields.customfield_12323 = dto.getE2e();
 
@@ -302,26 +300,30 @@ public class IssueTicketDao {
         return field;
     }
     private String generateFeatureDescription(WorkOrderDtoRequest2 dto, String board) {
-        return String.format(
-                "Feature generado automáticamente para onboarding\n\n" +
-                        "**Información del Source:**\n" +
-                        "- Fuente: %s\n" +
-                        "- ID Fuente: %s\n" +
-                        "- Folio: %s\n" +
-                        "- Fase: %s\n" +
-                        "- Sprint Estimado: Sprint %s\n" +
-                        "- Tipología: %s\n\n" +
-                        "**Proyecto:**\n" +
-                        "- Proyecto ID: %s\n" +
-                        "- Board ID: %s\n\n" +
-                        "Esta feature agrupa las stories necesarias para el onboarding de la fuente especificada.",
+        return String.format("""
+            Feature generado automáticamente para onboarding
+
+            **Información del Source:**
+            - Fuente: %s
+            - ID Fuente: %s
+            - Folio: %s
+            - Fase: %s
+            - Sprint Estimado: Sprint %s
+            - Tipología: %s
+
+            **Proyecto:**
+            - Proyecto ID: %s
+            - Board ID: %s
+
+            Esta feature agrupa las stories necesarias para el onboarding de la fuente especificada.""",
+                // Aquí van los parámetros para String.format()
                 dto.getSourceName(),
                 dto.getSourceId(),
                 dto.getFolio(),
                 dto.getFaseId(),
                 dto.getSprintEst(),
                 dto.getFlowType(),
-                dto.getJiraProjectName(),
+                dto.getProjectId(),
                 board
         );
     }
@@ -334,7 +336,7 @@ public class IssueTicketDao {
                 return boardMapper.boardById(boardId);
             }
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Error obteniendo board: " + boardId, e);
+            LOGGER.warning(String.format("Error obteniendo board: %s", boardId));
             return null;
         }
     }

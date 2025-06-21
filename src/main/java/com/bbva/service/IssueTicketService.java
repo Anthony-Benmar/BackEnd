@@ -61,6 +61,7 @@ public class IssueTicketService {
     private static final String STATUS_READY = "ready";
     private static final String COOKIE_HEADER = "Cookie";
     private static final String TOKEN_EXPIRED_MESSAGE = "Token Expirado";
+    private static final String UTF_TYPE = "UTF-8";
 
     private CookieStore cookieStore = new BasicCookieStore();
     private HttpClient httpClient;
@@ -138,7 +139,6 @@ public class IssueTicketService {
         return new SuccessDataResult(null);
     }
     public IDataResult<Map<String, Object>> insert2(List<WorkOrderDtoRequest2> dtoList) throws Exception {
-        // Inicio insert
         List<Map<String, Object>> successFeatures = new ArrayList<>();
         List<String> failedFeatures = new ArrayList<>();
 
@@ -167,7 +167,7 @@ public class IssueTicketService {
 
                 var workOrderDetailsRequest = dto.getWorkOrderDetail().stream()
                         .map(s -> new WorkOrderDetail(0, 0, s.templateId, "", STATUS_READY, dto.getRegisterUserId(), new Date(), null))
-                        .collect(Collectors.toList());
+                        .toList();
 
                 var objFeature = new JiraFeatureEntity(0, completedFeature.getKey(),"","","",dto.getJiraProjectId(), dto.getJiraProjectName());
 
@@ -179,7 +179,7 @@ public class IssueTicketService {
 
                 workOrderDetailsRequest = workOrderDetailsRequest.stream()
                         .filter(w -> !StringUtils.isNullOrEmpty(w.issue_code))
-                        .collect(Collectors.toList());
+                        .toList();
 
                 issueTicketDao.insertWorkOrderAndDetail(workOrderRequest, workOrderDetailsRequest);
 
@@ -200,84 +200,7 @@ public class IssueTicketService {
                 "failed", failedFeatures
         ));
     }
-//    public IDataResult<Map<String, Object>> insert2(List<WorkOrderDtoRequest2> dtoList) throws Exception {
-//        List<Map<String, Object>> successFeatures = new ArrayList<>();
-//        List<String> failedFeatures = new ArrayList<>();
-//
-//        for (WorkOrderDtoRequest2 dto : dtoList) {
-//            try {
-//                String validationError = validateDto(dto);
-//                if (validationError != null) {
-//                    failedFeatures.add(validationError);
-//                    continue;
-//                }
-//
-//                processValidDto(dto, successFeatures, failedFeatures);
-//
-//            } catch (Exception ex) {
-//                failedFeatures.add(dto.getFeature() + ": " + ex.getMessage());
-//            }
-//        }
-//
-//        return new SuccessDataResult<>(Map.of(
-//                "success", successFeatures,
-//                "failed", failedFeatures
-//        ));
-//    }
-//    private String validateDto(WorkOrderDtoRequest2 dto) {
-//        if (dto.getFeature().isEmpty() || dto.getJiraProjectName().isEmpty()) {
-//            return dto.getFeature() + ": No se tienen datos del Feature a crear";
-//        }
-//
-//        if (dto.getWorkOrderDetail() == null || dto.getWorkOrderDetail().isEmpty()) {
-//            return dto.getFeature() + ": Sin templates seleccionados";
-//        }
-//
-//        return null;
-//    }
 
-    private void processValidDto(WorkOrderDtoRequest2 dto,
-                                 List<Map<String, Object>> successFeatures,
-                                 List<String> failedFeatures) throws Exception {
-
-        IssueResponse completedFeature = createJiraFeature(dto);
-
-        var workOrderRequest = new WorkOrder(0, completedFeature.getKey(), dto.getFolio(),
-                dto.getBoardId(), dto.getProjectId(), dto.getSourceId(), dto.getSourceName(),
-                dto.getFlowType(), 1, 1, dto.getRegisterUserId(), new Date(), null, 0);
-
-        var countWorkOrder = issueTicketDao.findRecordWorkOrder(workOrderRequest);
-        if (countWorkOrder > 0) {
-            failedFeatures.add(dto.getFeature() + ": Ya existe registro duplicado");
-            return;
-        }
-
-        var workOrderDetailsRequest = dto.getWorkOrderDetail().stream()
-                .map(s -> new WorkOrderDetail(0, 0, s.templateId, "", STATUS_READY,
-                        dto.getRegisterUserId(), new Date(), null))
-                .toList();
-
-        var objFeature = new JiraFeatureEntity(0, completedFeature.getKey(), "", "", "",
-                dto.getJiraProjectId(), dto.getJiraProjectName());
-
-        var issuesRequests = issueTicketDao.getDataRequestIssueJira2(
-                workOrderRequest, workOrderDetailsRequest, objFeature);
-
-        createTicketJira3(dto, issuesRequests, workOrderDetailsRequest);
-
-        workOrderDetailsRequest = workOrderDetailsRequest.stream()
-                .filter(w -> !StringUtils.isNullOrEmpty(w.issue_code))
-                .toList();
-
-        issueTicketDao.insertWorkOrderAndDetail(workOrderRequest, workOrderDetailsRequest);
-
-        successFeatures.add(Map.of(
-                "featureName", dto.getFeature(),
-                "featureKey", completedFeature.getKey(),
-                "storiesCreated", workOrderDetailsRequest.size(),
-                "featureLink", "https://jira.globaldevtools.bbva.com/browse/" + completedFeature.getKey()
-        ));
-    }
     private IssueResponse createJiraFeature(WorkOrderDtoRequest2 dto) throws Exception {
 
         String idSdaProject = callJiraGetIdSda(dto);
@@ -292,7 +215,6 @@ public class IssueTicketService {
 
         var featureRequest = issueTicketDao.getDataRequestFeatureJira(dto);
 
-        System.out.println("dsdsd");
         IssueResponse jiraResponse = callJiraCreateFeatureSingle(dto, featureRequest);
 
         return jiraResponse;
@@ -342,7 +264,6 @@ public class IssueTicketService {
         JsonObject jsonResponse = gson.fromJson(responseBodyString, JsonObject.class);
         String issueId = jsonResponse.get("id").getAsString();
 
-        System.out.println("stop");
         return issueId;
     }
     private IssueResponse callJiraCreateFeatureSingle(WorkOrderDtoRequest2 objAuth, IssueFeatureDto featureRequest) throws Exception {
@@ -350,7 +271,7 @@ public class IssueTicketService {
         String jsonString = gson.toJson(featureRequest);
 
         HttpPost httpPost = new HttpPost(URL_API_JIRA  + "?expand=fields");
-        StringEntity requestEntity = new StringEntity(jsonString, "UTF-8");
+        StringEntity requestEntity = new StringEntity(jsonString, UTF_TYPE);
         httpPost.setEntity(requestEntity);
         httpPost.setHeader(CONTENT_TYPE_HEADER, APPLICATION_JSON);
 
@@ -510,7 +431,7 @@ public class IssueTicketService {
         String jsonString = gson.toJson(issueJira);
 
         HttpPost httpPost = new HttpPost(URL_API_JIRA_BULK);
-        StringEntity requestEntity = new StringEntity(jsonString, "UTF-8");
+        StringEntity requestEntity = new StringEntity(jsonString, UTF_TYPE);
         httpPost.setEntity(requestEntity);
         httpPost.setHeader(CONTENT_TYPE_HEADER, APPLICATION_JSON);
 
@@ -544,7 +465,7 @@ public class IssueTicketService {
         String jsonString = gson.toJson(issueJira);
 
         HttpPost httpPost = new HttpPost(URL_API_JIRA_BULK);
-        StringEntity requestEntity = new StringEntity(jsonString, "UTF-8");
+        StringEntity requestEntity = new StringEntity(jsonString, UTF_TYPE);
         httpPost.setEntity(requestEntity);
         httpPost.setHeader(CONTENT_TYPE_HEADER, APPLICATION_JSON);
 
@@ -626,7 +547,7 @@ public class IssueTicketService {
 
         String url = URL_API_JIRA + issueTicketCode;
         HttpPut httpPut = new HttpPut(url);
-        StringEntity requestEntity = new StringEntity(jsonString, "UTF-8");
+        StringEntity requestEntity = new StringEntity(jsonString, UTF_TYPE);
         httpPut.setEntity(requestEntity);
         httpPut.setHeader(CONTENT_TYPE_HEADER, APPLICATION_JSON);
 
