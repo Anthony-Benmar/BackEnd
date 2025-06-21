@@ -599,7 +599,7 @@ class IssueTicketDaoTest {
         dto.setFaseId("PRE");
         dto.setSprintEst("5");
         dto.setFlowType(1);
-        dto.setJiraProjectName("JKEY");
+        dto.setProjectId(45876);
         String board = "BID-11";
         String desc = (String) m.invoke(dao, dto, board);
 
@@ -608,7 +608,7 @@ class IssueTicketDaoTest {
         assertTrue(desc.contains("Folio: FOL-77"));
         assertTrue(desc.contains("Fase: PRE"));
         assertTrue(desc.contains("Sprint Estimado: Sprint 5"));
-        assertTrue(desc.contains("Proyecto ID: JKEY"));
+        assertTrue(desc.contains("Proyecto ID: 45876"));
         assertTrue(desc.contains("Board ID: BID-11"));
         assertTrue(desc.contains("Esta feature agrupa las stories necesarias"));
     }
