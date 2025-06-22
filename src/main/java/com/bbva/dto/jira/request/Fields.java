@@ -10,7 +10,6 @@ import java.util.List;
 
 @Setter
 @Getter
-// NOSONAR - This class maps JIRA API fields which require specific naming convention
 public class Fields {
     public Customfield customfield_19200;
     public Resolution resolution;
@@ -71,8 +70,8 @@ public class Fields {
     public Object customfield_12321;
     public Object customfield_10263;
     public Object customfield_12320;
-    public List<String> customfield_10264;
-    public List<Object> customfield_14623;
+    public List<String> customfield_10264; // NOSONAR - JIRA API field name format required
+    public List<Object> customfield_14623; // NOSONAR - JIRA API field name format required
     public Object customfield_18302;
     public Object customfield_12322;
     public Object customfield_18303;
@@ -253,9 +252,9 @@ public class Fields {
     public Customfield customfield_13900;
     public Customfield customfield_11604;
     public Customfield customfield_10265;
-    public Customfield customfield_19001;
-    public List<Customfield> customfield_10601;
-    public List<Customfield> customfield_10600;
-    public String customfield_10006;
-    public String customfield_12323;
+    public Customfield customfield_19001; // NOSONAR - JIRA API field name format required
+    public List<Customfield> customfield_10601; // NOSONAR - JIRA API field name format required
+    public List<Customfield> customfield_10600; // NOSONAR - JIRA API field name format required
+    public String customfield_10006; // NOSONAR - JIRA API field name format required
+    public String customfield_12323; // NOSONAR - JIRA API field name format required
 }
