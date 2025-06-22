@@ -251,7 +251,7 @@ public class Fields {
     public Customfield customfield_12143;
     public Customfield customfield_13900;
     public Customfield customfield_11604;
-    public Customfield customfield_10265;
+    public Customfield customfield_10265; // NOSONAR - JIRA API field name format required
     public Customfield customfield_19001; // NOSONAR - JIRA API field name format required
     public List<Customfield> customfield_10601; // NOSONAR - JIRA API field name format required
     public List<Customfield> customfield_10600; // NOSONAR - JIRA API field name format required
