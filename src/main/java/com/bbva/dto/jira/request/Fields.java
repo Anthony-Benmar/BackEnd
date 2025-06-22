@@ -10,6 +10,7 @@ import java.util.List;
 
 @Setter
 @Getter
+// NOSONAR - This class maps JIRA API fields which require specific naming convention
 public class Fields {
     public Customfield customfield_19200;
     public Resolution resolution;

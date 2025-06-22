@@ -195,7 +195,7 @@ public class IssueTicketService {
             }
         }
 
-        return new SuccessDataResult(Map.of(
+        return new SuccessDataResult<>(Map.of(
                 "success", successFeatures,
                 "failed", failedFeatures
         ));
@@ -215,9 +215,7 @@ public class IssueTicketService {
 
         var featureRequest = issueTicketDao.getDataRequestFeatureJira(dto);
 
-        IssueResponse jiraResponse = callJiraCreateFeatureSingle(dto, featureRequest);
-
-        return jiraResponse;
+        return callJiraCreateFeatureSingle(dto, featureRequest);
     }
 
     private String convertPIToQuarter(String piFormat) {
@@ -262,9 +260,7 @@ public class IssueTicketService {
         }
 
         JsonObject jsonResponse = gson.fromJson(responseBodyString, JsonObject.class);
-        String issueId = jsonResponse.get("id").getAsString();
-
-        return issueId;
+        return jsonResponse.get("id").getAsString();
     }
     private IssueResponse callJiraCreateFeatureSingle(WorkOrderDtoRequest2 objAuth, IssueFeatureDto featureRequest) throws Exception {
         Gson gson = GsonConfig.createGson();
@@ -296,8 +292,7 @@ public class IssueTicketService {
             throw new HandledException(responseCode.toString(), "Error al crear Feature en Jira: " + responseBodyString);
         }
 
-        var issueCreated = gson.fromJson(responseBodyString, IssueResponse.class);
-        return issueCreated;
+        return gson.fromJson(responseBodyString, IssueResponse.class);
     }
 
     public IDataResult update(WorkOrderDtoRequest dto)
