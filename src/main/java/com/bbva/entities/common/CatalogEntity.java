@@ -16,6 +16,8 @@ public class CatalogEntity {
     private Integer elementId;
     @SerializedName("element_name")
     private String elementName;
+    @SerializedName("element_desc")
+    private String elementDesc;
     @SerializedName("status_type")
     private int statusType;
 }
