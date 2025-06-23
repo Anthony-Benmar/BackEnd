@@ -278,7 +278,7 @@ public class IssueTicketService {
         String responseBodyString = "";
         HttpEntity entity = null;
 
-        try(CloseableHttpClient httpclient = HttpClients.createDefault()){
+        try(CloseableHttpClient httpclient = createHttpClient()){
             getBasicSession(objAuth.getUsername(), objAuth.getToken(), httpclient);
             httpPost.setHeader(COOKIE_HEADER, createCookieHeader(cookieStore.getCookies()));
             CloseableHttpResponse response = httpclient.execute(httpPost);
@@ -604,4 +604,9 @@ public class IssueTicketService {
         }
         return cookieHeader.toString();
     }
+
+    protected CloseableHttpClient createHttpClient() {
+        return HttpClients.createDefault();
+    }
+
 }

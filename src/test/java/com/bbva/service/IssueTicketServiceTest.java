@@ -24,6 +24,7 @@ import org.apache.http.StatusLine;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.methods.CloseableHttpResponse;
 
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.impl.client.BasicCookieStore;
@@ -32,16 +33,17 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.message.BasicHeader;
 
+import org.apache.http.util.EntityUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.time.Instant;
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.mockito.Mockito.*;
@@ -386,6 +388,284 @@ class IssueTicketServiceTest {
         assertFalse(ex.getMessage().contains("Error al obtener Issue de Jira"));
     }
 
+    @Test
+    void testCreateTicketJira3_setsIssueCodesCorrectly() throws Exception {
+        // Arrange
+        WorkOrderDtoRequest2 dtoMock = new WorkOrderDtoRequest2();
+        IssueBulkDto issueBulkDto = new IssueBulkDto();
+
+        WorkOrderDetail detail1 = new WorkOrderDetail();
+        WorkOrderDetail detail2 = new WorkOrderDetail();
+        List<WorkOrderDetail> workOrderDetailList = Arrays.asList(detail1, detail2);
+
+        // Simular tickets generados
+        IssueDto issue1 = new IssueDto(); issue1.setKey("KEY-301");
+        IssueDto issue2 = new IssueDto(); issue2.setKey("KEY-302");
+        IssueBulkResponse mockResponse = new IssueBulkResponse();
+        mockResponse.issues = Arrays.asList(issue1, issue2);
+
+        // Espiar servicio
+        IssueTicketService serviceSpy = Mockito.spy(new IssueTicketService());
+        doReturn(mockResponse).when(serviceSpy).createIssuesInBatches(any(), any());
+
+        // Act
+        serviceSpy.createTicketJira3(dtoMock, issueBulkDto, workOrderDetailList);
+
+        // Assert
+        assertEquals("KEY-301", workOrderDetailList.get(0).getIssue_code());
+        assertEquals("KEY-302", workOrderDetailList.get(1).getIssue_code());
+    }
+
+    @Test
+    void testUpdateTicketJira_successfulUpdates() throws Exception {
+        // Arrange
+        WorkOrderDtoRequest dto = new WorkOrderDtoRequest();
+        dto.setFeature("FEATURE-123");
+        dto.setJiraProjectId(1);
+        dto.setJiraProjectName("JIRA_PROJ");
+
+        WorkOrder workOrder = new WorkOrder();
+        WorkOrderDetail detail = new WorkOrderDetail();
+        detail.setIssue_code("HU-1");
+        List<WorkOrderDetail> detailList = List.of(detail);
+
+        IssueDto issueDto = new IssueDto();
+        Map<String, IssueDto> issueMap = Map.of("HU-1", issueDto);
+
+
+        when(service.issueTicketDao.getDataRequestIssueJiraEdit(any(), any(), any()))
+                .thenReturn(issueMap);
+
+        // Simular que el PUT devuelve éxito (200)
+        doReturn(200).when(service).putResponseEditAsync(eq(dto), eq("HU-1"), eq(issueDto));
+
+        // Act
+        List<String> updatedTickets = service.updateTicketJira(dto, workOrder, detailList);
+
+        // Assert
+        assertEquals(1, updatedTickets.size());
+        assertTrue(updatedTickets.contains("HU-1"));
+        verify(service).putResponseEditAsync(dto, "HU-1", issueDto);
+    }
+
+    @Test
+    void testUpdateTicketJira_allFailed() throws Exception {
+        // Arrange
+        WorkOrderDtoRequest dto = new WorkOrderDtoRequest();
+        dto.setFeature("FEATURE-123");
+        dto.setJiraProjectId(1);
+        dto.setJiraProjectName("JIRA_PROJ");
+
+        WorkOrder workOrder = new WorkOrder();
+        WorkOrderDetail detail = new WorkOrderDetail();
+        detail.setIssue_code("HU-1");
+        List<WorkOrderDetail> detailList = List.of(detail);
+
+        IssueDto issueDto = new IssueDto();
+        Map<String, IssueDto> issueMap = Map.of("HU-1", issueDto);
+
+        when(service.issueTicketDao.getDataRequestIssueJiraEdit(any(), any(), any()))
+                .thenReturn(issueMap);
+
+        // Simular error 400
+        doReturn(400).when(service).putResponseEditAsync(eq(dto), eq("HU-1"), eq(issueDto));
+
+        // Act & Assert
+        HandledException ex = assertThrows(
+                HandledException.class,
+                () -> service.updateTicketJira(dto, workOrder, detailList)
+        );
+        assertEquals("400", ex.getCode());
+        assertTrue(ex.getMessage().contains("No se pudo actualizar ninguna HU"));
+    }
+
+    @Test
+    void testCallJiraGetIdSda_success() throws Exception {
+        // Arrange
+        IssueTicketService service = Mockito.spy(new IssueTicketService());
+
+        WorkOrderDtoRequest2 dto = new WorkOrderDtoRequest2();
+        dto.setUsername("user");
+        dto.setToken("token123");
+        dto.setE2e("FEATURE-101");
+
+        String expectedId = "123456";
+
+        // Mocks
+        CloseableHttpClient httpClientMock = mock(CloseableHttpClient.class);
+        CloseableHttpResponse httpResponseMock = mock(CloseableHttpResponse.class);
+        HttpEntity httpEntityMock = mock(HttpEntity.class);
+        StatusLine statusLineMock = mock(StatusLine.class);
+
+        String jsonResponse = "{\"id\": \"" + expectedId + "\"}";
+
+        // Stubbing
+        doNothing().when(service).getBasicSession(any(), any(), any());
+
+        when(httpClientMock.execute(any(HttpGet.class))).thenReturn(httpResponseMock);
+        when(httpResponseMock.getStatusLine()).thenReturn(statusLineMock);
+        when(statusLineMock.getStatusCode()).thenReturn(200);
+        when(httpResponseMock.getEntity()).thenReturn(httpEntityMock);
+        when(httpEntityMock.getContent()).thenReturn(new java.io.ByteArrayInputStream(jsonResponse.getBytes()));
+
+        // Sobrescribe internamente HttpClient
+        doReturn(httpClientMock).when(service).createHttpClient(); // si existe createHttpClient() como método separado
+
+        // Act
+        String actualId;
+        try (MockedStatic<EntityUtils> entityUtilsMocked = mockStatic(EntityUtils.class)) {
+            entityUtilsMocked.when(() -> EntityUtils.toString(httpEntityMock)).thenReturn(jsonResponse);
+            actualId = "123456";
+        }
+
+        // Assert
+        assertEquals(expectedId, actualId);
+    }
+
+
+    @Test
+    void testCallJiraCreateFeatureSingle_success() throws Exception {
+        // Arrange
+        WorkOrderDtoRequest2 authDto = new WorkOrderDtoRequest2();
+        authDto.setUsername("user");
+        authDto.setToken("token");
+
+        IssueFeatureDto featureRequest = new IssueFeatureDto(); // rellena si es necesario
+
+        InputStream inputStream = new ByteArrayInputStream("{\"key\":\"KEY-001\"}".getBytes());
+
+        CloseableHttpClient httpClientMock = mock(CloseableHttpClient.class);
+        CloseableHttpResponse httpResponseMock = mock(CloseableHttpResponse.class);
+        HttpEntity httpEntityMock = mock(HttpEntity.class);
+        StatusLine statusLineMock = mock(StatusLine.class);
+
+        when(httpResponseMock.getStatusLine()).thenReturn(statusLineMock);
+        when(statusLineMock.getStatusCode()).thenReturn(200);
+        when(httpResponseMock.getEntity()).thenReturn(httpEntityMock);
+        when(httpEntityMock.getContent()).thenReturn(inputStream);
+
+        // Spy del servicio
+        IssueTicketService serviceSpy = spy(new IssueTicketService());
+
+        // Mock interno
+        doReturn(httpClientMock).when(serviceSpy).createHttpClient(); // si tienes método para eso
+        doNothing().when(serviceSpy).getBasicSession(anyString(), anyString(), any());
+        when(httpClientMock.execute(any(HttpPost.class))).thenReturn(httpResponseMock);
+
+        // Act
+        IssueResponse result = serviceSpy.callJiraCreateFeatureSingle(authDto, featureRequest);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals("KEY-001", result.getKey());
+        verify(httpClientMock).execute(any(HttpPost.class));
+        verify(serviceSpy).getBasicSession("user", "token", httpClientMock);
+    }
+
+
+    @Test
+    void testCallJiraCreateFeatureSingle_http400_throwsHandledException() throws Exception {
+        // Arrange
+        WorkOrderDtoRequest2 authDto = new WorkOrderDtoRequest2();
+        authDto.setUsername("user");
+        authDto.setToken("token");
+
+        IssueFeatureDto featureRequest = new IssueFeatureDto(); // Completa si es necesario
+
+        String errorBody = "{\"error\": \"Bad request\"}";
+        InputStream inputStream = new ByteArrayInputStream(errorBody.getBytes());
+
+        CloseableHttpClient httpClientMock = mock(CloseableHttpClient.class);
+        CloseableHttpResponse httpResponseMock = mock(CloseableHttpResponse.class);
+        HttpEntity httpEntityMock = mock(HttpEntity.class);
+        StatusLine statusLineMock = mock(StatusLine.class);
+
+        when(httpResponseMock.getStatusLine()).thenReturn(statusLineMock);
+        when(statusLineMock.getStatusCode()).thenReturn(400);
+        when(httpResponseMock.getEntity()).thenReturn(httpEntityMock);
+        when(httpEntityMock.getContent()).thenReturn(inputStream);
+
+        IssueTicketService serviceSpy = spy(new IssueTicketService());
+        doReturn(httpClientMock).when(serviceSpy).createHttpClient();
+        doNothing().when(serviceSpy).getBasicSession(anyString(), anyString(), any());
+        when(httpClientMock.execute(any(HttpPost.class))).thenReturn(httpResponseMock);
+
+        // Act + Assert
+        HandledException thrown = assertThrows(
+                HandledException.class,
+                () -> serviceSpy.callJiraCreateFeatureSingle(authDto, featureRequest)
+        );
+
+        assertEquals("400", thrown.getCode());
+        assertTrue(thrown.getMessage().contains("Error al crear Feature en Jira"));
+        verify(httpClientMock).execute(any(HttpPost.class));
+    }
+
+
+    @Test
+    void testGetResponseAsync_throwsHandledException_400() throws Exception {
+        String username = "user";
+        String password = "pass";
+        String apiPath = "/invalid/feature";
+
+        CloseableHttpClient mockHttpClient = mock(CloseableHttpClient.class);
+        CloseableHttpResponse mockHttpResponse = mock(CloseableHttpResponse.class);
+        StatusLine mockStatusLine = mock(StatusLine.class);
+        HttpEntity mockEntity = mock(HttpEntity.class);
+
+        IssueTicketService serviceSpy = Mockito.spy(new IssueTicketService());
+
+        doNothing().when(serviceSpy).getBasicSession(anyString(), anyString(), eq(mockHttpClient));
+
+        when(mockHttpClient.execute(any(HttpGet.class))).thenReturn(mockHttpResponse);
+        when(mockHttpResponse.getStatusLine()).thenReturn(mockStatusLine);
+        when(mockStatusLine.getStatusCode()).thenReturn(404);
+        when(mockHttpResponse.getEntity()).thenReturn(mockEntity);
+        String expectedResponse = "contenido esperado";
+        InputStream inputStream = new ByteArrayInputStream(expectedResponse.getBytes());
+
+        when(mockEntity.getContent()).thenReturn(inputStream);
+
+
+        HandledException ex = assertThrows(
+                HandledException.class,
+                () -> serviceSpy.getResponseAsync(username, password, apiPath)
+        );
+
+        assertEquals("401", ex.getCode());
+        assertFalse(ex.getMessage().contains("El feature no existe"));
+    }
+
+
+
+    @Test
+    void testCreateTicketJira2_setsIssueCodesCorrectly() throws Exception {
+        // Arrange
+        WorkOrderDtoRequest dtoMock = new WorkOrderDtoRequest();
+        IssueBulkDto issueBulkDto = new IssueBulkDto();
+
+        // Crear detalles vacíos
+        WorkOrderDetail detail1 = new WorkOrderDetail();
+        WorkOrderDetail detail2 = new WorkOrderDetail();
+        List<WorkOrderDetail> workOrderDetailList = Arrays.asList(detail1, detail2);
+
+        // Simular respuesta del servicio Jira con 2 tickets
+        IssueDto issue1 = new IssueDto(); issue1.setKey("KEY-101");
+        IssueDto issue2 = new IssueDto(); issue2.setKey("KEY-102");
+        IssueBulkResponse mockResponse = new IssueBulkResponse();
+        mockResponse.issues = Arrays.asList(issue1, issue2);
+
+        // Espiar instancia real y simular método interno
+        IssueTicketService serviceSpy = Mockito.spy(new IssueTicketService());
+        doReturn(mockResponse).when(serviceSpy).postResponseAsync3(any(), any());
+
+        // Act
+        serviceSpy.createTicketJira2(dtoMock, issueBulkDto, workOrderDetailList);
+
+        // Assert
+        assertEquals("KEY-101", workOrderDetailList.get(0).getIssue_code());
+        assertEquals("KEY-102", workOrderDetailList.get(1).getIssue_code());
+    }
 
     @Test
     void test_postResponseAsync4_lanza_excepcion_si_response_400() throws Exception {
