@@ -18,8 +18,14 @@ class FieldsTest {
     }
 
     @Test
-    void testStringFields() {
+    void testBasicStringFields() {
         String testValue = "test";
+
+        fields.setSummary(testValue);
+        assertEquals(testValue, fields.getSummary());
+
+        fields.setDescription(testValue);
+        assertEquals(testValue, fields.getDescription());
 
         fields.setCustomfield_13200(testValue);
         assertEquals(testValue, fields.getCustomfield_13200());
@@ -38,6 +44,11 @@ class FieldsTest {
 
         fields.setCustomfield_10004(testValue);
         assertEquals(testValue, fields.getCustomfield_10004());
+    }
+
+    @Test
+    void testAdditionalStringFields() {
+        String testValue = "test";
 
         fields.setCustomfield_12530(testValue);
         assertEquals(testValue, fields.getCustomfield_12530());
@@ -59,12 +70,6 @@ class FieldsTest {
 
         fields.setCustomfield_12323(testValue);
         assertEquals(testValue, fields.getCustomfield_12323());
-
-        fields.setSummary(testValue);
-        assertEquals(testValue, fields.getSummary());
-
-        fields.setDescription(testValue);
-        assertEquals(testValue, fields.getDescription());
     }
 
     @Test
@@ -216,7 +221,7 @@ class FieldsTest {
     }
 
     @Test
-    void testCustomfieldTypeFields() {
+    void testCustomfieldTypeFields1() {
         Customfield cf = new Customfield();
 
         fields.setCustomfield_19200(cf);
@@ -254,6 +259,11 @@ class FieldsTest {
 
         fields.setCustomfield_10270(cf);
         assertEquals(cf, fields.getCustomfield_10270());
+    }
+
+    @Test
+    void testCustomfieldTypeFields2() {
+        Customfield cf = new Customfield();
 
         fields.setCustomfield_10100(cf);
         assertEquals(cf, fields.getCustomfield_10100());
@@ -290,6 +300,11 @@ class FieldsTest {
 
         fields.setCustomfield_11511(cf);
         assertEquals(cf, fields.getCustomfield_11511());
+    }
+
+    @Test
+    void testCustomfieldTypeFields3() {
+        Customfield cf = new Customfield();
 
         fields.setCustomfield_18700(cf);
         assertEquals(cf, fields.getCustomfield_18700());
@@ -299,7 +314,7 @@ class FieldsTest {
     }
 
     @Test
-    void testCustomfieldTypeFields2() {
+    void testCustomfieldTypeFields4() {
         Customfield cf = new Customfield();
 
         fields.setCustomfield_11502(cf);
@@ -337,6 +352,11 @@ class FieldsTest {
 
         fields.setCustomfield_17604(cf);
         assertEquals(cf, fields.getCustomfield_17604());
+    }
+
+    @Test
+    void testCustomfieldTypeFields5() {
+        Customfield cf = new Customfield();
 
         fields.setCustomfield_17603(cf);
         assertEquals(cf, fields.getCustomfield_17603());
@@ -370,11 +390,37 @@ class FieldsTest {
     }
 
     @Test
-    void testObjectTypeCustomFields1() {
+    void testTimeAndEstimateFields() {
         Object objectValue = new Object();
 
         fields.setAggregatetimeoriginalestimate(objectValue);
         assertEquals(objectValue, fields.getAggregatetimeoriginalestimate());
+
+        fields.setTimeoriginalestimate(objectValue);
+        assertEquals(objectValue, fields.getTimeoriginalestimate());
+
+        fields.setTimeestimate(objectValue);
+        assertEquals(objectValue, fields.getTimeestimate());
+
+        fields.setAggregatetimeestimate(objectValue);
+        assertEquals(objectValue, fields.getAggregatetimeestimate());
+
+        fields.setTimespent(objectValue);
+        assertEquals(objectValue, fields.getTimespent());
+
+        fields.setAggregatetimespent(objectValue);
+        assertEquals(objectValue, fields.getAggregatetimespent());
+
+        fields.setEnvironment(objectValue);
+        assertEquals(objectValue, fields.getEnvironment());
+
+        fields.setDuedate(objectValue);
+        assertEquals(objectValue, fields.getDuedate());
+    }
+
+    @Test
+    void testObjectCustomFields17xxx() {
+        Object objectValue = new Object();
 
         fields.setCustomfield_17001(objectValue);
         assertEquals(objectValue, fields.getCustomfield_17001());
@@ -394,56 +440,17 @@ class FieldsTest {
         fields.setCustomfield_17800(objectValue);
         assertEquals(objectValue, fields.getCustomfield_17800());
 
-        fields.setCustomfield_12900(objectValue);
-        assertEquals(objectValue, fields.getCustomfield_12900());
-
-        fields.setCustomfield_10271(objectValue);
-        assertEquals(objectValue, fields.getCustomfield_10271());
-
-        fields.setCustomfield_10272(objectValue);
-        assertEquals(objectValue, fields.getCustomfield_10272());
-
-        fields.setCustomfield_13302(objectValue);
-        assertEquals(objectValue, fields.getCustomfield_13302());
-
-        fields.setCustomfield_13301(objectValue);
-        assertEquals(objectValue, fields.getCustomfield_13301());
-
         fields.setCustomfield_17900(objectValue);
         assertEquals(objectValue, fields.getCustomfield_17900());
 
-        fields.setCustomfield_12206(objectValue);
-        assertEquals(objectValue, fields.getCustomfield_12206());
+        fields.setCustomfield_17300(objectValue);
+        assertEquals(objectValue, fields.getCustomfield_17300());
 
-        fields.setCustomfield_12205(objectValue);
-        assertEquals(objectValue, fields.getCustomfield_12205());
+        fields.setCustomfield_17400(objectValue);
+        assertEquals(objectValue, fields.getCustomfield_17400());
 
-        fields.setCustomfield_12207(objectValue);
-        assertEquals(objectValue, fields.getCustomfield_12207());
-
-        fields.setCustomfield_12209(objectValue);
-        assertEquals(objectValue, fields.getCustomfield_12209());
-
-        fields.setCustomfield_20500(objectValue);
-        assertEquals(objectValue, fields.getCustomfield_20500());
-
-        fields.setCustomfield_18300(objectValue);
-        assertEquals(objectValue, fields.getCustomfield_18300());
-
-        fields.setCustomfield_18301(objectValue);
-        assertEquals(objectValue, fields.getCustomfield_18301());
-
-        fields.setCustomfield_10261(objectValue);
-        assertEquals(objectValue, fields.getCustomfield_10261());
-
-        fields.setCustomfield_12321(objectValue);
-        assertEquals(objectValue, fields.getCustomfield_12321());
-
-        fields.setCustomfield_10263(objectValue);
-        assertEquals(objectValue, fields.getCustomfield_10263());
-
-        fields.setCustomfield_12320(objectValue);
-        assertEquals(objectValue, fields.getCustomfield_12320());
+        fields.setCustomfield_17500(objectValue);
+        assertEquals(objectValue, fields.getCustomfield_17500());
     }
 
     @Test
