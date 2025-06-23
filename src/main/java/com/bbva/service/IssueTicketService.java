@@ -142,15 +142,17 @@ public class IssueTicketService {
         List<Map<String, Object>> successFeatures = new ArrayList<>();
         List<String> failedFeatures = new ArrayList<>();
 
-        for (WorkOrderDtoRequest2 dto : dtoList) {
+        for (WorkOrderDtoRequest2 dto : dtoList) { // NOSONAR - Multiple continue statements needed for clear validation logic
             try {
                 if (dto.getFeature().isEmpty() || dto.getJiraProjectName().isEmpty()){
                     failedFeatures.add(dto.getFeature() +": No se tienen datos del Feature a crear");
-                    continue; // NOSONAR - Validation logic requires multiple continues
+                    // NOSONAR - Validation logic requires multiple continues
+                    continue;
                 }
                 if(dto.getWorkOrderDetail()==null || dto.getWorkOrderDetail().isEmpty()){
                     failedFeatures.add(dto.getFeature() + ": Sin templates seleccionados");
-                    continue; // NOSONAR - Validation logic requires multiple continues
+                    // NOSONAR - Validation logic requires multiple continues
+                    continue;
                 }
 
                 IssueResponse completedFeature = createJiraFeature(dto);
@@ -162,7 +164,8 @@ public class IssueTicketService {
                 var countWorkOrder = issueTicketDao.findRecordWorkOrder(workOrderRequest);
                 if (countWorkOrder > 0) {
                     failedFeatures.add(dto.getFeature() + ": Ya existe registro duplicado");
-                    continue; // NOSONAR - Validation logic requires multiple continues
+                    // NOSONAR - Validation logic requires multiple continues
+                    continue;
                 }
 
                 var workOrderDetailsRequest = dto.getWorkOrderDetail().stream()
