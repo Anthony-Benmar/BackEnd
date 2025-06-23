@@ -6,19 +6,25 @@ import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dao.IssueTicketDao;
 import com.bbva.dto.issueticket.request.WorkOrderDtoRequest;
+import com.bbva.dto.issueticket.request.WorkOrderDtoRequest2;
 import com.bbva.dto.issueticket.request.authJiraDtoRequest;
 import com.bbva.dto.issueticket.response.issueTicketDtoResponse;
 import com.bbva.dto.issueticket.request.sourceTicketDtoRequest;
 import com.bbva.dto.issueticket.response.sourceTicketDtoResponse;
 import com.bbva.dto.jira.request.IssueBulkDto;
 import com.bbva.dto.jira.request.IssueDto;
+import com.bbva.dto.jira.request.IssueFeatureDto;
+import com.bbva.dto.jira.request.IssueUpdate;
 import com.bbva.dto.jira.response.IssueBulkResponse;
+import com.bbva.dto.jira.response.IssueResponse;
 import com.bbva.entities.feature.JiraFeatureEntity;
 import com.bbva.entities.issueticket.WorkOrder;
 import com.bbva.entities.issueticket.WorkOrderDetail;
 import com.bbva.util.GsonConfig;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mysql.cj.util.StringUtils;
 import org.apache.http.Header;
@@ -39,10 +45,9 @@ import org.apache.http.util.EntityUtils;
 import java.net.http.HttpClient;
 import java.time.Instant;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class IssueTicketService {
-    private final IssueTicketDao issueTicketDao = new IssueTicketDao();
+    protected final IssueTicketDao issueTicketDao = new IssueTicketDao();
     private static final String URL_API_BASE = "https://jira.globaldevtools.bbva.com";
     private static final String URL_API_JIRA_ISSUE = "/rest/api/2/issue/";
     private static final String URL_API_JIRA = URL_API_BASE + URL_API_JIRA_ISSUE;
@@ -50,8 +55,17 @@ public class IssueTicketService {
     private static final String URL_API_JIRA_SESSION = URL_API_BASE + "/rest/auth/1/session";
     private static final String URL_API_JIRA_SQL = URL_API_BASE + "/rest/api/2/search?jql=";
     private static final String HEADER_COOKIE_JIRA = "_oauth2_proxy=";
+
+    private static final String CONTENT_TYPE_HEADER = "Content-Type";
+    private static final String APPLICATION_JSON = "application/json";
+    private static final String STATUS_READY = "ready";
+    private static final String COOKIE_HEADER = "Cookie";
+    private static final String TOKEN_EXPIRED_MESSAGE = "Token Expirado";
+    private static final String UTF_TYPE = "UTF-8";
+
     private CookieStore cookieStore = new BasicCookieStore();
     private HttpClient httpClient;
+
 
     public boolean expiredTokenValidate(long time) {
         Date dateNowUTC = Date.from(Instant.now());
@@ -67,11 +81,10 @@ public class IssueTicketService {
         HttpPost httpPost = new HttpPost(URL_API_JIRA_SESSION);
         StringEntity requestEntity = new StringEntity(gson.toJson(authJira));
         httpPost.setEntity(requestEntity);
-        httpPost.setHeader("Content-Type", "application/json");
+        httpPost.setHeader(CONTENT_TYPE_HEADER, APPLICATION_JSON);
 
         try(CloseableHttpResponse response = httpclient.execute(httpPost)) {
             Integer responseCode = response.getStatusLine().getStatusCode();
-
             if (responseCode >= 400) {
                 throw new HandledException(responseCode.toString(), "Error autenticación jira");
             }
@@ -106,8 +119,8 @@ public class IssueTicketService {
                 return new ErrorDataResult(null,"500","Existe un registro con los mismos datos (proyecto, proceso, folio, id fuente, fuente)");
             }
             var workOrderDetailsRequest = dto.workOrderDetail.stream()
-                    .map(s -> new WorkOrderDetail(0, 0, s.templateId, "", "ready", dto.registerUserId, new Date(), null))
-                    .collect(Collectors.toList());
+                    .map(s -> new WorkOrderDetail(0, 0, s.templateId, "", STATUS_READY, dto.registerUserId, new Date(), null))
+                    .toList();
             var objFeature = new JiraFeatureEntity(0, dto.feature,"","","",dto.jiraProjectId, dto.jiraProjectName);
             var issuesRequests = issueTicketDao.getDataRequestIssueJira2(workOrderRequest, workOrderDetailsRequest, objFeature);
 
@@ -116,13 +129,173 @@ public class IssueTicketService {
             }catch (HandledException ex){
                 return new ErrorDataResult(ex.getCause(),ex.getCode(),ex.getMessage());
             }
-            workOrderDetailsRequest = workOrderDetailsRequest.stream().filter(w -> !StringUtils.isNullOrEmpty(w.issue_code)).collect(Collectors.toList());
+            workOrderDetailsRequest = workOrderDetailsRequest.stream().filter(w -> !StringUtils.isNullOrEmpty(w.issue_code)).toList();
             issueTicketDao.insertWorkOrderAndDetail(workOrderRequest, workOrderDetailsRequest);
 
         }catch (Exception ex){
             return new ErrorDataResult(ex.getCause(),"500","No se pudo realizar el registro");
         }
         return new SuccessDataResult(null);
+    }
+    public IDataResult<Map<String, Object>> insert2(List<WorkOrderDtoRequest2> dtoList) throws Exception {
+        List<Map<String, Object>> successFeatures = new ArrayList<>();
+        List<String> failedFeatures = new ArrayList<>();
+
+        for (WorkOrderDtoRequest2 dto : dtoList) { // NOSONAR - Multiple continue statements needed for clear validation logic
+            try {
+                if (dto.getFeature().isEmpty() || dto.getJiraProjectName().isEmpty()){
+                    failedFeatures.add(dto.getFeature() +": No se tienen datos del Feature a crear");
+                    // NOSONAR - Validation logic requires multiple continues
+                    continue;
+                }
+                if(dto.getWorkOrderDetail()==null || dto.getWorkOrderDetail().isEmpty()){
+                    failedFeatures.add(dto.getFeature() + ": Sin templates seleccionados");
+                    // NOSONAR - Validation logic requires multiple continues
+                    continue;
+                }
+
+                IssueResponse completedFeature = createJiraFeature(dto);
+
+                var workOrderRequest = new WorkOrder(0, completedFeature.getKey(), dto.getFolio(), dto.getBoardId(), dto.getProjectId(),
+                        dto.getSourceId(), dto.getSourceName(), dto.getFlowType(),
+                        1, 1, dto.getRegisterUserId(), new Date(), null, 0);
+
+                var countWorkOrder = issueTicketDao.findRecordWorkOrder(workOrderRequest);
+                if (countWorkOrder > 0) {
+                    failedFeatures.add(dto.getFeature() + ": Ya existe registro duplicado");
+                    // NOSONAR - Validation logic requires multiple continues
+                    continue;
+                }
+
+                var workOrderDetailsRequest = dto.getWorkOrderDetail().stream()
+                        .map(s -> new WorkOrderDetail(0, 0, s.templateId, "", STATUS_READY, dto.getRegisterUserId(), new Date(), null))
+                        .toList();
+
+                var objFeature = new JiraFeatureEntity(0, completedFeature.getKey(),"","","",dto.getJiraProjectId(), dto.getJiraProjectName());
+
+                var issuesRequests = issueTicketDao.getDataRequestIssueJira2(
+                        workOrderRequest, workOrderDetailsRequest, objFeature);
+
+
+                createTicketJira3(dto, issuesRequests, workOrderDetailsRequest);
+
+                workOrderDetailsRequest = workOrderDetailsRequest.stream()
+                        .filter(w -> !StringUtils.isNullOrEmpty(w.issue_code))
+                        .toList();
+
+                issueTicketDao.insertWorkOrderAndDetail(workOrderRequest, workOrderDetailsRequest);
+
+                successFeatures.add(Map.of(
+                        "featureName", dto.getFeature(),
+                        "featureKey", completedFeature.getKey(),
+                        "storiesCreated", workOrderDetailsRequest.size(),
+                        "featureLink", "https://jira.globaldevtools.bbva.com/browse/"+completedFeature.getKey()
+                ));
+
+            } catch (Exception ex) {
+                failedFeatures.add(dto.getFeature() + ": " + ex.getMessage());
+            }
+        }
+
+        return new SuccessDataResult<>(Map.of(
+                "success", successFeatures,
+                "failed", failedFeatures
+        ));
+    }
+
+    @VisibleForTesting
+    protected IssueResponse createJiraFeature(WorkOrderDtoRequest2 dto) throws Exception {
+
+        String idSdaProject = callJiraGetIdSda(dto);
+        dto.setE2e(idSdaProject);
+
+        List<String> period = new ArrayList<>();
+
+        String originalPeriod = dto.getPeriod().get(0);
+        String convertedPeriod = convertPIToQuarter(originalPeriod);
+        period.add(convertedPeriod);
+        dto.setPeriod(period);
+
+        var featureRequest = issueTicketDao.getDataRequestFeatureJira(dto);
+
+        return callJiraCreateFeatureSingle(dto, featureRequest);
+    }
+
+    protected String convertPIToQuarter(String piFormat) {
+        if (piFormat == null || !piFormat.matches("PI[1-4]-\\d{2}")) {
+            throw new IllegalArgumentException("Formato inválido. Se esperaba PIX-YY (ej: PI2-25)");
+        }
+        int quarter = Integer.parseInt(piFormat.substring(2, 3));
+        String yearSuffix = piFormat.substring(4);
+        int fullYear = 2000 + Integer.parseInt(yearSuffix);
+        return fullYear + "-Q" + quarter;
+    }
+
+    protected String callJiraGetIdSda(WorkOrderDtoRequest2 dto) throws Exception {
+        Gson gson = GsonConfig.createGson();
+
+        String issueKey = dto.getE2e();
+        String url = URL_API_JIRA + issueKey + "?fields=id";
+
+        HttpGet httpGet = new HttpGet(url);
+        httpGet.setHeader(CONTENT_TYPE_HEADER, APPLICATION_JSON);
+
+        Integer responseCode = 0;
+        String responseBodyString = "";
+        HttpEntity entity = null;
+
+        try (CloseableHttpClient httpclient = HttpClients.createDefault()) {
+            getBasicSession(dto.getUsername(), dto.getToken(), httpclient);
+            httpGet.setHeader(COOKIE_HEADER, createCookieHeader(cookieStore.getCookies()));
+
+            CloseableHttpResponse response = httpclient.execute(httpGet);
+            responseCode = response.getStatusLine().getStatusCode();
+            entity = response.getEntity();
+            responseBodyString = EntityUtils.toString(entity);
+            response.close();
+        }
+
+        if (responseCode.equals(302)) {
+            throw new HandledException(responseCode.toString(),TOKEN_EXPIRED_MESSAGE);
+        }
+        if (responseCode >= 400 && responseCode <= 500) {
+            throw new HandledException(responseCode.toString(), "Error al obtener Issue de Jira: " + responseBodyString);
+        }
+
+        JsonObject jsonResponse = gson.fromJson(responseBodyString, JsonObject.class);
+        return jsonResponse.get("id").getAsString();
+    }
+    protected IssueResponse callJiraCreateFeatureSingle(WorkOrderDtoRequest2 objAuth, IssueFeatureDto featureRequest) throws Exception {
+        Gson gson = GsonConfig.createGson();
+        String jsonString = gson.toJson(featureRequest);
+
+        HttpPost httpPost = new HttpPost(URL_API_JIRA  + "?expand=fields");
+        StringEntity requestEntity = new StringEntity(jsonString, UTF_TYPE);
+        httpPost.setEntity(requestEntity);
+        httpPost.setHeader(CONTENT_TYPE_HEADER, APPLICATION_JSON);
+
+        Integer responseCode = 0;
+        String responseBodyString = "";
+        HttpEntity entity = null;
+
+        try(CloseableHttpClient httpclient = createHttpClient()){
+            getBasicSession(objAuth.getUsername(), objAuth.getToken(), httpclient);
+            httpPost.setHeader(COOKIE_HEADER, createCookieHeader(cookieStore.getCookies()));
+            CloseableHttpResponse response = httpclient.execute(httpPost);
+            responseCode = response.getStatusLine().getStatusCode();
+            entity = response.getEntity();
+            responseBodyString = EntityUtils.toString(entity);
+            response.close();
+        }
+
+        if (responseCode.equals(302)) {
+            throw new HandledException(responseCode.toString(), TOKEN_EXPIRED_MESSAGE);
+        }
+        if (responseCode >= 400 && responseCode <= 500) {
+            throw new HandledException(responseCode.toString(), "Error al crear Feature en Jira: " + responseBodyString);
+        }
+
+        return gson.fromJson(responseBodyString, IssueResponse.class);
     }
 
     public IDataResult update(WorkOrderDtoRequest dto)
@@ -136,8 +309,7 @@ public class IssueTicketService {
                 return new ErrorDataResult(null,"500","Es necesario el código de registro (workOrderId) para la edición");
             }
 
-            //consultar si feature existe
-            var issueMetadataJson = GetResponseAsync(dto.username, dto.token,URL_API_JIRA_ISSUE + dto.feature);
+            var issueMetadataJson = getResponseAsync(dto.username, dto.token,URL_API_JIRA_ISSUE + dto.feature);
             var issueMetadata = JsonParser.parseString(issueMetadataJson).getAsJsonObject();
             var issueKey = issueMetadata.get("key").getAsString();
 
@@ -152,7 +324,7 @@ public class IssueTicketService {
 
             var workOrderDetails = issueTicketDao.ListWorkOrderDetails(workOrder.work_order_id);
             if (workOrderDetails != null && workOrderDetails.stream().count()>0) {
-                workOrderDetails = workOrderDetails.stream().filter(w -> !StringUtils.isNullOrEmpty(w.issue_code)).collect(Collectors.toList());
+                workOrderDetails = workOrderDetails.stream().filter(w -> !StringUtils.isNullOrEmpty(w.issue_code)).toList();
                 var ticketsUpdates = updateTicketJira(dto, workOrder, workOrderDetails);
                 issueTicketDao.UpdateWorkOrder(workOrder);
                 if (ticketsUpdates.stream().count()>0 &&
@@ -175,12 +347,12 @@ public class IssueTicketService {
 
             workOrderDetailsRequest = dto.workOrderDetail.stream().map(s -> {
                 var workorderid = dto.workOrderId > 0 ? dto.workOrderId : workOrderRequest.work_order_id;
-                return new WorkOrderDetail(0, workorderid, s.templateId, "", "ready", dto.registerUserId, new Date(), null);
-            }).collect(Collectors.toList());
+                return new WorkOrderDetail(0, workorderid, s.templateId, "", STATUS_READY, dto.registerUserId, new Date(), null);
+            }).toList();
             var objFeature = new JiraFeatureEntity(0, dto.feature,"","","",dto.jiraProjectId, dto.jiraProjectName);
             var issuesRequests = issueTicketDao.getDataRequestIssueJira2(workOrderRequest, workOrderDetailsRequest, objFeature);
             createTicketJira2(dto, issuesRequests, workOrderDetailsRequest);
-            workOrderDetailsRequest = workOrderDetailsRequest.stream().filter(w -> !StringUtils.isNullOrEmpty(w.issue_code)).collect(Collectors.toList());
+            workOrderDetailsRequest = workOrderDetailsRequest.stream().filter(w -> !StringUtils.isNullOrEmpty(w.issue_code)).toList();
             issueTicketDao.InsertWorkOrderDetail(workOrderDetailsRequest);
 
         }catch (HandledException ex){
@@ -209,16 +381,24 @@ public class IssueTicketService {
         return new SuccessDataResult(modelo);
     }
 
-    private void createTicketJira2(WorkOrderDtoRequest objAuth, IssueBulkDto issuesRequests, List<WorkOrderDetail> workOrderDetail)
+   protected void createTicketJira2(WorkOrderDtoRequest objAuth, IssueBulkDto issuesRequests, List<WorkOrderDetail> workOrderDetail)
             throws Exception
     {
-        var issuesGenerates = PostResponseAsync3(objAuth, issuesRequests);
+        var issuesGenerates = postResponseAsync3(objAuth, issuesRequests);
+        for (int i = 0; i < issuesGenerates.issues.size() && i < workOrderDetail.size(); i++) {
+            workOrderDetail.get(i).setIssue_code(issuesGenerates.issues.get(i).getKey());
+        }
+    }
+    protected void createTicketJira3(WorkOrderDtoRequest2 objAuth, IssueBulkDto issuesRequests, List<WorkOrderDetail> workOrderDetail)
+            throws Exception
+    {
+        var issuesGenerates = createIssuesInBatches(objAuth, issuesRequests);
         for (int i = 0; i < issuesGenerates.issues.size() && i < workOrderDetail.size(); i++) {
             workOrderDetail.get(i).setIssue_code(issuesGenerates.issues.get(i).getKey());
         }
     }
 
-    private List<String> updateTicketJira(WorkOrderDtoRequest dto, WorkOrder workOrder, List<WorkOrderDetail> workOrderDetail)
+    protected List<String> updateTicketJira(WorkOrderDtoRequest dto, WorkOrder workOrder, List<WorkOrderDetail> workOrderDetail)
             throws Exception
     {
         httpClient = HttpClient.newHttpClient();
@@ -229,7 +409,7 @@ public class IssueTicketService {
         List<String> ticketsUpdates = new ArrayList();
         for (Map.Entry<String, IssueDto> issue : issuesRequests.entrySet())
         {
-            responseCode = PutResponseEditAsync(dto, issue.getKey(), issue.getValue());
+            responseCode = putResponseEditAsync(dto, issue.getKey(), issue.getValue());
             if (responseCode>=400 && responseCode<=500) {
                 nroFails = nroFails + 1;
             }else{
@@ -242,25 +422,23 @@ public class IssueTicketService {
         return ticketsUpdates;
     }
 
-    private IssueBulkResponse PostResponseAsync3(WorkOrderDtoRequest objAuth, IssueBulkDto issueJira)
+    IssueBulkResponse postResponseAsync3(WorkOrderDtoRequest objAuth, IssueBulkDto issueJira)
             throws Exception
     {
-        // NOTA: el api bulk de jira permite hasta 50 issues por petición
-        //var gson = new GsonBuilder().setPrettyPrinting().create();
         Gson gson = GsonConfig.createGson();
         String jsonString = gson.toJson(issueJira);
 
         HttpPost httpPost = new HttpPost(URL_API_JIRA_BULK);
-        StringEntity requestEntity = new StringEntity(jsonString, "UTF-8");
+        StringEntity requestEntity = new StringEntity(jsonString, UTF_TYPE);
         httpPost.setEntity(requestEntity);
-        httpPost.setHeader("Content-Type", "application/json");
+        httpPost.setHeader(CONTENT_TYPE_HEADER, APPLICATION_JSON);
 
         Integer responseCode =0;
         String responseBodyString = "";
         HttpEntity entity = null;
         try(CloseableHttpClient httpclient = HttpClients.createDefault()){
             getBasicSession(objAuth.username, objAuth.token, httpclient);
-            httpPost.setHeader("Cookie", createCookieHeader(cookieStore.getCookies()));
+            httpPost.setHeader(COOKIE_HEADER, createCookieHeader(cookieStore.getCookies()));
             CloseableHttpResponse response = httpclient.execute(httpPost);
             responseCode = response.getStatusLine().getStatusCode();
             entity = response.getEntity();
@@ -269,16 +447,97 @@ public class IssueTicketService {
         }
 
         if (responseCode.equals(302)) {
-            throw new HandledException(responseCode.toString(), "Token Expirado");
+            throw new HandledException(responseCode.toString(), TOKEN_EXPIRED_MESSAGE);
         }
         if (responseCode>=400 && responseCode<=500) {
             throw new HandledException(responseCode.toString(), "Error al intentar generar tickets, revise los datos ingresados");
         }
-        var issueCreated = gson.fromJson(responseBodyString, IssueBulkResponse.class);
-        return issueCreated;
+        return gson.fromJson(responseBodyString, IssueBulkResponse.class);
     }
 
-    private Integer PutResponseEditAsync(WorkOrderDtoRequest objAuth,String issueTicketCode, IssueDto issueJira)
+   protected IssueBulkResponse postResponseAsync4(WorkOrderDtoRequest2 objAuth, IssueBulkDto issueJira)
+            throws Exception
+    {
+        // NOTA: el api bulk de jira permite hasta 50 issues por petición
+        Gson gson = GsonConfig.createGson();
+        String jsonString = gson.toJson(issueJira);
+
+        HttpPost httpPost = new HttpPost(URL_API_JIRA_BULK);
+        StringEntity requestEntity = new StringEntity(jsonString, UTF_TYPE);
+        httpPost.setEntity(requestEntity);
+        httpPost.setHeader(CONTENT_TYPE_HEADER, APPLICATION_JSON);
+
+        Integer responseCode =0;
+        String responseBodyString = "";
+        HttpEntity entity = null;
+        try(CloseableHttpClient httpclient = HttpClients.createDefault()){
+            getBasicSession(objAuth.getUsername(), objAuth.getUsername(), httpclient);
+            httpPost.setHeader(COOKIE_HEADER, createCookieHeader(cookieStore.getCookies()));
+            CloseableHttpResponse response = httpclient.execute(httpPost);
+            responseCode = response.getStatusLine().getStatusCode();
+            entity = response.getEntity();
+            responseBodyString = EntityUtils.toString(entity);
+            response.close();
+        }
+
+        if (responseCode.equals(302)) {
+            throw new HandledException(responseCode.toString(), TOKEN_EXPIRED_MESSAGE);
+        }
+        if (responseCode>=400 && responseCode<=500) {
+            throw new HandledException(responseCode.toString(), "Error al intentar generar tickets, revise los datos ingresados");
+        }
+        return gson.fromJson(responseBodyString, IssueBulkResponse.class);
+    }
+
+    public IssueBulkResponse createIssuesInBatches(WorkOrderDtoRequest2 objAuth, IssueBulkDto issueJira) throws Exception {
+        List<IssueUpdate> allIssues = issueJira.getIssueUpdates();
+
+        if (allIssues == null || allIssues.isEmpty()) {
+            throw new IllegalArgumentException("No hay issues para crear");
+        }
+
+        List<IssueBulkResponse> responses = new ArrayList<>();
+        final int BATCH_SIZE = 30;
+
+        // Dividir en chunks de 30
+        for (int i = 0; i < allIssues.size(); i += BATCH_SIZE) {
+            int endIndex = Math.min(i + BATCH_SIZE, allIssues.size());
+            List<IssueUpdate> batch = allIssues.subList(i, endIndex);
+
+            // Crear DTO para este batch
+            IssueBulkDto batchDto = new IssueBulkDto();
+            batchDto.setIssueUpdates(batch);
+
+            // Hacer la petición
+            IssueBulkResponse batchResponse = postResponseAsync4(objAuth, batchDto);
+            responses.add(batchResponse);
+
+            // Pausa entre requests para no saturar
+            if (i + BATCH_SIZE < allIssues.size()) {
+                Thread.sleep(500); // 500ms entre batches
+            }
+        }
+
+        // Combinar todas las respuestas
+        return combineResponses(responses);
+    }
+
+   protected IssueBulkResponse combineResponses(List<IssueBulkResponse> responses) {
+        IssueBulkResponse combined = new IssueBulkResponse();
+        List<IssueDto> allIssues = new ArrayList<>();
+
+        for (IssueBulkResponse response : responses) {
+            if (response.issues != null) {
+                allIssues.addAll(response.issues);
+            }
+        }
+
+        combined.issues = allIssues;
+
+        return combined;
+    }
+
+    protected Integer putResponseEditAsync(WorkOrderDtoRequest objAuth,String issueTicketCode, IssueDto issueJira)
             throws Exception
     {
         Gson gson = GsonConfig.createGson();
@@ -286,39 +545,39 @@ public class IssueTicketService {
 
         String url = URL_API_JIRA + issueTicketCode;
         HttpPut httpPut = new HttpPut(url);
-        StringEntity requestEntity = new StringEntity(jsonString, "UTF-8");
+        StringEntity requestEntity = new StringEntity(jsonString, UTF_TYPE);
         httpPut.setEntity(requestEntity);
-        httpPut.setHeader("Content-Type", "application/json");
+        httpPut.setHeader(CONTENT_TYPE_HEADER, APPLICATION_JSON);
 
         Integer responseCode =0;
         String responseBodyString = "";
         HttpEntity entity = null;
         try(CloseableHttpClient httpclient = HttpClients.createDefault()){
             getBasicSession(objAuth.username, objAuth.token, httpclient);
-            httpPut.setHeader("Cookie", createCookieHeader(cookieStore.getCookies()));
+            httpPut.setHeader(COOKIE_HEADER, createCookieHeader(cookieStore.getCookies()));
             CloseableHttpResponse response = httpclient.execute(httpPut);
             responseCode = response.getStatusLine().getStatusCode();
             entity = response.getEntity();
             response.close();
         }
         if (responseCode.equals(302)) {
-            throw new HandledException(responseCode.toString(), "Token Expirado");
+            throw new HandledException(responseCode.toString(), TOKEN_EXPIRED_MESSAGE);
         }
         return responseCode;
     }
 
-    private String GetResponseAsync(String username, String password, String apiPath)
+    protected String getResponseAsync(String username, String password, String apiPath)
             throws Exception
     {
         HttpGet httpGet = new HttpGet(URL_API_BASE + apiPath);
-        httpGet.setHeader("Content-Type", "application/json");
+        httpGet.setHeader(CONTENT_TYPE_HEADER, APPLICATION_JSON);
 
         Integer responseCode =0;
         String responseBodyString = "";
         HttpEntity entity = null;
         try(CloseableHttpClient httpclient = HttpClients.createDefault()){
             getBasicSession(username, password, httpclient);
-            httpGet.setHeader("Cookie", createCookieHeader(cookieStore.getCookies()));
+            httpGet.setHeader(COOKIE_HEADER, createCookieHeader(cookieStore.getCookies()));
             CloseableHttpResponse response = httpclient.execute(httpGet);
             responseCode = response.getStatusLine().getStatusCode();
             entity = response.getEntity();
@@ -327,7 +586,7 @@ public class IssueTicketService {
         }
 
         if (responseCode.equals(302)) {
-            throw new HandledException(responseCode.toString(), "Token Expirado");
+            throw new HandledException(responseCode.toString(), TOKEN_EXPIRED_MESSAGE);
         }
         if (responseCode>=400 && responseCode<=500) {
             throw new HandledException(responseCode.toString(), "El feature no existe");
@@ -345,4 +604,9 @@ public class IssueTicketService {
         }
         return cookieHeader.toString();
     }
+
+    protected CloseableHttpClient createHttpClient() {
+        return HttpClients.createDefault();
+    }
+
 }

@@ -1,13 +1,9 @@
 package com.bbva.database.mappers;
 
-import com.bbva.entities.User;
 import com.bbva.entities.issueticket.WorkOrder;
 import com.bbva.entities.issueticket.WorkOrderDetail;
-import com.bbva.entities.issueticket.WorkOrderInsertResult;
-import com.bbva.entities.template.TemplateEntity;
 import org.apache.ibatis.annotations.*;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 

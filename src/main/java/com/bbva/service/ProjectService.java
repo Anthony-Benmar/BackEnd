@@ -79,6 +79,11 @@ public class ProjectService {
         return new SuccessDataResult<>(result);
     }
 
+    public IDataResult<List<ProjectCatalogDtoResponse>> listProjectCatalog(String sdatoolId) {
+        var result = projectDao.listProjectCatalog(sdatoolId);
+        return new SuccessDataResult<>(result);
+    }
+
     public IDataResult<List<ProjectListForSelectDtoResponse>> listForSelect() {
         var result = projectDao.listForSelect();
         return new SuccessDataResult<>(result, "Succesfull");

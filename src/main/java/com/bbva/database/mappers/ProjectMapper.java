@@ -8,10 +8,7 @@ import com.bbva.entities.InsertEntity;
 import com.bbva.entities.common.ProjectByPeriodEntity;
 import com.bbva.entities.common.ProjectEntity;
 import com.bbva.entities.feature.JiraFeatureEntity;
-import com.bbva.entities.project.ProjectPortafolioEntity;
-import com.bbva.entities.project.ProjectFilterEntity;
-import com.bbva.entities.project.ProjectPortafolioFilterEntity;
-import com.bbva.entities.project.ProjectStatusEntity;
+import com.bbva.entities.project.*;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;
@@ -82,6 +79,18 @@ public interface ProjectMapper {
 
     @Select("CALL SP_LIST_PROJECTS_BY_PERIOD(#{period_id})")
     List<ProjectByPeriodEntity> listProjectsByPeriod(@Param("period_id") String period_id);
+
+    @Select("CALL SP_LIST_PROJECT_CATALOG_BY_PARAMS(#{sdatool_id}, NULL, NULL)")
+    @Results({ // NOSONAR - MyBatis requires @Results wrapper for multiple @Result annotations
+            @Result(property = "sdatoolId", column = "sdatool_id"),
+            @Result(property = "projectName", column = "project_name"),
+            @Result(property = "sn1", column = "sn1"),
+            @Result(property = "sn1Desc", column = "sn1_desc"),
+            @Result(property = "sn2", column = "sn2"),
+            @Result(property = "sn2ProjectId", column = "sn2_projectId"),
+            @Result(property = "codigo5Digitos", column = "codigo_5_digitos")
+    })
+    List<ProjectCatalogEntity> listProjectCatalog(@Param("sdatool_id") String sdatoolId);
 
     @Insert("INSERT INTO data_project(project_name, project_desc, sdatool_id, status_type, product_owner_id, portafolio_code, " +
             "project_type, project_domain_type, sponsor_owner_id, rule_associated_link, " +
