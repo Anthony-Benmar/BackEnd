@@ -21,6 +21,7 @@ import com.bbva.entities.feature.JiraFeatureEntity;
 import com.bbva.entities.issueticket.WorkOrder;
 import com.bbva.entities.issueticket.WorkOrderDetail;
 import com.bbva.util.GsonConfig;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
@@ -44,7 +45,6 @@ import org.apache.http.util.EntityUtils;
 import java.net.http.HttpClient;
 import java.time.Instant;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class IssueTicketService {
     protected final IssueTicketDao issueTicketDao = new IssueTicketDao();
@@ -85,7 +85,6 @@ public class IssueTicketService {
 
         try(CloseableHttpResponse response = httpclient.execute(httpPost)) {
             Integer responseCode = response.getStatusLine().getStatusCode();
-
             if (responseCode >= 400) {
                 throw new HandledException(responseCode.toString(), "Error autenticación jira");
             }
@@ -204,7 +203,8 @@ public class IssueTicketService {
         ));
     }
 
-    private IssueResponse createJiraFeature(WorkOrderDtoRequest2 dto) throws Exception {
+    @VisibleForTesting
+    protected IssueResponse createJiraFeature(WorkOrderDtoRequest2 dto) throws Exception {
 
         String idSdaProject = callJiraGetIdSda(dto);
         dto.setE2e(idSdaProject);
@@ -221,7 +221,7 @@ public class IssueTicketService {
         return callJiraCreateFeatureSingle(dto, featureRequest);
     }
 
-    private String convertPIToQuarter(String piFormat) {
+    protected String convertPIToQuarter(String piFormat) {
         if (piFormat == null || !piFormat.matches("PI[1-4]-\\d{2}")) {
             throw new IllegalArgumentException("Formato inválido. Se esperaba PIX-YY (ej: PI2-25)");
         }
@@ -231,7 +231,7 @@ public class IssueTicketService {
         return fullYear + "-Q" + quarter;
     }
 
-    private String callJiraGetIdSda(WorkOrderDtoRequest2 dto) throws Exception {
+    protected String callJiraGetIdSda(WorkOrderDtoRequest2 dto) throws Exception {
         Gson gson = GsonConfig.createGson();
 
         String issueKey = dto.getE2e();
@@ -265,7 +265,7 @@ public class IssueTicketService {
         JsonObject jsonResponse = gson.fromJson(responseBodyString, JsonObject.class);
         return jsonResponse.get("id").getAsString();
     }
-    private IssueResponse callJiraCreateFeatureSingle(WorkOrderDtoRequest2 objAuth, IssueFeatureDto featureRequest) throws Exception {
+    protected IssueResponse callJiraCreateFeatureSingle(WorkOrderDtoRequest2 objAuth, IssueFeatureDto featureRequest) throws Exception {
         Gson gson = GsonConfig.createGson();
         String jsonString = gson.toJson(featureRequest);
 
@@ -381,7 +381,7 @@ public class IssueTicketService {
         return new SuccessDataResult(modelo);
     }
 
-    private void createTicketJira2(WorkOrderDtoRequest objAuth, IssueBulkDto issuesRequests, List<WorkOrderDetail> workOrderDetail)
+   protected void createTicketJira2(WorkOrderDtoRequest objAuth, IssueBulkDto issuesRequests, List<WorkOrderDetail> workOrderDetail)
             throws Exception
     {
         var issuesGenerates = postResponseAsync3(objAuth, issuesRequests);
@@ -389,7 +389,7 @@ public class IssueTicketService {
             workOrderDetail.get(i).setIssue_code(issuesGenerates.issues.get(i).getKey());
         }
     }
-    private void createTicketJira3(WorkOrderDtoRequest2 objAuth, IssueBulkDto issuesRequests, List<WorkOrderDetail> workOrderDetail)
+    protected void createTicketJira3(WorkOrderDtoRequest2 objAuth, IssueBulkDto issuesRequests, List<WorkOrderDetail> workOrderDetail)
             throws Exception
     {
         var issuesGenerates = createIssuesInBatches(objAuth, issuesRequests);
@@ -398,7 +398,7 @@ public class IssueTicketService {
         }
     }
 
-    private List<String> updateTicketJira(WorkOrderDtoRequest dto, WorkOrder workOrder, List<WorkOrderDetail> workOrderDetail)
+    protected List<String> updateTicketJira(WorkOrderDtoRequest dto, WorkOrder workOrder, List<WorkOrderDetail> workOrderDetail)
             throws Exception
     {
         httpClient = HttpClient.newHttpClient();
@@ -422,7 +422,7 @@ public class IssueTicketService {
         return ticketsUpdates;
     }
 
-    private IssueBulkResponse postResponseAsync3(WorkOrderDtoRequest objAuth, IssueBulkDto issueJira)
+    IssueBulkResponse postResponseAsync3(WorkOrderDtoRequest objAuth, IssueBulkDto issueJira)
             throws Exception
     {
         Gson gson = GsonConfig.createGson();
@@ -455,7 +455,7 @@ public class IssueTicketService {
         return gson.fromJson(responseBodyString, IssueBulkResponse.class);
     }
 
-    private IssueBulkResponse postResponseAsync4(WorkOrderDtoRequest2 objAuth, IssueBulkDto issueJira)
+   protected IssueBulkResponse postResponseAsync4(WorkOrderDtoRequest2 objAuth, IssueBulkDto issueJira)
             throws Exception
     {
         // NOTA: el api bulk de jira permite hasta 50 issues por petición
@@ -522,7 +522,7 @@ public class IssueTicketService {
         return combineResponses(responses);
     }
 
-    private IssueBulkResponse combineResponses(List<IssueBulkResponse> responses) {
+   protected IssueBulkResponse combineResponses(List<IssueBulkResponse> responses) {
         IssueBulkResponse combined = new IssueBulkResponse();
         List<IssueDto> allIssues = new ArrayList<>();
 
@@ -537,7 +537,7 @@ public class IssueTicketService {
         return combined;
     }
 
-    private Integer PutResponseEditAsync(WorkOrderDtoRequest objAuth,String issueTicketCode, IssueDto issueJira)
+    protected Integer PutResponseEditAsync(WorkOrderDtoRequest objAuth,String issueTicketCode, IssueDto issueJira)
             throws Exception
     {
         Gson gson = GsonConfig.createGson();
@@ -566,7 +566,7 @@ public class IssueTicketService {
         return responseCode;
     }
 
-    private String GetResponseAsync(String username, String password, String apiPath)
+    protected String GetResponseAsync(String username, String password, String apiPath)
             throws Exception
     {
         HttpGet httpGet = new HttpGet(URL_API_BASE + apiPath);
