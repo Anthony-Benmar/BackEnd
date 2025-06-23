@@ -155,7 +155,7 @@ class IssueTicketServiceTest {
     }
 
     @Test
-    public void testInsert_WhenDuplicateRecord_ShouldReturnError() throws Exception {
+    void testInsert_WhenDuplicateRecord_ShouldReturnError() throws Exception {
         WorkOrderDtoRequest dto = createValidDto();
         when(issueTicketDaoMock.findRecordWorkOrder(any(WorkOrder.class))).thenReturn(1);
 
@@ -167,7 +167,7 @@ class IssueTicketServiceTest {
     }
 
     @Test
-    public void testInsert_WhenJiraCreationFails_ShouldReturnHandledError() throws Exception {
+    void testInsert_WhenJiraCreationFails_ShouldReturnHandledError() throws Exception {
         // Arrange
         WorkOrderDtoRequest dto = createValidDto();
         when(issueTicketDaoMock.findRecordWorkOrder(any(WorkOrder.class))).thenReturn(0);
@@ -186,7 +186,7 @@ class IssueTicketServiceTest {
     }
 
     @Test
-    public void testInsert_WhenUnexpectedException_ShouldReturnGenericError() throws Exception {
+    void testInsert_WhenUnexpectedException_ShouldReturnGenericError() throws Exception {
         // Arrange
         WorkOrderDtoRequest dto = createValidDto();
         when(issueTicketDaoMock.findRecordWorkOrder(any(WorkOrder.class))).thenReturn(0);
@@ -232,7 +232,7 @@ class IssueTicketServiceTest {
 
 
     @Test
-    public void testInsert2_MixedResults() throws Exception {
+    void testInsert2_MixedResults() throws Exception {
         // Arrange
         WorkOrderDtoRequest2 validDto = createValidDto("VALID");
         WorkOrderDtoRequest2 invalidDto = createInvalidDto();
@@ -263,7 +263,7 @@ class IssueTicketServiceTest {
     }
 
     @Test
-    public void testInsert2_DuplicateRecord() throws Exception {
+    void testInsert2_DuplicateRecord() throws Exception {
         // Arrange
         WorkOrderDtoRequest2 dto = createValidDto("FEATURE-1");
         List<WorkOrderDtoRequest2> dtos = List.of(dto);
@@ -286,7 +286,7 @@ class IssueTicketServiceTest {
     }
 
     @Test
-    public void testInsert2_JiraCreationFails() throws Exception {
+    void testInsert2_JiraCreationFails() throws Exception {
         // Arrange
         WorkOrderDtoRequest2 dto = createValidDto("FEATURE-1");
         List<WorkOrderDtoRequest2> dtos = List.of(dto);
@@ -332,8 +332,6 @@ class IssueTicketServiceTest {
 
     @Test
     void test_postResponseAsync3_lanza_excepcion_si_response_400() throws Exception {
-        IssueTicketService service = Mockito.spy(new IssueTicketService());
-
         doNothing().when(service).getBasicSession(anyString(), anyString(), any(CloseableHttpClient.class));
 
         WorkOrderDtoRequest dto = new WorkOrderDtoRequest();
@@ -391,8 +389,6 @@ class IssueTicketServiceTest {
 
     @Test
     void test_postResponseAsync4_lanza_excepcion_si_response_400() throws Exception {
-        IssueTicketService service = Mockito.spy(new IssueTicketService());
-
         doNothing().when(service).getBasicSession(anyString(), anyString(), any(CloseableHttpClient.class));
 
         WorkOrderDtoRequest2 dto = new WorkOrderDtoRequest2();
@@ -449,7 +445,7 @@ class IssueTicketServiceTest {
         List<WorkOrderDetail> details = List.of(detail);
         List<String> fakeUpdates = List.of("HU-001");
 
-        doReturn(jsonResponse).when(service).GetResponseAsync(anyString(), anyString(), anyString());
+        doReturn(jsonResponse).when(service).getResponseAsync(anyString(), anyString(), anyString());
         when(issueTicketDaoMock.ListWorkOrder(1)).thenReturn(List.of(workOrder));
         when(issueTicketDaoMock.ListWorkOrderDetails(1)).thenReturn(details);
         doReturn(fakeUpdates).when(service).updateTicketJira(any(), any(), any());
@@ -541,13 +537,8 @@ class IssueTicketServiceTest {
 
     @Test
     void test_createIssuesInBatches_divideEnLotesYCombinaRespuestas() throws Exception {
-        IssueTicketService service = Mockito.spy(new IssueTicketService());
-
         List<IssueUpdate> issueList = IntStream.range(0, 65)
-                .mapToObj(i -> {
-                    IssueUpdate issue = new IssueUpdate();
-                    return issue;
-                }).collect(Collectors.toList());
+                .mapToObj(i -> new IssueUpdate()).toList();
 
         IssueBulkDto issueBulkDto = new IssueBulkDto();
         issueBulkDto.setIssueUpdates(issueList);
@@ -570,8 +561,6 @@ class IssueTicketServiceTest {
 
     @Test
     void test_combineResponses_combinaIssuesCorrectamente() {
-        IssueTicketService service = new IssueTicketService();
-
         IssueDto issue1 = new IssueDto();
         issue1.setKey("ISSUE-1");
         IssueDto issue2 = new IssueDto();
@@ -621,7 +610,7 @@ class IssueTicketServiceTest {
         field.setAccessible(true);
         field.set(serviceSpy, cookieStore);
 
-        Integer status = serviceSpy.PutResponseEditAsync(auth, code, dto);
-        assertEquals(status, 401);
+        Integer status = serviceSpy.putResponseEditAsync(auth, code, dto);
+        assertEquals(401, status);
     }
 }

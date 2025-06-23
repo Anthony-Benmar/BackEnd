@@ -309,7 +309,7 @@ public class IssueTicketService {
                 return new ErrorDataResult(null,"500","Es necesario el código de registro (workOrderId) para la edición");
             }
 
-            var issueMetadataJson = GetResponseAsync(dto.username, dto.token,URL_API_JIRA_ISSUE + dto.feature);
+            var issueMetadataJson = getResponseAsync(dto.username, dto.token,URL_API_JIRA_ISSUE + dto.feature);
             var issueMetadata = JsonParser.parseString(issueMetadataJson).getAsJsonObject();
             var issueKey = issueMetadata.get("key").getAsString();
 
@@ -409,7 +409,7 @@ public class IssueTicketService {
         List<String> ticketsUpdates = new ArrayList();
         for (Map.Entry<String, IssueDto> issue : issuesRequests.entrySet())
         {
-            responseCode = PutResponseEditAsync(dto, issue.getKey(), issue.getValue());
+            responseCode = putResponseEditAsync(dto, issue.getKey(), issue.getValue());
             if (responseCode>=400 && responseCode<=500) {
                 nroFails = nroFails + 1;
             }else{
@@ -537,7 +537,7 @@ public class IssueTicketService {
         return combined;
     }
 
-    protected Integer PutResponseEditAsync(WorkOrderDtoRequest objAuth,String issueTicketCode, IssueDto issueJira)
+    protected Integer putResponseEditAsync(WorkOrderDtoRequest objAuth,String issueTicketCode, IssueDto issueJira)
             throws Exception
     {
         Gson gson = GsonConfig.createGson();
@@ -566,7 +566,7 @@ public class IssueTicketService {
         return responseCode;
     }
 
-    protected String GetResponseAsync(String username, String password, String apiPath)
+    protected String getResponseAsync(String username, String password, String apiPath)
             throws Exception
     {
         HttpGet httpGet = new HttpGet(URL_API_BASE + apiPath);
