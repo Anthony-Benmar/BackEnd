@@ -64,6 +64,38 @@ class IssueTicketServiceTest {
     }
 
     @Test
+    void testConvertPIToQuarter_nullInput() {
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
+            service.convertPIToQuarter(null);
+        });
+        assertEquals("Formato inválido. Se esperaba PIX-YY (ej: PI2-25)", ex.getMessage());
+    }
+
+    @Test
+    void testConvertPIToQuarter_invalidFormat() {
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
+            service.convertPIToQuarter("INVALID");
+        });
+        assertEquals("Formato inválido. Se esperaba PIX-YY (ej: PI2-25)", ex.getMessage());
+    }
+
+    @Test
+    void testConvertPIToQuarter_invalidQuarter() {
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
+            service.convertPIToQuarter("PI5-25"); // Quarter 5 no existe
+        });
+        assertEquals("Formato inválido. Se esperaba PIX-YY (ej: PI2-25)", ex.getMessage());
+    }
+
+    @Test
+    void testConvertPIToQuarter_allValidQuarters() {
+        assertEquals("2025-Q1", service.convertPIToQuarter("PI1-25"));
+        assertEquals("2025-Q2", service.convertPIToQuarter("PI2-25"));
+        assertEquals("2025-Q3", service.convertPIToQuarter("PI3-25"));
+        assertEquals("2025-Q4", service.convertPIToQuarter("PI4-25"));
+    }
+
+    @Test
     void expiredTokenValidate_ShouldReturnTrueWhenExpired() {
         long expired = Instant.now().minusSeconds(3600).getEpochSecond();
         assertTrue(service.expiredTokenValidate(expired));
@@ -437,7 +469,7 @@ class IssueTicketServiceTest {
                 .thenReturn(issueMap);
 
         // Simular que el PUT devuelve éxito (200)
-        doReturn(200).when(service).putResponseEditAsync(eq(dto), eq("HU-1"), eq(issueDto));
+        doReturn(200).when(service).putResponseEditAsync(dto, "HU-1", issueDto);
 
         // Act
         List<String> updatedTickets = service.updateTicketJira(dto, workOrder, detailList);
@@ -468,7 +500,7 @@ class IssueTicketServiceTest {
                 .thenReturn(issueMap);
 
         // Simular error 400
-        doReturn(400).when(service).putResponseEditAsync(eq(dto), eq("HU-1"), eq(issueDto));
+        doReturn(400).when(service).putResponseEditAsync(dto, "HU-1", issueDto);
 
         // Act & Assert
         HandledException ex = assertThrows(
@@ -482,8 +514,7 @@ class IssueTicketServiceTest {
     @Test
     void testCallJiraGetIdSda_success() throws Exception {
         // Arrange
-        IssueTicketService service = Mockito.spy(new IssueTicketService());
-
+        IssueTicketService issueService = Mockito.spy(new IssueTicketService());
         WorkOrderDtoRequest2 dto = new WorkOrderDtoRequest2();
         dto.setUsername("user");
         dto.setToken("token123");
@@ -496,12 +527,10 @@ class IssueTicketServiceTest {
         CloseableHttpResponse httpResponseMock = mock(CloseableHttpResponse.class);
         HttpEntity httpEntityMock = mock(HttpEntity.class);
         StatusLine statusLineMock = mock(StatusLine.class);
-
         String jsonResponse = "{\"id\": \"" + expectedId + "\"}";
 
         // Stubbing
-        doNothing().when(service).getBasicSession(any(), any(), any());
-
+        doNothing().when(issueService).getBasicSession(any(), any(), any());
         when(httpClientMock.execute(any(HttpGet.class))).thenReturn(httpResponseMock);
         when(httpResponseMock.getStatusLine()).thenReturn(statusLineMock);
         when(statusLineMock.getStatusCode()).thenReturn(200);
@@ -509,7 +538,7 @@ class IssueTicketServiceTest {
         when(httpEntityMock.getContent()).thenReturn(new java.io.ByteArrayInputStream(jsonResponse.getBytes()));
 
         // Sobrescribe internamente HttpClient
-        doReturn(httpClientMock).when(service).createHttpClient(); // si existe createHttpClient() como método separado
+        doReturn(httpClientMock).when(issueService).createHttpClient();
 
         // Act
         String actualId;
