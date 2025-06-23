@@ -64,31 +64,19 @@ class IssueTicketServiceTest {
     }
 
     @Test
-    void testConvertPIToQuarter_nullInput() {
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
-            service.convertPIToQuarter(null);
-        });
-        assertEquals("Formato inválido. Se esperaba PIX-YY (ej: PI2-25)", ex.getMessage());
+    void testConvertPIToQuarter_invalidInputs() {
+        // Test casos inválidos
+        String[] invalidInputs = {null, "INVALID", "PI5-25"};
+        for (String input : invalidInputs) {
+            IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
+                service.convertPIToQuarter(input);
+            });
+            assertEquals("Formato inválido. Se esperaba PIX-YY (ej: PI2-25)", ex.getMessage());
+        }
     }
 
     @Test
-    void testConvertPIToQuarter_invalidFormat() {
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
-            service.convertPIToQuarter("INVALID");
-        });
-        assertEquals("Formato inválido. Se esperaba PIX-YY (ej: PI2-25)", ex.getMessage());
-    }
-
-    @Test
-    void testConvertPIToQuarter_invalidQuarter() {
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
-            service.convertPIToQuarter("PI5-25"); // Quarter 5 no existe
-        });
-        assertEquals("Formato inválido. Se esperaba PIX-YY (ej: PI2-25)", ex.getMessage());
-    }
-
-    @Test
-    void testConvertPIToQuarter_allValidQuarters() {
+    void testConvertPIToQuarter_validInputs() {
         assertEquals("2025-Q1", service.convertPIToQuarter("PI1-25"));
         assertEquals("2025-Q2", service.convertPIToQuarter("PI2-25"));
         assertEquals("2025-Q3", service.convertPIToQuarter("PI3-25"));
