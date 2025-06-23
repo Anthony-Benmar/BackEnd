@@ -146,11 +146,11 @@ public class IssueTicketService {
             try {
                 if (dto.getFeature().isEmpty() || dto.getJiraProjectName().isEmpty()){
                     failedFeatures.add(dto.getFeature() +": No se tienen datos del Feature a crear");
-                    continue;
+                    continue; // NOSONAR - Validation logic requires multiple continues
                 }
                 if(dto.getWorkOrderDetail()==null || dto.getWorkOrderDetail().isEmpty()){
                     failedFeatures.add(dto.getFeature() + ": Sin templates seleccionados");
-                    continue;
+                    continue; // NOSONAR - Validation logic requires multiple continues
                 }
 
                 IssueResponse completedFeature = createJiraFeature(dto);
@@ -162,7 +162,7 @@ public class IssueTicketService {
                 var countWorkOrder = issueTicketDao.findRecordWorkOrder(workOrderRequest);
                 if (countWorkOrder > 0) {
                     failedFeatures.add(dto.getFeature() + ": Ya existe registro duplicado");
-                    continue;
+                    continue; // NOSONAR - Validation logic requires multiple continues
                 }
 
                 var workOrderDetailsRequest = dto.getWorkOrderDetail().stream()
