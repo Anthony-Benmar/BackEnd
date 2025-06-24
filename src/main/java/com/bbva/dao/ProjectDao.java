@@ -85,7 +85,7 @@ public class ProjectDao {
             return projectList;
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
-            return null;
+            return Collections.emptyList();
         }
     }
 
