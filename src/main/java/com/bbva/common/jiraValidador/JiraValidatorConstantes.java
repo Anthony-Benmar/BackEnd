@@ -132,7 +132,7 @@ public class JiraValidatorConstantes {
         Map<String, List<String>> mapAttachByDevTypes = new HashMap<>();
         mapAttachByDevTypes.put(MALLAS, new ArrayList<>(List.of(C204,P110)));
         mapAttachByDevTypes.put(PRS, new ArrayList<>(List.of(C204)));
-        mapAttachByDevTypes.put(HAMMURABI, new ArrayList<>(List.of(C204,"RC")));
+        mapAttachByDevTypes.put(HAMMURABI, new ArrayList<>(List.of(C204)));
         mapAttachByDevTypes.put(HOST, new ArrayList<>(List.of(C204,P110)));
         mapAttachByDevTypes.put(MIGRATIONTOOL, new ArrayList<>(List.of(C204)));
         mapAttachByDevTypes.put(SMARTCLEANER, new ArrayList<>(List.of(C204)));
