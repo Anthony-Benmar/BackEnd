@@ -131,10 +131,10 @@ class ProjectDaoTest {
         int projectId = 1;
 
         List<CatalogEntity> mockCatalogData = new ArrayList<>();
-        mockCatalogData.add(new CatalogEntity(1037, 1037, "DESCRIPTION_PARTICIPANTS", 1));
-        mockCatalogData.add(new CatalogEntity(1037, 1, "Participante 1", 2));
-        mockCatalogData.add(new CatalogEntity(1036, 1036, "DESCRIPTION_DOCUMENTS", 1));
-        mockCatalogData.add(new CatalogEntity(1036, 2, "Documento 2", 2));
+        mockCatalogData.add(new CatalogEntity(1037, 1037, "DESCRIPTION_PARTICIPANTS","desc 001", 1));
+        mockCatalogData.add(new CatalogEntity(1037, 1, "Participante 1", "desc 001",2));
+        mockCatalogData.add(new CatalogEntity(1036, 1036, "DESCRIPTION_DOCUMENTS","desc 002", 1));
+        mockCatalogData.add(new CatalogEntity(1036, 2, "Documento 2","desc 002", 2));
 
         when(catalogMapperMock.getListByCatalog(any(int[].class))).thenReturn(new ArrayList<>(mockCatalogData));
         when(projectMapperMock.getProjectParticipants(projectId)).thenReturn(Collections.emptyList());

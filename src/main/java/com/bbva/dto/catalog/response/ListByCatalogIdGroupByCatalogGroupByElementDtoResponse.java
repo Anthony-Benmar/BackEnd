@@ -8,4 +8,5 @@ import lombok.Setter;
 public class ListByCatalogIdGroupByCatalogGroupByElementDtoResponse {
     private int elementId;
     private String description;
+    private String elementDesc;
 }

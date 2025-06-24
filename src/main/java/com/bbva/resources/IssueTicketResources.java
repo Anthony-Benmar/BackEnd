@@ -22,7 +22,7 @@ public class IssueTicketResources {
     @Path("/insert")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public IDataResult insert(WorkOrderDtoRequest dto)
+    public IDataResult<Void> insert(WorkOrderDtoRequest dto)
             throws Exception
     {
         return issueTicketService.insert(dto);
