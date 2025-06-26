@@ -433,33 +433,39 @@ public class JiraValidationMethods {
 
     private String generateMessageForSubTasks(String tipoDesarrollo, SubTaskResult result, List<String> foundSpecialLabel, List<String> aditionalSpecialSubtask, List<String> requiredSubTasks) {
         StringBuilder message = new StringBuilder();
-
         if (new HashSet<>(result.foundSubTasks).containsAll(requiredSubTasks)) {
-            message.append("Todas las subtareas requeridas fueron encontradas: ").append(String.join(", ", requiredSubTasks)).append(".\n");
-            if (!result.additionalSubTasks.isEmpty()) {
-                message.append(" También se encontraron subtareas adicionales: ").append(String.join(", ", result.additionalSubTasks)).append(".\n");
-                if (tipoDesarrollo.equals(MALLAS)) {
-                    if (!foundSpecialLabel.isEmpty() && result.foundSpecialSubtasks.isEmpty()) {
-                        message.append(MSG_RULE_NOSUBTAREA).append(String.join(", ", aditionalSpecialSubtask));
-                    } else if (foundSpecialLabel.isEmpty() && !result.foundSpecialSubtasks.isEmpty()) {
-                        message.append(MSG_RULE_RECOMENDATIONSUBTAREA).append(String.join(", ", aditionalSpecialSubtask)).append(" para casos especiales.");
-                    }
+            generateMessageAllSubtaskFounded(message,tipoDesarrollo,result,foundSpecialLabel,aditionalSpecialSubtask,requiredSubTasks);
+        } else {
+            generateMessageMissingSubtask(message,tipoDesarrollo,result,requiredSubTasks);
+        }
+        return message.toString();
+    }
+
+    private void generateMessageAllSubtaskFounded(StringBuilder message, String tipoDesarrollo, SubTaskResult result, List<String> foundSpecialLabel, List<String> aditionalSpecialSubtask, List<String> requiredSubTasks){
+        message.append("Todas las subtareas requeridas fueron encontradas: ").append(String.join(", ", requiredSubTasks)).append(".\n");
+        if (!result.additionalSubTasks.isEmpty()) {
+            message.append(" También se encontraron subtareas adicionales: ").append(String.join(", ", result.additionalSubTasks)).append(".\n");
+            if (tipoDesarrollo.equals(MALLAS)) {
+                if (!foundSpecialLabel.isEmpty() && result.foundSpecialSubtasks.isEmpty()) {
+                    message.append(MSG_RULE_NOSUBTAREA).append(String.join(", ", aditionalSpecialSubtask));
+                } else if (foundSpecialLabel.isEmpty() && !result.foundSpecialSubtasks.isEmpty()) {
+                    message.append(MSG_RULE_RECOMENDATIONSUBTAREA).append(String.join(", ", aditionalSpecialSubtask)).append(" para casos especiales.");
                 }
             }
-        } else {
-            List<String> missingSubTasks = new ArrayList<>(requiredSubTasks);
-            missingSubTasks.removeAll(result.foundSubTasks);
-            if(tipoDesarrollo.equalsIgnoreCase(PROCESAMIENTO) && missingSubTasks.contains(VB_ADA)){
-                message.append("Validar "+VB_ADA+" para Procesamiento Scala es obligatorio, para Procesamiento Scaffolder no es necesaria.\n");
-                result.hasWarnings = true;
-                missingSubTasks.remove(VB_ADA);
-            }
-            if(!missingSubTasks.isEmpty()) {
-                message.append("Faltan las siguientes subtareas: ").append(String.join(", ", missingSubTasks)).append(". ");
-            }
         }
+    }
 
-        return message.toString();
+    private void generateMessageMissingSubtask(StringBuilder message, String tipoDesarrollo, SubTaskResult result, List<String> requiredSubTasks){
+        List<String> missingSubTasks = new ArrayList<>(requiredSubTasks);
+        missingSubTasks.removeAll(result.foundSubTasks);
+        if(tipoDesarrollo.equalsIgnoreCase(PROCESAMIENTO) && missingSubTasks.contains(VB_ADA)){
+            message.append("Validar "+VB_ADA+" para Procesamiento Scala es obligatorio, para Procesamiento Scaffolder no es necesaria.\n");
+            result.hasWarnings = true;
+            missingSubTasks.remove(VB_ADA);
+        }
+        if(!missingSubTasks.isEmpty()) {
+            message.append("Faltan las siguientes subtareas: ").append(String.join(", ", missingSubTasks)).append(". ");
+        }
     }
 
     private static class SubTaskResult {
