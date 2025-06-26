@@ -449,7 +449,14 @@ public class JiraValidationMethods {
         } else {
             List<String> missingSubTasks = new ArrayList<>(requiredSubTasks);
             missingSubTasks.removeAll(result.foundSubTasks);
-            message.append("Faltan las siguientes subtareas: ").append(String.join(", ", missingSubTasks)).append(". ");
+            if(tipoDesarrollo.equalsIgnoreCase(PROCESAMIENTO) && missingSubTasks.contains(VB_ADA)){
+                message.append("Validar "+VB_ADA+" para Procesamiento Scala es obligatorio, para Procesamiento Scaffolder no es necesaria.\n");
+                result.hasWarnings = true;
+                missingSubTasks.remove(VB_ADA);
+            }
+            if(!missingSubTasks.isEmpty()) {
+                message.append("Faltan las siguientes subtareas: ").append(String.join(", ", missingSubTasks)).append(". ");
+            }
         }
 
         return message.toString();

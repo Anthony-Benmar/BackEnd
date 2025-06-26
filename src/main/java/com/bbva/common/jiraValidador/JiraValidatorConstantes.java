@@ -166,10 +166,10 @@ public class JiraValidatorConstantes {
         LABELS_BY_DEVELOP_TYPES = Collections.unmodifiableMap(mapLabelsByDevTypes);
 
         Map<String, List<String>> mapTicketHuTypes = new HashMap<>();
-        mapTicketHuTypes.put(MALLAS, DEPENDENCY);
+        mapTicketHuTypes.put(MALLAS, STORY);
         mapTicketHuTypes.put(PRS, STORY);
         mapTicketHuTypes.put(PRODUCTIVIZACION, STORY);
-        mapTicketHuTypes.put(HOST, DEPENDENCY);
+        mapTicketHuTypes.put(HOST, STORY);
         mapTicketHuTypes.put(HAMMURABI, STORY);
         mapTicketHuTypes.put(MIGRATIONTOOL, STORY);
         mapTicketHuTypes.put(SMARTCLEANER, STORY);
