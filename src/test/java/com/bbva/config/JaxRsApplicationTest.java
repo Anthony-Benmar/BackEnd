@@ -21,7 +21,6 @@ class JaxRsApplicationTest {
         // When
         final Set<Class<?>> classes = jaxRsApplication.getClasses();
 
-        // Then
-        assertEquals(27, classes.size());
+        assertEquals(31, classes.size());
     }
 }
