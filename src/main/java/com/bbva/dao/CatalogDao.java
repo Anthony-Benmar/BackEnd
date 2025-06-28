@@ -72,6 +72,7 @@ public class CatalogDao {
 
                             objectElement.setElementId(element.getElementId());
                             objectElement.setDescription(element.getElementName());
+                            objectElement.setElementDesc(element.getElementDesc());
 
                             listElement.add(objectElement);
                         });
@@ -79,7 +80,7 @@ public class CatalogDao {
                 String description = filterByCatalogId
                         .stream()
                         .filter(f -> f.getElementId() == catalogId)
-                        .findFirst().orElse(new CatalogEntity(0,0,"",0))
+                        .findFirst().orElse(new CatalogEntity(0,0,"", "", 0))
                         .getElementName();
 
                 objectCatalog.setCatalogId(catalogId);

@@ -14,7 +14,7 @@ import java.util.List;
 
 public interface CatalogMapper {
     @Select({"<script>" +
-            "SELECT c.catalog_id,c.element_id,c.element_name,c.status_type FROM catalog c " +
+            "SELECT c.catalog_id,c.element_id,c.element_name, c.element_desc, c.status_type FROM catalog c " +
             "WHERE c.status_type = 1 AND c.catalog_id IN " +
             "<foreach item='item' index='index' collection='list' open='(' separator=',' close=')'> #{item} </foreach>" +
             "</script>"})

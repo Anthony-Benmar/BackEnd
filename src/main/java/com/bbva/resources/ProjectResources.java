@@ -88,6 +88,13 @@ public class ProjectResources {
         return result;
     }
 
+    @GET
+    @Path("/{sdatoolId}/listprojectcatalog")
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<List<ProjectCatalogDtoResponse>> projectCatalogList(@PathParam("sdatoolId") String sdatoolId) {
+        return projectService.listProjectCatalog(sdatoolId);
+    }
+
     @POST
     @Path("/listAll")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -273,7 +280,6 @@ public class ProjectResources {
     {
         return projectService.getAllProjects();
     }
-
     @GET
     @Path("/{projectId}/validate")
     @Consumes(MediaType.APPLICATION_JSON)

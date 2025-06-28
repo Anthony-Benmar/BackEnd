@@ -8,7 +8,6 @@ import javax.ws.rs.ext.Provider;
 
 @Provider
 public class CorsFeature implements Feature {
-
     @Override
     public boolean configure(FeatureContext context) {
         CorsFilter corsFilter = new CorsFilter();

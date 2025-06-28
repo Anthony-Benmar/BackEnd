@@ -1,12 +1,12 @@
 package com.bbva.dto.jira.request;
 
-import com.bbva.dto.jira.request.*;
 import lombok.Getter;
 import lombok.Setter;
 
 import javax.annotation.Nullable;
 import java.time.LocalDateTime;
 import java.util.List;
+
 
 @Setter
 @Getter
@@ -70,8 +70,8 @@ public class Fields {
     public Object customfield_12321;
     public Object customfield_10263;
     public Object customfield_12320;
-    public Object customfield_10264;
-    public List<Object> customfield_14623;
+    public List<String> customfield_10264; // NOSONAR - JIRA API field name format required
+    public List<Object> customfield_14623; // NOSONAR - JIRA API field name format required
     public Object customfield_18302;
     public Object customfield_12322;
     public Object customfield_18303;
@@ -251,4 +251,10 @@ public class Fields {
     public Customfield customfield_12143;
     public Customfield customfield_13900;
     public Customfield customfield_11604;
+    public Customfield customfield_10265; // NOSONAR - JIRA API field name format required
+    public Customfield customfield_19001; // NOSONAR - JIRA API field name format required
+    public List<Customfield> customfield_10601; // NOSONAR - JIRA API field name format required
+    public List<Customfield> customfield_10600; // NOSONAR - JIRA API field name format required
+    public String customfield_10006; // NOSONAR - JIRA API field name format required
+    public String customfield_12323; // NOSONAR - JIRA API field name format required
 }
