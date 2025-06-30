@@ -39,7 +39,7 @@ class AdaServiceTest {
 
         AdaJobExecutionFilterResponseDTO mockResponse = new AdaJobExecutionFilterResponseDTO();
         mockResponse.setCount(3);
-        mockResponse.setPages_amount(1);
+        mockResponse.setPagesAmount(1);
 
         when(adaDaoMock.filter(dto)).thenReturn(mockResponse);
         IDataResult<AdaJobExecutionFilterResponseDTO> result = adaService.filter(dto);

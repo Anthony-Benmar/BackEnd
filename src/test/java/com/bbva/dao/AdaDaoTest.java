@@ -65,18 +65,18 @@ class AdaDaoTest {
                 adaJobExecutionFilterData
         );
 
-        when(mockAdaMapper.filter(1, 3, null, null, null, null, null, null, null, "CS")).thenReturn(mockList);
+        when(mockAdaMapper.filter(request)).thenReturn(mockList);
 
         AdaJobExecutionFilterResponseDTO response = adaDao.filter(request);
 
         assertNotNull(response);
         assertEquals(3, response.getCount());
-        assertEquals(1, response.getPages_amount());
+        assertEquals(1, response.getPagesAmount());
         assertEquals(3, response.getData().size());
 
         verify(mockSqlSessionFactory).openSession();
         verify(mockSqlSession).getMapper(AdaMapper.class);
-        verify(mockAdaMapper).filter(1, 3, null, null, null, null, null, null, null, "CS");
+        verify(mockAdaMapper).filter(request);
         verify(mockSqlSession).close();
     }
 }

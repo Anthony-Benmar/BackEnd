@@ -30,7 +30,6 @@ public class AdaResources {
             @QueryParam("jobType") String jobType,
             @QueryParam("serverExecution") String serverExecution,
             @QueryParam("domain") String domain
-
     ){
         AdaJobExecutionFilterRequestDTO dto = new AdaJobExecutionFilterRequestDTO();
         Integer recordsAmountFinal = helper.parseIntegerOrDefault(recordsAmount, 10);

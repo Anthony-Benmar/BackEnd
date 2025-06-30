@@ -11,6 +11,6 @@ import java.util.List;
 @Data
 public class AdaJobExecutionFilterResponseDTO {
     private int count;
-    private int pages_amount;
+    private int pagesAmount;
     private List<AdaJobExecutionFilterData> data;
 }

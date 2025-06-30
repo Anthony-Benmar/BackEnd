@@ -16,29 +16,19 @@ public class AdaDao {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         List<AdaJobExecutionFilterData> list;
 
-        Integer recordsCount = 0;
-        Integer pagesAmount = 0;
+        Integer recordsCount;
+        Integer pagesAmount;
 
         AdaJobExecutionFilterResponseDTO response = new AdaJobExecutionFilterResponseDTO();
         try (SqlSession session = sqlSessionFactory.openSession()) {
             AdaMapper mapper = session.getMapper(AdaMapper.class);
-            list = mapper.filter(
-                    dto.getPage(),
-                    dto.getRecords_amount(),
-                    dto.getJobName(),
-                    dto.getStartDate(),
-                    dto.getEndDate(),
-                    dto.getFrequency(),
-                    dto.getIsTransferred(),
-                    dto.getJobType(),
-                    dto.getServerExecution(),
-                    dto.getDomain());
+            list = mapper.filter(dto);
         }
         recordsCount = (!list.isEmpty()) ? list.get(0).getRecordsCount() : 0;
         pagesAmount = dto.getRecords_amount() > 0 ? (int) Math.ceil(recordsCount.floatValue() / dto.getRecords_amount().floatValue()) : 1;
 
         response.setCount(recordsCount);
-        response.setPages_amount(pagesAmount);
+        response.setPagesAmount(pagesAmount);
         response.setData(list);
         return response;
     }
