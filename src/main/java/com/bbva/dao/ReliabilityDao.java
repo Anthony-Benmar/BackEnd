@@ -82,6 +82,12 @@ public class ReliabilityDao {
                     item.setJobName(item.getJobName().replaceAll("\\s+", ""));
                 }
             }
+            for (PendingCustodyJobsDtoResponse x : pendingCustodyJobsList) {
+                ExecutionValidationDtoResponse executionValidation = mapper.getExecutionValidation(x.getJobName());
+                if (executionValidation != null) {
+                    x.setStatus(executionValidation.getValidation());
+                }
+            }
             return pendingCustodyJobsList;
         }
     }
@@ -149,8 +155,9 @@ public class ReliabilityDao {
             reliabilityMapper.insertTranfer(dto);
             dto.getTransferInputDtoRequests().forEach(reliabilityMapper::insertJobStock);
             session.commit();
-        }catch (Exception e) {
+        } catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            throw e;
         }
     }
 

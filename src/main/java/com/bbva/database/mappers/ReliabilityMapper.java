@@ -130,7 +130,9 @@ public interface ReliabilityMapper {
             "#{isCritical}," +
             "#{domainId}," +
             "#{pack}," +
-            "#{statusId}" +
+            "#{statusId}," +
+            "#{sn1}," +
+            "#{sn2}" +
             ")")
     void insertJobStock(JobTransferInputDtoRequest dto);
 
