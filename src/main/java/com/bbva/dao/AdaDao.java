@@ -34,7 +34,7 @@ public class AdaDao {
                     dto.getServerExecution(),
                     dto.getDomain());
         }
-        recordsCount = (list.size() > 0) ? list.get(0).getRecordsCount() : 0;
+        recordsCount = (!list.isEmpty()) ? list.get(0).getRecordsCount() : 0;
         pagesAmount = dto.getRecords_amount() > 0 ? (int) Math.ceil(recordsCount.floatValue() / dto.getRecords_amount().floatValue()) : 1;
 
         response.setCount(recordsCount);
