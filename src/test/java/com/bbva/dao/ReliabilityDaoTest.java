@@ -201,7 +201,7 @@ class ReliabilityDaoTest {
     @Test
     void testInsertTransferNoJobs() {
         TransferInputDtoRequest dto = new TransferInputDtoRequest();
-        dto.setTransferInputDtoRequests(null);
+        dto.setTransferInputDtoRequests(List.of());
 
         when(sqlSessionFactoryMock.openSession()).thenReturn(sqlSessionMock);
         when(sqlSessionMock.getMapper(ReliabilityMapper.class)).thenReturn(reliabilityMapperMock);
@@ -216,10 +216,16 @@ class ReliabilityDaoTest {
     @Test
     void testInsertTransferDatabaseError() {
         TransferInputDtoRequest dto = new TransferInputDtoRequest();
-        when(sqlSessionFactoryMock.openSession()).thenThrow(new RuntimeException("DB error"));
 
-        reliabilityDao.insertTransfer(dto);
+        when(sqlSessionFactoryMock.openSession()).thenReturn(sqlSessionMock);
+        when(sqlSessionMock.getMapper(ReliabilityMapper.class))
+                .thenThrow(new RuntimeException("DB error"));
 
+        RuntimeException thrown = assertThrows(RuntimeException.class, () -> {
+            reliabilityDao.insertTransfer(dto);
+        });
+
+        assertEquals("DB error", thrown.getMessage());
         verify(sqlSessionMock, never()).commit();
     }
 
