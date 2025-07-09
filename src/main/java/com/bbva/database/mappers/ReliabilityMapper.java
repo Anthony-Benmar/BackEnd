@@ -1,6 +1,7 @@
 package com.bbva.database.mappers;
 
 import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
+import com.bbva.dto.reliability.response.ProjectInputsDtoResponse;
 import com.bbva.dto.reliability.request.JobTransferInputDtoRequest;
 import com.bbva.dto.reliability.request.TransferInputDtoRequest;
 import com.bbva.dto.reliability.response.*;
@@ -44,6 +45,40 @@ public interface ReliabilityMapper {
                                                               @Param("searchByInputOutputTable") String searchByInputOutputTable,
                                                               @Param("searchType") String searchType
     );
+
+    @Select("CALL SP_LIST_PROJECT(" +
+            "#{projectId}, "   +
+            "#{projectName}, " +
+            "#{domainId}, "    +
+            "#{status}, "      +
+            "#{projectType}, " +
+            "#{wow}, "         +
+            "#{startQ}, "      +
+            "#{endQ}"          +
+            ")")
+    @Results({
+            @Result(property = "sdatoolId",       column = "sdatool_id"),
+            @Result(property = "projectName",     column = "project_name"),
+            @Result(property = "domainName",      column = "domain_name"),
+            @Result(property = "statusTypeDesc",  column = "status_type_desc"),
+            @Result(property = "projectTypeDesc", column = "project_type_desc"),
+            @Result(property = "wowName",         column = "wow_name"),
+            @Result(property = "startPiId",       column = "start_pi_id"),
+            @Result(property = "finalStartPiId",  column = "final_start_pi_id"),
+            @Result(property = "endPiId",         column = "end_pi_id"),
+            @Result(property = "finalEndPiId",    column = "final_end_pi_id")
+    })
+    List<ProjectInputsDtoResponse> getProjects(
+            @Param("projectId")    String projectId,
+            @Param("projectName")  String projectName,
+            @Param("domainId")     String domainId,
+            @Param("status")       String status,
+            @Param("projectType")  String projectType,
+            @Param("wow")          String wow,
+            @Param("startQ")       String startQ,
+            @Param("endQ")         String endQ
+    );
+
     @Update("CALL SP_UPDATE_INVENTORY_JOB_STOCK(" +
             "#{jobName}," +
             "#{componentName}," +

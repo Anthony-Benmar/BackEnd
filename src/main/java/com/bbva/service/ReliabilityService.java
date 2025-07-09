@@ -6,10 +6,12 @@ import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dao.ReliabilityDao;
 import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
+import com.bbva.dto.reliability.request.ProjectInputsFilterDtoRequest;
 import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
 import com.bbva.dto.reliability.request.ReliabilityPackInputFilterRequest;
 import com.bbva.dto.reliability.response.ExecutionValidationDtoResponse;
 import com.bbva.dto.reliability.response.InventoryInputsFilterDtoResponse;
+import com.bbva.dto.reliability.response.ProjectInputsDtoResponse;
 import com.bbva.dto.reliability.response.PendingCustodyJobsDtoResponse;
 import com.bbva.dto.reliability.response.ProjectCustodyInfoDtoResponse;
 import com.bbva.dto.reliability.request.TransferInputDtoRequest;
@@ -151,6 +153,54 @@ public class ReliabilityService {
             return new byte[0];
         }
     }
+
+    public byte[] generateDocumentProjects(ProjectInputsFilterDtoRequest dto) {
+        List<ProjectInputsDtoResponse> lista = reliabilityDao.listProjects(dto);
+
+        try (Workbook workbook = new XSSFWorkbook();
+             ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+
+            Sheet sheet = workbook.createSheet("Proyectos");
+
+            String[] columns = {
+                    "SDATOOL", "NOMBRE PROYECTO", "DOMINIO", "ESTADO",
+                    "TIPO PROYECTO", "WOW", "Q-INICIO EST.",
+                    "Q-INICIO REAL", "Q-FIN EST.", "Q-FIN REAL"
+            };
+
+            Row headerRow = sheet.createRow(0);
+            for (int i = 0; i < columns.length; i++) {
+                headerRow.createCell(i).setCellValue(columns[i]);
+            }
+
+            int rowIdx = 1;
+            for (ProjectInputsDtoResponse project : lista) {
+                Row row = sheet.createRow(rowIdx++);
+                row.createCell(0).setCellValue(nullSafe(project.getSdatoolId()));
+                row.createCell(1).setCellValue(nullSafe(project.getProjectName()));
+                row.createCell(2).setCellValue(nullSafe(project.getDomainName()));
+                row.createCell(3).setCellValue(nullSafe(project.getStatusTypeDesc()));
+                row.createCell(4).setCellValue(nullSafe(project.getProjectTypeDesc()));
+                row.createCell(5).setCellValue(nullSafe(project.getWowName()));
+                row.createCell(6).setCellValue(String.valueOf(project.getStartPiId()));
+                row.createCell(7).setCellValue(String.valueOf(project.getFinalStartPiId()));
+                row.createCell(8).setCellValue(String.valueOf(project.getEndPiId()));
+                row.createCell(9).setCellValue(String.valueOf(project.getFinalEndPiId()));
+            }
+
+            for (int i = 0; i < columns.length; i++) {
+                sheet.autoSizeColumn(i);
+            }
+
+            workbook.write(outputStream);
+            return outputStream.toByteArray();
+
+        } catch (Exception e) {
+            log.info(ERROR + e);
+            return new byte[0];
+        }
+    }
+
 
     private String nullSafe(String value) {
         return value != null ? value : "";

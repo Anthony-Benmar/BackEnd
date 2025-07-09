@@ -15,18 +15,19 @@ public class CorsResponseFilter implements ContainerResponseFilter {
     public final static String DEFAULT_ALLOWED_HEADERS = "*, X-Requested-With," +
             "Content-Type, Accept, Authorization,CSRF-Token, X-Requested-By, Authorization, Content-Length," +
             "Host, User-Agent, Accept-Encoding, Connection";
-    public final static String DEFAULT_EXPOSED_HEADERS = "location,info";
+    public final static String DEFAULT_EXPOSED_HEADERS = "location,info,Content-Disposition";
+
 
     @Override
-    public void filter(final ContainerRequestContext requestContext, final ContainerResponseContext responseContext) throws IOException {
-        final MultivaluedMap<String, Object> headers = responseContext.getHeaders();
-        headers.add("Access-Control-Allow-Origin",  "*");
-        headers.add("Access-Control-Allow-Headers", getRequestedAllowedHeaders(requestContext));
-        headers.add("Access-Control-Expose-Headers", getRequestedExposedHeaders(requestContext));
-        headers.add("Access-Control-Allow-Credentials", "true");
-        headers.add("Access-Control-Allow-Methods", ALLOWED_METHODS);
-        headers.add("Access-Control-Max-Age", MAX_AGE);
-        headers.add("x-responded-by", "cors-response-filter");
+    public void filter(ContainerRequestContext requestContext,
+                       ContainerResponseContext responseContext) {
+        MultivaluedMap<String,Object> headers = responseContext.getHeaders();
+        headers.putSingle("Access-Control-Allow-Origin", "*");
+        headers.putSingle("Access-Control-Allow-Headers", getRequestedAllowedHeaders(requestContext));
+        headers.putSingle("Access-Control-Expose-Headers", getRequestedExposedHeaders(requestContext));
+        headers.putSingle("Access-Control-Allow-Credentials", "true");
+        headers.putSingle("Access-Control-Allow-Methods", ALLOWED_METHODS);
+        headers.putSingle("Access-Control-Max-Age", String.valueOf(MAX_AGE));
     }
 
     String getRequestedAllowedHeaders(ContainerRequestContext responseContext) {
