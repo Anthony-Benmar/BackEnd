@@ -2,10 +2,9 @@ package com.bbva.dao;
 
 import com.bbva.database.MyBatisConnectionFactory;
 import com.bbva.database.mappers.ReliabilityMapper;
+import com.bbva.dto.catalog.response.DropDownDto;
 import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
 import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
-import com.bbva.dto.reliability.request.ProjectInputsFilterDtoRequest;
-import com.bbva.dto.reliability.response.ProjectInputsDtoResponse;
 import com.bbva.dto.reliability.request.ReliabilityPackInputFilterRequest;
 import com.bbva.dto.reliability.request.TransferInputDtoRequest;
 import com.bbva.dto.reliability.response.*;
@@ -66,26 +65,6 @@ public class ReliabilityDao {
             }
         }
         return response;
-    }
-
-    public List<ProjectInputsDtoResponse> listProjects(ProjectInputsFilterDtoRequest dto) {
-        try (SqlSession session = MyBatisConnectionFactory.getInstance().openSession()) {
-            return session
-                    .getMapper(ReliabilityMapper.class)
-                    .getProjects(
-                            dto.getProjectId(),
-                            dto.getProjectName(),
-                            dto.getDomainId(),
-                            dto.getStatus(),
-                            dto.getProjectType(),
-                            dto.getWow(),
-                            dto.getStartQ(),
-                            dto.getEndQ()
-                    );
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, e.getMessage(), e);
-            return Collections.emptyList();
-        }
     }
 
     public List<PendingCustodyJobsDtoResponse> getPendingCustodyJobs(String sdatoolId) {
@@ -189,12 +168,21 @@ public class ReliabilityDao {
                     dto.getFrequency(),
                     dto.getIsCritical(),
                     dto.getSearchByInputOutputTable(),
-                    dto.getSearchType()
+                    dto.getSearchType(),
+                    dto.getOrigin()
             );
             return lista;
         }catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
             return List.of();
+        }
+    }
+
+    public List<DropDownDto> getOriginTypes() {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ReliabilityMapper mapper = session.getMapper(ReliabilityMapper.class);
+            return mapper.getOriginTypes();
         }
     }
 

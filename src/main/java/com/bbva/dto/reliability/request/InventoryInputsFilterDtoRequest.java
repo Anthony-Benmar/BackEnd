@@ -15,4 +15,5 @@ public class InventoryInputsFilterDtoRequest {
     private String isCritical;
     private String searchByInputOutputTable;
     private String searchType;
+    private String origin;
 }

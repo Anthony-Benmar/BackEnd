@@ -8,8 +8,12 @@ import com.bbva.dao.UseCaseReliabilityDao;
 import com.bbva.dto.use_case.request.UpdateOrInsertUseCaseDtoRequest;
 import com.bbva.dto.use_case.request.UseCaseInputsFilterDtoRequest;
 import com.bbva.dto.use_case.response.UpdateOrInsertDtoResponse;
+import com.bbva.dto.use_case.response.UseCaseInputsDtoResponse;
 import com.bbva.dto.use_case.response.UseCaseInputsFilterDtoResponse;
 import com.bbva.entities.use_case.UseCaseEntity;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import java.io.ByteArrayOutputStream;
 
 import java.util.List;
 import java.util.logging.Level;
@@ -106,5 +110,66 @@ public class UseCaseService {
             log.log(Level.SEVERE, e.getMessage(), e);
             return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
         }
+    }
+
+    public byte[] generateDocumentUseCases(UseCaseInputsFilterDtoRequest dto) {
+        List<UseCaseInputsDtoResponse> rows = useCaseReliabilityDao.listAllFilteredUseCases(dto);
+
+        try (Workbook wb = new XSSFWorkbook();
+             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+
+            Sheet sheet = wb.createSheet("Casos de Uso");
+            String[] cols = {
+                    "DOMINIO", "NOMBRE", "DESCRIPCIÓN", "NRO PROYECTOS", "PROYECTOS ASOCIADOS",
+                    "TRIMESTRE", "CRITICIDAD", "REGULATORIO", "GLOBAL / LOCAL", "MODELO OPERATIVO SDM"
+            };
+
+            Row header = sheet.createRow(0);
+            for (int i = 0; i < cols.length; i++) {
+                header.createCell(i).setCellValue(cols[i]);
+            }
+
+            int r = 1;
+            for (UseCaseInputsDtoResponse u : rows) {
+                Row row = sheet.createRow(r++);
+                row.createCell(0).setCellValue(nullSafe(u.getDomainName()));
+                row.createCell(1).setCellValue(nullSafe(u.getUseCaseName()));
+                row.createCell(2).setCellValue(nullSafe(u.getUseCaseDescription()));
+                row.createCell(3).setCellValue(u.getProjectCount() == null ? 0 : u.getProjectCount());
+
+                Cell c4 = row.createCell(4);
+                if (u.getProjects() != null) {
+                    c4.setCellValue(u.getProjects());
+                    CellStyle wrap = wb.createCellStyle();
+                    wrap.setWrapText(true);
+                    c4.setCellStyle(wrap);
+                } else {
+                    c4.setCellValue("");
+                }
+
+                row.createCell(5).setCellValue(nullSafe(u.getPiLargeName()));
+                row.createCell(6).setCellValue(nullSafe(u.getCriticalDesc()));
+                row.createCell(7).setCellValue(
+                        u.getIsRegulatory() != null && u.getIsRegulatory() == 1 ? "SI" : "NO"
+                );
+                row.createCell(8).setCellValue(nullSafe(u.getUseCaseScopeDesc()));
+                row.createCell(9).setCellValue(
+                        u.getOperativeModel() != null && u.getOperativeModel() == 1 ? "SI" : "NO"
+                );
+            }
+
+            for (int i = 0; i < cols.length; i++) {
+                sheet.autoSizeColumn(i);
+            }
+
+            wb.write(out);
+            return out.toByteArray();
+        } catch (Exception e) {
+            log.severe("Error generando Excel Casos de Uso: " + e.getMessage());
+            return new byte[0];
+        }
+    }
+    private String nullSafe(String v) {
+        return v == null ? "" : v;
     }
 }

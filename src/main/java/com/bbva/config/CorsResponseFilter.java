@@ -15,19 +15,23 @@ public class CorsResponseFilter implements ContainerResponseFilter {
     public final static String DEFAULT_ALLOWED_HEADERS = "*, X-Requested-With," +
             "Content-Type, Accept, Authorization,CSRF-Token, X-Requested-By, Authorization, Content-Length," +
             "Host, User-Agent, Accept-Encoding, Connection";
-    public final static String DEFAULT_EXPOSED_HEADERS = "location,info,Content-Disposition";
+    public final static String DEFAULT_EXPOSED_HEADERS = "location,info";
 
 
     @Override
-    public void filter(ContainerRequestContext requestContext,
-                       ContainerResponseContext responseContext) {
-        MultivaluedMap<String,Object> headers = responseContext.getHeaders();
-        headers.putSingle("Access-Control-Allow-Origin", "*");
-        headers.putSingle("Access-Control-Allow-Headers", getRequestedAllowedHeaders(requestContext));
-        headers.putSingle("Access-Control-Expose-Headers", getRequestedExposedHeaders(requestContext));
-        headers.putSingle("Access-Control-Allow-Credentials", "true");
-        headers.putSingle("Access-Control-Allow-Methods", ALLOWED_METHODS);
-        headers.putSingle("Access-Control-Max-Age", String.valueOf(MAX_AGE));
+    public void filter(ContainerRequestContext request, ContainerResponseContext response) throws IOException {
+        MultivaluedMap<String,Object> headers = response.getHeaders();
+        headers.add("Access-Control-Allow-Origin",  "*");
+        headers.add("Access-Control-Allow-Methods", ALLOWED_METHODS);
+        headers.add("Access-Control-Max-Age", MAX_AGE);
+        String requested = request.getHeaderString("Access-Control-Request-Headers");
+        headers.add("Access-Control-Allow-Headers",
+                (requested == null || requested.isEmpty())
+                        ? DEFAULT_ALLOWED_HEADERS
+                        : requested + "," + DEFAULT_ALLOWED_HEADERS
+        );
+        headers.add("Access-Control-Expose-Headers", DEFAULT_EXPOSED_HEADERS);
+        headers.add("Access-Control-Allow-Credentials", "true");
     }
 
     String getRequestedAllowedHeaders(ContainerRequestContext responseContext) {

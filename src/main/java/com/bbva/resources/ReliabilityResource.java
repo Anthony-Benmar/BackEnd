@@ -3,7 +3,11 @@ package com.bbva.resources;
 
 import com.bbva.common.HttpStatusCodes;
 import com.bbva.core.abstracts.IDataResult;
-import com.bbva.dto.reliability.request.*;
+import com.bbva.dto.catalog.response.DropDownDto;
+import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
+import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
+import com.bbva.dto.reliability.request.ReliabilityPackInputFilterRequest;
+import com.bbva.dto.reliability.request.TransferInputDtoRequest;
 import com.bbva.dto.reliability.response.*;
 import com.bbva.service.ReliabilityService;
 
@@ -82,24 +86,6 @@ public class ReliabilityResource {
     }
 
     @POST
-    @Path("/documentGenerator/projects")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-    public Response generateDocumentProjects(ProjectInputsFilterDtoRequest dto) {
-        byte[] excel = reliabilityService.generateDocumentProjects(dto);
-        String fileName = "Proyectos_v1.xlsx";
-        return Response.ok(excel)
-                .header("Content-Disposition", "attachment; filename=\"" + fileName + "\"")
-                .build();
-    }
-
-    @OPTIONS
-    @Path("/documentGenerator/projects")
-    public Response optionsForExcel() {
-        return Response.ok().build();
-    }
-
-    @POST
     @Path("/documentGenerator/inventory")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
@@ -128,5 +114,13 @@ public class ReliabilityResource {
                                                  List<String> packs)
     {
         return reliabilityService.updateStatusReliabilityPacksJobStock(packs);
+    }
+
+    @GET
+    @Path("/origin-types")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<List<DropDownDto>> getOriginTypes() {
+        return reliabilityService.getOriginTypes();
     }
 }

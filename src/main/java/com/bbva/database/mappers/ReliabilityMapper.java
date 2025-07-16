@@ -1,7 +1,7 @@
 package com.bbva.database.mappers;
 
+import com.bbva.dto.catalog.response.DropDownDto;
 import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
-import com.bbva.dto.reliability.response.ProjectInputsDtoResponse;
 import com.bbva.dto.reliability.request.JobTransferInputDtoRequest;
 import com.bbva.dto.reliability.request.TransferInputDtoRequest;
 import com.bbva.dto.reliability.response.*;
@@ -18,11 +18,14 @@ public interface ReliabilityMapper {
             "#{frequency}," +
             "#{isCritical}," +
             "#{searchByInputOutputTable}, "+
-            "#{searchType})"
+            "#{searchType}," +
+            "#{origin})"
     )
 
     @Result(property = "domainName", column = "domain_name")
     @Result(property = "useCase", column = "use_case")
+    @Result(property = "originTypeId",   column = "origin_type_id")
+    @Result(property = "origin",       column = "origin")
     @Result(property = "jobName", column = "job_name")
     @Result(property = "componentName", column = "component_name")
     @Result(property = "jobType", column = "job_type")
@@ -43,41 +46,22 @@ public interface ReliabilityMapper {
                                                               @Param("frequency") String frequency,
                                                               @Param("isCritical") String isCritical,
                                                               @Param("searchByInputOutputTable") String searchByInputOutputTable,
-                                                              @Param("searchType") String searchType
+                                                              @Param("searchType") String searchType,
+                                                              @Param("origin") String origin
     );
 
-    @Select("CALL SP_LIST_PROJECT(" +
-            "#{projectId}, "   +
-            "#{projectName}, " +
-            "#{domainId}, "    +
-            "#{status}, "      +
-            "#{projectType}, " +
-            "#{wow}, "         +
-            "#{startQ}, "      +
-            "#{endQ}"          +
-            ")")
+    @Select(
+            "SELECT element_id AS value, element_name AS label\n" +
+                    "  FROM catalog\n" +
+                    " WHERE catalog_id = 1003\n" +
+                    "   AND element_id <> 1003\n" +
+                    " ORDER BY element_name"
+    )
     @Results({
-            @Result(property = "sdatoolId",       column = "sdatool_id"),
-            @Result(property = "projectName",     column = "project_name"),
-            @Result(property = "domainName",      column = "domain_name"),
-            @Result(property = "statusTypeDesc",  column = "status_type_desc"),
-            @Result(property = "projectTypeDesc", column = "project_type_desc"),
-            @Result(property = "wowName",         column = "wow_name"),
-            @Result(property = "startPiId",       column = "start_pi_id"),
-            @Result(property = "finalStartPiId",  column = "final_start_pi_id"),
-            @Result(property = "endPiId",         column = "end_pi_id"),
-            @Result(property = "finalEndPiId",    column = "final_end_pi_id")
+            @Result(property = "value", column = "value"),
+            @Result(property = "label", column = "label")
     })
-    List<ProjectInputsDtoResponse> getProjects(
-            @Param("projectId")    String projectId,
-            @Param("projectName")  String projectName,
-            @Param("domainId")     String domainId,
-            @Param("status")       String status,
-            @Param("projectType")  String projectType,
-            @Param("wow")          String wow,
-            @Param("startQ")       String startQ,
-            @Param("endQ")         String endQ
-    );
+    List<DropDownDto> getOriginTypes();
 
     @Update("CALL SP_UPDATE_INVENTORY_JOB_STOCK(" +
             "#{jobName}," +
@@ -98,7 +82,7 @@ public interface ReliabilityMapper {
     @Result(property = "jsonName", column = "json_name")
     @Result(property = "frequencyId", column = "frequency_id")
     @Result(property = "jobTypeId", column = "job_type_id")
-    @Result(property = "originTypeId", column = "origin_type_id")
+        @Result(property = "originTypeId", column = "origin_type_id")
     @Result(property = "phaseTypeId", column = "phase_type_id")
     @Result(property = "principalJob", column = "principal_job")
     List<PendingCustodyJobsDtoResponse> getPendingCustodyJobs(@Param("sdatoolId") String sdatoolId);

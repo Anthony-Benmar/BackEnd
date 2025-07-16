@@ -111,6 +111,7 @@ class UseCaseReliabilityDaoTest {
         request.setDomainName("domain");
         request.setCritical("critical");
         request.setProjectName("project");
+        request.setTrimestre("2024-Q4");
         request.setRecordsAmount(0);
         request.setPage(1);
 
@@ -120,7 +121,7 @@ class UseCaseReliabilityDaoTest {
                 new UseCaseInputsDtoResponse()
         );
 
-        when(useCaseMapperMock.getFilteredUseCases("domain", "critical", "project")).thenReturn(mockList);
+        when(useCaseMapperMock.getFilteredUseCases("domain", "critical", "project", "2024-Q4")).thenReturn(mockList);
 
         UseCaseInputsFilterDtoResponse response = useCaseReliabilityDao.getFilteredUseCases(request);
 
@@ -131,7 +132,7 @@ class UseCaseReliabilityDaoTest {
 
         verify(sqlSessionFactoryMock).openSession();
         verify(sqlSessionMock).getMapper(UseCaseMapper.class);
-        verify(useCaseMapperMock).getFilteredUseCases("domain","critical", "project");
+        verify(useCaseMapperMock).getFilteredUseCases("domain","critical", "project", "2024-Q4");
         verify(sqlSessionMock).close();
     }
 

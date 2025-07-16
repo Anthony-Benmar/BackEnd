@@ -12,6 +12,8 @@ import com.bbva.dto.catalog.response.ListByCatalogIdDtoResponse;
 import com.bbva.dto.catalog.response.ListByCatalogIdGroupByCatalogGroupByElementDtoResponse;
 import com.bbva.dto.project.request.*;
 import com.bbva.dto.project.response.*;
+import com.bbva.dto.project.request.ProjectInfoFilterRequest;
+import com.bbva.dto.project.response.ProjectInfoSelectResponse;
 import com.bbva.entities.InsertEntity;
 import com.bbva.entities.common.PeriodPEntity;
 import com.bbva.entities.common.ProjectByPeriodEntity;
@@ -526,6 +528,16 @@ public class ProjectDao {
         try (SqlSession session = sqlSessionFactory.openSession()) {
             ProjectMapper mapper = session.getMapper(ProjectMapper.class);
             return mapper.getFeaturesByProject(sdatoolId, featureKey);
+        }
+    }
+
+    public List<ProjectInfoSelectResponse> listProjects(ProjectInfoFilterRequest dto) {
+        try (SqlSession session = MyBatisConnectionFactory.getInstance().openSession()) {
+            return session
+                    .getMapper(ProjectMapper.class)
+                    .projectInfoFilter(dto);
+        } catch (Exception e) {
+            return Collections.emptyList();
         }
     }
 

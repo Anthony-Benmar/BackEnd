@@ -26,5 +26,6 @@ class InventoryInputsFilterDtoRequestTest {
         assertEquals("Daily", request.getFrequency());
         assertEquals("Yes", request.getIsCritical());
         assertEquals("input_table_xyz", request.getSearchByInputOutputTable());
+        assertEquals("Oficina Central", request.getOrigin());
     }
 }

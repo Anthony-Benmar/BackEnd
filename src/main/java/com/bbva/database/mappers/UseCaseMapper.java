@@ -39,7 +39,8 @@ public interface UseCaseMapper {
     @Select("CALL SP_GET_FILTERED_USE_CASES(" +
             "#{domainName}," +
             "#{critical}," +
-            "#{projectName})")
+            "#{projectName}," +
+            "#{piLargeName})")
     @Result(property = "useCaseId", column = "use_case_id")
     @Result(property = "domainName", column = "domain_name")
     @Result(property = "domainId", column = "domain_id")
@@ -57,5 +58,5 @@ public interface UseCaseMapper {
     @Result(property = "useCaseScopeDesc", column = "use_case_scope_desc")
     @Result(property = "operativeModel", column = "operative_model")
     @Result(property = "operativeModelDesc", column = "operative_model_desc")
-    List<UseCaseInputsDtoResponse> getFilteredUseCases(String domainName, String critical, String projectName);
+    List<UseCaseInputsDtoResponse> getFilteredUseCases(String domainName, String critical, String projectName, String piLargeName);
 }

@@ -5,13 +5,12 @@ import com.bbva.core.abstracts.IDataResult;
 import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dao.ReliabilityDao;
+import com.bbva.dto.catalog.response.DropDownDto;
 import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
-import com.bbva.dto.reliability.request.ProjectInputsFilterDtoRequest;
 import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
 import com.bbva.dto.reliability.request.ReliabilityPackInputFilterRequest;
 import com.bbva.dto.reliability.response.ExecutionValidationDtoResponse;
 import com.bbva.dto.reliability.response.InventoryInputsFilterDtoResponse;
-import com.bbva.dto.reliability.response.ProjectInputsDtoResponse;
 import com.bbva.dto.reliability.response.PendingCustodyJobsDtoResponse;
 import com.bbva.dto.reliability.response.ProjectCustodyInfoDtoResponse;
 import com.bbva.dto.reliability.request.TransferInputDtoRequest;
@@ -109,7 +108,7 @@ public class ReliabilityService {
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             Sheet sheet = workbook.createSheet("Inventario");
 
-            String[] columns = {"DOMINIO", "CASO DE USO", "JOB CONTROL-M", "COMPONENTE", "TIPO JOB",
+            String[] columns = {"DOMINIO", "CASO DE USO", "ORIGEN", "JOB CONTROL-M", "COMPONENTE", "TIPO JOB",
                     "RUTA CRITICA", "FRECUENCIA", "INSUMOS", "SALIDA", "PACK"};
 
             Row headerRow = sheet.createRow(0);
@@ -123,12 +122,13 @@ public class ReliabilityService {
                 Row row = sheet.createRow(rowIdx++);
                 row.createCell(0).setCellValue(nullSafe(inventory.getDomainName()));
                 row.createCell(1).setCellValue(nullSafe(inventory.getUseCase()));
-                row.createCell(2).setCellValue(nullSafe(inventory.getJobName()));
-                row.createCell(3).setCellValue(nullSafe(inventory.getComponentName()));
-                row.createCell(4).setCellValue(nullSafe(inventory.getJobType()));
-                row.createCell(5).setCellValue(nullSafe(inventory.getIsCritical()));
-                row.createCell(6).setCellValue(nullSafe(inventory.getFrequency()));
-                Cell insumosCell = row.createCell(7);
+                row.createCell(2).setCellValue(nullSafe(inventory.getOrigin()));
+                row.createCell(3).setCellValue(nullSafe(inventory.getJobName()));
+                row.createCell(4).setCellValue(nullSafe(inventory.getComponentName()));
+                row.createCell(5).setCellValue(nullSafe(inventory.getJobType()));
+                row.createCell(6).setCellValue(nullSafe(inventory.getIsCritical()));
+                row.createCell(7).setCellValue(nullSafe(inventory.getFrequency()));
+                Cell insumosCell = row.createCell(8);
                 if (inventory.getInputPaths() != null) {
                     insumosCell.setCellValue(inventory.getInputPaths());
                     CellStyle multiLineStyle = workbook.createCellStyle();
@@ -137,8 +137,8 @@ public class ReliabilityService {
                 } else {
                     insumosCell.setCellValue("");
                 }
-                row.createCell(8).setCellValue(nullSafe(inventory.getOutputPath()));
-                row.createCell(9).setCellValue(nullSafe(inventory.getPack()));
+                row.createCell(9).setCellValue(nullSafe(inventory.getOutputPath()));
+                row.createCell(10).setCellValue(nullSafe(inventory.getPack()));
             }
 
             for (int i = 0; i < columns.length; i++) {
@@ -154,53 +154,15 @@ public class ReliabilityService {
         }
     }
 
-    public byte[] generateDocumentProjects(ProjectInputsFilterDtoRequest dto) {
-        List<ProjectInputsDtoResponse> lista = reliabilityDao.listProjects(dto);
-
-        try (Workbook workbook = new XSSFWorkbook();
-             ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-
-            Sheet sheet = workbook.createSheet("Proyectos");
-
-            String[] columns = {
-                    "SDATOOL", "NOMBRE PROYECTO", "DOMINIO", "ESTADO",
-                    "TIPO PROYECTO", "WOW", "Q-INICIO EST.",
-                    "Q-INICIO REAL", "Q-FIN EST.", "Q-FIN REAL"
-            };
-
-            Row headerRow = sheet.createRow(0);
-            for (int i = 0; i < columns.length; i++) {
-                headerRow.createCell(i).setCellValue(columns[i]);
-            }
-
-            int rowIdx = 1;
-            for (ProjectInputsDtoResponse project : lista) {
-                Row row = sheet.createRow(rowIdx++);
-                row.createCell(0).setCellValue(nullSafe(project.getSdatoolId()));
-                row.createCell(1).setCellValue(nullSafe(project.getProjectName()));
-                row.createCell(2).setCellValue(nullSafe(project.getDomainName()));
-                row.createCell(3).setCellValue(nullSafe(project.getStatusTypeDesc()));
-                row.createCell(4).setCellValue(nullSafe(project.getProjectTypeDesc()));
-                row.createCell(5).setCellValue(nullSafe(project.getWowName()));
-                row.createCell(6).setCellValue(String.valueOf(project.getStartPiId()));
-                row.createCell(7).setCellValue(String.valueOf(project.getFinalStartPiId()));
-                row.createCell(8).setCellValue(String.valueOf(project.getEndPiId()));
-                row.createCell(9).setCellValue(String.valueOf(project.getFinalEndPiId()));
-            }
-
-            for (int i = 0; i < columns.length; i++) {
-                sheet.autoSizeColumn(i);
-            }
-
-            workbook.write(outputStream);
-            return outputStream.toByteArray();
-
+    public IDataResult<List<DropDownDto>> getOriginTypes() {
+        try {
+            List<DropDownDto> lista = reliabilityDao.getOriginTypes();
+            return new SuccessDataResult<>(lista);
         } catch (Exception e) {
-            log.info(ERROR + e);
-            return new byte[0];
+            log.severe("Error al obtener tipos de origen: " + e.getMessage());
+            return new ErrorDataResult<>(null, "500", e.getMessage());
         }
     }
-
 
     private String nullSafe(String value) {
         return value != null ? value : "";
