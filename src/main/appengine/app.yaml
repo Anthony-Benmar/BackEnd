@@ -1,6 +1,12 @@
 runtime: java17
 service: default
-instance_class: F4
+instance_class: F2
+
+automatic_scaling:
+  target_cpu_utilization: 0.5
+  min_instances: 1
+  max_instances: 2
+  max_concurrent_requests: 40
 
 handlers:
   - url: /tasks/.*
