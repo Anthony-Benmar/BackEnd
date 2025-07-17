@@ -5,7 +5,6 @@ import com.bbva.database.mappers.*;
 import com.bbva.dto.issueticket.request.WorkOrderDtoRequest2;
 import com.bbva.dto.issueticket.request.sourceTicketDtoRequest;
 import com.bbva.dto.issueticket.response.issueTicketDtoResponse;
-import com.bbva.dto.issueticket.response.sourceTicketDetailDtoResponse;
 import com.bbva.dto.issueticket.response.sourceTicketDtoResponse;
 import com.bbva.dto.issueticket.response.sourceTicketGroupByDtoResponse;
 import com.bbva.dto.jira.request.*;
