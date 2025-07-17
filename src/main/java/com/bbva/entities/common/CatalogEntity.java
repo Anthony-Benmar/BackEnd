@@ -20,4 +20,8 @@ public class CatalogEntity {
     private String elementDesc;
     @SerializedName("status_type")
     private int statusType;
+
+    public CatalogEntity() {
+
+    }
 }
