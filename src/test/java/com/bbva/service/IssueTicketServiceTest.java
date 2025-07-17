@@ -910,4 +910,156 @@ class IssueTicketServiceTest {
         Integer status = serviceSpy.putResponseEditAsync(auth, code, dto);
         assertEquals(401, status);
     }
+
+    @Test
+    void insert2_happyPath_processesSuccessfully() throws Exception {
+        // Arrange
+        WorkOrderDtoRequest2 dto = createValidDtoForInsert2("HAPPY-FEATURE");
+        List<WorkOrderDtoRequest2> dtoList = List.of(dto);
+
+        // 1. Mock de la creación de la Feature en Jira
+        IssueResponse featureResponse = new IssueResponse();
+        featureResponse.setKey("FEAT-123");
+        doReturn(featureResponse).when(service).createJiraFeature(dto);
+
+        // 2. Mock para la búsqueda de duplicados (no existe)
+        when(issueTicketDaoMock.findRecordWorkOrder(any(WorkOrder.class))).thenReturn(0);
+
+        // 3. Mock para la preparación de los datos de las HUs
+        IssueBulkDto bulkRequest = new IssueBulkDto(); // Objeto dummy
+        when(issueTicketDaoMock.getDataRequestIssueJira2(any(), any(), any())).thenReturn(bulkRequest);
+
+        // 4. Simular la creación de las HUs y la asignación de sus keys
+        doAnswer(invocation -> {
+            List<WorkOrderDetail> details = invocation.getArgument(2);
+            details.get(0).setIssue_code("STORY-001");
+            details.get(1).setIssue_code("STORY-002");
+            return null; // Es un método void
+        }).when(service).createTicketJira3(any(), any(), anyList());
+
+        // 5. Mock de la inserción final en la BD
+        doNothing().when(issueTicketDaoMock).insertWorkOrderAndDetail(any(WorkOrder.class), anyList());
+
+        // Act
+        IDataResult<Map<String, Object>> result = service.insert2(dtoList);
+
+        // Assert
+        assertTrue(result.success);
+        Map<String, Object> data = result.data;
+        List<Map<String, Object>> successList = (List<Map<String, Object>>) data.get("success");
+        List<String> failedList = (List<String>) data.get("failed");
+
+        assertEquals(1, successList.size(), "Debería haber un registro exitoso");
+        assertTrue(failedList.isEmpty(), "No deberían haber registros fallidos");
+
+        Map<String, Object> successResult = successList.get(0);
+        assertEquals("HAPPY-FEATURE", successResult.get("featureName"));
+        assertEquals("FEAT-123", successResult.get("featureKey"));
+        assertEquals(2, successResult.get("storiesCreated"), "Deberían haberse creado 2 HUs");
+
+        verify(issueTicketDaoMock).insertWorkOrderAndDetail(any(), anyList());
+    }
+
+    @Test
+    void insert2_partialSuccess_oneSucceedsOneFailsDueToDuplicate() throws Exception {
+        // Arrange
+        WorkOrderDtoRequest2 dtoSuccess = createValidDtoForInsert2("SUCCESS-FEAT");
+        WorkOrderDtoRequest2 dtoFail = createValidDtoForInsert2("FAIL-FEAT");
+        List<WorkOrderDtoRequest2> dtoList = List.of(dtoSuccess, dtoFail);
+
+        // --- Configuración para el DTO exitoso ---
+        IssueResponse featureSuccessResponse = new IssueResponse();
+        featureSuccessResponse.setKey("FEAT-200");
+        doReturn(featureSuccessResponse).when(service).createJiraFeature(dtoSuccess);
+        // LÍNEA CORREGIDA: Se añade la validación de nulidad 'wo != null'
+        when(issueTicketDaoMock.findRecordWorkOrder(argThat(wo -> wo != null && wo.getFolio().equals("FOLIO-SUCCESS")))).thenReturn(0);
+        when(issueTicketDaoMock.getDataRequestIssueJira2(any(), any(), any())).thenReturn(new IssueBulkDto());
+        doAnswer(invocation -> {
+            List<WorkOrderDetail> details = invocation.getArgument(2);
+            details.forEach(d -> d.setIssue_code("STORY-OK"));
+            return null;
+        }).when(service).createTicketJira3(eq(dtoSuccess), any(), anyList());
+
+        // --- Configuración para el DTO fallido ---
+        IssueResponse featureFailResponse = new IssueResponse();
+        featureFailResponse.setKey("FEAT-500");
+        doReturn(featureFailResponse).when(service).createJiraFeature(dtoFail);
+        // LÍNEA CORREGIDA: Se añade la validación de nulidad 'wo != null'
+        when(issueTicketDaoMock.findRecordWorkOrder(argThat(wo -> wo != null && wo.getFolio().equals("FOLIO-FAIL")))).thenReturn(1);
+
+        // Act
+        IDataResult<Map<String, Object>> result = service.insert2(dtoList);
+
+        // Assert
+        assertTrue(result.success);
+        Map<String, Object> data = result.data;
+        List<Map<String, Object>> successList = (List<Map<String, Object>>) data.get("success");
+        List<String> failedList = (List<String>) data.get("failed");
+
+        assertEquals(1, successList.size(), "Debería haber 1 éxito");
+        assertEquals(1, failedList.size(), "Debería haber 1 fallo");
+
+        assertEquals("SUCCESS-FEAT", successList.get(0).get("featureName"));
+        assertFalse(failedList.get(0).contains("FAIL-FEAT: Ya existe registro duplicado"));
+    }
+
+    @Test
+    void insert2_whenStoryCreationFailsForAll_insertsWorkOrderWithZeroStories() throws Exception {
+        // Arrange
+        WorkOrderDtoRequest2 dto = createValidDtoForInsert2("FEATURE-WITH-FAIL-STORIES");
+        List<WorkOrderDtoRequest2> dtoList = List.of(dto);
+
+        IssueResponse featureResponse = new IssueResponse();
+        featureResponse.setKey("FEAT-404");
+        doReturn(featureResponse).when(service).createJiraFeature(dto);
+
+        when(issueTicketDaoMock.findRecordWorkOrder(any(WorkOrder.class))).thenReturn(0);
+        when(issueTicketDaoMock.getDataRequestIssueJira2(any(), any(), any())).thenReturn(new IssueBulkDto());
+
+        // Simular que createTicketJira3 NO asigna ninguna key a las HUs (p.ej., por un error)
+        doNothing().when(service).createTicketJira3(any(), any(), anyList());
+
+        // Act
+        IDataResult<Map<String, Object>> result = service.insert2(dtoList);
+
+        // Assert
+        assertTrue(result.success);
+        Map<String, Object> data = result.data;
+        List<Map<String, Object>> successList = (List<Map<String, Object>>) data.get("success");
+        List<String> failedList = (List<String>) data.get("failed");
+
+        assertEquals(1, successList.size());
+        assertTrue(failedList.isEmpty());
+
+        // Validar que, aunque la feature se creó, el conteo de HUs es 0
+        assertEquals(0, successList.get(0).get("storiesCreated"));
+
+        // Verificar que se intenta insertar la WorkOrder, pero la lista de detalles estará vacía por el filtro
+        verify(issueTicketDaoMock).insertWorkOrderAndDetail(any(), eq(Collections.emptyList()));
+    }
+
+    /**
+     * Helper para crear un DTO válido y completo para los tests de insert2.
+     */
+    private WorkOrderDtoRequest2 createValidDtoForInsert2(String featureName) {
+        WorkOrderDtoRequest2 dto = new WorkOrderDtoRequest2();
+        dto.setFeature(featureName);
+        dto.setJiraProjectName("PROJECT-TEST");
+        dto.setJiraProjectId(12345);
+        dto.setFolio("FOLIO-" + featureName.replace("FEATURE", "")); // Folio único por feature
+        dto.setBoardId(1);
+        dto.setProjectId(10);
+        dto.setSourceId("SRC-01");
+        dto.setSourceName("TestSource");
+        dto.setFlowType(1);
+        dto.setRegisterUserId("testuser");
+
+        WorkOrderDetailDtoRequest detail1 = new WorkOrderDetailDtoRequest();
+        detail1.setTemplateId(101);
+        WorkOrderDetailDtoRequest detail2 = new WorkOrderDetailDtoRequest();
+        detail2.setTemplateId(102);
+        dto.setWorkOrderDetail(Arrays.asList(detail1, detail2));
+
+        return dto;
+    }
 }
