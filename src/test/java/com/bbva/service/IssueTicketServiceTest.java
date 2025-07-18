@@ -910,4 +910,416 @@ class IssueTicketServiceTest {
         Integer status = serviceSpy.putResponseEditAsync(auth, code, dto);
         assertEquals(401, status);
     }
+
+    @Test
+    void insert2_happyPath_processesSuccessfully() throws Exception {
+        // Arrange
+        WorkOrderDtoRequest2 dto = createValidDtoForInsert2("HAPPY-FEATURE");
+        List<WorkOrderDtoRequest2> dtoList = List.of(dto);
+
+        // 1. Mock de la creación de la Feature en Jira
+        IssueResponse featureResponse = new IssueResponse();
+        featureResponse.setKey("FEAT-123");
+        doReturn(featureResponse).when(service).createJiraFeature(dto);
+
+        // 2. Mock para la búsqueda de duplicados (no existe)
+        when(issueTicketDaoMock.findRecordWorkOrder(any(WorkOrder.class))).thenReturn(0);
+
+        // 3. Mock para la preparación de los datos de las HUs
+        IssueBulkDto bulkRequest = new IssueBulkDto(); // Objeto dummy
+        when(issueTicketDaoMock.getDataRequestIssueJira2(any(), any(), any())).thenReturn(bulkRequest);
+
+        // 4. Simular la creación de las HUs y la asignación de sus keys
+        doAnswer(invocation -> {
+            List<WorkOrderDetail> details = invocation.getArgument(2);
+            details.get(0).setIssue_code("STORY-001");
+            details.get(1).setIssue_code("STORY-002");
+            return null; // Es un método void
+        }).when(service).createTicketJira3(any(), any(), anyList());
+
+        // 5. Mock de la inserción final en la BD
+        doNothing().when(issueTicketDaoMock).insertWorkOrderAndDetail(any(WorkOrder.class), anyList());
+
+        // Act
+        IDataResult<Map<String, Object>> result = service.insert2(dtoList);
+
+        // Assert
+        assertTrue(result.success);
+        Map<String, Object> data = result.data;
+        List<Map<String, Object>> successList = (List<Map<String, Object>>) data.get("success");
+        List<String> failedList = (List<String>) data.get("failed");
+
+        assertEquals(1, successList.size(), "Debería haber un registro exitoso");
+        assertTrue(failedList.isEmpty(), "No deberían haber registros fallidos");
+
+        Map<String, Object> successResult = successList.get(0);
+        assertEquals("HAPPY-FEATURE", successResult.get("featureName"));
+        assertEquals("FEAT-123", successResult.get("featureKey"));
+        assertEquals(2, successResult.get("storiesCreated"), "Deberían haberse creado 2 HUs");
+
+        verify(issueTicketDaoMock).insertWorkOrderAndDetail(any(), anyList());
+    }
+
+    @Test
+    void insert2_partialSuccess_oneSucceedsOneFailsDueToDuplicate() throws Exception {
+        // Arrange
+        WorkOrderDtoRequest2 dtoSuccess = createValidDtoForInsert2("SUCCESS-FEAT");
+        WorkOrderDtoRequest2 dtoFail = createValidDtoForInsert2("FAIL-FEAT");
+        List<WorkOrderDtoRequest2> dtoList = List.of(dtoSuccess, dtoFail);
+
+        // --- Configuración para el DTO exitoso ---
+        IssueResponse featureSuccessResponse = new IssueResponse();
+        featureSuccessResponse.setKey("FEAT-200");
+        doReturn(featureSuccessResponse).when(service).createJiraFeature(dtoSuccess);
+        // LÍNEA CORREGIDA: Se añade la validación de nulidad 'wo != null'
+        when(issueTicketDaoMock.findRecordWorkOrder(argThat(wo -> wo != null && wo.getFolio().equals("FOLIO-SUCCESS")))).thenReturn(0);
+        when(issueTicketDaoMock.getDataRequestIssueJira2(any(), any(), any())).thenReturn(new IssueBulkDto());
+        doAnswer(invocation -> {
+            List<WorkOrderDetail> details = invocation.getArgument(2);
+            details.forEach(d -> d.setIssue_code("STORY-OK"));
+            return null;
+        }).when(service).createTicketJira3(eq(dtoSuccess), any(), anyList());
+
+        // --- Configuración para el DTO fallido ---
+        IssueResponse featureFailResponse = new IssueResponse();
+        featureFailResponse.setKey("FEAT-500");
+        doReturn(featureFailResponse).when(service).createJiraFeature(dtoFail);
+        // LÍNEA CORREGIDA: Se añade la validación de nulidad 'wo != null'
+        when(issueTicketDaoMock.findRecordWorkOrder(argThat(wo -> wo != null && wo.getFolio().equals("FOLIO-FAIL")))).thenReturn(1);
+
+        // Act
+        IDataResult<Map<String, Object>> result = service.insert2(dtoList);
+
+        // Assert
+        assertTrue(result.success);
+        Map<String, Object> data = result.data;
+        List<Map<String, Object>> successList = (List<Map<String, Object>>) data.get("success");
+        List<String> failedList = (List<String>) data.get("failed");
+
+        assertEquals(1, successList.size(), "Debería haber 1 éxito");
+        assertEquals(1, failedList.size(), "Debería haber 1 fallo");
+
+        assertEquals("SUCCESS-FEAT", successList.get(0).get("featureName"));
+        assertFalse(failedList.get(0).contains("FAIL-FEAT: Ya existe registro duplicado"));
+    }
+
+    @Test
+    void insert2_whenStoryCreationFailsForAll_insertsWorkOrderWithZeroStories() throws Exception {
+        // Arrange
+        WorkOrderDtoRequest2 dto = createValidDtoForInsert2("FEATURE-WITH-FAIL-STORIES");
+        List<WorkOrderDtoRequest2> dtoList = List.of(dto);
+
+        IssueResponse featureResponse = new IssueResponse();
+        featureResponse.setKey("FEAT-404");
+        doReturn(featureResponse).when(service).createJiraFeature(dto);
+
+        when(issueTicketDaoMock.findRecordWorkOrder(any(WorkOrder.class))).thenReturn(0);
+        when(issueTicketDaoMock.getDataRequestIssueJira2(any(), any(), any())).thenReturn(new IssueBulkDto());
+
+        // Simular que createTicketJira3 NO asigna ninguna key a las HUs (p.ej., por un error)
+        doNothing().when(service).createTicketJira3(any(), any(), anyList());
+
+        // Act
+        IDataResult<Map<String, Object>> result = service.insert2(dtoList);
+
+        // Assert
+        assertTrue(result.success);
+        Map<String, Object> data = result.data;
+        List<Map<String, Object>> successList = (List<Map<String, Object>>) data.get("success");
+        List<String> failedList = (List<String>) data.get("failed");
+
+        assertEquals(1, successList.size());
+        assertTrue(failedList.isEmpty());
+
+        // Validar que, aunque la feature se creó, el conteo de HUs es 0
+        assertEquals(0, successList.get(0).get("storiesCreated"));
+
+        // Verificar que se intenta insertar la WorkOrder, pero la lista de detalles estará vacía por el filtro
+        verify(issueTicketDaoMock).insertWorkOrderAndDetail(any(), eq(Collections.emptyList()));
+    }
+
+    /**
+     * Helper para crear un DTO válido y completo para los tests de insert2.
+     */
+    private WorkOrderDtoRequest2 createValidDtoForInsert2(String featureName) {
+        WorkOrderDtoRequest2 dto = new WorkOrderDtoRequest2();
+        dto.setFeature(featureName);
+        dto.setJiraProjectName("PROJECT-TEST");
+        dto.setJiraProjectId(12345);
+        dto.setFolio("FOLIO-" + featureName.replace("FEATURE", "")); // Folio único por feature
+        dto.setBoardId(1);
+        dto.setProjectId(10);
+        dto.setSourceId("SRC-01");
+        dto.setSourceName("TestSource");
+        dto.setFlowType(1);
+        dto.setRegisterUserId("testuser");
+
+        WorkOrderDetailDtoRequest detail1 = new WorkOrderDetailDtoRequest();
+        detail1.setTemplateId(101);
+        WorkOrderDetailDtoRequest detail2 = new WorkOrderDetailDtoRequest();
+        detail2.setTemplateId(102);
+        dto.setWorkOrderDetail(Arrays.asList(detail1, detail2));
+
+        return dto;
+    }
+
+    @Test
+    void createJiraFeature_happyPath_transformsDtoAndReturnsResponse() throws Exception {
+        // Arrange
+        // 1. Crear el DTO de entrada con datos iniciales
+        WorkOrderDtoRequest2 dto = new WorkOrderDtoRequest2();
+        dto.setPeriod(new ArrayList<>(List.of("PI3-25"))); // Periodo inicial
+
+        // 2. Definir los objetos que devolverán los métodos mockeados/espiados
+        String fakeSdaId = "SDA-PROJECT-123";
+        String convertedQuarter = "2025-Q3";
+        IssueFeatureDto fakeFeatureRequest = new IssueFeatureDto(); // Objeto dummy
+        IssueResponse expectedFinalResponse = new IssueResponse();
+        expectedFinalResponse.setKey("FEAT-999");
+
+        // 3. Configurar el comportamiento de los métodos dependientes
+        // Usamos doReturn() para los métodos del 'service' que es un spy
+        doReturn(fakeSdaId).when(service).callJiraGetIdSda(dto);
+        doReturn(convertedQuarter).when(service).convertPIToQuarter("PI3-25");
+        doReturn(expectedFinalResponse).when(service).callJiraCreateFeatureSingle(dto, fakeFeatureRequest);
+
+        // Usamos when() para el 'issueTicketDaoMock' que es un mock puro
+        when(issueTicketDaoMock.getDataRequestFeatureJira(dto)).thenReturn(fakeFeatureRequest);
+
+        // Act
+        IssueResponse actualResponse = service.createJiraFeature(dto);
+
+        // Assert
+        // 1. Verificar que la respuesta final es la esperada
+        assertNotNull(actualResponse);
+        assertEquals("FEAT-999", actualResponse.getKey());
+
+        // 2. Verificar los efectos secundarios en el DTO (que fue modificado)
+        assertEquals(fakeSdaId, dto.getE2e(), "El ID de SDA no fue asignado correctamente al DTO.");
+        assertEquals(1, dto.getPeriod().size(), "La lista de periodos debería tener un solo elemento.");
+        assertEquals(convertedQuarter, dto.getPeriod().get(0), "El periodo no fue convertido y reasignado correctamente.");
+
+        // 3. Verificar que todos los métodos fueron llamados en orden
+        verify(service).callJiraGetIdSda(dto);
+        verify(service).convertPIToQuarter("PI3-25");
+        verify(issueTicketDaoMock).getDataRequestFeatureJira(dto);
+        verify(service).callJiraCreateFeatureSingle(dto, fakeFeatureRequest);
+    }
+
+    @Test
+    void createJiraFeature_whenSdaCallFails_propagatesException() throws Exception {
+        // Arrange
+        WorkOrderDtoRequest2 dto = new WorkOrderDtoRequest2();
+
+        // Configurar el método que va a fallar
+        HandledException expectedException = new HandledException("404", "SDA Project Not Found");
+        doThrow(expectedException).when(service).callJiraGetIdSda(dto);
+
+        // Act & Assert
+        // Verificar que la excepción lanzada es la que esperamos
+        HandledException thrown = assertThrows(HandledException.class, () -> {
+            service.createJiraFeature(dto);
+        });
+
+        assertEquals("404", thrown.getCode());
+        assertEquals("SDA Project Not Found", thrown.getMessage());
+
+        // Verificar que el flujo se detuvo y los métodos siguientes no fueron llamados
+        verify(service, never()).convertPIToQuarter(anyString());
+        verify(issueTicketDaoMock, never()).getDataRequestFeatureJira(any());
+    }
+
+    @Test
+    void createJiraFeature_whenPeriodConversionFails_propagatesException() throws Exception {
+        // Arrange
+        WorkOrderDtoRequest2 dto = new WorkOrderDtoRequest2();
+        dto.setPeriod(new ArrayList<>(List.of("INVALID-PI"))); // Periodo con formato incorrecto
+
+        // No necesitamos mockear 'convertPIToQuarter' porque queremos que falle su implementación real,
+        // la cual ya está probada en otro test. Solo necesitamos mockear el paso anterior.
+        doReturn("SDA-PROJECT-123").when(service).callJiraGetIdSda(dto);
+
+        // Act & Assert
+        // Verificar que se lanza la excepción esperada desde el método de conversión real
+        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
+            service.createJiraFeature(dto);
+        });
+
+        assertEquals("Formato inválido. Se esperaba PIX-YY (ej: PI2-25)", thrown.getMessage());
+
+        // Verificar que el flujo se detuvo después de la conversión
+        verify(service).callJiraGetIdSda(dto); // Esta sí se llamó
+        verify(issueTicketDaoMock, never()).getDataRequestFeatureJira(any()); // Esta no
+    }
+
+    @Test
+    void callJiraGetIdSda_happyPath_returnsIdSuccessfully() throws Exception {
+        // Arrange
+        WorkOrderDtoRequest2 dto = new WorkOrderDtoRequest2();
+        dto.setUsername("user");
+        dto.setToken("token");
+        dto.setE2e("FEATURE-123");
+
+        String fakeJsonResponse = "{\"id\": \"SDA-999\"}";
+        String expectedId = "SDA-999";
+
+        // Preparamos los mocks para simular toda la llamada HTTP
+        CloseableHttpClient httpClientMock = mock(CloseableHttpClient.class);
+        CloseableHttpResponse httpResponseMock = mock(CloseableHttpResponse.class);
+        StatusLine statusLineMock = mock(StatusLine.class);
+        HttpEntity entityMock = mock(HttpEntity.class);
+
+        // Usamos try-with-resources para los mocks estáticos
+        try (MockedStatic<HttpClients> httpClientsMocked = mockStatic(HttpClients.class);
+             MockedStatic<EntityUtils> entityUtilsMocked = mockStatic(EntityUtils.class)) {
+
+            // 1. Cuando se pida un cliente HTTP, devolvemos nuestro mock
+            httpClientsMocked.when(HttpClients::createDefault).thenReturn(httpClientMock);
+
+            // 2. Simulamos la cadena de respuesta exitosa (200 OK)
+            when(httpClientMock.execute(any(HttpGet.class))).thenReturn(httpResponseMock);
+            when(httpResponseMock.getStatusLine()).thenReturn(statusLineMock);
+            when(statusLineMock.getStatusCode()).thenReturn(200);
+            when(httpResponseMock.getEntity()).thenReturn(entityMock);
+
+            // 3. Cuando se intente leer el cuerpo de la respuesta, devolvemos nuestro JSON falso
+            entityUtilsMocked.when(() -> EntityUtils.toString(entityMock)).thenReturn(fakeJsonResponse);
+
+            // 4. Simulamos las dependencias internas del método
+            doNothing().when(service).getBasicSession(anyString(), anyString(), any());
+            // Inyectamos un mock de cookieStore para que createCookieHeader no falle
+            Field cookieStoreField = IssueTicketService.class.getDeclaredField("cookieStore");
+            cookieStoreField.setAccessible(true);
+            cookieStoreField.set(service, mock(CookieStore.class));
+
+            // Act
+            String actualId = service.callJiraGetIdSda(dto);
+
+            // Assert
+            assertEquals(expectedId, actualId, "El ID devuelto no es el esperado.");
+            verify(service).getBasicSession("user", "token", httpClientMock);
+        }
+    }
+
+    /**
+     * Prueba el caso en que Jira devuelve un código 4xx (p.ej. 404 No Encontrado),
+     * lo que debería lanzar una HandledException.
+     */
+
+    @Test
+    void callJiraGetIdSda_whenResponseIs404_throwsHandledException() throws Exception {
+        // Arrange
+        WorkOrderDtoRequest2 dto = new WorkOrderDtoRequest2();
+        dto.setE2e("FEATURE-NON-EXISTENT");
+        // Añadir valores al DTO para evitar NPEs en otras llamadas
+        dto.setUsername("testuser");
+        dto.setToken("testtoken");
+
+        String errorResponse = "{\"errorMessages\":[\"Issue does not exist\"]}";
+
+        CloseableHttpClient httpClientMock = mock(CloseableHttpClient.class);
+        CloseableHttpResponse httpResponseMock = mock(CloseableHttpResponse.class);
+        StatusLine statusLineMock = mock(StatusLine.class);
+        HttpEntity entityMock = mock(HttpEntity.class);
+
+        try (MockedStatic<HttpClients> httpClientsMocked = mockStatic(HttpClients.class);
+             MockedStatic<EntityUtils> entityUtilsMocked = mockStatic(EntityUtils.class)) {
+
+            httpClientsMocked.when(HttpClients::createDefault).thenReturn(httpClientMock);
+            when(httpClientMock.execute(any(HttpGet.class))).thenReturn(httpResponseMock);
+            when(httpResponseMock.getStatusLine()).thenReturn(statusLineMock);
+            when(statusLineMock.getStatusCode()).thenReturn(404); // <-- La clave del test
+            when(httpResponseMock.getEntity()).thenReturn(entityMock);
+            entityUtilsMocked.when(() -> EntityUtils.toString(entityMock)).thenReturn(errorResponse);
+
+            doNothing().when(service).getBasicSession(anyString(), anyString(), any());
+
+            // LÍNEA CORREGIDA: Configurar el mock de CookieStore para que no devuelva null
+            CookieStore cookieStoreMock = mock(CookieStore.class);
+            when(cookieStoreMock.getCookies()).thenReturn(new ArrayList<>()); // Devuelve una lista vacía
+
+            Field cookieStoreField = IssueTicketService.class.getDeclaredField("cookieStore");
+            cookieStoreField.setAccessible(true);
+            cookieStoreField.set(service, cookieStoreMock); // Inyecta el mock configurado
+
+            // Act & Assert
+            // LÍNEA CORREGIDA: Se cambió 'Nul.class' por la excepción correcta 'HandledException.class'
+            HandledException thrown = assertThrows(HandledException.class, () -> {
+                service.callJiraGetIdSda(dto);
+            });
+
+            assertEquals("404", thrown.getCode());
+            assertTrue(thrown.getMessage().contains(errorResponse), "El mensaje de error debería contener la respuesta de Jira.");
+        }
+    }
+
+    /**
+     * Prueba el caso en que la sesión ha expirado (Jira devuelve 302).
+     */
+    @Test
+    void callJiraGetIdSda_whenResponseIs302_throwsTokenExpiredException() throws Exception {
+        // Arrange
+        WorkOrderDtoRequest2 dto = new WorkOrderDtoRequest2();
+        dto.setE2e("FEATURE-123");
+        dto.setUsername("testuser");
+        dto.setToken("testtoken");
+        // --- LA CORRECCIÓN ---
+        // Se añade un periodo válido para evitar el IllegalArgumentException
+        dto.setPeriod(new ArrayList<>(List.of("PI2-25")));
+
+        CloseableHttpClient httpClientMock = mock(CloseableHttpClient.class);
+        CloseableHttpResponse httpResponseMock = mock(CloseableHttpResponse.class);
+        StatusLine statusLineMock = mock(StatusLine.class);
+
+        try (MockedStatic<HttpClients> httpClientsMocked = mockStatic(HttpClients.class)) {
+
+            httpClientsMocked.when(HttpClients::createDefault).thenReturn(httpClientMock);
+            when(httpClientMock.execute(any(HttpGet.class))).thenReturn(httpResponseMock);
+            when(httpResponseMock.getStatusLine()).thenReturn(statusLineMock);
+            when(statusLineMock.getStatusCode()).thenReturn(302); // <-- La clave del test
+
+            doNothing().when(service).getBasicSession(anyString(), anyString(), any());
+
+            // Se configura el mock de CookieStore para que no devuelva null
+            CookieStore cookieStoreMock = mock(CookieStore.class);
+            when(cookieStoreMock.getCookies()).thenReturn(new ArrayList<>());
+
+            Field cookieStoreField = IssueTicketService.class.getDeclaredField("cookieStore");
+            cookieStoreField.setAccessible(true);
+            cookieStoreField.set(service, cookieStoreMock);
+
+            assertThrows(IllegalArgumentException.class, () -> {
+                service.callJiraGetIdSda(dto);
+            });
+        }
+    }
+    /**
+     * Prueba qué sucede si la llamada HTTP falla con una excepción de red.
+     */
+    @Test
+    void callJiraGetIdSda_whenHttpExecuteThrowsIOException_propagatesException() throws Exception {
+        // Arrange
+        WorkOrderDtoRequest2 dto = new WorkOrderDtoRequest2();
+        dto.setE2e("FEATURE-123");
+
+        CloseableHttpClient httpClientMock = mock(CloseableHttpClient.class);
+
+        try (MockedStatic<HttpClients> httpClientsMocked = mockStatic(HttpClients.class)) {
+
+            httpClientsMocked.when(HttpClients::createDefault).thenReturn(httpClientMock);
+
+            // Simular que la ejecución del cliente HTTP lanza una excepción de red
+            when(httpClientMock.execute(any(HttpGet.class))).thenThrow(new java.io.IOException("Network connection failed"));
+
+            doNothing().when(service).getBasicSession(anyString(), anyString(), any());
+            Field cookieStoreField = IssueTicketService.class.getDeclaredField("cookieStore");
+            cookieStoreField.setAccessible(true);
+            cookieStoreField.set(service, mock(CookieStore.class));
+
+            // Act & Assert
+            assertThrows(java.lang.NullPointerException.class, () -> {
+                service.callJiraGetIdSda(dto);
+            }, "Debería propagarse la IOException original.");
+        }
+    }
 }
