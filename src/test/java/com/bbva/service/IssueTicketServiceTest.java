@@ -1322,26 +1322,4 @@ class IssueTicketServiceTest {
             }, "Debería propagarse la IOException original.");
         }
     }
-
-    /**
-     * Helper para inyectar un CookieStore mock y evitar NullPointerExceptions.
-     */
-    private void injectMockCookieStore() throws Exception {
-        CookieStore cookieStoreMock = mock(CookieStore.class);
-        when(cookieStoreMock.getCookies()).thenReturn(new ArrayList<>());
-        Field cookieStoreField = IssueTicketService.class.getDeclaredField("cookieStore");
-        cookieStoreField.setAccessible(true);
-        cookieStoreField.set(service, cookieStoreMock);
-    }
-
-    /**
-     * Helper para modificar campos estáticos y finales usando reflexión.
-     */
-    private void setFinalStatic(Field field, Object newValue) throws Exception {
-        field.setAccessible(true);
-        Field modifiersField = Field.class.getDeclaredField("modifiers");
-        modifiersField.setAccessible(true);
-        modifiersField.setInt(field, field.getModifiers() & ~java.lang.reflect.Modifier.FINAL);
-        field.set(null, newValue);
-    }
 }
