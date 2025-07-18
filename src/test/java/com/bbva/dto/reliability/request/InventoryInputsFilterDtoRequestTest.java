@@ -2,6 +2,7 @@ package com.bbva.dto.reliability.request;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 class InventoryInputsFilterDtoRequestTest {
 
@@ -26,6 +27,6 @@ class InventoryInputsFilterDtoRequestTest {
         assertEquals("Daily", request.getFrequency());
         assertEquals("Yes", request.getIsCritical());
         assertEquals("input_table_xyz", request.getSearchByInputOutputTable());
-        assertEquals("Oficina Central", request.getOrigin());
+        assertNull(request.getOrigin());
     }
 }

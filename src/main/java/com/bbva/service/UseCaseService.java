@@ -113,6 +113,7 @@ public class UseCaseService {
     }
 
     public byte[] generateDocumentUseCases(UseCaseInputsFilterDtoRequest dto) {
+        try {
         List<UseCaseInputsDtoResponse> rows = useCaseReliabilityDao.listAllFilteredUseCases(dto);
 
         try (Workbook wb = new XSSFWorkbook();
@@ -164,6 +165,7 @@ public class UseCaseService {
 
             wb.write(out);
             return out.toByteArray();
+        }
         } catch (Exception e) {
             log.severe("Error generando Excel Casos de Uso: " + e.getMessage());
             return new byte[0];

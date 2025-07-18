@@ -111,7 +111,7 @@ class UseCaseReliabilityDaoTest {
         request.setDomainName("domain");
         request.setCritical("critical");
         request.setProjectName("project");
-        request.setTrimestre("2024-Q4");
+        request.setPiLargeName("2024-Q4");
         request.setRecordsAmount(0);
         request.setPage(1);
 
@@ -136,5 +136,48 @@ class UseCaseReliabilityDaoTest {
         verify(sqlSessionMock).close();
     }
 
+    @Test
+    void testListAllFilteredUseCasesSuccess() {
+        UseCaseInputsFilterDtoRequest dto = new UseCaseInputsFilterDtoRequest();
+        dto.setDomainName("dom");
+        dto.setCritical("crit");
+        dto.setProjectName("proj");
+        dto.setPiLargeName("2025-Q2");
 
+        List<UseCaseInputsDtoResponse> mockList = List.of(
+                new UseCaseInputsDtoResponse(),
+                new UseCaseInputsDtoResponse()
+        );
+
+        when(useCaseMapperMock.getFilteredUseCases(
+                "dom", "crit", "proj", "2025-Q2"
+        )).thenReturn(mockList);
+
+        List<UseCaseInputsDtoResponse> result =
+                useCaseReliabilityDao.listAllFilteredUseCases(dto);
+
+        assertSame(mockList, result, "Debe devolver justamente la lista del mapper");
+        verify(sqlSessionFactoryMock).openSession();
+        verify(sqlSessionMock).getMapper(UseCaseMapper.class);
+        verify(useCaseMapperMock).getFilteredUseCases(
+                "dom", "crit", "proj", "2025-Q2"
+        );
+        verify(sqlSessionMock).close();
+    }
+
+    @Test
+    void testListAllFilteredUseCasesOnExceptionReturnsEmpty() {
+        UseCaseInputsFilterDtoRequest dto = new UseCaseInputsFilterDtoRequest();
+
+        when(sqlSessionFactoryMock.openSession())
+                .thenThrow(new RuntimeException("DB error"));
+
+        List<UseCaseInputsDtoResponse> result =
+                useCaseReliabilityDao.listAllFilteredUseCases(dto);
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty(), "En excepción debe retornar Collections.emptyList()");
+
+        verify(sqlSessionMock, never()).getMapper(UseCaseMapper.class);
+    }
 }

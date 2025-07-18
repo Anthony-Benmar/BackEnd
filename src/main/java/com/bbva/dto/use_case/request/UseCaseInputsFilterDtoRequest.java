@@ -13,4 +13,5 @@ public class UseCaseInputsFilterDtoRequest {
     private String domainName;
     private String projectName;
     private String piLargeName;
+    private String trimestre;
 }

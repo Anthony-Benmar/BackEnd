@@ -4,6 +4,7 @@ import com.bbva.common.HttpStatusCodes;
 import com.bbva.core.abstracts.IDataResult;
 import com.bbva.dao.ReliabilityDao;
 import com.bbva.database.mappers.ReliabilityMapper;
+import com.bbva.dto.catalog.response.DropDownDto;
 import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
 import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
 import com.bbva.dto.reliability.request.ReliabilityPackInputFilterRequest;
@@ -339,14 +340,15 @@ class ReliabilityServiceTest {
             var row = sheet.getRow(1);
             assertEquals("Dom1", row.getCell(0).getStringCellValue());
             assertEquals("UseCase1", row.getCell(1).getStringCellValue());
-            assertEquals("Job1", row.getCell(2).getStringCellValue());
-            assertEquals("Comp1", row.getCell(3).getStringCellValue());
-            assertEquals("Type1", row.getCell(4).getStringCellValue());
-            assertEquals("Yes", row.getCell(5).getStringCellValue());
-            assertEquals("Daily", row.getCell(6).getStringCellValue());
-            assertEquals("input1\ninput2", row.getCell(7).getStringCellValue());
-            assertEquals("output1", row.getCell(8).getStringCellValue());
-            assertEquals("Pack1", row.getCell(9).getStringCellValue());
+            assertEquals("", row.getCell(2).getStringCellValue());
+            assertEquals("Job1", row.getCell(3).getStringCellValue());
+            assertEquals("Comp1", row.getCell(4).getStringCellValue());
+            assertEquals("Type1", row.getCell(5).getStringCellValue());
+            assertEquals("Yes", row.getCell(6).getStringCellValue());
+            assertEquals("Daily", row.getCell(7).getStringCellValue());
+            assertEquals("input1\ninput2", row.getCell(8).getStringCellValue());
+            assertEquals("output1", row.getCell(9).getStringCellValue());
+            assertEquals("Pack1", row.getCell(10).getStringCellValue());
         }
     }
 
@@ -395,5 +397,30 @@ class ReliabilityServiceTest {
         IDataResult<Void> result = reliabilityService.updateStatusReliabilityPacksJobStock(packs);
         assertFalse(result.success);
         verify(reliabilityDaoMock, times(1)).updateStatusReliabilityPacksJobStock(any());
+    }
+
+    @Test
+    void testGetOriginTypesSuccess() {
+        // dado
+        List<DropDownDto> mockOrigins = List.of();
+        when(reliabilityDaoMock.getOriginTypes()).thenReturn(mockOrigins);
+
+        IDataResult<List<DropDownDto>> result = reliabilityService.getOriginTypes();
+
+        assertTrue(result.success);
+        assertEquals(mockOrigins, result.data);
+        verify(reliabilityDaoMock).getOriginTypes();
+    }
+
+    @Test
+    void testGetOriginTypesError() {
+        when(reliabilityDaoMock.getOriginTypes()).thenThrow(new RuntimeException("DB down"));
+
+        IDataResult<List<DropDownDto>> result = reliabilityService.getOriginTypes();
+
+        assertFalse(result.success);
+        assertEquals("500", result.status);
+        assertTrue(result.message.contains("DB down"));
+        verify(reliabilityDaoMock).getOriginTypes();
     }
 }
