@@ -2,6 +2,8 @@ package com.bbva.service;
 
 import com.bbva.core.abstracts.IDataResult;
 import com.bbva.dao.UseCaseReliabilityDao;
+import com.bbva.dto.use_case.response.UseCaseInputsDtoResponse;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import com.bbva.dto.use_case.request.UpdateOrInsertUseCaseDtoRequest;
 import com.bbva.dto.use_case.request.UseCaseInputsFilterDtoRequest;
 import com.bbva.dto.use_case.response.UpdateOrInsertDtoResponse;
@@ -11,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -315,5 +318,32 @@ class UseCaseServiceTest {
         assertNotNull(result);
         assertFalse(result.success);
         assertEquals("OperativeModel must not be null", result.message);
+    }
+
+    @Test
+    void testGenerateDocumentUseCases() throws IOException, InvalidFormatException {
+        UseCaseInputsFilterDtoRequest dto = new UseCaseInputsFilterDtoRequest();
+
+        UseCaseInputsDtoResponse useCaseMock = new UseCaseInputsDtoResponse();
+        useCaseMock.setDomainName("Dominio 1");
+        useCaseMock.setUseCaseName("Caso de Uso 1");
+        useCaseMock.setUseCaseDescription("Descripción 1");
+        useCaseMock.setProjectCount(2);
+        useCaseMock.setProjects("Proyecto A, Proyecto B");
+        useCaseMock.setPiLargeName("Q3 2025");
+        useCaseMock.setCriticalDesc("Alta");
+        useCaseMock.setIsRegulatory(1);
+        useCaseMock.setUseCaseScopeDesc("Global");
+        useCaseMock.setOperativeModel(1);
+
+        when(useCaseReliabilityDaoMock.listAllFilteredUseCases(dto)).thenReturn(List.of(useCaseMock));
+
+        byte[] result = useCaseService.generateDocumentUseCases(dto);
+
+        assertNotNull(result);
+        assertTrue(result.length > 0);
+
+        assertEquals((byte)0x50, result[0]);
+        assertEquals((byte)0x4B, result[1]);
     }
 }
