@@ -87,7 +87,7 @@ public class JiraValidatorConstantes {
     public static final String ACCEPTANCE_CRITERIA_DATAX_RLB = "Como equipo de Reliability {0} declaramos que el siguiente Pase está listo para transitar por las etapas de Certificación Técnica y Pase a Producción";
     public static final String MSG_RULE_CRITERIOFORMATO_MESH = "Criterio de aceptación no cumple con el formato requerido. \"" + ACCEPTANCE_CRITERIA_MESH.replace("{0}", "(Nombre de Equipo) ") + "\"";
     public static final String MSG_RULE_CRITERIOFORMATO_PR = "Criterio de aceptación no cumple con el formato requerido.  " + ACCEPTANCE_CRITERIA_COMMON_TEXT;
-    public static final String MSG_RULE_CRITERIOFORMATO_DATAX = "Criterio de aceptación no cumple con el formato requerido.  ";
+    public static final String MSG_RULE_CRITERIOFORMATO_DATAX = "Criterio de aceptación Datax no cumple con el formato requerido.  ";
     public static final String MSG_RULE_TIPODESARROLLO = "Tipo de desarrollo no encontrado en los criterios de aceptación";
     public static final String MSG_RULE_CRITEROACEPTACION = "Sin Criterio de Aceptación";
     public static final String MSG_RULE_EXCEPTION_RLB = "Proviene del tabero RLB, por lo que no tiene dependencia asociada y, en consecuencia, esta regla no es aplicable.";
@@ -228,7 +228,7 @@ public class JiraValidatorConstantes {
         Map<String, List<String>> mapSubtasksByDevTypes = new HashMap<>();
         mapSubtasksByDevTypes.put(MALLAS, new ArrayList<>(List.of(P110_AT, C204_PO, C204_QA, VB_DEV, VB_ADA)));
         mapSubtasksByDevTypes.put(PRS, new ArrayList<>(List.of(C204_PO, C204_QA, VB_ADA)));
-        mapSubtasksByDevTypes.put(PRODUCTIVIZACION, new ArrayList<>(List.of("[VB][PO]", "[VB][QA]", VB_ADA)));
+        mapSubtasksByDevTypes.put(PRODUCTIVIZACION, new ArrayList<>(List.of(VB_PO, VB_QA, VB_ADA)));
         mapSubtasksByDevTypes.put(HOST, new ArrayList<>(List.of(P110_AT, C204_PO, C204_QA, P110_GC)));
         mapSubtasksByDevTypes.put(HAMMURABI, new ArrayList<>(List.of(C204_PO, C204_QA, VB_ADA)));
         mapSubtasksByDevTypes.put(MIGRATIONTOOL, new ArrayList<>(List.of(C204_PO, C204_QA, VB_ADA)));
@@ -269,7 +269,7 @@ public class JiraValidatorConstantes {
                 "advertenciaReadyToVerify", true,
                 "advertenciaEstadoInicial", false,
                 STATUS, new ArrayList<>(List.of(ACCEPTED, READY_TO_VERIFY)),
-                ITEMS, new ArrayList<>(List.of(C204_PO,"[VB][PO]")),
+                ITEMS, new ArrayList<>(List.of(C204_PO,VB_PO)),
                 "rol", new ArrayList<>(List.of("5","8"))
                 )));
         mapSubtasksTipoOwner.put("so", new HashMap<>(Map.of(
@@ -308,7 +308,7 @@ public class JiraValidatorConstantes {
                 "advertenciaReadyToVerify", false,
                 "advertenciaEstadoInicial", true,
                 STATUS, new ArrayList<>(List.of(READY)),
-                ITEMS, new ArrayList<>(List.of(C204_QA, "[VB][QA]"))
+                ITEMS, new ArrayList<>(List.of(C204_QA, VB_QA))
                 )));
     SUBTASKS_TYPE_OWNER = Collections.unmodifiableMap(mapSubtasksTipoOwner);
 
