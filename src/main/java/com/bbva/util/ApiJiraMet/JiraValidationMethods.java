@@ -206,7 +206,7 @@ public class JiraValidationMethods {
                         ? "Con PR asociada y aprobada por Scrum Master o Focal Point: " + prValid.keySet()
                         : "Con PR asociada: " + prValid.keySet();
             } else {
-                message = "No se detectó una PR válida asociada.";
+                message = "No se detectó una PR válida asociada ó se encontraron mas de las esperadas.";
                 message += " Atención: Si la PR fue asociada correctamente, falta dar permisos de acceso.";
                 isValid = false;
             }
@@ -262,8 +262,8 @@ public class JiraValidationMethods {
     }
 
     private List<String> getDevelopmentTypes() {
-        return Stream.of("Procesamiento", "MigrationTool", "Hammurabi", "Ingesta", "Scaffolder", "Operativizacion",
-                        "Teradata", "SmartCleaner", "SparkCompactor", "JSON Global")
+        return Stream.of(PROCESAMIENTO, MIGRATIONTOOL, HAMMURABI, INGESTA, SCAFFOLDER, OPERATIVIZACION,
+                        TERADATA, SMARTCLEANER, SPARKCOMPACTOR, JSON_GLOBAL)
                 .map(String::toLowerCase)
                 .toList();
     }
@@ -291,50 +291,84 @@ public class JiraValidationMethods {
         return false;
     }
 
-    public Map<String, Object> getValidationPRBranch(String helpMessage, String group) {
+    public Map<String, Object> getValidationPRBranch(String tipoDesarrollo, String helpMessage, String group) {
         String message = "";
         boolean isValid = false;
         boolean isWarning = false;
-        List<String> validBranches = Arrays.asList("develop", "master");
+        List<String> validOriginBranches;
+        List<String> validDestinyBranches;
+        if (tipoDesarrollo.equalsIgnoreCase(PROCESAMIENTO) || tipoDesarrollo.equalsIgnoreCase(SCAFFOLDER) || (tipoDesarrollo.equalsIgnoreCase(JSON_GLOBAL)
+                || (tipoDesarrollo.equalsIgnoreCase(SMARTCLEANER)))){
+            validOriginBranches = List.of("develop");
+            validDestinyBranches = List.of("master");
+        } else{
+            validOriginBranches = List.of("feature");
+            validDestinyBranches = List.of("master");
+        }
+
         JsonObject jiraTicketResultPrs = jiraTicketResult
                 .getAsJsonObject(FIELDS);
 
-        List<String> tipoDesarrolloPRs = Arrays.asList("Procesamiento","MigrationTool",
-                "Hammurabi", "Ingesta", "Scaffolder", "Operativizacion",
-                "Teradata", "SmartCleaner","SparkCompactor", "JSON Global");
+        List<String> tipoDesarrolloPRs = getDevelopmentTypes();
+        if (isValidDevelopmentType(tipoDesarrollo, tipoDesarrolloPRs)) {
+            if (jiraTicketResultPrs.get("prs") != null) {
+                int cantidadPRs = jiraTicketResultPrs.get("prs").getAsJsonArray().size();
+                return validatePRBranch(cantidadPRs, jiraTicketResultPrs, validOriginBranches, validDestinyBranches,
+                        isValid, isWarning, message, helpMessage, group);
+            }
+            return buildValidationResult(message, isValid, isWarning, helpMessage, group);
+        } else {
+            return buildValidationResult(MSG_RULE_INVALID, !isValid, isWarning, helpMessage, group);
+        }
+    }
 
-        tipoDesarrolloPRs.replaceAll(String::toLowerCase);
-
-
-        if (jiraTicketResultPrs.get("prs") != null) {
-            int cantidadPRs = jiraTicketResultPrs.get("prs").getAsJsonArray().size();
-            if (cantidadPRs > 0) {
-                for (JsonElement prObj : jiraTicketResultPrs.get("prs").getAsJsonArray()) {
-                    String branch = prObj.getAsJsonObject().get("destinyBranch").getAsString();
-                    if(validBranches.contains(branch)){
-                        isValid = true;
-                        message = "Se encontró PR branch destino correcta: "+branch;
-                        return buildValidationResult(message, isValid, isWarning, helpMessage, group);
-                    }
-                    else{
-                        message = "No se encontró PR branch Asociada correcta: "+branch+ ". Solo son validas"+String.join(",",validBranches);
-                    }
+    private Map<String, Object> validatePRBranch(int cantidadPRs, JsonObject jiraTicketResultPrs, List<String> validOriginBranches,
+                                                 List<String> validDestinyBranches, boolean isValid,
+                                                 boolean isWarning, String message, String helpMessage, String group) {
+        if (cantidadPRs > 0) {
+            boolean hasError = false;
+            StringBuilder messageBuilder = new StringBuilder(message);
+            for (JsonElement prObj : jiraTicketResultPrs.get("prs").getAsJsonArray()) {
+                String destinyBranch = prObj.getAsJsonObject().get("destinyBranch").getAsString();
+                String originBranch = prObj.getAsJsonObject().get("originBranch").getAsString();
+                boolean isValidDestinyBranch = isBranchMatching (validDestinyBranches, destinyBranch);
+                boolean isValidOriginBranch= isBranchMatching (validOriginBranches, originBranch);
+                if(isValidOriginBranch){
+                    messageBuilder.append("Se encontró PR branch origen correcta: ").append(originBranch).append(".\n");
+                } else{
+                    hasError = true;
+                    messageBuilder.append("No se encontró PR branch origen Asociada correcta: ").append(originBranch).append(". Solo son validas ").append(String.join(",", validOriginBranches)).append(".\n");
+                }
+                if(isValidDestinyBranch){
+                    messageBuilder.append("Se encontró PR branch destino correcta: ").append(destinyBranch).append(".\n");
+                } else{
+                    hasError = true;
+                    messageBuilder.append("No se encontró PR branch destino Asociada correcta: ").append(destinyBranch).append(". Solo son validas ").append(String.join(",", validDestinyBranches)).append(".\n");
                 }
             }
-            else {
-                message = "No se encontraron PRs asociadas";
+            message = messageBuilder.toString();
+            isValid = !hasError;
+        } else {
+            message = "No se encontraron PRs asociadas";
+        }
+        return buildValidationResult(message, isValid, isWarning, helpMessage, group);
+    }
+
+    private boolean isBranchMatching(List<String> validBranches, String branch) {
+        for (String valid : validBranches) {
+            if (branch.equals(valid) || branch.startsWith(valid + "/")) {
+                return true;
             }
         }
-
-        return buildValidationResult(message, isValid, isWarning, helpMessage, group);
+        return false;
     }
 
     public Map<String, Object> getValidationValidateSubTask(String tipoDesarrollo, String helpMessage, String group) {
         List<String> aditionalSpecialSubtask = List.of(VB_KM, VB_SO);
         List<String> aditionalSpecialLabels = List.of("datioRutaCritica", "JobsHuerfanos");
 
-        List<String> requiredSubTasks = SUBTASKS_BY_DEVELOP_TYPES.get(tipoDesarrollo);
-        if(!containsAnyBranch(jiraTicketResult.getAsJsonObject(FIELDS), List.of("master"))){
+        List<String> requiredSubTasks = new ArrayList<>(SUBTASKS_BY_DEVELOP_TYPES.get(tipoDesarrollo));
+        if(!containsAnyBranch(jiraTicketResult.getAsJsonObject(FIELDS), List.of("master")) && !tipoDesarrollo.equalsIgnoreCase(DATAX)){
             requiredSubTasks.remove(VB_ADA);
         }
 
@@ -775,13 +809,17 @@ public class JiraValidationMethods {
         }
     }
 
-    public Map<String, Object> getValidationAcceptanceCriteria(String tipoDesarrollo,
+    public Map<String, Object> getValidationAcceptanceCriteria(String teamBackLogId, List<String> teamBackLogTicketIdRLB, String tipoDesarrollo,
             String helpMessage, String group) {
         String message;
         boolean isValid;
         boolean isWarning = false;
+        boolean isRLB = false;
         Map<String, Object> validAcceptanceCriteriaObject = CRITERIA_BY_DEVELOP_TYPES.get(tipoDesarrollo);
 
+        if (teamBackLogTicketIdRLB.contains(teamBackLogId)) {
+            isRLB = true;
+        }
         String acceptanceCriteria = jiraTicketResult
                 .getAsJsonObject(FIELDS)
                 .get("customfield_10260").getAsString()
@@ -791,20 +829,42 @@ public class JiraValidationMethods {
         if (tipoDesarrollo.equalsIgnoreCase(MALLAS)) {
             message = validateAcceptanceCriteriaMeshStandard(acceptanceCriteria, validAcceptanceCriteriaObject);
         } else {
-            message = validateAcceptanceCriteriaForOtherTypes(acceptanceCriteria, validAcceptanceCriteriaObject);
+            if(tipoDesarrollo.equalsIgnoreCase(DATAX)){
+                message = validateAcceptanceCriteriaDatax(acceptanceCriteria,validAcceptanceCriteriaObject, isRLB);
+            }
+            else{
+                message = validateAcceptanceCriteriaForOtherTypes(acceptanceCriteria, validAcceptanceCriteriaObject);
+            }
         }
         isValid = message.startsWith("Es válido: ");
 
         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
 
+    private String validateAcceptanceCriteriaDatax(String acceptanceCriteria, Map<String, Object> validAcceptanceCriteriaObject, boolean isRLB) {
+        String validationMessage = validateInitialConditions(acceptanceCriteria, validAcceptanceCriteriaObject);
+        if (validationMessage != null) {
+            return validationMessage;
+        }
+        String validAcceptanceCriteria = (String) validAcceptanceCriteriaObject.get(TEXTO);
+        if(isRLB){
+            validAcceptanceCriteria = ACCEPTANCE_CRITERIA_DATAX_RLB;
+        }
+        String expectedPattern = validAcceptanceCriteria.replace("{0}","[\\w\\s-]+")+"*";
+        Pattern pattern = Pattern.compile(expectedPattern);
+        Matcher matcher = pattern.matcher(acceptanceCriteria);
+
+        if (matcher.find()) {
+            return String.format(MSG_RULE_VALID, acceptanceCriteria);
+        }
+        return MSG_RULE_CRITERIOFORMATO_DATAX + validAcceptanceCriteria.replace("{0}", "XXXXX ").replace("\\", "");
+    }
+
     private String validateAcceptanceCriteriaMeshStandard(
             String acceptanceCriteria, Map<String, Object> validAcceptanceCriteriaObject) {
-        if (acceptanceCriteria.isEmpty()) {
-            return MSG_RULE_CRITEROACEPTACION;
-        }
-        if (validAcceptanceCriteriaObject == null) {
-            return MSG_RULE_TIPODESARROLLO;
+        String validationMessage = validateInitialConditions(acceptanceCriteria, validAcceptanceCriteriaObject);
+        if (validationMessage != null) {
+            return validationMessage;
         }
         String expectedPattern = ((String) validAcceptanceCriteriaObject.get(TEXTO)).replace("{0}", "([\\w\\d\\s\\-\\.\\&áéíóúÁÉÍÓÚüÜ]+)");
         Pattern pattern = Pattern.compile(expectedPattern);
@@ -818,11 +878,9 @@ public class JiraValidationMethods {
 
     private String validateAcceptanceCriteriaForOtherTypes(
             String acceptanceCriteria, Map<String, Object> validAcceptanceCriteriaObject) {
-        if (acceptanceCriteria.isEmpty()) {
-            return MSG_RULE_CRITEROACEPTACION;
-        }
-        if (validAcceptanceCriteriaObject == null) {
-            return MSG_RULE_TIPODESARROLLO;
+        String validationMessage = validateInitialConditions(acceptanceCriteria, validAcceptanceCriteriaObject);
+        if (validationMessage != null) {
+            return validationMessage;
         }
         String expectedPattern = (String) validAcceptanceCriteriaObject.get(TEXTO);
         String[] palabras = expectedPattern.split("\\s+");
@@ -832,6 +890,15 @@ public class JiraValidationMethods {
         return MSG_RULE_CRITERIOFORMATO_PR;
     }
 
+    private String validateInitialConditions(String acceptanceCriteria, Map<String, Object> validAcceptanceCriteriaObject) {
+        if (acceptanceCriteria.isEmpty()) {
+            return MSG_RULE_CRITEROACEPTACION;
+        }
+        if (validAcceptanceCriteriaObject == null) {
+            return MSG_RULE_TIPODESARROLLO;
+        }
+        return null;
+    }
 
     public Map<String, Object> getValidationTeamAssigned( String teamBackLogId,
             String tipoDesarrollo, String helpMessage, String group) {
@@ -1186,7 +1253,7 @@ public class JiraValidationMethods {
         boolean isValid = false;
         boolean isWarning = false;
 
-        if (tipoDesarrollo.equalsIgnoreCase(HOST) || tipoDesarrollo.equalsIgnoreCase(MALLAS)) {
+        if (tipoDesarrollo.equalsIgnoreCase(HOST) || tipoDesarrollo.equalsIgnoreCase(MALLAS) || tipoDesarrollo.equalsIgnoreCase(DATAX)) {
             JsonObject fieldsObject = jiraTicketResult.getAsJsonObject(FIELDS);
 
             List<String> jiraTicketImpactLabelList = extractImpactLabels(fieldsObject);
@@ -1195,9 +1262,14 @@ public class JiraValidationMethods {
                 return buildValidationResult(message, isValid, isWarning, helpMessage, group);
             }
 
-            List<String> validImpactLabels = tipoDesarrollo.equalsIgnoreCase("HOST")
-                    ? List.of("DataHub", "Host", "Plataforma_InformacionalP11")
-                    : List.of("AppsInternos", "Datio");
+            List<String> validImpactLabels;
+            if (tipoDesarrollo.equalsIgnoreCase("HOST")) {
+                validImpactLabels = List.of("DataHub", "Host", "Plataforma_InformacionalP11");
+            } else if (tipoDesarrollo.equalsIgnoreCase(DATAX)) {
+                validImpactLabels = List.of("Distribuido-CCR");
+            } else {
+                validImpactLabels = List.of("AppsInternos", "Datio");
+            }
 
             List<String> impactLabelsNotFound = getMissingLabels(validImpactLabels, jiraTicketImpactLabelList);
 
@@ -1257,10 +1329,14 @@ public class JiraValidationMethods {
                 .getAsJsonArray(ATTACHMENT);
         List<String> foundAttachments = new ArrayList<>();
 
-        if(tipoDesarrollo.equals("productivizacion")){
+        if(tipoDesarrollo.equalsIgnoreCase(PRODUCTIVIZACION)){
             message = "Esta regla no es válida para este tipo de desarrollo";
             isValid = true;
             return buildValidationResult(message, isValid, isWarning, helpMessage, group);
+        }
+
+        if(tipoDesarrollo.equalsIgnoreCase(DATAX)) {
+            return validateAttachmentDatax(attachments, helpMessage, group);
         }
 
         for (JsonElement attachment : attachments) {
@@ -1280,6 +1356,52 @@ public class JiraValidationMethods {
             message = "Faltan los siguientes adjuntos: " + String.join(", ", missingAttachments);
             isValid = false;
         }
+        return buildValidationResult(message, isValid, isWarning, helpMessage, group);
+    }
+
+    private Map<String, Object> validateAttachmentDatax(JsonArray attachments, String helpMessage, String group) {
+        int xlsxCount = 0;
+        boolean hasMatrizEscalamiento = false;
+        boolean hasDeRetorno = false;
+
+        for (JsonElement attachment : attachments) {
+            JsonObject obj = attachment.getAsJsonObject();
+            String filename = obj.has("filename") ? obj.get("filename").getAsString().toLowerCase() : "";
+
+            if (filename.endsWith(".xlsx")) {
+                xlsxCount++;
+
+                if (filename.contains("matriz")) {
+                    hasMatrizEscalamiento = true;
+                }
+            }
+        }
+
+        StringBuilder msgBuilder = new StringBuilder();
+
+        if (xlsxCount < 1) {
+            msgBuilder.append("Debe existir 1 archivos con extensión .xlsx.\n");
+        }
+
+        if (!hasMatrizEscalamiento) {
+            msgBuilder.append("Debe existir un archivo adjunto .xlsx con la palabra 'Matriz' en el nombre.\n");
+        }
+
+        String message;
+        boolean isValid;
+        boolean isWarning = false;
+        if (msgBuilder.isEmpty()) {
+            message = "Se encontró 1 archivo .xlsx requerido: con 'Matriz' en el nombre.";
+            isValid = true;
+        } else {
+            message = msgBuilder.toString().trim();
+            isValid = false;
+            if (xlsxCount > 1){
+                message = "Se encontró más de 1 archivo .xlsx requerido. Recordar que Plan de Retorno debe venir como enlace.";
+                isWarning = true;
+            }
+        }
+
         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
 
@@ -1384,7 +1506,7 @@ public class JiraValidationMethods {
         String message;
         boolean isValid;
         boolean isWarning = false;
-        List<String> requiredLabels = LABELS_BY_DEVELOP_TYPES.get(tipoDesarrollo.toLowerCase());
+        List<String> requiredLabels = new ArrayList<>(LABELS_BY_DEVELOP_TYPES.get(tipoDesarrollo.toLowerCase()));
         JsonArray labels = jiraTicketResult
                 .getAsJsonObject(FIELDS)
                 .getAsJsonArray(LABELS);
@@ -1394,6 +1516,14 @@ public class JiraValidationMethods {
             String labelName = label.getAsString();
             if (requiredLabels.contains(labelName)) {
                 foundLabels.add(labelName);
+                if(tipoDesarrollo.equalsIgnoreCase(DATAX)){
+                    if(labelName.equals(PROMOCIONNUEVA)){
+                        requiredLabels.remove(PROMOCIONMODIFICADA);
+                    }
+                    if(labelName.equals(PROMOCIONMODIFICADA)){
+                        requiredLabels.remove(PROMOCIONNUEVA);
+                    }
+                }
             }
         }
 
@@ -1770,25 +1900,28 @@ public class JiraValidationMethods {
         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
 
-    public Map<String, Object> getValidationTechStack(String helpMessage, String group) {
+    public Map<String, Object> getValidationTechStack(String tipoDesarrollo, String helpMessage, String group) {
         String message;
         boolean isValid = false;
         boolean isWarning = false;
+        if (tipoDesarrollo.equalsIgnoreCase(DATAX)) {
+            String techStackDatax = "DataX";
+            JsonObject fields = jiraTicketResult.getAsJsonObject(FIELDS);
+            if (fields.has("customfield_18001")) {
+                String itemType = fields.getAsJsonObject("customfield_18001").get("value").getAsString();
+                if (itemType.equals(techStackDatax)) {
+                    message = "Se encontró Tech Stack correcto " + techStackDatax;
+                    isValid = true;
+                } else {
+                    message = "Valor de Tech Stack no es el correcto";
+                }
+            } else {
+                message = "No se encontró Tech Stack";
+            }
+        } else {
+            return buildValidationResult(MSG_RULE_INVALID, true, isWarning, helpMessage, group);
+        }
 
-        JsonObject fields = jiraTicketResult.getAsJsonObject(FIELDS);
-        if (fields.has("customfield_18001")){
-            String itemType = fields.getAsJsonObject("customfield_18001").get("value").getAsString();
-            if(itemType.equals("Data - Dataproc") || itemType.equals("DATIO (Dataproc)")){
-                message = "Se encontró Tech Stack correcto Data - Dataproc";
-                isValid = true;
-            }
-            else{
-                message = "Valor de Tech Stack no es el correcto";
-            }
-        }
-        else{
-            message = "No se encontró Item Type";
-        }
         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
     }
 
@@ -1891,5 +2024,58 @@ public class JiraValidationMethods {
                 .getAsJsonObject(FIELDS)
                 .getAsJsonObject("comment")
                 .getAsJsonArray("comments");
+    }
+
+        public Map<String, Object> getValidationComments(String tipoDesarrollo, String helpMessage, String group) {
+        boolean isValid = true;
+        boolean isWarning = false;
+        StringBuilder messageBuilder = new StringBuilder();
+        if (tipoDesarrollo.equalsIgnoreCase(MALLAS) || tipoDesarrollo.equalsIgnoreCase(DATAX)) {
+            JsonArray comments = jiraTicketResult
+                    .getAsJsonObject(FIELDS)
+                    .getAsJsonObject(COMMENT)
+                    .getAsJsonArray("comments");
+
+            if (comments == null || comments.isJsonNull() || comments.isEmpty()) {
+                isValid = false;
+                messageBuilder.append("No se encontraron comentarios en el ticket.\n")
+                        .append("Debes responder las siguientes preguntas en los comentarios del ticket:\n")
+                        .append("Revisa: https://teamspaces.bbva.com/teamspaces/data-quality-assurance/activities?aid=4802224242819072");
+                return buildValidationResult(messageBuilder.toString().trim(), isValid, isWarning, helpMessage, group);
+            }
+
+            List<String> questions = Arrays.asList(
+                    "¿Qué se va a hacer y para qué?",
+                    "¿Por qué se va hacer?",
+                    "¿Qué servicios se ven involucrados con el cambio?",
+                    "¿Quién consume lo modificado (canales, servicios, aplicaciones, etc.) durante o después de la instalación?",
+                    "¿El cambio genera indisponibilidad / Impacto en algún servicio Crítico (NetCash Web, NetCash Móvil, Banca por Internet, Glomo - Banca Móvil, Contact Center (Pure Cloud), Sucursales, Cajeros automáticos (ATMs), Pivot connect (host to host), GEMA, Swift )?",
+                    "¿Este cambio está relacionado a algún otro cambio CRQ que deba pasar en paralelo?"
+            );
+            Map<String, Boolean> foundQuestion = new LinkedHashMap<>();
+            for (String question : questions) {
+                foundQuestion.put(question, false);
+            }
+            for (JsonElement commentElement : comments) {
+                String commentBody = commentElement.getAsJsonObject().get("body").getAsString().toLowerCase();
+
+                for (String question : questions) {
+                    if (commentBody.contains(question.toLowerCase())) {
+                        foundQuestion.put(question, true);
+                    }
+                }
+            }
+            for (Map.Entry<String, Boolean> entry : foundQuestion.entrySet()) {
+                if (entry.getValue()) {
+                    messageBuilder.append("Se encontró: ").append(entry.getKey()).append("\n");
+                } else {
+                    messageBuilder.append("No se encontró: ").append(entry.getKey()).append("\n");
+                    isValid = false;
+                }
+            }
+
+            return buildValidationResult(messageBuilder.toString().trim(), isValid, isWarning, helpMessage, group);
+        }
+        return buildValidationResult(MSG_RULE_INVALID, true, isWarning, helpMessage, group);
     }
 }

@@ -29,10 +29,17 @@ public class JiraValidatorConstantes {
     public static final String RELEASEMALLASDATIO = "ReleaseMallasDatio";
     public static final String RELEASEPRDATIO = "ReleasePRDatio";
     public static final String RELEASESCAFFOLDERDATIO = "ReleaseScaffolderDatio";
+    public static final String DATAXDQA = "DATAX_DQA";
+    public static final String PROMOCIONNUEVA = "PROMOCION_NUEVA";
+    public static final String PROMOCIONMODIFICADA = "PROMOCION_MODIFICADA";
     public static final List<String> STORY = List.of("Story", "Historia");
     public static final String P110_AT = "[P110][AT]";
     public static final String C204_PO = "[C204][PO]";
     public static final String C204_QA = "[C204][QA]";
+    public static final String DATAX = "datax";
+    public static final String VB_PO = "[VB][PO]";
+    public static final String VB_QA = "[VB][QA]";
+    public static final String XLSX = "xlsx";
     public static final String TEXTO = "texto";
     public static final String FIELDS = "fields";
     public static final String CHANGELOG = "changelog";
@@ -42,6 +49,7 @@ public class JiraValidatorConstantes {
     public static final String SUMMARY = "summary";
     public static final String ISSUETYPE = "issuetype";
     public static final String ATTACHMENT = "attachment";
+    public static final String COMMENT = "comment";
     public static final String ISSUELINKS = "issuelinks";
     public static final String CREATED = "created";
     public static final String ITEMS = "items";
@@ -72,8 +80,11 @@ public class JiraValidatorConstantes {
     public static final String MSG_RULE_VALID = "Es válido: %s";
     public static final String ACCEPTANCE_CRITERIA_MESH = "Como {0} declaramos que este Pase se encuentra listo para transitar por las etapas de Certificación Técnica, QA y Despliegue a Producción";
     public static final String ACCEPTANCE_CRITERIA_COMMON_TEXT = "Desarrollo según lineamientos globales ONE y de Data Quality Assurance Perú";
+    public static final String ACCEPTANCE_CRITERIA_DATAX_PROJECT = "Como equipo del proyecto/iniciativa SDATOOL-{0}- Soporte DataX declaramos que el siguiente Pase está listo para transitar por las etapas de Certificación Técnica y Pase a Producción";
+    public static final String ACCEPTANCE_CRITERIA_DATAX_RLB = "Como equipo de Reliability {0} declaramos que el siguiente Pase está listo para transitar por las etapas de Certificación Técnica y Pase a Producción";
     public static final String MSG_RULE_CRITERIOFORMATO_MESH = "Criterio de aceptación no cumple con el formato requerido. \"" + ACCEPTANCE_CRITERIA_MESH.replace("{0}", "(Nombre de Equipo) ") + "\"";
     public static final String MSG_RULE_CRITERIOFORMATO_PR = "Criterio de aceptación no cumple con el formato requerido.  " + ACCEPTANCE_CRITERIA_COMMON_TEXT;
+    public static final String MSG_RULE_CRITERIOFORMATO_DATAX = "Criterio de aceptación no cumple con el formato requerido.  ";
     public static final String MSG_RULE_TIPODESARROLLO = "Tipo de desarrollo no encontrado en los criterios de aceptación";
     public static final String MSG_RULE_CRITEROACEPTACION = "Sin Criterio de Aceptación";
     public static final String MSG_RULE_EXCEPTION_RLB = "Proviene del tabero RLB, por lo que no tiene dependencia asociada y, en consecuencia, esta regla no es aplicable.";
@@ -126,6 +137,7 @@ public class JiraValidatorConstantes {
         mapDevTypes.put(SPARKCOMPACTOR, new ArrayList<>(List.of(SPARKCOMPACTOR)));
         mapDevTypes.put(JSON_GLOBAL, new ArrayList<>(List.of("json")));
         mapDevTypes.put(TERADATA, new ArrayList<>(List.of("Creación de archivo")));
+        mapDevTypes.put(DATAX, new ArrayList<>(List.of(DATAX)));
 
         DEVELOPS_TYPES = Collections.unmodifiableMap(mapDevTypes);
 
@@ -144,6 +156,7 @@ public class JiraValidatorConstantes {
         mapAttachByDevTypes.put(JSON_GLOBAL, new ArrayList<>(List.of(C204)));
         mapAttachByDevTypes.put(TERADATA, new ArrayList<>(List.of(C204)));
         mapAttachByDevTypes.put(SPARKCOMPACTOR, new ArrayList<>(List.of(C204)));
+        mapAttachByDevTypes.put(DATAX, new ArrayList<>(List.of(XLSX)));
 
         ATTACHS_BY_DEVELOP_TYPES = Collections.unmodifiableMap(mapAttachByDevTypes);
 
@@ -162,6 +175,7 @@ public class JiraValidatorConstantes {
         mapLabelsByDevTypes.put(SPARKCOMPACTOR, new ArrayList<>(List.of(RELEASEPRDATIO)));
         mapLabelsByDevTypes.put(JSON_GLOBAL, new ArrayList<>(List.of(RELEASEPRDATIO)));
         mapLabelsByDevTypes.put(TERADATA, new ArrayList<>(List.of(RELEASEPRDATIO)));
+        mapLabelsByDevTypes.put(DATAX, new ArrayList<>(List.of(DATAXDQA,PROMOCIONMODIFICADA,PROMOCIONNUEVA)));
 
         LABELS_BY_DEVELOP_TYPES = Collections.unmodifiableMap(mapLabelsByDevTypes);
 
@@ -180,6 +194,7 @@ public class JiraValidatorConstantes {
         mapTicketHuTypes.put(SPARKCOMPACTOR, STORY);
         mapTicketHuTypes.put(JSON_GLOBAL, STORY);
         mapTicketHuTypes.put(TERADATA, STORY);
+        mapTicketHuTypes.put(DATAX, STORY);
 
         TICKET_HU_TYPES = Collections.unmodifiableMap(mapTicketHuTypes);
 
@@ -193,7 +208,7 @@ public class JiraValidatorConstantes {
 
         mapCriteriaByDevTypes.put(MALLAS, Map.of(TEXTO, ACCEPTANCE_CRITERIA_MESH));
         mapCriteriaByDevTypes.put(HOST, Map.of(TEXTO, ACCEPTANCE_CRITERIA_MESH));
-
+        mapCriteriaByDevTypes.put(DATAX, Map.of(TEXTO, ACCEPTANCE_CRITERIA_DATAX_PROJECT));
         List<String> devTypesWithCommonText = List.of(PRS,
                 HAMMURABI, MIGRATIONTOOL, SMARTCLEANER,
                 INGESTA, PROCESAMIENTO, OPERATIVIZACION,
@@ -222,6 +237,7 @@ public class JiraValidatorConstantes {
         mapSubtasksByDevTypes.put(SPARKCOMPACTOR, new ArrayList<>(List.of(C204_PO, C204_QA, VB_ADA)));
         mapSubtasksByDevTypes.put(JSON_GLOBAL, new ArrayList<>(List.of(C204_PO, C204_QA, VB_ADA)));
         mapSubtasksByDevTypes.put(TERADATA, new ArrayList<>(List.of(C204_PO, C204_QA, VB_ADA)));
+        mapSubtasksByDevTypes.put(DATAX, new ArrayList<>(List.of(VB_PO, VB_QA, VB_ADA)));
 
         SUBTASKS_BY_DEVELOP_TYPES = Collections.unmodifiableMap(mapSubtasksByDevTypes);
 
