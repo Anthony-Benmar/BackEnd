@@ -1372,7 +1372,7 @@ public class JiraValidationMethods {
             if (filename.endsWith(".xlsx")) {
                 xlsxCount++;
 
-                if (filename.contains("matriz")) {
+                if (filename.contains("matriz escalamiento")) {
                     hasMatrizEscalamiento = true;
                 }
             }
@@ -1385,14 +1385,14 @@ public class JiraValidationMethods {
         }
 
         if (!hasMatrizEscalamiento) {
-            msgBuilder.append("Debe existir un archivo adjunto .xlsx con la palabra 'Matriz' en el nombre.\n");
+            msgBuilder.append("Debe existir un archivo adjunto .xlsx con el nombre '{{uuaa}} - {{proyecto}}: Matriz Escalamiento.xlsx'.\n");
         }
 
         String message;
         boolean isValid;
         boolean isWarning = false;
         if (msgBuilder.isEmpty()) {
-            message = "Se encontró 1 archivo .xlsx requerido: con 'Matriz' en el nombre.";
+            message = "Se encontró 1 archivo .xlsx requerido: con 'Matriz Escalamiento' en el nombre.";
             isValid = true;
         } else {
             message = msgBuilder.toString().trim();
