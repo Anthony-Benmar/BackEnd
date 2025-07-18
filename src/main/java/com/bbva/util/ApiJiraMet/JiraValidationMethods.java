@@ -2088,7 +2088,7 @@ public class JiraValidationMethods {
             String commentBody = commentElement.getAsJsonObject().get("body").getAsString().toLowerCase();
 
             for (String question : questions) {
-                if (!result.get(question) && commentBody.contains(question.toLowerCase())) {
+                if (Boolean.FALSE.equals(result.get(question)) && commentBody.contains(question.toLowerCase())) {
                     result.put(question, true);
                 }
             }
