@@ -89,7 +89,7 @@ public class UseCaseReliabilityDao {
                     dto.getPiLargeName()
             );
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Error listAllFilteredUseCases: " + e.getMessage(), e);
+            LOGGER.log(Level.SEVERE, String.format("Error listAllFilteredUseCases: %s", e.getMessage()), e);
             return Collections.emptyList();
         }
     }

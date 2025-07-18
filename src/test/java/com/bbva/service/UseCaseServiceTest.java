@@ -321,7 +321,7 @@ class UseCaseServiceTest {
     }
 
     @Test
-    void testGenerateDocumentUseCases() throws IOException, InvalidFormatException {
+    void testGenerateDocumentUseCases() {
         UseCaseInputsFilterDtoRequest dto = new UseCaseInputsFilterDtoRequest();
 
         UseCaseInputsDtoResponse useCaseMock = new UseCaseInputsDtoResponse();

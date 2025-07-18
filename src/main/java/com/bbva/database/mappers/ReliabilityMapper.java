@@ -57,10 +57,8 @@ public interface ReliabilityMapper {
                     "   AND element_id <> 1003\n" +
                     " ORDER BY element_name"
     )
-    @Results({
-            @Result(property = "value", column = "value"),
-            @Result(property = "label", column = "label")
-    })
+    @Result(property = "value", column = "value")
+    @Result(property = "label", column = "label")
     List<DropDownDto> getOriginTypes();
 
     @Update("CALL SP_UPDATE_INVENTORY_JOB_STOCK(" +
