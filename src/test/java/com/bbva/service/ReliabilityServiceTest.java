@@ -424,3 +424,4 @@ class ReliabilityServiceTest {
         verify(reliabilityDaoMock).getOriginTypes();
     }
 }
+
