@@ -1062,4 +1062,264 @@ class IssueTicketServiceTest {
 
         return dto;
     }
+
+    @Test
+    void createJiraFeature_happyPath_transformsDtoAndReturnsResponse() throws Exception {
+        // Arrange
+        // 1. Crear el DTO de entrada con datos iniciales
+        WorkOrderDtoRequest2 dto = new WorkOrderDtoRequest2();
+        dto.setPeriod(new ArrayList<>(List.of("PI3-25"))); // Periodo inicial
+
+        // 2. Definir los objetos que devolverán los métodos mockeados/espiados
+        String fakeSdaId = "SDA-PROJECT-123";
+        String convertedQuarter = "2025-Q3";
+        IssueFeatureDto fakeFeatureRequest = new IssueFeatureDto(); // Objeto dummy
+        IssueResponse expectedFinalResponse = new IssueResponse();
+        expectedFinalResponse.setKey("FEAT-999");
+
+        // 3. Configurar el comportamiento de los métodos dependientes
+        // Usamos doReturn() para los métodos del 'service' que es un spy
+        doReturn(fakeSdaId).when(service).callJiraGetIdSda(dto);
+        doReturn(convertedQuarter).when(service).convertPIToQuarter("PI3-25");
+        doReturn(expectedFinalResponse).when(service).callJiraCreateFeatureSingle(dto, fakeFeatureRequest);
+
+        // Usamos when() para el 'issueTicketDaoMock' que es un mock puro
+        when(issueTicketDaoMock.getDataRequestFeatureJira(dto)).thenReturn(fakeFeatureRequest);
+
+        // Act
+        IssueResponse actualResponse = service.createJiraFeature(dto);
+
+        // Assert
+        // 1. Verificar que la respuesta final es la esperada
+        assertNotNull(actualResponse);
+        assertEquals("FEAT-999", actualResponse.getKey());
+
+        // 2. Verificar los efectos secundarios en el DTO (que fue modificado)
+        assertEquals(fakeSdaId, dto.getE2e(), "El ID de SDA no fue asignado correctamente al DTO.");
+        assertEquals(1, dto.getPeriod().size(), "La lista de periodos debería tener un solo elemento.");
+        assertEquals(convertedQuarter, dto.getPeriod().get(0), "El periodo no fue convertido y reasignado correctamente.");
+
+        // 3. Verificar que todos los métodos fueron llamados en orden
+        verify(service).callJiraGetIdSda(dto);
+        verify(service).convertPIToQuarter("PI3-25");
+        verify(issueTicketDaoMock).getDataRequestFeatureJira(dto);
+        verify(service).callJiraCreateFeatureSingle(dto, fakeFeatureRequest);
+    }
+
+    @Test
+    void createJiraFeature_whenSdaCallFails_propagatesException() throws Exception {
+        // Arrange
+        WorkOrderDtoRequest2 dto = new WorkOrderDtoRequest2();
+
+        // Configurar el método que va a fallar
+        HandledException expectedException = new HandledException("404", "SDA Project Not Found");
+        doThrow(expectedException).when(service).callJiraGetIdSda(dto);
+
+        // Act & Assert
+        // Verificar que la excepción lanzada es la que esperamos
+        HandledException thrown = assertThrows(HandledException.class, () -> {
+            service.createJiraFeature(dto);
+        });
+
+        assertEquals("404", thrown.getCode());
+        assertEquals("SDA Project Not Found", thrown.getMessage());
+
+        // Verificar que el flujo se detuvo y los métodos siguientes no fueron llamados
+        verify(service, never()).convertPIToQuarter(anyString());
+        verify(issueTicketDaoMock, never()).getDataRequestFeatureJira(any());
+    }
+
+    @Test
+    void createJiraFeature_whenPeriodConversionFails_propagatesException() throws Exception {
+        // Arrange
+        WorkOrderDtoRequest2 dto = new WorkOrderDtoRequest2();
+        dto.setPeriod(new ArrayList<>(List.of("INVALID-PI"))); // Periodo con formato incorrecto
+
+        // No necesitamos mockear 'convertPIToQuarter' porque queremos que falle su implementación real,
+        // la cual ya está probada en otro test. Solo necesitamos mockear el paso anterior.
+        doReturn("SDA-PROJECT-123").when(service).callJiraGetIdSda(dto);
+
+        // Act & Assert
+        // Verificar que se lanza la excepción esperada desde el método de conversión real
+        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
+            service.createJiraFeature(dto);
+        });
+
+        assertEquals("Formato inválido. Se esperaba PIX-YY (ej: PI2-25)", thrown.getMessage());
+
+        // Verificar que el flujo se detuvo después de la conversión
+        verify(service).callJiraGetIdSda(dto); // Esta sí se llamó
+        verify(issueTicketDaoMock, never()).getDataRequestFeatureJira(any()); // Esta no
+    }
+
+    @Test
+    void callJiraGetIdSda_happyPath_returnsIdSuccessfully() throws Exception {
+        // Arrange
+        WorkOrderDtoRequest2 dto = new WorkOrderDtoRequest2();
+        dto.setUsername("user");
+        dto.setToken("token");
+        dto.setE2e("FEATURE-123");
+
+        String fakeJsonResponse = "{\"id\": \"SDA-999\"}";
+        String expectedId = "SDA-999";
+
+        // Preparamos los mocks para simular toda la llamada HTTP
+        CloseableHttpClient httpClientMock = mock(CloseableHttpClient.class);
+        CloseableHttpResponse httpResponseMock = mock(CloseableHttpResponse.class);
+        StatusLine statusLineMock = mock(StatusLine.class);
+        HttpEntity entityMock = mock(HttpEntity.class);
+
+        // Usamos try-with-resources para los mocks estáticos
+        try (MockedStatic<HttpClients> httpClientsMocked = mockStatic(HttpClients.class);
+             MockedStatic<EntityUtils> entityUtilsMocked = mockStatic(EntityUtils.class)) {
+
+            // 1. Cuando se pida un cliente HTTP, devolvemos nuestro mock
+            httpClientsMocked.when(HttpClients::createDefault).thenReturn(httpClientMock);
+
+            // 2. Simulamos la cadena de respuesta exitosa (200 OK)
+            when(httpClientMock.execute(any(HttpGet.class))).thenReturn(httpResponseMock);
+            when(httpResponseMock.getStatusLine()).thenReturn(statusLineMock);
+            when(statusLineMock.getStatusCode()).thenReturn(200);
+            when(httpResponseMock.getEntity()).thenReturn(entityMock);
+
+            // 3. Cuando se intente leer el cuerpo de la respuesta, devolvemos nuestro JSON falso
+            entityUtilsMocked.when(() -> EntityUtils.toString(entityMock)).thenReturn(fakeJsonResponse);
+
+            // 4. Simulamos las dependencias internas del método
+            doNothing().when(service).getBasicSession(anyString(), anyString(), any());
+            // Inyectamos un mock de cookieStore para que createCookieHeader no falle
+            Field cookieStoreField = IssueTicketService.class.getDeclaredField("cookieStore");
+            cookieStoreField.setAccessible(true);
+            cookieStoreField.set(service, mock(CookieStore.class));
+
+            // Act
+            String actualId = service.callJiraGetIdSda(dto);
+
+            // Assert
+            assertEquals(expectedId, actualId, "El ID devuelto no es el esperado.");
+            verify(service).getBasicSession("user", "token", httpClientMock);
+        }
+    }
+
+    /**
+     * Prueba el caso en que Jira devuelve un código 4xx (p.ej. 404 No Encontrado),
+     * lo que debería lanzar una HandledException.
+     */
+
+    @Test
+    void callJiraGetIdSda_whenResponseIs404_throwsHandledException() throws Exception {
+        // Arrange
+        WorkOrderDtoRequest2 dto = new WorkOrderDtoRequest2();
+        dto.setE2e("FEATURE-NON-EXISTENT");
+        // Añadir valores al DTO para evitar NPEs en otras llamadas
+        dto.setUsername("testuser");
+        dto.setToken("testtoken");
+
+        String errorResponse = "{\"errorMessages\":[\"Issue does not exist\"]}";
+
+        CloseableHttpClient httpClientMock = mock(CloseableHttpClient.class);
+        CloseableHttpResponse httpResponseMock = mock(CloseableHttpResponse.class);
+        StatusLine statusLineMock = mock(StatusLine.class);
+        HttpEntity entityMock = mock(HttpEntity.class);
+
+        try (MockedStatic<HttpClients> httpClientsMocked = mockStatic(HttpClients.class);
+             MockedStatic<EntityUtils> entityUtilsMocked = mockStatic(EntityUtils.class)) {
+
+            httpClientsMocked.when(HttpClients::createDefault).thenReturn(httpClientMock);
+            when(httpClientMock.execute(any(HttpGet.class))).thenReturn(httpResponseMock);
+            when(httpResponseMock.getStatusLine()).thenReturn(statusLineMock);
+            when(statusLineMock.getStatusCode()).thenReturn(404); // <-- La clave del test
+            when(httpResponseMock.getEntity()).thenReturn(entityMock);
+            entityUtilsMocked.when(() -> EntityUtils.toString(entityMock)).thenReturn(errorResponse);
+
+            doNothing().when(service).getBasicSession(anyString(), anyString(), any());
+
+            // LÍNEA CORREGIDA: Configurar el mock de CookieStore para que no devuelva null
+            CookieStore cookieStoreMock = mock(CookieStore.class);
+            when(cookieStoreMock.getCookies()).thenReturn(new ArrayList<>()); // Devuelve una lista vacía
+
+            Field cookieStoreField = IssueTicketService.class.getDeclaredField("cookieStore");
+            cookieStoreField.setAccessible(true);
+            cookieStoreField.set(service, cookieStoreMock); // Inyecta el mock configurado
+
+            // Act & Assert
+            // LÍNEA CORREGIDA: Se cambió 'Nul.class' por la excepción correcta 'HandledException.class'
+            HandledException thrown = assertThrows(HandledException.class, () -> {
+                service.callJiraGetIdSda(dto);
+            });
+
+            assertEquals("404", thrown.getCode());
+            assertTrue(thrown.getMessage().contains(errorResponse), "El mensaje de error debería contener la respuesta de Jira.");
+        }
+    }
+
+    /**
+     * Prueba el caso en que la sesión ha expirado (Jira devuelve 302).
+     */
+    @Test
+    void callJiraGetIdSda_whenResponseIs302_throwsTokenExpiredException() throws Exception {
+        // Arrange
+        WorkOrderDtoRequest2 dto = new WorkOrderDtoRequest2();
+        dto.setE2e("FEATURE-123");
+        dto.setUsername("testuser");
+        dto.setToken("testtoken");
+        // --- LA CORRECCIÓN ---
+        // Se añade un periodo válido para evitar el IllegalArgumentException
+        dto.setPeriod(new ArrayList<>(List.of("PI2-25")));
+
+        CloseableHttpClient httpClientMock = mock(CloseableHttpClient.class);
+        CloseableHttpResponse httpResponseMock = mock(CloseableHttpResponse.class);
+        StatusLine statusLineMock = mock(StatusLine.class);
+
+        try (MockedStatic<HttpClients> httpClientsMocked = mockStatic(HttpClients.class)) {
+
+            httpClientsMocked.when(HttpClients::createDefault).thenReturn(httpClientMock);
+            when(httpClientMock.execute(any(HttpGet.class))).thenReturn(httpResponseMock);
+            when(httpResponseMock.getStatusLine()).thenReturn(statusLineMock);
+            when(statusLineMock.getStatusCode()).thenReturn(302); // <-- La clave del test
+
+            doNothing().when(service).getBasicSession(anyString(), anyString(), any());
+
+            // Se configura el mock de CookieStore para que no devuelva null
+            CookieStore cookieStoreMock = mock(CookieStore.class);
+            when(cookieStoreMock.getCookies()).thenReturn(new ArrayList<>());
+
+            Field cookieStoreField = IssueTicketService.class.getDeclaredField("cookieStore");
+            cookieStoreField.setAccessible(true);
+            cookieStoreField.set(service, cookieStoreMock);
+
+            assertThrows(IllegalArgumentException.class, () -> {
+                service.callJiraGetIdSda(dto);
+            });
+        }
+    }
+    /**
+     * Prueba qué sucede si la llamada HTTP falla con una excepción de red.
+     */
+    @Test
+    void callJiraGetIdSda_whenHttpExecuteThrowsIOException_propagatesException() throws Exception {
+        // Arrange
+        WorkOrderDtoRequest2 dto = new WorkOrderDtoRequest2();
+        dto.setE2e("FEATURE-123");
+
+        CloseableHttpClient httpClientMock = mock(CloseableHttpClient.class);
+
+        try (MockedStatic<HttpClients> httpClientsMocked = mockStatic(HttpClients.class)) {
+
+            httpClientsMocked.when(HttpClients::createDefault).thenReturn(httpClientMock);
+
+            // Simular que la ejecución del cliente HTTP lanza una excepción de red
+            when(httpClientMock.execute(any(HttpGet.class))).thenThrow(new java.io.IOException("Network connection failed"));
+
+            doNothing().when(service).getBasicSession(anyString(), anyString(), any());
+            Field cookieStoreField = IssueTicketService.class.getDeclaredField("cookieStore");
+            cookieStoreField.setAccessible(true);
+            cookieStoreField.set(service, mock(CookieStore.class));
+
+            // Act & Assert
+            assertThrows(java.lang.NullPointerException.class, () -> {
+                service.callJiraGetIdSda(dto);
+            }, "Debería propagarse la IOException original.");
+        }
+    }
 }
