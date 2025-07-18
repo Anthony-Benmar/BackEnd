@@ -3,7 +3,6 @@ package com.bbva.service;
 import com.bbva.core.abstracts.IDataResult;
 import com.bbva.dao.UseCaseReliabilityDao;
 import com.bbva.dto.use_case.response.UseCaseInputsDtoResponse;
-import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import com.bbva.dto.use_case.request.UpdateOrInsertUseCaseDtoRequest;
 import com.bbva.dto.use_case.request.UseCaseInputsFilterDtoRequest;
 import com.bbva.dto.use_case.response.UpdateOrInsertDtoResponse;
@@ -13,7 +12,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
-import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;

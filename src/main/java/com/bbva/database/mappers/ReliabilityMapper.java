@@ -50,13 +50,13 @@ public interface ReliabilityMapper {
                                                               @Param("origin") String origin
     );
 
-    @Select(
-            "SELECT element_id AS value, element_name AS label\n" +
-                    "  FROM catalog\n" +
-                    " WHERE catalog_id = 1003\n" +
-                    "   AND element_id <> 1003\n" +
-                    " ORDER BY element_name"
-    )
+    @Select("""
+        SELECT element_id AS value, element_name AS label
+          FROM catalog
+         WHERE catalog_id = 1003
+           AND element_id <> 1003
+         ORDER BY element_name
+        """)
     @Result(property = "value", column = "value")
     @Result(property = "label", column = "label")
     List<DropDownDto> getOriginTypes();
