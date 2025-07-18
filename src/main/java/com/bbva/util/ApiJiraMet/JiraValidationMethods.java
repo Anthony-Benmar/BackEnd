@@ -300,10 +300,10 @@ public class JiraValidationMethods {
         if (tipoDesarrollo.equalsIgnoreCase(PROCESAMIENTO) || tipoDesarrollo.equalsIgnoreCase(SCAFFOLDER) || (tipoDesarrollo.equalsIgnoreCase(JSON_GLOBAL)
                 || (tipoDesarrollo.equalsIgnoreCase(SMARTCLEANER)))){
             validOriginBranches = List.of("develop");
-            validDestinyBranches = List.of("master");
+            validDestinyBranches = List.of(MASTER);
         } else{
             validOriginBranches = List.of("feature");
-            validDestinyBranches = List.of("master");
+            validDestinyBranches = List.of(MASTER);
         }
 
         JsonObject jiraTicketResultPrs = jiraTicketResult
@@ -314,7 +314,7 @@ public class JiraValidationMethods {
             if (jiraTicketResultPrs.get("prs") != null) {
                 int cantidadPRs = jiraTicketResultPrs.get("prs").getAsJsonArray().size();
                 return validatePRBranch(cantidadPRs, jiraTicketResultPrs, validOriginBranches, validDestinyBranches,
-                        isValid, isWarning, message, helpMessage, group);
+                        helpMessage, group);
             }
             return buildValidationResult(message, isValid, isWarning, helpMessage, group);
         } else {
@@ -323,8 +323,10 @@ public class JiraValidationMethods {
     }
 
     private Map<String, Object> validatePRBranch(int cantidadPRs, JsonObject jiraTicketResultPrs, List<String> validOriginBranches,
-                                                 List<String> validDestinyBranches, boolean isValid,
-                                                 boolean isWarning, String message, String helpMessage, String group) {
+                                                 List<String> validDestinyBranches, String helpMessage, String group) {
+        String message = "";
+        boolean isValid = false;
+        boolean isWarning = false;
         if (cantidadPRs > 0) {
             boolean hasError = false;
             StringBuilder messageBuilder = new StringBuilder(message);
@@ -368,7 +370,7 @@ public class JiraValidationMethods {
         List<String> aditionalSpecialLabels = List.of("datioRutaCritica", "JobsHuerfanos");
 
         List<String> requiredSubTasks = new ArrayList<>(SUBTASKS_BY_DEVELOP_TYPES.get(tipoDesarrollo));
-        if(!containsAnyBranch(jiraTicketResult.getAsJsonObject(FIELDS), List.of("master")) && !tipoDesarrollo.equalsIgnoreCase(DATAX)){
+        if(!containsAnyBranch(jiraTicketResult.getAsJsonObject(FIELDS), List.of(MASTER)) && !tipoDesarrollo.equalsIgnoreCase(DATAX)){
             requiredSubTasks.remove(VB_ADA);
         }
 
@@ -1340,7 +1342,7 @@ public class JiraValidationMethods {
         }
 
         for (JsonElement attachment : attachments) {
-            String filename = attachment.getAsJsonObject().get("filename").getAsString();
+            String filename = attachment.getAsJsonObject().get(FILENAME).getAsString();
             String attachmentLabel = filename.split("-")[0].replaceAll("\\s+", "");
             if (requiredAttachments.contains(attachmentLabel)) {
                 foundAttachments.add(attachmentLabel);
@@ -1362,11 +1364,10 @@ public class JiraValidationMethods {
     private Map<String, Object> validateAttachmentDatax(JsonArray attachments, String helpMessage, String group) {
         int xlsxCount = 0;
         boolean hasMatrizEscalamiento = false;
-        boolean hasDeRetorno = false;
 
         for (JsonElement attachment : attachments) {
             JsonObject obj = attachment.getAsJsonObject();
-            String filename = obj.has("filename") ? obj.get("filename").getAsString().toLowerCase() : "";
+            String filename = obj.has(FILENAME) ? obj.get(FILENAME).getAsString().toLowerCase() : "";
 
             if (filename.endsWith(".xlsx")) {
                 xlsxCount++;
@@ -1517,12 +1518,7 @@ public class JiraValidationMethods {
             if (requiredLabels.contains(labelName)) {
                 foundLabels.add(labelName);
                 if(tipoDesarrollo.equalsIgnoreCase(DATAX)){
-                    if(labelName.equals(PROMOCIONNUEVA)){
-                        requiredLabels.remove(PROMOCIONMODIFICADA);
-                    }
-                    if(labelName.equals(PROMOCIONMODIFICADA)){
-                        requiredLabels.remove(PROMOCIONNUEVA);
-                    }
+                    validateLabelsDatax(requiredLabels, labelName);
                 }
             }
         }
@@ -1537,6 +1533,15 @@ public class JiraValidationMethods {
             isValid = false;
         }
         return buildValidationResult(message, isValid, isWarning, helpMessage, group);
+    }
+
+    private void validateLabelsDatax(List<String> requiredLabels, String labelName) {
+        if (labelName.equals(PROMOCIONNUEVA)) {
+            requiredLabels.remove(PROMOCIONMODIFICADA);
+        }
+        if (labelName.equals(PROMOCIONMODIFICADA)) {
+            requiredLabels.remove(PROMOCIONNUEVA);
+        }
     }
 
     public Map<String, Object> getValidationInitialTeam(String helpMessage, String group){
@@ -1847,7 +1852,7 @@ public class JiraValidationMethods {
         JsonArray attachments = jiraTicketResult.getAsJsonObject(FIELDS).getAsJsonArray(ATTACHMENT);
 
         for (JsonElement attachment : attachments) {
-            String filename = attachment.getAsJsonObject().get("filename").getAsString();
+            String filename = attachment.getAsJsonObject().get(FILENAME).getAsString();
             attachmentFilenameList.add(filename);
         }
         return attachmentFilenameList;
@@ -2026,10 +2031,11 @@ public class JiraValidationMethods {
                 .getAsJsonArray("comments");
     }
 
-        public Map<String, Object> getValidationComments(String tipoDesarrollo, String helpMessage, String group) {
+    public Map<String, Object> getValidationComments(String tipoDesarrollo, String helpMessage, String group) {
         boolean isValid = true;
         boolean isWarning = false;
         StringBuilder messageBuilder = new StringBuilder();
+
         if (tipoDesarrollo.equalsIgnoreCase(MALLAS) || tipoDesarrollo.equalsIgnoreCase(DATAX)) {
             JsonArray comments = jiraTicketResult
                     .getAsJsonObject(FIELDS)
@@ -2040,33 +2046,14 @@ public class JiraValidationMethods {
                 isValid = false;
                 messageBuilder.append("No se encontraron comentarios en el ticket.\n")
                         .append("Debes responder las siguientes preguntas en los comentarios del ticket:\n")
-                        .append("Revisa: https://teamspaces.bbva.com/teamspaces/data-quality-assurance/activities?aid=4802224242819072");
+                        .append("Revisa: ").append(TEAMSPACE_DQA_URL);
                 return buildValidationResult(messageBuilder.toString().trim(), isValid, isWarning, helpMessage, group);
             }
 
-            List<String> questions = Arrays.asList(
-                    "¿Qué se va a hacer y para qué?",
-                    "¿Por qué se va hacer?",
-                    "¿Qué servicios se ven involucrados con el cambio?",
-                    "¿Quién consume lo modificado (canales, servicios, aplicaciones, etc.) durante o después de la instalación?",
-                    "¿El cambio genera indisponibilidad / Impacto en algún servicio Crítico (NetCash Web, NetCash Móvil, Banca por Internet, Glomo - Banca Móvil, Contact Center (Pure Cloud), Sucursales, Cajeros automáticos (ATMs), Pivot connect (host to host), GEMA, Swift )?",
-                    "¿Este cambio está relacionado a algún otro cambio CRQ que deba pasar en paralelo?"
-            );
-            Map<String, Boolean> foundQuestion = new LinkedHashMap<>();
-            for (String question : questions) {
-                foundQuestion.put(question, false);
-            }
-            for (JsonElement commentElement : comments) {
-                String commentBody = commentElement.getAsJsonObject().get("body").getAsString().toLowerCase();
+            Map<String, Boolean> foundQuestion = validateRequiredQuestionsInComments(comments, getRequiredQuestions());
 
-                for (String question : questions) {
-                    if (commentBody.contains(question.toLowerCase())) {
-                        foundQuestion.put(question, true);
-                    }
-                }
-            }
             for (Map.Entry<String, Boolean> entry : foundQuestion.entrySet()) {
-                if (entry.getValue()) {
+                if (Boolean.TRUE.equals(entry.getValue())) {
                     messageBuilder.append("Se encontró: ").append(entry.getKey()).append("\n");
                 } else {
                     messageBuilder.append("No se encontró: ").append(entry.getKey()).append("\n");
@@ -2076,6 +2063,37 @@ public class JiraValidationMethods {
 
             return buildValidationResult(messageBuilder.toString().trim(), isValid, isWarning, helpMessage, group);
         }
+
         return buildValidationResult(MSG_RULE_INVALID, true, isWarning, helpMessage, group);
+    }
+
+    private List<String> getRequiredQuestions() {
+        return Arrays.asList(
+                "¿Qué se va a hacer y para qué?",
+                "¿Por qué se va hacer?",
+                "¿Qué servicios se ven involucrados con el cambio?",
+                "¿Quién consume lo modificado (canales, servicios, aplicaciones, etc.) durante o después de la instalación?",
+                "¿El cambio genera indisponibilidad / Impacto en algún servicio Crítico (NetCash Web, NetCash Móvil, Banca por Internet, Glomo - Banca Móvil, Contact Center (Pure Cloud), Sucursales, Cajeros automáticos (ATMs), Pivot connect (host to host), GEMA, Swift )?",
+                "¿Este cambio está relacionado a algún otro cambio CRQ que deba pasar en paralelo?"
+        );
+    }
+
+    private Map<String, Boolean> validateRequiredQuestionsInComments(JsonArray comments, List<String> questions) {
+        Map<String, Boolean> result = new LinkedHashMap<>();
+        for (String question : questions) {
+            result.put(question, false);
+        }
+
+        for (JsonElement commentElement : comments) {
+            String commentBody = commentElement.getAsJsonObject().get("body").getAsString().toLowerCase();
+
+            for (String question : questions) {
+                if (!result.get(question) && commentBody.contains(question.toLowerCase())) {
+                    result.put(question, true);
+                }
+            }
+        }
+
+        return result;
     }
 }

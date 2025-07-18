@@ -32,6 +32,9 @@ public class JiraValidatorConstantes {
     public static final String DATAXDQA = "DATAX_DQA";
     public static final String PROMOCIONNUEVA = "PROMOCION_NUEVA";
     public static final String PROMOCIONMODIFICADA = "PROMOCION_MODIFICADA";
+    public static final String MASTER = "master";
+    public static final String FILENAME = "filename";
+    public static final String TEAMSPACE_DQA_URL = "https://teamspaces.bbva.com/teamspaces/data-quality-assurance/activities";
     public static final List<String> STORY = List.of("Story", "Historia");
     public static final String P110_AT = "[P110][AT]";
     public static final String C204_PO = "[C204][PO]";
