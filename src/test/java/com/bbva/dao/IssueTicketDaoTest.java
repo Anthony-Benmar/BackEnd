@@ -9,7 +9,6 @@ import com.bbva.dto.issueticket.response.sourceTicketDtoResponse;
 import com.bbva.dto.issueticket.response.sourceTicketGroupByDtoResponse;
 import com.bbva.dto.jira.request.*;
 import com.bbva.entities.board.Board;
-import com.bbva.entities.common.CatalogEntity;
 import com.bbva.entities.feature.JiraFeatureEntity;
 import com.bbva.entities.issueticket.WorkOrder;
 import com.bbva.entities.issueticket.WorkOrderDetail;

@@ -156,8 +156,9 @@ public class ReliabilityDao {
             dto.getTransferInputDtoRequests().forEach(reliabilityMapper::insertJobStock);
             session.commit();
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, e.getMessage(), e);
-            throw e;
+            String errorMessage = "Error al guardar los datos de la transferencia en la base de datos.";
+            LOGGER.log(Level.SEVERE, errorMessage, e);
+            throw new RuntimeException(errorMessage, e);
         }
     }
 
