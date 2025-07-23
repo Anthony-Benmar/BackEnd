@@ -888,13 +888,6 @@ class IssueTicketDaoTest {
         board1.name = "Development Board";
         when(boardMapperMock.list()).thenReturn(List.of(board1));
 
-        CatalogEntity flowType = new CatalogEntity();
-        flowType.setElementId(1023);
-        flowType.setElementName("Task");
-
-        // LÍNEA CORREGIDA: Se crea un nuevo ArrayList en lugar de hacer un casteo.
-        when(catalogMapperMock.getListByCatalog(any(int[].class))).thenReturn(new ArrayList<>(List.of(flowType)));
-
         // Dos grupos diferentes, el segundo con fecha más reciente para probar el orden
         WorkOrder wo1 = new WorkOrder(); // Grupo 1
         wo1.folio = "FOLIO-001";
@@ -957,11 +950,6 @@ class IssueTicketDaoTest {
         board1.name = "Existing Board";
         when(boardMapperMock.list()).thenReturn(List.of(board1));
 
-        CatalogEntity flowType = new CatalogEntity();
-        flowType.setElementId(1023);
-        flowType.setElementName("Existing Type");
-        // LÍNEA CORREGIDA: Se eliminó el casteo innecesario (ArrayList<...>)
-        doReturn(new ArrayList<>(List.of(flowType))).when(catalogMapperMock).getListByCatalog(any(int[].class));
 
         // WorkOrder con IDs que no coinciden
         WorkOrder wo = new WorkOrder();
