@@ -20,6 +20,12 @@ public class MyBatisConnectionFactory {
     private static final Logger LOGGER = Logger.getLogger(MyBatisConnectionFactory.class.getName());
 
     private static SqlSessionFactory sqlSessionFactory;
+    public static SqlSessionFactory getSqlSessionFactory() {
+        if (sqlSessionFactory == null) {
+            initialiceInstance();
+        }
+        return sqlSessionFactory;
+    }
 
     private MyBatisConnectionFactory() {}
 
@@ -69,10 +75,7 @@ public class MyBatisConnectionFactory {
     }
 
     public static SqlSessionFactory getInstance() {
-        if (sqlSessionFactory == null){
-            initialiceInstance();
-        }
-        return sqlSessionFactory;
+        return getSqlSessionFactory();
     }
 
 }

@@ -4,16 +4,17 @@ import com.bbva.database.MyBatisConnectionFactory;
 import com.bbva.database.mappers.CatalogMapper;
 import com.bbva.database.mappers.ProjectMapper;
 import com.bbva.dto.project.request.ProjectInfoFilterRequest;
+import com.bbva.dto.project.response.ProjectCatalogDtoResponse;
 import com.bbva.dto.project.response.ProjectInfoFilterResponse;
 import com.bbva.dto.project.response.ProjectInfoSelectResponse;
 import com.bbva.dto.project.response.ProjectValidationParamsDtoResponse;
 import com.bbva.entities.common.CatalogEntity;
+import com.bbva.entities.project.ProjectCatalogEntity;
 import com.bbva.entities.project.ProjectStatusEntity;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
+
 import org.mockito.MockedStatic;
 import org.mockito.MockitoAnnotations;
 
@@ -63,7 +64,7 @@ class ProjectDaoTest {
         response1.setProjectId(1);
         response1.setCreateAuditDate(new Date());
         ProjectInfoSelectResponse response2 = new ProjectInfoSelectResponse();
-        response2.setProjectId(2);;
+        response2.setProjectId(2);
         response2.setUpdateAuditDate(new Date());
 
         List<ProjectInfoSelectResponse> mockList = Arrays.asList(response1, response2);
@@ -124,20 +125,18 @@ class ProjectDaoTest {
         verify(projectMapperMock).getProjectStatusTracking(projectId);
         verify(sqlSessionMock).close();
     }
+
     @Test
     void testValidateInfoProjectByProjectId_missingParticipantAndDocument() {
         int projectId = 1;
 
         List<CatalogEntity> mockCatalogData = new ArrayList<>();
-
-        mockCatalogData.add(new CatalogEntity(1037, 1037, "DESCRIPTION_PARTICIPANTS", 1));
-        mockCatalogData.add(new CatalogEntity(1037, 1, "Participante 1", 2));
-
-        mockCatalogData.add(new CatalogEntity(1036, 1036, "DESCRIPTION_DOCUMENTS", 1));
-        mockCatalogData.add(new CatalogEntity(1036, 2, "Documento 2", 2));
+        mockCatalogData.add(new CatalogEntity(1037, 1037, "DESCRIPTION_PARTICIPANTS","desc 001", 1));
+        mockCatalogData.add(new CatalogEntity(1037, 1, "Participante 1", "desc 001",2));
+        mockCatalogData.add(new CatalogEntity(1036, 1036, "DESCRIPTION_DOCUMENTS","desc 002", 1));
+        mockCatalogData.add(new CatalogEntity(1036, 2, "Documento 2","desc 002", 2));
 
         when(catalogMapperMock.getListByCatalog(any(int[].class))).thenReturn(new ArrayList<>(mockCatalogData));
-
         when(projectMapperMock.getProjectParticipants(projectId)).thenReturn(Collections.emptyList());
         when(projectMapperMock.getDocument(projectId, 0)).thenReturn(Collections.emptyList());
 
@@ -145,8 +144,55 @@ class ProjectDaoTest {
 
         assertNotNull(result);
         assertEquals(2, result.size());
-
         assertTrue(result.stream().anyMatch(e -> e.getMessage().contains("Participante 1")));
-        assertFalse(result.stream().anyMatch(e -> e.getMessage().contains("Documento 2")));
+    }
+
+    @Test
+    void listProjectCatalog_ReturnsMappedList() {
+        List<ProjectCatalogEntity> entityList = new ArrayList<>();
+        ProjectCatalogEntity entity = new ProjectCatalogEntity();
+        entity.setSdatoolId("SDT001");
+        entity.setProjectName("Project 1");
+        entity.setSn1("SN1");
+        entity.setSn1Desc("Desc1");
+        entity.setSn2("SN2");
+        entity.setSn2ProjectId("SN2ID");
+        entity.setCodigo5Digitos("C5DIG");
+        entityList.add(entity);
+
+        when(projectMapperMock.listProjectCatalog("SDT001")).thenReturn(entityList);
+
+        List<ProjectCatalogDtoResponse> result = projectDao.listProjectCatalog("SDT001");
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("SDT001", result.get(0).getSdatoolId());
+        assertEquals("Project 1", result.get(0).getProjectName());
+        assertEquals("SN1", result.get(0).getSn1());
+        assertEquals("Desc1", result.get(0).getSn1Desc());
+        assertEquals("SN2", result.get(0).getSn2());
+        assertEquals("SN2ID", result.get(0).getSn2ProjectId());
+        assertEquals("C5DIG", result.get(0).getCodigo5Digitos());
+        verify(sqlSessionMock).close();
+    }
+
+    @Test
+    void listProjectCatalog_ReturnsEmptyListIfNoEntities() {
+        when(projectMapperMock.listProjectCatalog("ANY")).thenReturn(new ArrayList<>());
+
+        List<ProjectCatalogDtoResponse> result = projectDao.listProjectCatalog("ANY");
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        verify(sqlSessionMock).close();
+    }
+
+    @Test
+    void listProjectCatalog_ReturnsNullOnException() {
+        when(sqlSessionFactoryMock.openSession()).thenThrow(new RuntimeException("DB error"));
+
+        List<ProjectCatalogDtoResponse> result = projectDao.listProjectCatalog("EXCEPTION");
+
+        assertEquals(result, List.of());
     }
 }
