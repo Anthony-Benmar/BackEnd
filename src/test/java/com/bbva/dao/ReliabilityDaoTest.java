@@ -219,13 +219,13 @@ class ReliabilityDaoTest {
 
         when(sqlSessionFactoryMock.openSession()).thenReturn(sqlSessionMock);
         when(sqlSessionMock.getMapper(ReliabilityMapper.class))
-                .thenThrow(new RuntimeException("DB error"));
+                .thenThrow(new RuntimeException("Error al guardar los datos de la transferencia en la base de datos."));
 
         RuntimeException thrown = assertThrows(RuntimeException.class, () -> {
             reliabilityDao.insertTransfer(dto);
         });
 
-        assertEquals("DB error", thrown.getMessage());
+        assertEquals("Error al guardar los datos de la transferencia en la base de datos.", thrown.getMessage());
         verify(sqlSessionMock, never()).commit();
     }
 
