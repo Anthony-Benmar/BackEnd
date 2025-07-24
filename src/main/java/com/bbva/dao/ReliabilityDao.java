@@ -148,6 +148,12 @@ public class ReliabilityDao {
         }
     }
 
+    public static class PersistenceException extends RuntimeException {
+        public PersistenceException(String message, Throwable cause) {
+            super(message, cause);
+        }
+    }
+
     public void insertTransfer(TransferInputDtoRequest dto) {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         try (SqlSession session = sqlSessionFactory.openSession()) {
@@ -157,8 +163,7 @@ public class ReliabilityDao {
             session.commit();
         } catch (Exception e) {
             String errorMessage = "Error al guardar los datos de la transferencia en la base de datos.";
-            LOGGER.log(Level.SEVERE, errorMessage, e);
-            throw new RuntimeException(errorMessage, e);
+            throw new PersistenceException(errorMessage, e);
         }
     }
 
