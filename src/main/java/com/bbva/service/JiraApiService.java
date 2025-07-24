@@ -3,9 +3,12 @@ package com.bbva.service;
 
 import com.bbva.core.HandledException;
 import com.bbva.dto.issueticket.request.authJiraDtoRequest;
+import com.bbva.dto.jira.request.JiraValidatorByUrlRequest;
 import com.bbva.util.ApiJiraName;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.CookieStore;
@@ -20,6 +23,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.util.EntityUtils;
 
+import java.io.IOException;
 import java.net.http.HttpClient;
 import java.util.*;
 import java.util.logging.Logger;
@@ -168,6 +172,18 @@ public class JiraApiService {
     public String buildJiraQueryUrl(List<String> jiraIssues) {
         String query = KEY_IN + String.join(",", jiraIssues) + ")";
         return ApiJiraName.URL_API_JIRA_SQL + query + getQuerySuffixURL();
+    }
+
+    public JsonObject getIssueMetadata(JiraValidatorByUrlRequest dto, String issueKey) throws Exception {
+        String url = "https://jira.globaldevtools.bbva.com/rest/api/2/issue/" + issueKey + "?expand=changelog";
+
+        String response = GetJiraAsync(dto.getUserName(), dto.getToken(), url);
+
+        if (response == null || response.isBlank()) {
+            return null;
+        }
+
+        return JsonParser.parseString(response).getAsJsonObject();
     }
 
 }

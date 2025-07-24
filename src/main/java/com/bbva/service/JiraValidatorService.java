@@ -71,7 +71,7 @@ public class JiraValidatorService {
             throw new HandledException("500", "no existe datos del ticket jira");
         }
         JsonObject jiraTicketResult = issueMetadataJsonObject.getAsJsonArray(ISSUES).get(0).getAsJsonObject();
-        
+
         String featureLink = getFeatureLink(jiraTicketResult);
         JsonObject featureLinkMetadataJsonObject = getMetadataIssues(dto, List.of(featureLink));
 
@@ -193,7 +193,7 @@ public class JiraValidatorService {
         String url = ApiJiraName.URL_API_JIRA_PULL_REQUEST + idTicket + "&applicationType=stash&dataType=pullrequest";
         List<Map<String,Object>> prs = new ArrayList<>();
         String resultPRs = this.jiraApiService.GetJiraAsync(dto.getUserName(), dto.getToken(), url);
-        
+
         var prsJsonResponse = JsonParser.parseString(resultPRs).getAsJsonObject();
         if(!prsJsonResponse
                 .getAsJsonArray("detail").isEmpty()){
@@ -284,19 +284,36 @@ public class JiraValidatorService {
         }
     }
 
-    public JsonObject getMetadataIssues (JiraValidatorByUrlRequest dto, List<String> jiraIssues){
+    public JsonObject getMetadataIssues(JiraValidatorByUrlRequest dto, List<String> urls) throws Exception {
         JsonObject result = new JsonObject();
-        if (jiraIssues == null || jiraIssues.isEmpty()) {
-            return result;
+        JsonArray issuesArray = new JsonArray();
+
+        for (String url : urls) {
+            String issueKey = extractIssueKey(url);
+
+            if (issueKey == null || issueKey.isBlank()) {
+                throw new HandledException("400", "El valor de urlJira no contiene un issue válido");
+            }
+
+            JsonObject ticketMetadata = jiraApiService.getIssueMetadata(dto, issueKey);
+            if (ticketMetadata != null) {
+                issuesArray.add(ticketMetadata);
+            } else {
+                throw new HandledException("404", "No se encontró metadata para el ticket: " + issueKey);
+            }
         }
-        String url = jiraApiService.buildJiraQueryUrl(jiraIssues);
-        try{
-            String response = jiraApiService.GetJiraAsync(dto.getUserName(), dto.getToken(), url);
-            result = JsonParser.parseString(response).getAsJsonObject();
-        } catch (Exception e) {
-            LOGGER.info("ERROR CONSULTA JIRA LINK " + url + ": " + e.getMessage());
-        }
+
+        result.add("issues", issuesArray);
         return result;
+    }
+
+    private String extractIssueKey(String urlOrKey) {
+        if (urlOrKey == null) return null;
+        if (urlOrKey.contains("/browse/")) {
+            String[] parts = urlOrKey.split("/browse/");
+            return parts.length > 1 ? parts[1] : null;
+        }
+        return urlOrKey;
     }
 
     public String getTeamBackLogId(String tipoDesarrollo, JsonObject jiraTicketResult) throws ParseException {
