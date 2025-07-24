@@ -43,16 +43,7 @@ public class JiraValidatorResources {
     public IDataResult<DmJiraValidatorResponseDTO> validatorDataModelling(JiraValidatorByUrlRequest dto)
             throws Exception {
 
-        JsonObject ticketMetadata = jiraValidatorService.getMetadataIssues(dto, List.of(dto.getUrlJira()));
-        if (ticketMetadata.isEmpty()) {
-            throw new HandledException("500", "Ticket no encontrado");
-        }
-
-        JsonObject ticket = ticketMetadata.getAsJsonArray("issues").get(0).getAsJsonObject();
-        JsonArray subtasks = ticket.getAsJsonObject("fields").getAsJsonArray("subtasks");
-        Map<String, JsonObject> subtaskMetadataMap = jiraValidatorService.buildSubtaskMetadataMap(dto, subtasks);
-
-        var messages = dmJiraValidatorService.validateHistoriaDM(dto, ticket, subtaskMetadataMap);
+        var messages = dmJiraValidatorService.validateHistoriaDM(dto);
 
         DmJiraValidatorResponseDTO response = new DmJiraValidatorResponseDTO();
         response.setData(messages);

@@ -24,18 +24,19 @@ public class DmJiraValidatorLogDao {
     }
 
     public boolean insertDmJiraValidatorLog(JiraValidatorLogEntity entity) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        SqlSession session = sqlSessionFactory.openSession();
         try {
-            LOGGER.info("Insertando log en DmJiraValidator");
-            SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
-            try (SqlSession session = sqlSessionFactory.openSession()) {
-                JiraValidatorLogMapper mapper = session.getMapper(JiraValidatorLogMapper.class);
-                mapper.insertJiraValidatorLog(entity);
-                session.commit();
-                return true;
-            }
+            JiraValidatorLogMapper mapper = session.getMapper(JiraValidatorLogMapper.class);
+            mapper.insertJiraValidatorLog(entity);
+            session.commit();
+            return true;
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            session.rollback();
             return false;
+        } finally {
+            session.close();
         }
     }
 }

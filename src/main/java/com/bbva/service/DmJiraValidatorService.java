@@ -12,14 +12,13 @@ import com.google.gson.JsonObject;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class DmJiraValidatorService {
 
     private final DmJiraValidatorLogDao logDao = DmJiraValidatorLogDao.getInstance();
+    private final JiraApiService jiraApiService = new JiraApiService();
 
-    public List<DmJiraValidatorMessageDTO> validateHistoriaDM(JiraValidatorByUrlRequest dto, JsonObject ticketMetadata, Map<String, JsonObject> subtaskMetadataMap) {
-
+    public List<DmJiraValidatorMessageDTO> validateHistoriaDM(JiraValidatorByUrlRequest dto) throws Exception {
         List<DmJiraValidatorMessageDTO> messages = new ArrayList<>();
         JiraValidatorLogEntity logEntity = new JiraValidatorLogEntity();
 
@@ -28,23 +27,34 @@ public class DmJiraValidatorService {
         logEntity.setNombre(dto.getName());
         logEntity.setTicket(dto.getUrlJira());
 
-        String issueType = ticketMetadata.getAsJsonObject("fields").get("issuetype").getAsJsonObject().get("name").getAsString();
-        String teamBacklog = ticketMetadata.getAsJsonObject("fields").getAsJsonArray("customfield_13300").get(0).getAsString();
+        String ticketKey = extractIssueKey(dto.getUrlJira());
 
-        messages.add(buildMessage(1, "Validación Issue Type", issueType.equalsIgnoreCase("Story"), issueType.equalsIgnoreCase("Story") ? "Correcto: Issue Type Story" : "Incorrecto: Issue Type no es Story", null));
+        JsonObject ticketMetadata = getIssueMetadata(dto, ticketKey);
+        JsonObject fields = ticketMetadata.getAsJsonObject("fields");
+
+        String issueType = fields.getAsJsonObject("issuetype").get("name").getAsString();
+        String teamBacklog = fields.getAsJsonArray("customfield_13300").get(0).getAsString();
+
+        messages.add(buildMessage(1, "Validación Issue Type",
+                issueType.equalsIgnoreCase("Story"),
+                issueType.equalsIgnoreCase("Story") ? "Correcto: Issue Type Story" : "Incorrecto: Issue Type no es Story",
+                null));
         logEntity.setRegla1(issueType.equalsIgnoreCase("Story") ? "1" : "0");
 
-        messages.add(buildMessage(2, "Validación Team Backlog", teamBacklog.equals("2461936"), teamBacklog.equals("2461936") ? "Correcto: Team Backlog PE DATA MODELLING" : "Incorrecto: Team Backlog distinto a PE DATA MODELLING", null));
+        messages.add(buildMessage(2, "Validación Team Backlog",
+                teamBacklog.equals("2461936"),
+                teamBacklog.equals("2461936") ? "Correcto: Team Backlog PE DATA MODELLING" : "Incorrecto: Team Backlog distinto a PE DATA MODELLING",
+                null));
         logEntity.setRegla2(teamBacklog.equals("2461936") ? "1" : "0");
 
-        JsonArray subtasks = ticketMetadata.getAsJsonObject("fields").getAsJsonArray("subtasks");
+        JsonArray subtasks = fields.getAsJsonArray("subtasks");
         int reglaIndex = 3;
 
         for (JsonElement subtaskElem : subtasks) {
             String subtaskKey = subtaskElem.getAsJsonObject().get("key").getAsString();
-            JsonObject subtaskMetadata = subtaskMetadataMap.get(subtaskKey).getAsJsonArray("issues").get(0).getAsJsonObject();
-            String summary = subtaskMetadata.getAsJsonObject("fields").get("summary").getAsString().toUpperCase();
+            JsonObject subtaskMetadata = getIssueMetadata(dto, subtaskKey);
 
+            String summary = subtaskMetadata.getAsJsonObject("fields").get("summary").getAsString().toUpperCase();
             List<String> errores = DmJiraValidationMethods.validarSubtarea(subtaskMetadata);
             List<String> detalles = DmJiraValidationMethods.obtenerDetallesValidacion(subtaskMetadata);
 
@@ -58,6 +68,19 @@ public class DmJiraValidatorService {
 
         logDao.insertDmJiraValidatorLog(logEntity);
         return messages;
+    }
+
+    protected JsonObject getIssueMetadata(JiraValidatorByUrlRequest dto, String issueKey) throws Exception {
+        return jiraApiService.getIssueMetadata(dto, issueKey);
+    }
+
+    private String extractIssueKey(String urlOrKey) {
+        if (urlOrKey == null) return null;
+        if (urlOrKey.contains("/browse/")) {
+            String[] parts = urlOrKey.split("/browse/");
+            return parts.length > 1 ? parts[1] : null;
+        }
+        return urlOrKey;
     }
 
     private DmJiraValidatorMessageDTO buildMessage(int ruleId, String rule, boolean isValid, String message, List<String> details) {

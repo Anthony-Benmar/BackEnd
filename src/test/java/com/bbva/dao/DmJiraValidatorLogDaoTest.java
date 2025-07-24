@@ -59,6 +59,7 @@ class DmJiraValidatorLogDaoTest {
         verify(sqlSessionMock).getMapper(JiraValidatorLogMapper.class);
         verify(jiraValidatorLogMapperMock).insertJiraValidatorLog(entity);
         verify(sqlSessionMock).commit();
+        verify(sqlSessionMock).close();
     }
 
     @Test
@@ -76,5 +77,7 @@ class DmJiraValidatorLogDaoTest {
         verify(sqlSessionMock).getMapper(JiraValidatorLogMapper.class);
         verify(jiraValidatorLogMapperMock).insertJiraValidatorLog(entity);
         verify(sqlSessionMock, never()).commit();
+        verify(sqlSessionMock).rollback();
+        verify(sqlSessionMock).close();
     }
 }

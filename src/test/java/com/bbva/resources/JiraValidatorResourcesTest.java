@@ -1,7 +1,9 @@
 package com.bbva.resources;
 
 import com.bbva.core.abstracts.IDataResult;
+import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dto.jira.request.JiraValidatorByUrlRequest;
+import com.bbva.dto.jira.response.DmJiraValidatorResponseDTO;
 import com.bbva.dto.jira.response.JiraResponseDTO;
 import com.bbva.service.DmJiraValidatorService;
 import com.bbva.service.JiraValidatorService;
@@ -11,17 +13,18 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.JsonArray;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import org.mockito.Mockito;
 
 
 import javax.ws.rs.core.Response;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
-import java.util.Map;
+import java.util.Collections;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class JiraValidatorResourcesTest {
@@ -307,47 +310,51 @@ class JiraValidatorResourcesTest {
 
     @Test
     void testValidatorDataModelling() throws Exception {
-        JiraValidatorByUrlRequest mockRequest = new JiraValidatorByUrlRequest();
-        mockRequest.setUrlJira("https://jira.globaldevtools.bbva.com/browse/DEDATIOEN4-1234");
-        mockRequest.setUserName("york.yusel.contractor");
-        mockRequest.setToken("xxxx");
-        mockRequest.setName("York");
+        // Arrange - Request DTO
+        JiraValidatorByUrlRequest request = new JiraValidatorByUrlRequest();
+        request.setUrlJira("https://jira.globaldevtools.bbva.com/browse/DEDATIOEN4-1234");
+        request.setUserName("york.yusel.contractor");
+        request.setToken("xxxx");
+        request.setName("York");
 
-        JiraValidatorService jiraValidatorServiceMock = mock(JiraValidatorService.class);
-        DmJiraValidatorService dmJiraValidatorServiceMock = mock(DmJiraValidatorService.class);
+        JiraValidatorService jiraServiceMock = mock(JiraValidatorService.class);
+        DmJiraValidatorService dmServiceMock = mock(DmJiraValidatorService.class);
 
         JiraValidatorResources resource = new JiraValidatorResources();
+        setPrivateField(resource, "jiraValidatorService", jiraServiceMock);
+        setPrivateField(resource, "dmJiraValidatorService", dmServiceMock);
 
-        Field validatorField = JiraValidatorResources.class.getDeclaredField("jiraValidatorService");
-        validatorField.setAccessible(true);
-        validatorField.set(resource, jiraValidatorServiceMock);
-
-        Field dmField = JiraValidatorResources.class.getDeclaredField("dmJiraValidatorService");
-        dmField.setAccessible(true);
-        dmField.set(resource, dmJiraValidatorServiceMock);
-
-        JsonObject mockMetadata = new JsonObject();
+        JsonObject ticketMetadata = new JsonObject();
         JsonObject issue = new JsonObject();
         JsonObject fields = new JsonObject();
         fields.add("subtasks", new JsonArray());
         issue.add("fields", fields);
         JsonArray issues = new JsonArray();
         issues.add(issue);
-        mockMetadata.add("issues", issues);
+        ticketMetadata.add("issues", issues);
 
-        when(jiraValidatorServiceMock.getMetadataIssues(eq(mockRequest), anyList()))
-                .thenReturn(mockMetadata);
-        when(jiraValidatorServiceMock.buildSubtaskMetadataMap(eq(mockRequest), any()))
-                .thenReturn(Map.of());
+        when(jiraServiceMock.getMetadataIssues(eq(request), anyList())).thenReturn(ticketMetadata);
+        when(jiraServiceMock.buildSubtaskMetadataMap(eq(request), any())).thenReturn(Collections.emptyMap());
+        when(dmServiceMock.validateHistoriaDM(eq(request))).thenReturn(List.of());
 
-        when(dmJiraValidatorServiceMock.validateHistoriaDM(eq(mockRequest), any(), any()))
-                .thenReturn(List.of());
+        // Act
+        IDataResult<DmJiraValidatorResponseDTO> result = resource.validatorDataModelling(request);
 
-        IDataResult<?> response = resource.validatorDataModelling(mockRequest);
+        // Assert
+        assertNotNull(result);
+        assertTrue(result instanceof SuccessDataResult);
+        assertEquals("200", result.status);
+        assertEquals("Validación Data Modelling ejecutada", result.message);
+        assertEquals(0, result.data.getData().size());
+        assertEquals(0, result.data.getErrorCount());
+        assertEquals(0, result.data.getSuccessCount());
+        assertEquals(0, result.data.getWarningCount());
+    }
 
-        assertNotNull(response);
-        assertEquals("200", response.status);
-        assertEquals("Validación Data Modelling ejecutada", response.message);
+    private void setPrivateField(Object target, String fieldName, Object value) throws Exception {
+        Field field = target.getClass().getDeclaredField(fieldName);
+        field.setAccessible(true);
+        field.set(target, value);
     }
 
 }

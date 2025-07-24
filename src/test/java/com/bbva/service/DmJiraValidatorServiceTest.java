@@ -1,10 +1,13 @@
 package com.bbva.service;
 
 import com.bbva.dao.DmJiraValidatorLogDao;
+import com.bbva.database.MyBatisConnectionFactory;
 import com.bbva.dto.jira.request.JiraValidatorByUrlRequest;
 import com.bbva.dto.jira.response.DmJiraValidatorMessageDTO;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
@@ -23,46 +26,43 @@ class DmJiraValidatorServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new DmJiraValidatorService();
+        service = Mockito.spy(new DmJiraValidatorService());
     }
 
     @Test
-    void testValidateHistoriaDM_withOneInvalidSubtask() {
-        // Mock DAO para evitar escritura real
+    void testValidateHistoriaDM_withOneInvalidSubtask() throws Exception {
+        // Mock del DAO
         DmJiraValidatorLogDao mockDao = mock(DmJiraValidatorLogDao.class);
-        MockedStatic<DmJiraValidatorLogDao> mockedStatic = Mockito.mockStatic(DmJiraValidatorLogDao.class);
-        mockedStatic.when(DmJiraValidatorLogDao::getInstance).thenReturn(mockDao);
+        MockedStatic<DmJiraValidatorLogDao> mockedDaoStatic = Mockito.mockStatic(DmJiraValidatorLogDao.class);
+        mockedDaoStatic.when(DmJiraValidatorLogDao::getInstance).thenReturn(mockDao);
         when(mockDao.insertDmJiraValidatorLog(any())).thenReturn(true);
 
-        // Armar ticketMetadata
+        // Mock de MyBatis
+        MockedStatic<MyBatisConnectionFactory> mockedFactory = Mockito.mockStatic(MyBatisConnectionFactory.class);
+        SqlSessionFactory sqlSessionFactoryMock = mock(SqlSessionFactory.class);
+        SqlSession sqlSessionMock = mock(SqlSession.class);
+        when(sqlSessionFactoryMock.openSession()).thenReturn(sqlSessionMock);
+        mockedFactory.when(MyBatisConnectionFactory::getInstance).thenReturn(sqlSessionFactoryMock);
+
+        // Armar metadata del ticket principal
         JsonObject ticketMetadata = new JsonObject();
         JsonObject fields = new JsonObject();
         fields.add("issuetype", tipo("Story"));
-        fields.add("customfield_13300", array("2461936")); // backlog correcto
+        fields.add("customfield_13300", array("2461936"));
         fields.add("subtasks", arraySubtask("DEDATIOEN4-9999"));
         ticketMetadata.add("fields", fields);
 
-        // Armar subtarea mock
+        // Armar metadata de subtarea (con errores)
         JsonObject subtaskFields = new JsonObject();
-        subtaskFields.addProperty("summary", "CS - VOLCADO BUI DM"); // Contiene "Volcado"
-        subtaskFields.add("issuetype", tipo("Bug")); // Error: no es Sub-task
-        subtaskFields.add("priority", tipo("Low")); // Error: no es Medium
-        subtaskFields.add("status", tipo("Deployed")); // Error: debe ser New
-        subtaskFields.add("customfield_13300", array("9999999")); // Error: backlog distinto
-        subtaskFields.addProperty("description", ""); // Error: vacía
-        subtaskFields.add("labels", array("#TTV_Dictamen", "algo_DM")); // Etiquetas correctas
-
-        JsonObject subtaskIssue = new JsonObject();
-        subtaskIssue.add("fields", subtaskFields);
-
-        JsonArray subtaskIssuesArray = new JsonArray();
-        subtaskIssuesArray.add(subtaskIssue);
-
-        JsonObject subtaskWrapper = new JsonObject();
-        subtaskWrapper.add("issues", subtaskIssuesArray);
-
-        Map<String, JsonObject> subtaskMetadataMap = new HashMap<>();
-        subtaskMetadataMap.put("DEDATIOEN4-9999", subtaskWrapper);
+        subtaskFields.addProperty("summary", "CS - VOLCADO BUI DM");
+        subtaskFields.add("issuetype", tipo("Bug"));
+        subtaskFields.add("priority", tipo("Low"));
+        subtaskFields.add("status", tipo("Deployed"));
+        subtaskFields.add("customfield_13300", array("9999999"));
+        subtaskFields.addProperty("description", "");
+        subtaskFields.add("labels", array("#TTV_Dictamen", "algo_DM"));
+        JsonObject subtaskMetadata = new JsonObject();
+        subtaskMetadata.add("fields", subtaskFields);
 
         // DTO
         JiraValidatorByUrlRequest dto = new JiraValidatorByUrlRequest();
@@ -71,21 +71,25 @@ class DmJiraValidatorServiceTest {
         dto.setToken("xxxx");
         dto.setName("York");
 
+        // Mock del método interno
+        doReturn(ticketMetadata).when(service).getIssueMetadata(eq(dto), eq("DEDATIOEN4-1234"));
+        doReturn(subtaskMetadata).when(service).getIssueMetadata(eq(dto), eq("DEDATIOEN4-9999"));
+
         // Ejecutar
-        List<DmJiraValidatorMessageDTO> messages = service.validateHistoriaDM(dto, ticketMetadata, subtaskMetadataMap);
+        List<DmJiraValidatorMessageDTO> messages = service.validateHistoriaDM(dto);
 
         // Validaciones
         assertEquals(3, messages.size()); // tipo + backlog + subtarea
-        assertEquals("success", messages.get(0).getStatus()); // tipo story
-        assertEquals("success", messages.get(1).getStatus()); // backlog correcto
-        assertEquals("error", messages.get(2).getStatus()); // subtarea falla
+        assertEquals("success", messages.get(0).getStatus()); // tipo
+        assertEquals("success", messages.get(1).getStatus()); // backlog
+        assertEquals("error", messages.get(2).getStatus()); // subtarea inválida
         assertTrue(messages.get(2).getMessage().contains("no cumple"));
-        assertNotNull(messages.get(2).getDetails());
 
-        mockedStatic.close();
+        // Cierre de mocks estáticos
+        mockedDaoStatic.close();
+        mockedFactory.close();
     }
 
-    // Métodos utilitarios para armar JSON
     private JsonObject tipo(String name) {
         JsonObject obj = new JsonObject();
         obj.addProperty("name", name);

@@ -103,8 +103,8 @@ public class JiraValidatorService {
         resultFinal.add(executeRule(() -> instancesRules.getValidationFeatureLinkProgramIncrement("Validar que el Feature Link tenga el Program Increment asignado y correcto (Q Actual)", GROUP_FEATURE_LINK)));
         resultFinal.add(executeRule(() -> instancesRules.getValidationFeatureLinkRLB(teamBacklogId, TEAM_BACKLOG_RLB_ID,"Validar que el Feature Link tenga INC PRB o PB como label, excepto para evolutivos", GROUP_FEATURE_LINK)));
         resultFinal.add(executeRule(() -> instancesRules.getValidationItemType("Validar Item Type sea Technical", GROUP_TICKET)));
-        resultFinal.add(executeRule(() -> instancesRules.getValidationTechStack("Validar Tech Stack sea Data - Dataproc", GROUP_TICKET)));
-        resultFinal.add(executeRule(() -> instancesRules.getValidationAcceptanceCriteria(tipoDesarrollo,"Validar el criterio de aceptacion, segun el tipo de desarrollo debe ser similar a la plantilla", GROUP_ACCEPTANCE_CRITERIA)));
+        resultFinal.add(executeRule(() -> instancesRules.getValidationTechStack(tipoDesarrollo,"Validar Tech Stack sea Data - Dataproc", GROUP_TICKET)));
+        resultFinal.add(executeRule(() -> instancesRules.getValidationAcceptanceCriteria(teamBacklogId, TEAM_BACKLOG_RLB_ID, tipoDesarrollo,"Validar el criterio de aceptacion, segun el tipo de desarrollo debe ser similar a la plantilla", GROUP_ACCEPTANCE_CRITERIA)));
         resultFinal.add(executeRule(() -> instancesRules.getValidationValidateImpactLabel("Validar que se tengan los Impact Label correctos (Solo Mallas/HOST)",GROUP_TICKET, tipoDesarrollo)));
         resultFinal.add(executeRule(() -> instancesRules.getValidationValidateAttachment(tipoDesarrollo,"Validar la existencia de los adjuntos", "Attachment")));
         resultFinal.add(executeRule(() -> instancesRules.getValidationDependency(teamBacklogId, TEAM_BACKLOG_RLB_ID,"Validar que exista una Dependencia asignada correctamente y comprometida (Comentario HUD Comprometida)",GROUP_DEPENDENCY)));
@@ -117,10 +117,11 @@ public class JiraValidatorService {
         resultFinal.add(executeRule(() -> instancesRules.getValidationAlpha(tipoDesarrollo,"Validar que la UUAA corresponda al Dominio de ALPHA", GROUP_SUBTASK)));
         resultFinal.add(executeRule(() -> instancesRules.getValidationValidateJIRAStatus(tipoDesarrollo,"Validar el Status de Ticket JIRA",GROUP_TICKET)));
         resultFinal.add(executeRule(() -> instancesRules.getValidationPR(tipoDesarrollo, "Validar que se tenga una PR asociada", teamBacklogId,  GROUP_PR, infoJiraProjectList)));
-        resultFinal.add(executeRule(() -> instancesRules.getValidationPRBranch("Validar que esté asociado a la rama correcta", GROUP_PR)));
+        resultFinal.add(executeRule(() -> instancesRules.getValidationPRBranch(tipoDesarrollo,"Validar que esté asociado a la rama correcta", GROUP_PR)));
         resultFinal.add(executeRule(() -> instancesRules.getValidationProductivizacionIssueLink(tipoDesarrollo, "Validar que el ticket de deployado como isChild (scaffolder)", GROUP_TICKET)));
         resultFinal.add(executeRule(() -> instancesRules.getValidatorHUTIntegration("Detectar el tipo de Ticket Integracion", tipoDesarrollo, GROUP_TICKET)));
         resultFinal.add(executeRule(() -> instancesRules.getValidationIFRS9("Validar los bloqueo IFRS9 en las solicitudes", GROUP_TICKET)));
+        resultFinal.add(executeRule(() -> instancesRules.getValidationComments(tipoDesarrollo, "Validar preguntas asociadas al Despligue", GROUP_TICKET)));
 
         JiraValidatorLogEntity logEntity = JiraValidatorLogEntity.builder()
                 .nombre(dto.getName())
@@ -217,6 +218,7 @@ public class JiraValidatorService {
                 prMap.put("url", prDetail.get("url").getAsString());
                 prMap.put("status", prDetail.get("status").getAsString());
                 prMap.put("destinyBranch", prDetail.getAsJsonObject("destination").get("branch").getAsString());
+                prMap.put("originBranch",  prDetail.getAsJsonObject("source").get("branch").getAsString());
                 prMap.put("reviewers", reviewersList);
                 prs.add(prMap);
             }
@@ -244,7 +246,7 @@ public class JiraValidatorService {
     private static final Map<Integer, RuleConfig> reglasConfig =  Map.ofEntries(
             Map.entry( 1, new RuleConfig("Validacion Summary HUT Type:", 1)),
             Map.entry(2, new RuleConfig("Validacion Issue Type:", 2)),
-            Map.entry(3, new RuleConfig("Validacion Fix Version:", 3)),
+            Map.entry(3, new RuleConfig("Validacion Fix Version:", 3,false)),
             Map.entry(4, new RuleConfig("Validacion Labels:", 4)),
             Map.entry( 5, new RuleConfig("Validacion Tablero Proyecto:", 5)),
             Map.entry(6, new RuleConfig("Validacion Asignacion a Tablero de DQA:", 6)),
@@ -254,7 +256,7 @@ public class JiraValidatorService {
             Map.entry(10, new RuleConfig("Validacion Feature Link Program Increment:", 10)),
             Map.entry(11, new RuleConfig("Validacion Feature Link Incidencia/problema:", 11)),
             Map.entry(12, new RuleConfig("Validacion Item Type:", 12)),
-            Map.entry(13, new RuleConfig("Validacion Tech Stack:", 13, false)),
+            Map.entry(13, new RuleConfig("Validacion Tech Stack:", 13)),
             Map.entry(14, new RuleConfig("Validacion Acceptance Criteria:", 14)),
             Map.entry(15, new RuleConfig("Validacion Impact Label:", 15)),
             Map.entry(16, new RuleConfig("Validacion documentos adjuntos:", 16)),
@@ -268,10 +270,11 @@ public class JiraValidatorService {
             Map.entry(24, new RuleConfig("Validacion Subtarea Alpha:", 24)),
             Map.entry(25, new RuleConfig("Validacion Status JIRA:", 25)),
             Map.entry(26, new RuleConfig("Validacion PR:", 26)),
-            Map.entry(27, new RuleConfig("Validacion PR Rama Destino:", 27)),
+            Map.entry(27, new RuleConfig("Validacion PR Rama Origen/Destino:", 27)),
             Map.entry(28, new RuleConfig("Validacion de productivizacion:", 28)),
             Map.entry(29, new RuleConfig("Validacion ticket de integracion:", 29)),
-            Map.entry(30, new RuleConfig("Advertencia IFRS9: Se alerta sobre la fecha de los bloqueos correspondientes a IFRS9", 30))
+            Map.entry(30, new RuleConfig("Advertencia IFRS9: Se alerta sobre la fecha de los bloqueos correspondientes a IFRS9", 30)),
+            Map.entry(31, new RuleConfig("Validacion Preguntas funcionales", 31))
     );
 
     private void actualizarLogEntity(JiraValidatorLogEntity logEntity, int ruleId, String reglaEstado) {
@@ -284,37 +287,21 @@ public class JiraValidatorService {
         }
     }
 
-    public JsonObject getMetadataIssues(JiraValidatorByUrlRequest dto, List<String> urls) throws Exception {
+    public JsonObject getMetadataIssues (JiraValidatorByUrlRequest dto, List<String> jiraIssues){
         JsonObject result = new JsonObject();
-        JsonArray issuesArray = new JsonArray();
-
-        for (String url : urls) {
-            String issueKey = extractIssueKey(url);
-
-            if (issueKey == null || issueKey.isBlank()) {
-                throw new HandledException("400", "El valor de urlJira no contiene un issue válido");
-            }
-
-            JsonObject ticketMetadata = jiraApiService.getIssueMetadata(dto, issueKey);
-            if (ticketMetadata != null) {
-                issuesArray.add(ticketMetadata);
-            } else {
-                throw new HandledException("404", "No se encontró metadata para el ticket: " + issueKey);
-            }
+        if (jiraIssues == null || jiraIssues.isEmpty()) {
+            return result;
         }
-
-        result.add("issues", issuesArray);
+        String url = jiraApiService.buildJiraQueryUrl(jiraIssues);
+        try{
+            String response = jiraApiService.GetJiraAsync(dto.getUserName(), dto.getToken(), url);
+            result = JsonParser.parseString(response).getAsJsonObject();
+        } catch (Exception e) {
+            LOGGER.info("ERROR CONSULTA JIRA LINK " + url + ": " + e.getMessage());
+        }
         return result;
     }
 
-    private String extractIssueKey(String urlOrKey) {
-        if (urlOrKey == null) return null;
-        if (urlOrKey.contains("/browse/")) {
-            String[] parts = urlOrKey.split("/browse/");
-            return parts.length > 1 ? parts[1] : null;
-        }
-        return urlOrKey;
-    }
 
     public String getTeamBackLogId(String tipoDesarrollo, JsonObject jiraTicketResult) throws ParseException {
         String teamBackLogId = "";

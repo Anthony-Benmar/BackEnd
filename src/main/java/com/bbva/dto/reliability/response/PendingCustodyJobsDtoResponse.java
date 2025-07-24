@@ -13,4 +13,5 @@ public class PendingCustodyJobsDtoResponse {
     private String originTypeId;
     private String phaseTypeId;
     private String principalJob;
+    private String status;
 }
