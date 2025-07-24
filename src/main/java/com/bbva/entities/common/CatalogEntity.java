@@ -3,11 +3,11 @@ package com.bbva.entities.common;
 import com.google.gson.annotations.SerializedName;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-//import lombok.NoArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @AllArgsConstructor
-//@NoArgsConstructor
+@NoArgsConstructor
 @Getter
 @Setter
 public class CatalogEntity {
