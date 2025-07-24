@@ -82,6 +82,12 @@ public class ReliabilityDao {
                     item.setJobName(item.getJobName().replaceAll("\\s+", ""));
                 }
             }
+            for (PendingCustodyJobsDtoResponse x : pendingCustodyJobsList) {
+                ExecutionValidationDtoResponse executionValidation = mapper.getExecutionValidation(x.getJobName());
+                if (executionValidation != null) {
+                    x.setStatus(executionValidation.getValidation());
+                }
+            }
             return pendingCustodyJobsList;
         }
     }
@@ -142,6 +148,12 @@ public class ReliabilityDao {
         }
     }
 
+    public static class PersistenceException extends RuntimeException {
+        public PersistenceException(String message, Throwable cause) {
+            super(message, cause);
+        }
+    }
+
     public void insertTransfer(TransferInputDtoRequest dto) {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         try (SqlSession session = sqlSessionFactory.openSession()) {
@@ -149,8 +161,9 @@ public class ReliabilityDao {
             reliabilityMapper.insertTranfer(dto);
             dto.getTransferInputDtoRequests().forEach(reliabilityMapper::insertJobStock);
             session.commit();
-        }catch (Exception e) {
-            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+        } catch (Exception e) {
+            String errorMessage = "Error al guardar los datos de la transferencia en la base de datos.";
+            throw new PersistenceException(errorMessage, e);
         }
     }
 
@@ -217,4 +230,5 @@ public class ReliabilityDao {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
         }
     }
+
 }
