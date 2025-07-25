@@ -1,5 +1,4 @@
 package com.bbva.resources;
-import com.bbva.core.HandledException;
 import com.bbva.core.abstracts.IDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dao.InfoJiraProjectDao;
@@ -10,13 +9,9 @@ import com.bbva.dto.jira.response.JiraResponseDTO;
 import com.bbva.service.DmJiraValidatorService;
 import com.bbva.service.JiraApiService;
 import com.bbva.service.JiraValidatorService;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 
 import javax.ws.rs.*;
-import java.util.List;
 import javax.ws.rs.core.MediaType;
-import java.util.Map;
 
 @Path("/jira")
 @Produces(MediaType.APPLICATION_JSON)

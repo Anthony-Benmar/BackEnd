@@ -335,7 +335,7 @@ class JiraValidatorResourcesTest {
 
         when(jiraServiceMock.getMetadataIssues(eq(request), anyList())).thenReturn(ticketMetadata);
         when(jiraServiceMock.buildSubtaskMetadataMap(eq(request), any())).thenReturn(Collections.emptyMap());
-        when(dmServiceMock.validateHistoriaDM(eq(request))).thenReturn(List.of());
+        when(dmServiceMock.validateHistoriaDM(request)).thenReturn(List.of());
 
         // Act
         IDataResult<DmJiraValidatorResponseDTO> result = resource.validatorDataModelling(request);

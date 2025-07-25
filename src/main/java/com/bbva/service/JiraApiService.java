@@ -23,7 +23,6 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.util.EntityUtils;
 
-import java.io.IOException;
 import java.net.http.HttpClient;
 import java.util.*;
 import java.util.logging.Logger;
