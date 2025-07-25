@@ -15,6 +15,9 @@ import java.util.List;
 
 public class DmJiraValidatorService {
 
+    private static final String ISSUE_TYPE_STORY = "Story";
+    private static final String TEAM_BACKLOG_PE_DATA_MODELLING = "2461936";
+
     private final DmJiraValidatorLogDao logDao = DmJiraValidatorLogDao.getInstance();
     private final JiraApiService jiraApiService = new JiraApiService();
 
@@ -35,17 +38,20 @@ public class DmJiraValidatorService {
         String issueType = fields.getAsJsonObject("issuetype").get("name").getAsString();
         String teamBacklog = fields.getAsJsonArray("customfield_13300").get(0).getAsString();
 
+        boolean isStory = ISSUE_TYPE_STORY.equalsIgnoreCase(issueType.trim());
+        boolean isCorrectBacklog = TEAM_BACKLOG_PE_DATA_MODELLING.equals(teamBacklog.trim());
+
         messages.add(buildMessage(1, "Validación Issue Type",
-                issueType.equalsIgnoreCase("Story"),
-                issueType.equalsIgnoreCase("Story") ? "Correcto: Issue Type Story" : "Incorrecto: Issue Type no es Story",
+                isStory,
+                isStory ? "Correcto: Issue Type Story" : "Incorrecto: Issue Type no es Story",
                 null));
-        logEntity.setRegla1(issueType.equalsIgnoreCase("Story") ? "1" : "0");
+        logEntity.setRegla1(isStory ? "1" : "0");
 
         messages.add(buildMessage(2, "Validación Team Backlog",
-                teamBacklog.equals("2461936"),
-                teamBacklog.equals("2461936") ? "Correcto: Team Backlog PE DATA MODELLING" : "Incorrecto: Team Backlog distinto a PE DATA MODELLING",
+                isCorrectBacklog,
+                isCorrectBacklog ? "Correcto: Team Backlog PE DATA MODELLING" : "Incorrecto: Team Backlog distinto a PE DATA MODELLING",
                 null));
-        logEntity.setRegla2(teamBacklog.equals("2461936") ? "1" : "0");
+        logEntity.setRegla2(isCorrectBacklog ? "1" : "0");
 
         JsonArray subtasks = fields.getAsJsonArray("subtasks");
         int reglaIndex = 3;

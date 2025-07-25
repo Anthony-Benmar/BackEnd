@@ -10,17 +10,24 @@ import java.util.List;
 public class DmJiraValidationMethods {
 
     private static final String BACKLOG_ESPERADO = "2461936";
+    private static final String FIELDS = "fields";
+
+    private DmJiraValidationMethods() {
+        throw new UnsupportedOperationException("Utility class");
+    }
 
     public static List<String> validarSubtarea(JsonObject subtask) {
         List<String> errores = new ArrayList<>();
 
-        String summary = subtask.getAsJsonObject("fields").get("summary").getAsString().toUpperCase();
-        String tipo = subtask.getAsJsonObject("fields").get("issuetype").getAsJsonObject().get("name").getAsString();
-        String prioridad = subtask.getAsJsonObject("fields").get("priority").getAsJsonObject().get("name").getAsString();
-        String status = subtask.getAsJsonObject("fields").get("status").getAsJsonObject().get("name").getAsString();
-        String backlog = subtask.getAsJsonObject("fields").getAsJsonArray("customfield_13300").get(0).getAsString();
-        String descripcion = subtask.getAsJsonObject("fields").get("description").getAsString();
-        JsonArray labelsJson = subtask.getAsJsonObject("fields").getAsJsonArray("labels");
+        JsonObject fields = subtask.getAsJsonObject(FIELDS);
+
+        String summary = fields.get("summary").getAsString().toUpperCase();
+        String tipo = fields.getAsJsonObject("issuetype").get("name").getAsString();
+        String prioridad = fields.getAsJsonObject("priority").get("name").getAsString();
+        String status = fields.getAsJsonObject("status").getAsJsonObject().get("name").getAsString();
+        String backlog = fields.getAsJsonArray("customfield_13300").get(0).getAsString();
+        String descripcion = fields.get("description").getAsString();
+        JsonArray labelsJson = fields.getAsJsonArray("labels");
 
         String tipoSubtask = determinarTipoSubtask(summary);
 
@@ -44,13 +51,15 @@ public class DmJiraValidationMethods {
     public static List<String> obtenerDetallesValidacion(JsonObject subtask) {
         List<String> detalles = new ArrayList<>();
 
-        String summary = subtask.getAsJsonObject("fields").get("summary").getAsString().toUpperCase();
-        String tipo = subtask.getAsJsonObject("fields").get("issuetype").getAsJsonObject().get("name").getAsString();
-        String prioridad = subtask.getAsJsonObject("fields").get("priority").getAsJsonObject().get("name").getAsString();
-        String status = subtask.getAsJsonObject("fields").get("status").getAsJsonObject().get("name").getAsString();
-        String backlog = subtask.getAsJsonObject("fields").getAsJsonArray("customfield_13300").get(0).getAsString();
-        String descripcion = subtask.getAsJsonObject("fields").get("description").getAsString();
-        JsonArray labelsJson = subtask.getAsJsonObject("fields").getAsJsonArray("labels");
+        JsonObject fields = subtask.getAsJsonObject(FIELDS);
+
+        String summary = fields.get("summary").getAsString().toUpperCase();
+        String tipo = fields.getAsJsonObject("issuetype").get("name").getAsString();
+        String prioridad = fields.getAsJsonObject("priority").get("name").getAsString();
+        String status = fields.getAsJsonObject("status").getAsJsonObject().get("name").getAsString();
+        String backlog = fields.getAsJsonArray("customfield_13300").get(0).getAsString();
+        String descripcion = fields.get("description").getAsString();
+        JsonArray labelsJson = fields.getAsJsonArray("labels");
 
         String tipoSubtask = determinarTipoSubtask(summary);
 
