@@ -27,8 +27,8 @@ class JiraApiServiceTest {
         String issueKey = "TEST-1234";
         String jsonResponse = "{\"fields\":{\"summary\":\"Issue summary\"}}";
 
-        doReturn(jsonResponse).when(service).GetJiraAsync(eq("user"), eq("token"),
-                eq("https://jira.globaldevtools.bbva.com/rest/api/2/issue/" + issueKey + "?expand=changelog"));
+        doReturn(jsonResponse).when(service).GetJiraAsync("user", "token",
+                "https://jira.globaldevtools.bbva.com/rest/api/2/issue/" + issueKey + "?expand=changelog");
 
         JsonObject result = service.getIssueMetadata(dto, issueKey);
 
