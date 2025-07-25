@@ -4,7 +4,7 @@ import com.bbva.dao.DmJiraValidatorLogDao;
 import com.bbva.dto.jira.request.JiraValidatorByUrlRequest;
 import com.bbva.dto.jira.response.DmJiraValidatorMessageDTO;
 import com.bbva.entities.jiravalidator.JiraValidatorLogEntity;
-import com.bbva.util.ApiJiraMet.DmJiraValidationMethods;
+import com.bbva.util.apijiramet.DmJiraValidationMethods;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;

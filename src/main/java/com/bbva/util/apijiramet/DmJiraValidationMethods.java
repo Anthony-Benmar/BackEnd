@@ -1,4 +1,4 @@
-package com.bbva.util.ApiJiraMet;
+package com.bbva.util.apijiramet;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;

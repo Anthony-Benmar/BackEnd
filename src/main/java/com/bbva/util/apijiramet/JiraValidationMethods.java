@@ -1,4 +1,4 @@
-package com.bbva.util.ApiJiraMet;
+package com.bbva.util.apijiramet;
 
 import com.bbva.dto.jira.request.JiraValidatorByUrlRequest;
 import com.bbva.entities.jiravalidator.InfoJiraProject;

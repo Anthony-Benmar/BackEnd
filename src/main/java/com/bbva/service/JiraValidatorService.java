@@ -10,7 +10,7 @@ import com.bbva.dto.jira.response.JiraMessageResponseDTO;
 import com.bbva.dto.jira.response.JiraResponseDTO;
 import com.bbva.entities.jiravalidator.InfoJiraProject;
 import com.bbva.entities.jiravalidator.JiraValidatorLogEntity;
-import com.bbva.util.ApiJiraMet.JiraValidationMethods;
+import com.bbva.util.apijiramet.JiraValidationMethods;
 import com.bbva.util.ApiJiraName;
 import com.google.gson.*;
 import lombok.AllArgsConstructor;
