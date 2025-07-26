@@ -24,7 +24,9 @@ public class DmJiraValidatorLogDao {
             if (session != null) {
                 session.rollback();
             }
-            LOGGER.log(Level.SEVERE, "Error al insertar log de validación DM: " + e.getMessage(), e);
+            if (LOGGER.isLoggable(Level.SEVERE)) {
+                LOGGER.log(Level.SEVERE, "Error al insertar log de validación DM: " + e.getMessage(), e);
+            }
             return false;
         } finally {
             if (session != null) {
