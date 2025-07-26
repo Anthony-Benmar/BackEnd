@@ -4,24 +4,22 @@ import com.bbva.database.MyBatisConnectionFactory;
 import com.bbva.database.mappers.JiraValidatorLogMapper;
 import com.bbva.entities.jiravalidator.JiraValidatorLogEntity;
 import org.apache.ibatis.session.SqlSession;
-import org.apache.ibatis.session.SqlSessionFactory;
 
-import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class DmJiraValidatorLogDao {
 
     private static final Logger LOGGER = Logger.getLogger(DmJiraValidatorLogDao.class.getName());
-    private static DmJiraValidatorLogDao instance;
+    private static final DmJiraValidatorLogDao INSTANCE = new DmJiraValidatorLogDao();
 
-    public static synchronized DmJiraValidatorLogDao getInstance() {
-        if (Objects.isNull(instance)) {
-            instance = new DmJiraValidatorLogDao();
-        }
-        return instance;
+    public static DmJiraValidatorLogDao getInstance() {
+        return INSTANCE;
     }
 
+    private DmJiraValidatorLogDao() {
+        // Constructor privado para Singleton
+    }
     public boolean insertDmJiraValidatorLog(JiraValidatorLogEntity entity) {
         SqlSession session = null;
         try {
@@ -34,7 +32,9 @@ public class DmJiraValidatorLogDao {
             if (session != null) {
                 session.rollback();
             }
-            LOGGER.log(Level.SEVERE, "Error al insertar log de validación DM: " + e.getMessage(), e);
+            if (LOGGER.isLoggable(Level.SEVERE)) {
+                LOGGER.log(Level.SEVERE, "Error al insertar log de validación DM: " + e.getMessage(), e);
+            }
             return false;
         } finally {
             if (session != null) {

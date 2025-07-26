@@ -19,7 +19,8 @@ public final class DmJiraValidationMethods {
     public static List<String> validarSubtarea(JsonObject subtask) {
         JsonObject fields = subtask.getAsJsonObject(FIELDS);
 
-        String summary = getString(fields, "summary").toUpperCase();
+        String summaryRaw = getString(fields, "summary");
+        String summary = summaryRaw != null ? summaryRaw.toUpperCase() : "";
         String tipo = getNestedString(fields, "issuetype", "name");
         String prioridad = getNestedString(fields, "priority", "name");
         String status = getNestedString(fields, "status", "name");
@@ -45,7 +46,8 @@ public final class DmJiraValidationMethods {
     public static List<String> obtenerDetallesValidacion(JsonObject subtask) {
         JsonObject fields = subtask.getAsJsonObject(FIELDS);
 
-        String summary = getString(fields, "summary").toUpperCase();
+        String summaryRaw = getString(fields, "summary");
+        String summary = summaryRaw != null ? summaryRaw.toUpperCase() : "";
         String tipo = getNestedString(fields, "issuetype", "name");
         String prioridad = getNestedString(fields, "priority", "name");
         String status = getNestedString(fields, "status", "name");
