@@ -11,15 +11,7 @@ import java.util.logging.Logger;
 public class DmJiraValidatorLogDao {
 
     private static final Logger LOGGER = Logger.getLogger(DmJiraValidatorLogDao.class.getName());
-    private static final DmJiraValidatorLogDao INSTANCE = new DmJiraValidatorLogDao();
 
-    public static DmJiraValidatorLogDao getInstance() {
-        return INSTANCE;
-    }
-
-    private DmJiraValidatorLogDao() {
-        // Constructor privado para Singleton
-    }
     public boolean insertDmJiraValidatorLog(JiraValidatorLogEntity entity) {
         SqlSession session = null;
         try {
@@ -32,9 +24,7 @@ public class DmJiraValidatorLogDao {
             if (session != null) {
                 session.rollback();
             }
-            if (LOGGER.isLoggable(Level.SEVERE)) {
-                LOGGER.log(Level.SEVERE, "Error al insertar log de validación DM: " + e.getMessage(), e);
-            }
+            LOGGER.log(Level.SEVERE, "Error al insertar log de validación DM: " + e.getMessage(), e);
             return false;
         } finally {
             if (session != null) {

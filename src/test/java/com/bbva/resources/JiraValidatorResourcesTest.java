@@ -310,7 +310,6 @@ class JiraValidatorResourcesTest {
 
     @Test
     void testValidatorDataModelling() throws Exception {
-        // Arrange - Request DTO
         JiraValidatorByUrlRequest request = new JiraValidatorByUrlRequest();
         request.setUrlJira("https://jira.globaldevtools.bbva.com/browse/DEDATIOEN4-1234");
         request.setUserName("york.yusel.contractor");
@@ -337,10 +336,8 @@ class JiraValidatorResourcesTest {
         when(jiraServiceMock.buildSubtaskMetadataMap(eq(request), any())).thenReturn(Collections.emptyMap());
         when(dmServiceMock.validateHistoriaDM(request)).thenReturn(List.of());
 
-        // Act
         IDataResult<DmJiraValidatorResponseDTO> result = resource.validatorDataModelling(request);
 
-        // Assert
         assertNotNull(result);
         assertTrue(result instanceof SuccessDataResult);
         assertEquals("200", result.status);

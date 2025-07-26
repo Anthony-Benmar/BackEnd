@@ -18,7 +18,7 @@ public class DmJiraValidatorService {
     private static final String ISSUE_TYPE_STORY = "Story";
     private static final String TEAM_BACKLOG_PE_DATA_MODELLING = "2461936";
 
-    private final DmJiraValidatorLogDao logDao = DmJiraValidatorLogDao.getInstance();
+    private final DmJiraValidatorLogDao logDao = new DmJiraValidatorLogDao();
     private final JiraApiService jiraApiService = new JiraApiService();
 
     public List<DmJiraValidatorMessageDTO> validateHistoriaDM(JiraValidatorByUrlRequest dto) throws Exception {
@@ -39,7 +39,7 @@ public class DmJiraValidatorService {
 
         validateSubtasks(fields.getAsJsonArray("subtasks"), dto, messages);
 
-        logDao.insertDmJiraValidatorLog(logEntity);
+        getLogDao().insertDmJiraValidatorLog(logEntity);
         return messages;
     }
 
@@ -108,5 +108,9 @@ public class DmJiraValidatorService {
                 .visible(true)
                 .order(ruleId)
                 .build();
+    }
+
+    protected DmJiraValidatorLogDao getLogDao() {
+        return logDao;
     }
 }
