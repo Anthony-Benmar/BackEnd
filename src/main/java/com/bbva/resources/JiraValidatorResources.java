@@ -34,17 +34,14 @@ public class JiraValidatorResources {
     @POST
     @Path("/validator/dm")
     @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public IDataResult<DmJiraValidatorResponseDTO> validatorDataModelling(JiraValidatorByUrlRequest dto)
-            throws Exception {
-
+    public IDataResult<DmJiraValidatorResponseDTO> validatorDataModelling(JiraValidatorByUrlRequest dto) throws Exception {
         var messages = dmJiraValidatorService.validateHistoriaDM(dto);
 
         DmJiraValidatorResponseDTO response = new DmJiraValidatorResponseDTO();
         response.setData(messages);
-        response.setSuccessCount((int) messages.stream().filter(m -> m.getStatus().equals("success")).count());
-        response.setErrorCount((int) messages.stream().filter(m -> m.getStatus().equals("error")).count());
-        response.setWarningCount((int) messages.stream().filter(m -> m.getStatus().equals("warning")).count());
+        response.setSuccessCount((int) messages.stream().filter(m -> "success".equals(m.getStatus())).count());
+        response.setErrorCount((int) messages.stream().filter(m -> "error".equals(m.getStatus())).count());
+        response.setWarningCount((int) messages.stream().filter(m -> "warning".equals(m.getStatus())).count());
 
         return new SuccessDataResult<>(response, "Validación Data Modelling ejecutada");
     }

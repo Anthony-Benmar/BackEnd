@@ -13,8 +13,7 @@ import java.util.logging.Logger;
 public class DmJiraValidatorLogDao {
 
     private static final Logger LOGGER = Logger.getLogger(DmJiraValidatorLogDao.class.getName());
-
-    private static DmJiraValidatorLogDao instance = null;
+    private static DmJiraValidatorLogDao instance;
 
     public static synchronized DmJiraValidatorLogDao getInstance() {
         if (Objects.isNull(instance)) {
@@ -24,19 +23,23 @@ public class DmJiraValidatorLogDao {
     }
 
     public boolean insertDmJiraValidatorLog(JiraValidatorLogEntity entity) {
-        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
-        SqlSession session = sqlSessionFactory.openSession();
+        SqlSession session = null;
         try {
+            session = MyBatisConnectionFactory.getInstance().openSession();
             JiraValidatorLogMapper mapper = session.getMapper(JiraValidatorLogMapper.class);
             mapper.insertJiraValidatorLog(entity);
             session.commit();
             return true;
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, e.getMessage(), e);
-            session.rollback();
+            if (session != null) {
+                session.rollback();
+            }
+            LOGGER.log(Level.SEVERE, "Error al insertar log de validación DM: " + e.getMessage(), e);
             return false;
         } finally {
-            session.close();
+            if (session != null) {
+                session.close();
+            }
         }
     }
 }

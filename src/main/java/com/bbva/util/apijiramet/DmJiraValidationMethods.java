@@ -7,7 +7,7 @@ import com.google.gson.JsonObject;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DmJiraValidationMethods {
+public final class DmJiraValidationMethods {
 
     private static final String BACKLOG_ESPERADO = "2461936";
     private static final String FIELDS = "fields";
@@ -17,30 +17,24 @@ public class DmJiraValidationMethods {
     }
 
     public static List<String> validarSubtarea(JsonObject subtask) {
-        List<String> errores = new ArrayList<>();
-
         JsonObject fields = subtask.getAsJsonObject(FIELDS);
 
-        String summary = fields.get("summary").getAsString().toUpperCase();
-        String tipo = fields.getAsJsonObject("issuetype").get("name").getAsString();
-        String prioridad = fields.getAsJsonObject("priority").get("name").getAsString();
-        String status = fields.getAsJsonObject("status").getAsJsonObject().get("name").getAsString();
-        String backlog = fields.getAsJsonArray("customfield_13300").get(0).getAsString();
-        String descripcion = fields.get("description").getAsString();
-        JsonArray labelsJson = fields.getAsJsonArray("labels");
+        String summary = getString(fields, "summary").toUpperCase();
+        String tipo = getNestedString(fields, "issuetype", "name");
+        String prioridad = getNestedString(fields, "priority", "name");
+        String status = getNestedString(fields, "status", "name");
+        String backlog = getFirstFromArray(fields.get("customfield_13300"));
+        String descripcion = getString(fields, "description");
+        List<String> labels = getListFromArray(fields.get("labels"));
 
         String tipoSubtask = determinarTipoSubtask(summary);
 
-        List<String> labels = new ArrayList<>();
-        for (JsonElement label : labelsJson) {
-            labels.add(label.getAsString());
-        }
-
-        if (tipoSubtask.equals("Otro")) errores.add("nombre inválido");
-        if (!tipo.equalsIgnoreCase("Sub-task")) errores.add("tipo incorrecto");
-        if (!prioridad.equalsIgnoreCase("Medium")) errores.add("prioridad incorrecta");
-        if (!status.equalsIgnoreCase("New")) errores.add("status inválido: se esperaba 'New'");
-        if (!backlog.equals(BACKLOG_ESPERADO)) errores.add("Team Backlog distinto");
+        List<String> errores = new ArrayList<>();
+        if ("Otro".equals(tipoSubtask)) errores.add("nombre inválido");
+        if (!"Sub-task".equalsIgnoreCase(tipo)) errores.add("tipo incorrecto");
+        if (!"Medium".equalsIgnoreCase(prioridad)) errores.add("prioridad incorrecta");
+        if (!"New".equalsIgnoreCase(status)) errores.add("status inválido: se esperaba 'New'");
+        if (!BACKLOG_ESPERADO.equals(backlog)) errores.add("Team Backlog distinto");
         if (descripcion == null || descripcion.trim().isEmpty()) errores.add("descripción vacía");
         if (!contieneLabelTipo(labels, tipoSubtask)) errores.add("falta label tipo");
         if (!contieneLabelDM(labels)) errores.add("falta label _DM");
@@ -49,57 +43,44 @@ public class DmJiraValidationMethods {
     }
 
     public static List<String> obtenerDetallesValidacion(JsonObject subtask) {
-        List<String> detalles = new ArrayList<>();
-
         JsonObject fields = subtask.getAsJsonObject(FIELDS);
 
-        String summary = fields.get("summary").getAsString().toUpperCase();
-        String tipo = fields.getAsJsonObject("issuetype").get("name").getAsString();
-        String prioridad = fields.getAsJsonObject("priority").get("name").getAsString();
-        String status = fields.getAsJsonObject("status").getAsJsonObject().get("name").getAsString();
-        String backlog = fields.getAsJsonArray("customfield_13300").get(0).getAsString();
-        String descripcion = fields.get("description").getAsString();
-        JsonArray labelsJson = fields.getAsJsonArray("labels");
+        String summary = getString(fields, "summary").toUpperCase();
+        String tipo = getNestedString(fields, "issuetype", "name");
+        String prioridad = getNestedString(fields, "priority", "name");
+        String status = getNestedString(fields, "status", "name");
+        String backlog = getFirstFromArray(fields.get("customfield_13300"));
+        String descripcion = getString(fields, "description");
+        List<String> labels = getListFromArray(fields.get("labels"));
 
         String tipoSubtask = determinarTipoSubtask(summary);
+        String labelEsperado = obtenerLabelEsperado(tipoSubtask);
 
-        List<String> labels = new ArrayList<>();
-        for (JsonElement label : labelsJson) {
-            labels.add(label.getAsString());
-        }
-
-        detalles.add(tipoSubtask.equals("Otro")
+        List<String> detalles = new ArrayList<>();
+        detalles.add("Otro".equals(tipoSubtask)
                 ? "Incorrecto: Nombre inválido"
                 : "Correcto: Nombre válido (" + tipoSubtask + ")");
-
-        detalles.add(tipo.equalsIgnoreCase("Sub-task")
+        detalles.add("Sub-task".equalsIgnoreCase(tipo)
                 ? "Correcto: Tipo Subtarea"
                 : "Incorrecto: Tipo no es Subtarea");
-
-        detalles.add(prioridad.equalsIgnoreCase("Medium")
+        detalles.add("Medium".equalsIgnoreCase(prioridad)
                 ? "Correcto: Prioridad Medium"
                 : "Incorrecto: Prioridad distinta de Medium");
-
-        detalles.add(status.equalsIgnoreCase("New")
+        detalles.add("New".equalsIgnoreCase(status)
                 ? "Correcto: Status New"
                 : "Incorrecto: Status inválido (se esperaba 'New')");
-
-        detalles.add(backlog.equals(BACKLOG_ESPERADO)
+        detalles.add(BACKLOG_ESPERADO.equals(backlog)
                 ? "Correcto: Team Backlog PE DATA MODELLING"
                 : "Incorrecto: Team Backlog distinto a PE DATA MODELLING");
-
         detalles.add((descripcion != null && !descripcion.trim().isEmpty())
                 ? "Correcto: Descripción presente"
                 : "Incorrecto: Descripción vacía");
-
-        String labelEsperado = obtenerLabelEsperado(tipoSubtask);
         detalles.add(contieneLabelTipo(labels, tipoSubtask)
                 ? "Correcto: Label tipo presente (" + labelEsperado + ")"
                 : "Incorrecto: Falta label tipo (" + labelEsperado + ")");
-
         detalles.add(contieneLabelDM(labels)
-                ? "Correcto: Prefijo label _DM"
-                : "Incorrecto: Falta de prefijo _DM");
+                ? "Correcto: Sufijo label _DM"
+                : "Incorrecto: Falta de sufijo _DM");
 
         return detalles;
     }
@@ -128,5 +109,37 @@ public class DmJiraValidationMethods {
 
     public static boolean contieneLabelDM(List<String> labels) {
         return labels.stream().anyMatch(label -> label.toUpperCase().endsWith("_DM"));
+    }
+
+    private static String getString(JsonObject obj, String memberName) {
+        JsonElement el = obj.get(memberName);
+        return el != null && el.isJsonPrimitive() ? el.getAsString() : null;
+    }
+
+    private static String getNestedString(JsonObject obj, String memberName, String nestedMember) {
+        JsonElement el = obj.get(memberName);
+        if (el != null && el.isJsonObject()) {
+            JsonObject nested = el.getAsJsonObject();
+            return getString(nested, nestedMember);
+        }
+        return null;
+    }
+
+    private static String getFirstFromArray(JsonElement arrayElement) {
+        if (arrayElement != null && arrayElement.isJsonArray()) {
+            JsonArray array = arrayElement.getAsJsonArray();
+            if (array.size() > 0) return array.get(0).getAsString();
+        }
+        return "";
+    }
+
+    private static List<String> getListFromArray(JsonElement arrayElement) {
+        List<String> list = new ArrayList<>();
+        if (arrayElement != null && arrayElement.isJsonArray()) {
+            for (JsonElement elem : arrayElement.getAsJsonArray()) {
+                list.add(elem.getAsString());
+            }
+        }
+        return list;
     }
 }

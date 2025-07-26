@@ -302,7 +302,6 @@ public class JiraValidatorService {
         return result;
     }
 
-
     public String getTeamBackLogId(String tipoDesarrollo, JsonObject jiraTicketResult) throws ParseException {
         String teamBackLogId = "";
         Date oldestDate = new SimpleDateFormat("yyyy-MM-dd").parse("9999-12-31");
