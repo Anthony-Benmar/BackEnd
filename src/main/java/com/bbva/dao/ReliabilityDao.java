@@ -74,7 +74,6 @@ public class ReliabilityDao {
             ReliabilityMapper mapper = session.getMapper(ReliabilityMapper.class);
             pendingCustodyJobsList = mapper.getPendingCustodyJobs(sdatoolId);
 
-            // Validar si la lista es nula o está vacía
             if (pendingCustodyJobsList == null || pendingCustodyJobsList.isEmpty()) {
                 return Collections.emptyList(); // Retorna una lista vacía en lugar de null
             }
@@ -84,15 +83,23 @@ public class ReliabilityDao {
                     item.setJobName(item.getJobName().replaceAll("\\s+", ""));
                 }
             }
-            for (PendingCustodyJobsDtoResponse x : pendingCustodyJobsList) {
-                ExecutionValidationDtoResponse executionValidation = mapper.getExecutionValidation(x.getJobName());
+
+            //CHRISTIAN : Este es el PROBLEMA de la optimización
+            /*for (PendingCustodyJobsDtoResponse x : pendingCustodyJobsList) {
+                ExecutionValidationDtoResponse executionValidation = mapper.getExecutionValidation(x.getJobName()); //CHRISTIAN MANCO: Este es el PROBLEMA de la optimización
+
                 if (executionValidation != null) {
                     x.setStatus(executionValidation.getValidation());
                 }
-            }
+            }*/
+
             return pendingCustodyJobsList;
+        }catch (Exception e) {
+        LOGGER.log(Level.SEVERE, e.getMessage(), e);
+        return Collections.emptyList();
         }
     }
+
     public void updateInventoryJobStock(InventoryJobUpdateDtoRequest dto) {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         try (SqlSession session = sqlSessionFactory.openSession()) {
