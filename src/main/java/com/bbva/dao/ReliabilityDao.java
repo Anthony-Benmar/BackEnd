@@ -241,5 +241,4 @@ public class ReliabilityDao {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
         }
     }
-
 }
