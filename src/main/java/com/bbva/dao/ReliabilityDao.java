@@ -2,6 +2,7 @@ package com.bbva.dao;
 
 import com.bbva.database.MyBatisConnectionFactory;
 import com.bbva.database.mappers.ReliabilityMapper;
+import com.bbva.dto.catalog.response.DropDownDto;
 import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
 import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
 import com.bbva.dto.reliability.request.ReliabilityPackInputFilterRequest;
@@ -65,6 +66,7 @@ public class ReliabilityDao {
         }
         return response;
     }
+
     public List<PendingCustodyJobsDtoResponse> getPendingCustodyJobs(String sdatoolId) {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         List<PendingCustodyJobsDtoResponse> pendingCustodyJobsList;
@@ -179,12 +181,21 @@ public class ReliabilityDao {
                     dto.getFrequency(),
                     dto.getIsCritical(),
                     dto.getSearchByInputOutputTable(),
-                    dto.getSearchType()
+                    dto.getSearchType(),
+                    dto.getOrigin()
             );
             return lista;
         }catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
             return List.of();
+        }
+    }
+
+    public List<DropDownDto> getOriginTypes() {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ReliabilityMapper mapper = session.getMapper(ReliabilityMapper.class);
+            return mapper.getOriginTypes();
         }
     }
 

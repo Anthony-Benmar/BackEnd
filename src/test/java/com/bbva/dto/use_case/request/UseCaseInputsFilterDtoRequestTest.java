@@ -13,7 +13,9 @@ class UseCaseInputsFilterDtoRequestTest {
         request.setRecordsAmount(10);
         request.setDomainName("Test Domain");
         request.setProjectName("Test Project");
+        request.setPiLargeName("2025-Q2");
 
+        assertEquals("2025-Q2", request.getPiLargeName());
         assertEquals(1, request.getPage());
         assertEquals(10, request.getRecordsAmount());
         assertEquals("Test Domain", request.getDomainName());

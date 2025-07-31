@@ -5,6 +5,7 @@ import com.bbva.core.abstracts.IDataResult;
 import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dao.ReliabilityDao;
+import com.bbva.dto.catalog.response.DropDownDto;
 import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
 import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
 import com.bbva.dto.reliability.request.ReliabilityPackInputFilterRequest;
@@ -107,7 +108,7 @@ public class ReliabilityService {
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             Sheet sheet = workbook.createSheet("Inventario");
 
-            String[] columns = {"DOMINIO", "CASO DE USO", "JOB CONTROL-M", "COMPONENTE", "TIPO JOB",
+            String[] columns = {"DOMINIO", "CASO DE USO", "ORIGEN", "JOB CONTROL-M", "COMPONENTE", "TIPO JOB",
                     "RUTA CRITICA", "FRECUENCIA", "INSUMOS", "SALIDA", "PACK"};
 
             Row headerRow = sheet.createRow(0);
@@ -121,12 +122,13 @@ public class ReliabilityService {
                 Row row = sheet.createRow(rowIdx++);
                 row.createCell(0).setCellValue(nullSafe(inventory.getDomainName()));
                 row.createCell(1).setCellValue(nullSafe(inventory.getUseCase()));
-                row.createCell(2).setCellValue(nullSafe(inventory.getJobName()));
-                row.createCell(3).setCellValue(nullSafe(inventory.getComponentName()));
-                row.createCell(4).setCellValue(nullSafe(inventory.getJobType()));
-                row.createCell(5).setCellValue(nullSafe(inventory.getIsCritical()));
-                row.createCell(6).setCellValue(nullSafe(inventory.getFrequency()));
-                Cell insumosCell = row.createCell(7);
+                row.createCell(2).setCellValue(nullSafe(inventory.getOrigin()));
+                row.createCell(3).setCellValue(nullSafe(inventory.getJobName()));
+                row.createCell(4).setCellValue(nullSafe(inventory.getComponentName()));
+                row.createCell(5).setCellValue(nullSafe(inventory.getJobType()));
+                row.createCell(6).setCellValue(nullSafe(inventory.getIsCritical()));
+                row.createCell(7).setCellValue(nullSafe(inventory.getFrequency()));
+                Cell insumosCell = row.createCell(8);
                 if (inventory.getInputPaths() != null) {
                     insumosCell.setCellValue(inventory.getInputPaths());
                     CellStyle multiLineStyle = workbook.createCellStyle();
@@ -135,8 +137,8 @@ public class ReliabilityService {
                 } else {
                     insumosCell.setCellValue("");
                 }
-                row.createCell(8).setCellValue(nullSafe(inventory.getOutputPath()));
-                row.createCell(9).setCellValue(nullSafe(inventory.getPack()));
+                row.createCell(9).setCellValue(nullSafe(inventory.getOutputPath()));
+                row.createCell(10).setCellValue(nullSafe(inventory.getPack()));
             }
 
             for (int i = 0; i < columns.length; i++) {
@@ -149,6 +151,16 @@ public class ReliabilityService {
         } catch (Exception e) {
             log.info(ERROR + e);
             return new byte[0];
+        }
+    }
+
+    public IDataResult<List<DropDownDto>> getOriginTypes() {
+        try {
+            List<DropDownDto> lista = reliabilityDao.getOriginTypes();
+            return new SuccessDataResult<>(lista);
+        } catch (Exception e) {
+            log.severe("Error al obtener tipos de origen: " + e.getMessage());
+            return new ErrorDataResult<>(null, "500", e.getMessage());
         }
     }
 

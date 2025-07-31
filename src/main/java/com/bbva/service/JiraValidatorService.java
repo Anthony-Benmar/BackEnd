@@ -10,7 +10,7 @@ import com.bbva.dto.jira.response.JiraMessageResponseDTO;
 import com.bbva.dto.jira.response.JiraResponseDTO;
 import com.bbva.entities.jiravalidator.InfoJiraProject;
 import com.bbva.entities.jiravalidator.JiraValidatorLogEntity;
-import com.bbva.util.ApiJiraMet.JiraValidationMethods;
+import com.bbva.util.apijiramet.JiraValidationMethods;
 import com.bbva.util.ApiJiraName;
 import com.google.gson.*;
 import lombok.AllArgsConstructor;
@@ -71,7 +71,7 @@ public class JiraValidatorService {
             throw new HandledException("500", "no existe datos del ticket jira");
         }
         JsonObject jiraTicketResult = issueMetadataJsonObject.getAsJsonArray(ISSUES).get(0).getAsJsonObject();
-        
+
         String featureLink = getFeatureLink(jiraTicketResult);
         JsonObject featureLinkMetadataJsonObject = getMetadataIssues(dto, List.of(featureLink));
 
@@ -194,7 +194,7 @@ public class JiraValidatorService {
         String url = ApiJiraName.URL_API_JIRA_PULL_REQUEST + idTicket + "&applicationType=stash&dataType=pullrequest";
         List<Map<String,Object>> prs = new ArrayList<>();
         String resultPRs = this.jiraApiService.GetJiraAsync(dto.getUserName(), dto.getToken(), url);
-        
+
         var prsJsonResponse = JsonParser.parseString(resultPRs).getAsJsonObject();
         if(!prsJsonResponse
                 .getAsJsonArray("detail").isEmpty()){

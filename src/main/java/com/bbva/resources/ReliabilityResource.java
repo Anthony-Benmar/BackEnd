@@ -3,6 +3,7 @@ package com.bbva.resources;
 
 import com.bbva.common.HttpStatusCodes;
 import com.bbva.core.abstracts.IDataResult;
+import com.bbva.dto.catalog.response.DropDownDto;
 import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
 import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
 import com.bbva.dto.reliability.request.ReliabilityPackInputFilterRequest;
@@ -113,5 +114,13 @@ public class ReliabilityResource {
                                                  List<String> packs)
     {
         return reliabilityService.updateStatusReliabilityPacksJobStock(packs);
+    }
+
+    @GET
+    @Path("/origin-types")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<List<DropDownDto>> getOriginTypes() {
+        return reliabilityService.getOriginTypes();
     }
 }

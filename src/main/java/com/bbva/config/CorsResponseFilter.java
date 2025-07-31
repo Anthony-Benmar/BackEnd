@@ -17,16 +17,21 @@ public class CorsResponseFilter implements ContainerResponseFilter {
             "Host, User-Agent, Accept-Encoding, Connection";
     public final static String DEFAULT_EXPOSED_HEADERS = "location,info";
 
+
     @Override
-    public void filter(final ContainerRequestContext requestContext, final ContainerResponseContext responseContext) throws IOException {
-        final MultivaluedMap<String, Object> headers = responseContext.getHeaders();
+    public void filter(ContainerRequestContext request, ContainerResponseContext response) throws IOException {
+        MultivaluedMap<String,Object> headers = response.getHeaders();
         headers.add("Access-Control-Allow-Origin",  "*");
-        headers.add("Access-Control-Allow-Headers", getRequestedAllowedHeaders(requestContext));
-        headers.add("Access-Control-Expose-Headers", getRequestedExposedHeaders(requestContext));
-        headers.add("Access-Control-Allow-Credentials", "true");
         headers.add("Access-Control-Allow-Methods", ALLOWED_METHODS);
         headers.add("Access-Control-Max-Age", MAX_AGE);
-        headers.add("x-responded-by", "cors-response-filter");
+        String requested = request.getHeaderString("Access-Control-Request-Headers");
+        headers.add("Access-Control-Allow-Headers",
+                (requested == null || requested.isEmpty())
+                        ? DEFAULT_ALLOWED_HEADERS
+                        : requested + "," + DEFAULT_ALLOWED_HEADERS
+        );
+        headers.add("Access-Control-Expose-Headers", DEFAULT_EXPOSED_HEADERS);
+        headers.add("Access-Control-Allow-Credentials", "true");
     }
 
     String getRequestedAllowedHeaders(ContainerRequestContext responseContext) {

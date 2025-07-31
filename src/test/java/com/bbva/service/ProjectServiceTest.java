@@ -795,4 +795,32 @@ class ProjectServiceTest {
         assertFalse(result.success);
         assertEquals(HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, result.status);
     }
+
+    @Test
+    void testGenerateDocumentProjects() {
+        ProjectInfoFilterRequest dto = new ProjectInfoFilterRequest();
+
+        ProjectInfoSelectResponse projectMock = new ProjectInfoSelectResponse();
+        projectMock.setSdatoolId("SDA001");
+        projectMock.setProjectName("Proyecto Test");
+        projectMock.setDomainName("Dominio Test");
+        projectMock.setStatusTypeDesc("Activo");
+        projectMock.setProjectTypeDesc("Tipo A");
+        projectMock.setWowName("WOW-TEST");
+        projectMock.setStartPiId(1);
+        projectMock.setFinalStartPiId(2);
+        projectMock.setEndPiId(3);
+        projectMock.setFinalEndPiId(4);
+
+        when(projectDaoMock.listProjects(dto)).thenReturn(List.of(projectMock));
+
+        byte[] result = projectService.generateDocumentProjects(dto);
+
+        assertNotNull(result);
+        assertTrue(result.length > 0);
+
+        assertEquals((byte)0x50, result[0]);
+        assertEquals((byte)0x4B, result[1]);
+    }
+
 }

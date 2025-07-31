@@ -14,12 +14,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class ProjectResourcesTest {
@@ -518,4 +519,40 @@ class ProjectResourcesTest {
         verify(projectServiceMock).getAllProjects();
     }
 
+    @Test
+    void testGenerateDocumentProjects() {
+
+        ProjectInfoFilterRequest dto = new ProjectInfoFilterRequest();
+        byte[] excelBytes = new byte[]{0x01, 0x02, 0x03};
+        when(projectServiceMock.generateDocumentProjects(dto)).thenReturn(excelBytes);
+
+        Response response = projectResources.generateDocumentProjects(dto);
+
+        assertEquals(200, response.getStatus());
+        assertArrayEquals(excelBytes, (byte[]) response.getEntity());
+
+        MultivaluedMap<String, Object> headers = response.getHeaders();
+        assertTrue(headers.containsKey("Content-Disposition"));
+        assertEquals(
+                "attachment; filename=\"Proyectos_v1.xlsx\"",
+                response.getHeaderString("Content-Disposition")
+        );
+        assertEquals(
+                "Content-Disposition",
+                response.getHeaderString("Access-Control-Expose-Headers")
+        );
+
+        verify(projectServiceMock).generateDocumentProjects(dto);
+    }
+
+    @Test
+    void testOptionsForExcel() {
+        // cuando
+        Response response = projectResources.optionsForExcel();
+
+        assertEquals(200, response.getStatus());
+
+        assertNull(response.getEntity());
+        verifyNoInteractions(projectServiceMock);
+    }
 }
