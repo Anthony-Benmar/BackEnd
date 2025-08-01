@@ -75,7 +75,7 @@ public class ReliabilityDao {
             pendingCustodyJobsList = mapper.getPendingCustodyJobs(sdatoolId);
 
             if (pendingCustodyJobsList == null || pendingCustodyJobsList.isEmpty()) {
-                return Collections.emptyList(); // Retorna una lista vacía en lugar de null
+                return Collections.emptyList();
             }
 
             for (PendingCustodyJobsDtoResponse item : pendingCustodyJobsList) {
@@ -83,15 +83,6 @@ public class ReliabilityDao {
                     item.setJobName(item.getJobName().replaceAll("\\s+", ""));
                 }
             }
-
-            //CHRISTIAN : Este es el PROBLEMA de la optimización
-            /*for (PendingCustodyJobsDtoResponse x : pendingCustodyJobsList) {
-                ExecutionValidationDtoResponse executionValidation = mapper.getExecutionValidation(x.getJobName()); //CHRISTIAN MANCO: Este es el PROBLEMA de la optimización
-
-                if (executionValidation != null) {
-                    x.setStatus(executionValidation.getValidation());
-                }
-            }*/
 
             return pendingCustodyJobsList;
         }catch (Exception e) {
