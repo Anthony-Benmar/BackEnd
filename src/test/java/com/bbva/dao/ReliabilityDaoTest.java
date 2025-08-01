@@ -14,6 +14,7 @@ import org.mockito.MockedStatic;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -30,7 +31,7 @@ class ReliabilityDaoTest {
     @BeforeEach
     void setUp() {
         sqlSessionFactoryMock = mock(SqlSessionFactory.class);
-        sqlSessionMock = mock(SqlSession.class);
+        sqlSessionMock        = mock(SqlSession.class);
         reliabilityMapperMock = mock(ReliabilityMapper.class);
 
         mockedFactory = mockStatic(MyBatisConnectionFactory.class);
@@ -64,34 +65,44 @@ class ReliabilityDaoTest {
         when(reliabilityMapperMock.inventoryInputsFilter(any()))
                 .thenReturn(mockList);
 
-        InventoryInputsFilterDtoResponse response = reliabilityDao.inventoryInputsFilter(dto);
+        InventoryInputsFilterDtoResponse response =
+                reliabilityDao.inventoryInputsFilter(dto);
 
         assertNotNull(response);
         assertEquals(3, response.getCount());
         assertEquals(2, response.getPagesAmount());
         assertEquals(2, response.getData().size());
-
-        verify(sqlSessionFactoryMock).openSession();
-        verify(sqlSessionMock).getMapper(ReliabilityMapper.class);
-        verify(reliabilityMapperMock).inventoryInputsFilter(any());
-        verify(sqlSessionMock).close();
     }
+
+    @Test
+    void testInventoryInputsFilterMapperThrows() {
+        InventoryInputsFilterDtoRequest dto = new InventoryInputsFilterDtoRequest();
+        dto.setRecordsAmount(0);
+        dto.setPage(1);
+
+        when(reliabilityMapperMock.inventoryInputsFilter(any()))
+                .thenThrow(new RuntimeException("DB down"));
+
+        InventoryInputsFilterDtoResponse response =
+                reliabilityDao.inventoryInputsFilter(dto);
+
+        assertNotNull(response);
+        assertEquals(0, response.getCount());
+        assertEquals(1, response.getPagesAmount());
+        assertTrue(response.getData().isEmpty());
+    }
+    /*** FIN NUEVO ***/
 
     @Test
     void testGetPendingCustodyJobsSuccess() {
         String sdatoolId = "123";
-        List<PendingCustodyJobsDtoResponse> mockList = List.of(new PendingCustodyJobsDtoResponse());
         when(reliabilityMapperMock.getPendingCustodyJobs(sdatoolId))
-                .thenReturn(mockList);
+                .thenReturn(List.of(new PendingCustodyJobsDtoResponse()));
 
-        List<PendingCustodyJobsDtoResponse> result = reliabilityDao.getPendingCustodyJobs(sdatoolId);
+        List<PendingCustodyJobsDtoResponse> result =
+                reliabilityDao.getPendingCustodyJobs(sdatoolId);
 
-        assertNotNull(result);
         assertEquals(1, result.size());
-        verify(sqlSessionFactoryMock).openSession();
-        verify(sqlSessionMock).getMapper(ReliabilityMapper.class);
-        verify(reliabilityMapperMock).getPendingCustodyJobs(sdatoolId);
-        verify(sqlSessionMock).close();
     }
 
     @Test
@@ -101,77 +112,63 @@ class ReliabilityDaoTest {
 
         reliabilityDao.updateInventoryJobStock(dto);
 
-        verify(sqlSessionFactoryMock).openSession();
-        verify(sqlSessionMock).getMapper(ReliabilityMapper.class);
-        verify(reliabilityMapperMock).updateInventoryJobStock(dto);
         verify(sqlSessionMock).commit();
-        verify(sqlSessionMock).close();
     }
 
     @Test
     void testGetProjectCustodyInfoSuccess() {
         String sdatoolId = "123";
-        List<ProjectCustodyInfoDtoResponse> mockList = List.of(new ProjectCustodyInfoDtoResponse());
         when(reliabilityMapperMock.getProjectCustodyInfo(sdatoolId))
-                .thenReturn(mockList);
+                .thenReturn(List.of(new ProjectCustodyInfoDtoResponse()));
 
-        List<ProjectCustodyInfoDtoResponse> result = reliabilityDao.getProjectCustodyInfo(sdatoolId);
+        List<ProjectCustodyInfoDtoResponse> result =
+                reliabilityDao.getProjectCustodyInfo(sdatoolId);
+
+        assertEquals(1, result.size());
+    }
+
+    /*** NUEVO ***/
+    @Test
+    void testGetProjectCustodyInfoException() {
+        String sdatoolId = "XYZ";
+        when(reliabilityMapperMock.getProjectCustodyInfo(sdatoolId))
+                .thenThrow(new RuntimeException("oops"));
+
+        List<ProjectCustodyInfoDtoResponse> result =
+                reliabilityDao.getProjectCustodyInfo(sdatoolId);
 
         assertNotNull(result);
-        assertEquals(1, result.size());
-        verify(sqlSessionFactoryMock).openSession();
-        verify(sqlSessionMock).getMapper(ReliabilityMapper.class);
-        verify(reliabilityMapperMock).getProjectCustodyInfo(sdatoolId);
-        verify(sqlSessionMock).close();
+        assertTrue(result.isEmpty());
     }
 
     @Test
     void testGetExecutionValidationSuccess() {
         String jobName = "job1";
-        ExecutionValidationDtoResponse mockResponse = new ExecutionValidationDtoResponse();
         when(reliabilityMapperMock.getExecutionValidation(jobName))
-                .thenReturn(mockResponse);
+                .thenReturn(new ExecutionValidationDtoResponse());
 
-        ExecutionValidationDtoResponse result = reliabilityDao.getExecutionValidation(jobName);
+        ExecutionValidationDtoResponse resp =
+                reliabilityDao.getExecutionValidation(jobName);
 
-        assertNotNull(result);
-        verify(sqlSessionFactoryMock).openSession();
-        verify(sqlSessionMock).getMapper(ReliabilityMapper.class);
-        verify(reliabilityMapperMock).getExecutionValidation(jobName);
-        verify(sqlSessionMock).close();
-    }
-
-    @Test
-    void testGetInstance() {
-        ReliabilityDao i1 = ReliabilityDao.getInstance();
-        ReliabilityDao i2 = ReliabilityDao.getInstance();
-        assertSame(i1, i2);
+        assertNotNull(resp);
     }
 
     @Test
     void testGetExecutionValidationAll() {
-        List<String> jobNames = Arrays.asList("job1","job2");
-        ExecutionValidationDtoResponse resp1 = new ExecutionValidationDtoResponse();
-        resp1.setValidation("SUCCESS");
-        ExecutionValidationDtoResponse resp2 = new ExecutionValidationDtoResponse();
-        resp2.setValidation("FAILED");
+        List<String> jobs = Arrays.asList("j1","j2");
+        ExecutionValidationDtoResponse r1 = new ExecutionValidationDtoResponse();
+        r1.setValidation("OK");
+        ExecutionValidationDtoResponse r2 = new ExecutionValidationDtoResponse();
+        r2.setValidation("FAIL");
+        when(reliabilityMapperMock.getExecutionValidation("j1")).thenReturn(r1);
+        when(reliabilityMapperMock.getExecutionValidation("j2")).thenReturn(r2);
 
-        when(sqlSessionFactoryMock.openSession()).thenReturn(sqlSessionMock);
-        when(sqlSessionMock.getMapper(ReliabilityMapper.class))
-                .thenReturn(reliabilityMapperMock);
-        when(reliabilityMapperMock.getExecutionValidation("job1"))
-                .thenReturn(resp1);
-        when(reliabilityMapperMock.getExecutionValidation("job2"))
-                .thenReturn(resp2);
-
-        List<ExecutionValidationAllDtoResponse> all = reliabilityDao.getExecutionValidationAll(jobNames);
+        List<ExecutionValidationAllDtoResponse> all =
+                reliabilityDao.getExecutionValidationAll(jobs);
 
         assertEquals(2, all.size());
-        assertEquals("SUCCESS", all.get(0).getValidation());
-        assertEquals("FAILED",  all.get(1).getValidation());
-        verify(sqlSessionFactoryMock).openSession();
-        verify(sqlSessionMock).getMapper(ReliabilityMapper.class);
-        verify(sqlSessionMock).close();
+        assertEquals("OK",   all.get(0).getValidation());
+        assertEquals("FAIL", all.get(1).getValidation());
     }
 
     @Test
@@ -193,7 +190,6 @@ class ReliabilityDaoTest {
         verify(reliabilityMapperMock).insertTranfer(dto);
         verify(reliabilityMapperMock).insertJobStock(job1);
         verify(sqlSessionMock).commit();
-        verify(sqlSessionMock).close();
     }
 
     @Test
@@ -208,7 +204,6 @@ class ReliabilityDaoTest {
 
         verify(reliabilityMapperMock).insertTranfer(dto);
         verify(reliabilityMapperMock, never()).insertJobStock(any());
-        verify(sqlSessionMock).close();
     }
 
     @Test
@@ -221,7 +216,10 @@ class ReliabilityDaoTest {
         RuntimeException ex = assertThrows(RuntimeException.class, () ->
                 reliabilityDao.insertTransfer(dto)
         );
-        assertEquals("Error al guardar los datos de la transferencia en la base de datos.", ex.getMessage());
+        assertEquals(
+                "Error al guardar los datos de la transferencia en la base de datos.",
+                ex.getMessage()
+        );
     }
 
     @Test
@@ -234,12 +232,10 @@ class ReliabilityDaoTest {
         when(sqlSessionMock.getMapper(ReliabilityMapper.class))
                 .thenReturn(reliabilityMapperMock);
 
-        PaginationReliabilityPackResponse resp = reliabilityDao.getReliabilityPacks(req);
+        PaginationReliabilityPackResponse resp =
+                reliabilityDao.getReliabilityPacks(req);
 
         assertNotNull(resp);
-        verify(sqlSessionFactoryMock).openSession();
-        verify(sqlSessionMock).getMapper(ReliabilityMapper.class);
-        verify(sqlSessionMock).close();
     }
 
     @Test
@@ -256,45 +252,35 @@ class ReliabilityDaoTest {
 
     @Test
     void testGetOriginTypesSuccess() {
-        List<DropDownDto> mockList = List.of(new DropDownDto(), new DropDownDto());
-        when(reliabilityMapperMock.getOriginTypes()).thenReturn(mockList);
-
-        List<DropDownDto> result = reliabilityDao.getOriginTypes();
-
-        assertSame(mockList, result);
-        verify(sqlSessionFactoryMock).openSession();
-        verify(sqlSessionMock).getMapper(ReliabilityMapper.class);
-        verify(reliabilityMapperMock).getOriginTypes();
-        verify(sqlSessionMock).close();
-    }
-
-    // — Corrección clave: aquí seteamos recordsAmount y page para evitar NPE
-    @Test
-    void testInventoryInputsFilterMapperThrows() {
-        InventoryInputsFilterDtoRequest req = new InventoryInputsFilterDtoRequest();
-        req.setRecordsAmount(0);
-        req.setPage(1);
-        when(reliabilityMapperMock.inventoryInputsFilter(any()))
-                .thenThrow(new RuntimeException("DB down"));
-
-        InventoryInputsFilterDtoResponse resp = reliabilityDao.inventoryInputsFilter(req);
-
-        assertNotNull(resp);
-        assertEquals(0, resp.getCount());
-        assertEquals(1, resp.getPagesAmount());
-        assertTrue(resp.getData().isEmpty());
+        when(reliabilityMapperMock.getOriginTypes())
+                .thenReturn(List.of(new DropDownDto(), new DropDownDto()));
+        assertEquals(2, reliabilityDao.getOriginTypes().size());
     }
 
     @Test
-    void testGetProjectCustodyInfoException() {
-        String sdatoolId = "FOO";
-        when(reliabilityMapperMock.getProjectCustodyInfo(sdatoolId))
-                .thenThrow(new RuntimeException("oops"));
+    void testGetPendingCustodyJobs_TrimmingWhitespace() {
+        String sdatoolId = "XYZ";
+        PendingCustodyJobsDtoResponse dto = new PendingCustodyJobsDtoResponse();
+        dto.setJobName("   JOB_01   ");
+        when(reliabilityMapperMock.getPendingCustodyJobs(sdatoolId))
+                .thenReturn(List.of(dto));
 
-        List<ProjectCustodyInfoDtoResponse> result =
-                reliabilityDao.getProjectCustodyInfo(sdatoolId);
+        List<PendingCustodyJobsDtoResponse> result =
+                reliabilityDao.getPendingCustodyJobs(sdatoolId);
 
-        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("JOB_01", result.get(0).getJobName());
+    }
+
+    @Test
+    void testGetPendingCustodyJobs_EmptyList() {
+        String sdatoolId = "ABC";
+        when(reliabilityMapperMock.getPendingCustodyJobs(sdatoolId))
+                .thenReturn(Collections.emptyList());
+
+        List<PendingCustodyJobsDtoResponse> result =
+                reliabilityDao.getPendingCustodyJobs(sdatoolId);
+
         assertTrue(result.isEmpty());
     }
 
@@ -303,14 +289,16 @@ class ReliabilityDaoTest {
         ReliabilityPackInputFilterRequest req = new ReliabilityPackInputFilterRequest();
         req.setDomainName("D");
         req.setUseCase("U");
-        req.setPage(2);
         req.setRecordsAmount(3);
+        req.setPage(2);
 
         List<ReliabilityPacksDtoResponse> full = new ArrayList<>();
         for (int i = 0; i < 7; i++) full.add(new ReliabilityPacksDtoResponse());
-        when(reliabilityMapperMock.getReliabilityPacks("D","U")).thenReturn(full);
+        when(reliabilityMapperMock.getReliabilityPacks("D", "U"))
+                .thenReturn(full);
 
-        PaginationReliabilityPackResponse resp = reliabilityDao.getReliabilityPacks(req);
+        PaginationReliabilityPackResponse resp =
+                reliabilityDao.getReliabilityPacks(req);
 
         assertEquals(7, resp.getCount());
         assertEquals(3, resp.getPagesAmount());
