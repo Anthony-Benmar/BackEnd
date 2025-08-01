@@ -379,4 +379,43 @@ class ReliabilityDaoTest {
         assertEquals(3, resp.getPagesAmount());
         assertEquals(3, resp.getData().size());
     }
+    @Test
+    void testSingletonGetInstance() {
+        ReliabilityDao a = ReliabilityDao.getInstance();
+        ReliabilityDao b = ReliabilityDao.getInstance();
+        assertSame(a, b);
+    }
+
+    @Test
+    void testGetReliabilityPacksMapperThrows() {
+        when(reliabilityMapperMock.getReliabilityPacks(anyString(), anyString()))
+                .thenThrow(new RuntimeException("fail packs"));
+        ReliabilityPackInputFilterRequest req = new ReliabilityPackInputFilterRequest();
+        req.setDomainName("D"); req.setUseCase("U");
+        assertThrows(RuntimeException.class, () -> reliabilityDao.getReliabilityPacks(req));
+    }
+
+    @Test
+    void testGetOriginTypesException() {
+        mockedFactory.when(MyBatisConnectionFactory::getInstance)
+                .thenReturn(sqlSessionFactoryMock);
+        when(sqlSessionFactoryMock.openSession()).thenThrow(new RuntimeException("no session"));
+        assertThrows(RuntimeException.class, () -> reliabilityDao.getOriginTypes());
+    }
+
+    @Test
+    void testUpdateStatusReliabilityPacksJobStockException() {
+        doThrow(new RuntimeException("update fail")).when(reliabilityMapperMock).updateReliabilityStatus(anyString(), anyInt());
+        assertDoesNotThrow(() -> reliabilityDao.updateStatusReliabilityPacksJobStock(List.of("P1")));
+    }
+    @Test
+    void testGetPendingCustodyJobsException() {
+        String sdatoolId = "ERR";
+        when(reliabilityMapperMock.getPendingCustodyJobs(sdatoolId))
+                .thenThrow(new RuntimeException("DB error"));
+        List<PendingCustodyJobsDtoResponse> result =
+                reliabilityDao.getPendingCustodyJobs(sdatoolId);
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
 }
