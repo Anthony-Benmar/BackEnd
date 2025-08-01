@@ -59,7 +59,7 @@ class ReliabilityDaoTest {
                 new InventoryInputsDtoResponse()
         );
 
-        when(reliabilityMapperMock.inventoryInputsFilter(any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(mockList);
+        when(reliabilityMapperMock.inventoryInputsFilter(any(InventoryInputsFilterDtoRequest.class))).thenReturn(mockList);
 
         InventoryInputsFilterDtoResponse response = reliabilityDao.inventoryInputsFilter(dto);
 
@@ -70,7 +70,7 @@ class ReliabilityDaoTest {
 
         verify(sqlSessionFactoryMock).openSession();
         verify(sqlSessionMock).getMapper(ReliabilityMapper.class);
-        verify(reliabilityMapperMock).inventoryInputsFilter(any(), any(), any(), any(), any(), any(), any(), any());
+        verify(reliabilityMapperMock).inventoryInputsFilter(any(InventoryInputsFilterDtoRequest.class));
         verify(sqlSessionMock).close();
     }
 
