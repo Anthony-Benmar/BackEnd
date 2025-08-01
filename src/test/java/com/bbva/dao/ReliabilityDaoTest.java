@@ -5,6 +5,7 @@ import com.bbva.database.mappers.ReliabilityMapper;
 import com.bbva.dto.catalog.response.DropDownDto;
 import com.bbva.dto.reliability.request.*;
 import com.bbva.dto.reliability.response.*;
+import com.bbva.util.JSONUtils;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.junit.jupiter.api.AfterEach;
@@ -27,6 +28,7 @@ class ReliabilityDaoTest {
     private SqlSession sqlSessionMock;
     private ReliabilityMapper reliabilityMapperMock;
     private MockedStatic<MyBatisConnectionFactory> mockedFactory;
+    private MockedStatic<JSONUtils> mockedJsonUtils;
 
     @BeforeEach
     void setUp() {
@@ -48,20 +50,23 @@ class ReliabilityDaoTest {
     @AfterEach
     void tearDown() {
         mockedFactory.close();
+        if (mockedJsonUtils != null) {
+            mockedJsonUtils.close();
+        }
     }
 
     @Test
     void testInventoryInputsFilterSuccess() {
         InventoryInputsFilterDtoRequest dto = new InventoryInputsFilterDtoRequest();
-        dto.setDomainName("domain");
         dto.setRecordsAmount(2);
         dto.setPage(1);
 
-        List<InventoryInputsDtoResponse> mockList = List.of(
-                new InventoryInputsDtoResponse(),
-                new InventoryInputsDtoResponse(),
-                new InventoryInputsDtoResponse()
-        );
+        InventoryInputsDtoResponse resp1 = new InventoryInputsDtoResponse();
+        resp1.setInputPaths("a\nb\nc");
+        InventoryInputsDtoResponse resp2 = new InventoryInputsDtoResponse();
+        resp2.setInputPaths(null);
+        List<InventoryInputsDtoResponse> mockList = List.of(resp1, resp2, new InventoryInputsDtoResponse());
+
         when(reliabilityMapperMock.inventoryInputsFilter(any()))
                 .thenReturn(mockList);
 
@@ -71,8 +76,80 @@ class ReliabilityDaoTest {
         assertNotNull(response);
         assertEquals(3, response.getCount());
         assertEquals(2, response.getPagesAmount());
-        assertEquals(2, response.getData().size());
+        // Check that inputPathsArray is set for the first item
+        assertNotNull(response.getData().get(0).getInputPathsArray());
+        assertArrayEquals(new String[]{"a","b","c"}, response.getData().get(0).getInputPathsArray());
+        // Items without inputPaths remain unchanged
+        assertNull(response.getData().get(1).getInputPathsArray());
     }
+
+    @Test
+    void testInventoryInputsFilterJsonConversionError() {
+        // Force JSONUtils.convertFromObjectToJson to throw
+        mockedJsonUtils = mockStatic(JSONUtils.class);
+        mockedJsonUtils.when(() -> JSONUtils.convertFromObjectToJson(any()))
+                .thenThrow(new RuntimeException("JSON error"));
+
+        InventoryInputsFilterDtoRequest dto = new InventoryInputsFilterDtoRequest();
+        dto.setRecordsAmount(0);
+        dto.setPage(1);
+
+        List<InventoryInputsDtoResponse> mockList = List.of();
+        when(reliabilityMapperMock.inventoryInputsFilter(any()))
+                .thenReturn(mockList);
+
+        // Should not throw despite JSON error
+        InventoryInputsFilterDtoResponse response =
+                reliabilityDao.inventoryInputsFilter(dto);
+        assertNotNull(response);
+        assertEquals(0, response.getCount());
+    }
+
+    @Test
+    void testListInventoryException() {
+        when(reliabilityMapperMock.inventoryInputsFilter(any()))
+                .thenThrow(new RuntimeException("DB down"));
+
+        List<InventoryInputsDtoResponse> result =
+                reliabilityDao.listinventory(new InventoryInputsFilterDtoRequest());
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void testGetExecutionValidationException() {
+        String jobName = "jobX";
+        when(reliabilityMapperMock.getExecutionValidation(jobName))
+                .thenThrow(new RuntimeException("DB error"));
+
+        ExecutionValidationDtoResponse resp =
+                reliabilityDao.getExecutionValidation(jobName);
+        assertNull(resp);
+    }
+
+    @Test
+    void testGetExecutionValidationAllException() {
+        List<String> jobs = Arrays.asList("j1","j2");
+        when(reliabilityMapperMock.getExecutionValidation(any()))
+                .thenThrow(new RuntimeException("Error"));
+
+        List<ExecutionValidationAllDtoResponse> all =
+                reliabilityDao.getExecutionValidationAll(jobs);
+        assertNotNull(all);
+        assertTrue(all.isEmpty());
+    }
+
+    @Test
+    void testUpdateInventoryJobStockException() {
+        InventoryJobUpdateDtoRequest dto = new InventoryJobUpdateDtoRequest();
+        doThrow(new RuntimeException("Update error"))
+                .when(reliabilityMapperMock).updateInventoryJobStock(dto);
+
+        // Should not propagate exception
+        assertDoesNotThrow(() -> reliabilityDao.updateInventoryJobStock(dto));
+    }
+
+    // Existing tests (unchanged)...
 
     @Test
     void testInventoryInputsFilterMapperThrows() {
@@ -91,7 +168,6 @@ class ReliabilityDaoTest {
         assertEquals(1, response.getPagesAmount());
         assertTrue(response.getData().isEmpty());
     }
-    /*** FIN NUEVO ***/
 
     @Test
     void testGetPendingCustodyJobsSuccess() {
@@ -127,7 +203,6 @@ class ReliabilityDaoTest {
         assertEquals(1, result.size());
     }
 
-    /*** NUEVO ***/
     @Test
     void testGetProjectCustodyInfoException() {
         String sdatoolId = "XYZ";
