@@ -1,7 +1,6 @@
 package com.bbva.util.apijiramet;
 
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.junit.jupiter.api.Test;
 
