@@ -10,77 +10,104 @@ import java.util.List;
 public final class DmJiraValidationMethods {
 
     private static final String BACKLOG_ESPERADO = "2461936";
-    private static final String FIELDS = "fields";
+    private static final String FIELDS            = "fields";
 
     private DmJiraValidationMethods() {
         throw new UnsupportedOperationException("Utility class");
     }
 
-    public static List<String> validarSubtarea(JsonObject subtask) {
+    private static class SubtaskData {
+        final String summary;
+        final String tipo;
+        final String prioridad;
+        final String status;
+        final String backlog;
+        final String descripcion;
+        final List<String> labels;
+        final String tipoSubtask;
+
+        SubtaskData(String summary,
+                    String tipo,
+                    String prioridad,
+                    String status,
+                    String backlog,
+                    String descripcion,
+                    List<String> labels)
+        {
+            this.summary     = summary;
+            this.tipo        = tipo;
+            this.prioridad   = prioridad;
+            this.status      = status;
+            this.backlog     = backlog;
+            this.descripcion = descripcion;
+            this.labels      = labels;
+            this.tipoSubtask = determinarTipoSubtask(summary);
+        }
+    }
+
+    private static SubtaskData parseSubtask(JsonObject subtask) {
         JsonObject fields = subtask.getAsJsonObject(FIELDS);
 
-        String summaryRaw = getString(fields, "summary");
-        String summary = summaryRaw != null ? summaryRaw.toUpperCase() : "";
-        String tipo = getNestedString(fields, "issuetype", "name");
-        String prioridad = getNestedString(fields, "priority", "name");
-        String status = getNestedString(fields, "status", "name");
-        String backlog = getFirstFromArray(fields.get("customfield_13300"));
-        String descripcion = getString(fields, "description");
-        List<String> labels = getListFromArray(fields.get("labels"));
+        String raw     = getString(fields, "summary");
+        String summary = raw != null ? raw.toUpperCase() : "";
 
-        String tipoSubtask = determinarTipoSubtask(summary);
+        String tipo      = getNestedString(fields, "issuetype", "name");
+        String prioridad = getNestedString(fields, "priority",  "name");
+        String status    = getNestedString(fields, "status",    "name");
+
+        String backlog     = getFirstFromArray(fields.get("customfield_13300"));
+        String descripcion = getString(fields, "description");
+        List<String> labels= getListFromArray(fields.get("labels"));
+
+        return new SubtaskData(
+                summary, tipo, prioridad, status,
+                backlog, descripcion, labels
+        );
+    }
+
+    public static List<String> validarSubtarea(JsonObject subtask) {
+        SubtaskData d = parseSubtask(subtask);
 
         List<String> errores = new ArrayList<>();
-        if ("Otro".equals(tipoSubtask)) errores.add("nombre inválido");
-        if (!"Sub-task".equalsIgnoreCase(tipo)) errores.add("tipo incorrecto");
-        if (!"Medium".equalsIgnoreCase(prioridad)) errores.add("prioridad incorrecta");
-        if (!"New".equalsIgnoreCase(status)) errores.add("status inválido: se esperaba 'New'");
-        if (!BACKLOG_ESPERADO.equals(backlog)) errores.add("Team Backlog distinto");
-        if (descripcion == null || descripcion.trim().isEmpty()) errores.add("descripción vacía");
-        if (!contieneLabelTipo(labels, tipoSubtask)) errores.add("falta label tipo");
-        if (!contieneLabelDM(labels)) errores.add("falta label _DM");
+        if ("Otro".equals(d.tipoSubtask))               errores.add("nombre inválido");
+        if (!"Sub-task".equalsIgnoreCase(d.tipo))       errores.add("tipo incorrecto");
+        if (!"Medium".equalsIgnoreCase(d.prioridad))    errores.add("prioridad incorrecta");
+        if (!"New".equalsIgnoreCase(d.status))          errores.add("status inválido: se esperaba 'New'");
+        if (!BACKLOG_ESPERADO.equals(d.backlog))        errores.add("Team Backlog distinto");
+        if (d.descripcion == null || d.descripcion.trim().isEmpty()) errores.add("descripción vacía");
+        if (!contieneLabelTipo(d.labels, d.tipoSubtask)) errores.add("falta label tipo");
+        if (!contieneLabelDM(d.labels))                  errores.add("falta label _DM");
 
         return errores;
     }
 
     public static List<String> obtenerDetallesValidacion(JsonObject subtask) {
-        JsonObject fields = subtask.getAsJsonObject(FIELDS);
-
-        String summaryRaw = getString(fields, "summary");
-        String summary = summaryRaw != null ? summaryRaw.toUpperCase() : "";
-        String tipo = getNestedString(fields, "issuetype", "name");
-        String prioridad = getNestedString(fields, "priority", "name");
-        String status = getNestedString(fields, "status", "name");
-        String backlog = getFirstFromArray(fields.get("customfield_13300"));
-        String descripcion = getString(fields, "description");
-        List<String> labels = getListFromArray(fields.get("labels"));
-
-        String tipoSubtask = determinarTipoSubtask(summary);
-        String labelEsperado = obtenerLabelEsperado(tipoSubtask);
+        SubtaskData d = parseSubtask(subtask);
+        String labelEsperado = obtenerLabelEsperado(d.tipoSubtask);
 
         List<String> detalles = new ArrayList<>();
-        detalles.add("Otro".equals(tipoSubtask)
+        detalles.add("Otro".equals(d.tipoSubtask)
                 ? "Incorrecto: Nombre inválido"
-                : "Correcto: Nombre válido (" + tipoSubtask + ")");
-        detalles.add("Sub-task".equalsIgnoreCase(tipo)
+                : "Correcto: Nombre válido (" + d.tipoSubtask + ")");
+        detalles.add("Sub-task".equalsIgnoreCase(d.tipo)
                 ? "Correcto: Tipo Subtarea"
                 : "Incorrecto: Tipo no es Subtarea");
-        detalles.add("Medium".equalsIgnoreCase(prioridad)
+        detalles.add("Medium".equalsIgnoreCase(d.prioridad)
                 ? "Correcto: Prioridad Medium"
                 : "Incorrecto: Prioridad distinta de Medium");
-        detalles.add("New".equalsIgnoreCase(status)
+        detalles.add("New".equalsIgnoreCase(d.status)
                 ? "Correcto: Status New"
                 : "Incorrecto: Status inválido (se esperaba 'New')");
-        detalles.add(BACKLOG_ESPERADO.equals(backlog)
+        detalles.add(BACKLOG_ESPERADO.equals(d.backlog)
                 ? "Correcto: Team Backlog PE DATA MODELLING"
                 : "Incorrecto: Team Backlog distinto a PE DATA MODELLING");
-        detalles.add((descripcion != null && !descripcion.trim().isEmpty())
+        detalles.add((d.descripcion != null && !d.descripcion.trim().isEmpty())
                 ? "Correcto: Descripción presente"
                 : "Incorrecto: Descripción vacía");
-        detalles.add(contieneLabelTipo(labels, tipoSubtask)
+        detalles.add(contieneLabelTipo(d.labels, d.tipoSubtask)
                 ? "Correcto: Label tipo presente (" + labelEsperado + ")"
                 : "Incorrecto: Falta label tipo (" + labelEsperado + ")");
-        detalles.add(contieneLabelDM(labels)
+        detalles.add(contieneLabelDM(d.labels)
                 ? "Correcto: Sufijo label _DM"
                 : "Incorrecto: Falta de sufijo _DM");
 
@@ -91,7 +118,7 @@ public final class DmJiraValidationMethods {
         summary = summary.toUpperCase();
         if (summary.contains("VISADO")) return "Visado";
         if (summary.contains("VOLCADO")) return "Volcado";
-        if (summary.contains("CORRECION")) return "Correcion";
+        if (summary.contains("CORRECCION")) return "Correcion";
         return "Otro";
     }
 
