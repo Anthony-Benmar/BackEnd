@@ -174,16 +174,7 @@ public class ReliabilityDao {
         List<InventoryInputsDtoResponse> lista;
         try (SqlSession session = sqlSessionFactory.openSession()) {
             ReliabilityMapper reliabilityMapper = session.getMapper(ReliabilityMapper.class);
-            lista = reliabilityMapper.inventoryInputsFilter(
-                    dto.getDomainName(),
-                    dto.getUseCase(),
-                    dto.getJobType(),
-                    dto.getFrequency(),
-                    dto.getIsCritical(),
-                    dto.getSearchByInputOutputTable(),
-                    dto.getSearchType(),
-                    dto.getOrigin()
-            );
+            lista = reliabilityMapper.inventoryInputsFilter(dto);
             return lista;
         }catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
