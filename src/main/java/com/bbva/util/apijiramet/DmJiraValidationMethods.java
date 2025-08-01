@@ -118,7 +118,7 @@ public final class DmJiraValidationMethods {
         summary = summary.toUpperCase();
         if (summary.contains("VISADO")) return "Visado";
         if (summary.contains("VOLCADO")) return "Volcado";
-        if (summary.contains("CORRECION")) return "Correcion";
+        if (summary.contains("CORRECCION")) return "Correcion";
         return "Otro";
     }
 

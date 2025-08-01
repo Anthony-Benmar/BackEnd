@@ -21,29 +21,25 @@ public interface ReliabilityMapper {
             "#{c.searchByInputOutputTable}," +
             "#{c.searchType}," +
             "#{c.origin}" +
-            ")"
-    )
-
-    @Results({
-            @Result(property = "domainName",       column = "domain_name"),
-            @Result(property = "useCase",          column = "use_case"),
-            @Result(property = "originTypeId",     column = "origin_type_id"),
-            @Result(property = "origin",           column = "origin"),
-            @Result(property = "jobName",          column = "job_name"),
-            @Result(property = "componentName",    column = "component_name"),
-            @Result(property = "jobType",          column = "job_type"),
-            @Result(property = "isCritical",       column = "is_critical"),
-            @Result(property = "frequency",        column = "frequency"),
-            @Result(property = "inputPaths",       column = "input_paths"),
-            @Result(property = "outputPath",       column = "output_path"),
-            @Result(property = "jobPhase",         column = "job_phase"),
-            @Result(property = "domainId",         column = "domain_id"),
-            @Result(property = "useCaseId",        column = "use_case_id"),
-            @Result(property = "frequencyId",      column = "frequency_id"),
-            @Result(property = "jobTypeId",        column = "job_type_id"),
-            @Result(property = "bitBucketUrl",     column = "bitbucket_url"),
-            @Result(property = "pack",             column = "pack")
-    })
+            ")")
+    @Result(property = "domainName",    column = "domain_name")
+    @Result(property = "useCase",       column = "use_case")
+    @Result(property = "originTypeId",  column = "origin_type_id")
+    @Result(property = "origin",        column = "origin")
+    @Result(property = "jobName",       column = "job_name")
+    @Result(property = "componentName", column = "component_name")
+    @Result(property = "jobType",       column = "job_type")
+    @Result(property = "isCritical",    column = "is_critical")
+    @Result(property = "frequency",     column = "frequency")
+    @Result(property = "inputPaths",    column = "input_paths")
+    @Result(property = "outputPath",    column = "output_path")
+    @Result(property = "jobPhase",      column = "job_phase")
+    @Result(property = "domainId",      column = "domain_id")
+    @Result(property = "useCaseId",     column = "use_case_id")
+    @Result(property = "frequencyId",   column = "frequency_id")
+    @Result(property = "jobTypeId",     column = "job_type_id")
+    @Result(property = "bitBucketUrl",  column = "bitbucket_url")
+    @Result(property = "pack",          column = "pack")
     List<InventoryInputsDtoResponse> inventoryInputsFilter(
             @Param("c") InventoryInputsFilterDtoRequest c
     );
