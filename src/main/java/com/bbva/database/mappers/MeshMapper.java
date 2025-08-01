@@ -47,7 +47,7 @@ public interface MeshMapper {
             @Result(property = "run_as", column = "run_as"),
             @Result(property = "status", column = "execution_status")
     })
-    List<JobExecution> ListStatusJobExecutions(
+    List<JobExecution> listStatusJobExecutions(
             @Param("orderDate") String orderDate,
             @Param("jobName")   String jobName
     );
