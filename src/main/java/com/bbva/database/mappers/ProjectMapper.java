@@ -1,6 +1,7 @@
 package com.bbva.database.mappers;
 
 import com.bbva.dto.project.request.*;
+import com.bbva.dto.project.response.ProjectDevResponse;
 import com.bbva.dto.project.response.ProjectInfoSelectAllByDomainDtoResponse;
 import com.bbva.dto.project.response.ProjectInfoSelectByDomainDtoResponse;
 import com.bbva.dto.project.response.ProjectInfoSelectResponse;
@@ -66,9 +67,25 @@ public interface ProjectMapper {
     @Result(property = "piLargeName", column = "pi_large_name")
     List<ProjectStatusEntity> getProjectStatusTracking(@Param("projectId") int projectId);
 
+    // getProjectRoles
+    @Select("CALL SP_GET_PROJECT_ROLES(#{projectId})")
+    @Result(property = "participantName", column = "participant_name")
+    @Result(property = "projectRolType", column = "project_rol_type")
+    @Result(property = "roleDescription", column = "role_description")
+    List<ProjectRoleDetailEntity> getProjectRoles(@Param("projectId") int projectId);
+
+
     @Select({"SELECT project_id, sdatool_id, project_name, status_type FROM data_project " +
             "WHERE project_id = #{projectId}"})
     ProjectEntity findById(@Param("projectId") int projectId);
+
+    @Select({"SELECT full_name AS fullName, employee_id AS employeeId FROM secu_user " +
+            "WHERE email = #{email} LIMIT 1"})
+    ProjectDevResponse getProjectDevSU(@Param("email") String email);
+
+    @Select({"SELECT participant_name AS full_name, participant_user AS employee_id FROM project_participant "+
+            "WHERE participant_email = #{email} LIMIT 1"})
+    ProjectDevResponse getProjectDevPP(@Param("email") String email);
 
     @Select({"<script>" +
             "SELECT p.project_id,p.sdatool_id,p.project_name,p.status_type FROM data_project p " +

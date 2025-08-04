@@ -43,6 +43,7 @@ public class JaxRsApplication extends Application {
         classes.add(SourceWithParameterResources.class);
         classes.add(ReliabilityResource.class);
         classes.add(UseCaseResources.class);
+        classes.add(MetaKnightResources.class);
         return classes;
     }
 }
