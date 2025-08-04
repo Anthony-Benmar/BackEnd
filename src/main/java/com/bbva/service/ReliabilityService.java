@@ -50,6 +50,16 @@ public class ReliabilityService {
         }
     }
 
+    public IDataResult<List<JobExecutionHistoryDtoResponse>> getJobExecutionHistory(String jobName) {
+        try {
+            var history = reliabilityDao.getJobExecutionHistory(jobName);
+            return new SuccessDataResult<>(history);
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "Error in getJobExecutionHistory", e);
+            return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
+
     public IDataResult<List<ProjectCustodyInfoDtoResponse>> getProjectCustodyInfo(String sdatoolId) {
         try {
             var result = reliabilityDao.getProjectCustodyInfo(sdatoolId);

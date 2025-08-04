@@ -91,6 +91,17 @@ public class ReliabilityDao {
         }
     }
 
+    public List<JobExecutionHistoryDtoResponse> getJobExecutionHistory(String jobName) {
+        try (SqlSession session = MyBatisConnectionFactory.getInstance().openSession()) {
+            return session
+                    .getMapper(ReliabilityMapper.class)
+                    .getJobExecutionHistory(jobName);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Error fetching job history", e);
+            return Collections.emptyList();
+        }
+    }
+
     public void updateInventoryJobStock(InventoryJobUpdateDtoRequest dto) {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         try (SqlSession session = sqlSessionFactory.openSession()) {

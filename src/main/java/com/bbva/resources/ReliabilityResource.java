@@ -40,6 +40,16 @@ public class ReliabilityResource {
     {
         return reliabilityService.getPendingCustodyJobs(sdatoolId);
     }
+
+    @GET
+    @Path("/execution_history/{jobName}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<List<JobExecutionHistoryDtoResponse>> getExecutionHistory(
+            @PathParam("jobName") String jobName
+    ) {
+        return reliabilityService.getJobExecutionHistory(jobName);
+    }
+
     @GET
     @Path("/project_custody_info/{sdatoolId}")
     @Consumes(MediaType.APPLICATION_JSON)

@@ -80,6 +80,19 @@ public interface ReliabilityMapper {
     @Result(property = "status", column = "status")
     List<PendingCustodyJobsDtoResponse> getPendingCustodyJobs(@Param("sdatoolId") String sdatoolId);
 
+    @Select("""
+     SELECT period,
+            execution_status
+       FROM job_execution
+      WHERE job_name = #{jobName}
+      ORDER BY period DESC
+  """)
+    @Results({
+            @Result(property="period",          column="period"),
+            @Result(property="executionStatus", column="execution_status")
+    })
+    List<JobExecutionHistoryDtoResponse> getJobExecutionHistory(@Param("jobName") String jobName);
+
     @Select("CALL SP_GET_PROJECT_CUSTODY_INFO(#{sdatoolId})")
 
     @Result(property = "useCase", column = "use_case")
