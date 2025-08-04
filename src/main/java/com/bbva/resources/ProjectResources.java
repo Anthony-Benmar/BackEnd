@@ -3,6 +3,7 @@ package com.bbva.resources;
 import com.bbva.core.abstracts.IDataResult;
 import com.bbva.core.results.ErrorDataResult;
 import com.bbva.dto.map_dependency.response.MapDependencyListByProjectResponse;
+import com.bbva.dto.project.request.ProjectInfoFilterRequest;
 import com.bbva.dto.project.request.*;
 import com.bbva.dto.project.response.*;
 import com.bbva.entities.common.PeriodPEntity;
@@ -14,6 +15,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -271,6 +273,25 @@ public class ProjectResources {
                                                                                  @PathParam("projectId") int projectId)
     {
         return projectService.getProjectParticipants(projectId);
+    }
+
+    @POST
+    @Path("/documentGenerator/projects")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    public Response generateDocumentProjects(ProjectInfoFilterRequest dto) {
+        byte[] excel = projectService.generateDocumentProjects(dto);
+        String fileName = "Proyectos_v1.xlsx";
+        return Response.ok(excel)
+                .header("Content-Disposition", "attachment; filename=\"" + fileName + "\"")
+                .header("Access-Control-Expose-Headers", "Content-Disposition")
+                .build();
+    }
+
+    @OPTIONS
+    @Path("/documentGenerator/projects")
+    public Response optionsForExcel() {
+        return Response.ok().build();
     }
 
     @GET

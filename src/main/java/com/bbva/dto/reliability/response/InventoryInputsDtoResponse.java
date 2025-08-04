@@ -8,6 +8,8 @@ import lombok.Setter;
 public class InventoryInputsDtoResponse {
     private String domainName;
     private String useCase;
+    private Integer originTypeId;
+    private String origin;
     private String jobName;
     private String componentName;
     private String jobType;

@@ -5,6 +5,8 @@ import com.bbva.database.mappers.*;
 import com.bbva.dto.issueticket.request.WorkOrderDtoRequest2;
 import com.bbva.dto.issueticket.request.sourceTicketDtoRequest;
 import com.bbva.dto.issueticket.response.issueTicketDtoResponse;
+import com.bbva.dto.issueticket.response.sourceTicketDtoResponse;
+import com.bbva.dto.issueticket.response.sourceTicketGroupByDtoResponse;
 import com.bbva.dto.jira.request.*;
 import com.bbva.entities.board.Board;
 import com.bbva.entities.feature.JiraFeatureEntity;
@@ -866,5 +868,131 @@ class IssueTicketDaoTest {
         assertEquals(1, response.count);
         assertEquals(1, response.data.size());
         assertEquals(8, response.data.get(0).templateId);
+    }
+    // =================================================================
+    // =========== TESTS PARA EL MÉTODO listSources ====================
+    // =================================================================
+
+    @Test
+    void listSources_success_returnsPaginatedAndSortedData() {
+        // Arrange: Preparar los datos de entrada y los mocks
+        sourceTicketDtoRequest dto = new sourceTicketDtoRequest();
+        dto.page = 1;
+        dto.projectId = 10;
+        dto.setRecords_amount(1);
+
+        // --- Mock de datos ---
+        Board board1 = new Board();
+        board1.board_id = 1;
+        board1.name = "Development Board";
+        when(boardMapperMock.list()).thenReturn(List.of(board1));
+
+        // Dos grupos diferentes, el segundo con fecha más reciente para probar el orden
+        WorkOrder wo1 = new WorkOrder(); // Grupo 1
+        wo1.folio = "FOLIO-001";
+        wo1.source_id = "SRC-A";
+        wo1.board_id = 1;
+        wo1.flow_type = 1023;
+        wo1.register_date = new Date(System.currentTimeMillis() - 20000); // Más antiguo
+
+        WorkOrder wo2 = new WorkOrder(); // Grupo 2
+        wo2.folio = "FOLIO-002";
+        wo2.source_id = "SRC-B";
+        wo2.board_id = 1;
+        wo2.flow_type = 1023;
+        wo2.register_date = new Date(); // Más reciente
+
+        when(issueTicketMapperMock.ListWorkOrder(dto.page, 0, 0, dto.projectId)).thenReturn(List.of(wo1, wo2));
+
+        // Act: Ejecutar el método a probar
+        sourceTicketDtoResponse response = dao.listSources(dto);
+
+        // Assert: Verificar los resultados
+        assertNotNull(response);
+        assertEquals(2, response.getCount(), "El conteo total de grupos debe ser 2");
+        assertEquals(2, response.getPages_amount(), "El total de páginas debe ser 2 (2 récords / 1 por página)");
+        assertEquals(1, response.getData().size(), "La página 1 debe contener 1 resultado");
+    }
+
+    @Test
+    void listSources_whenNoWorkOrders_returnsEmptyResult() {
+        // Arrange
+        sourceTicketDtoRequest dto = new sourceTicketDtoRequest();
+        dto.page = 1;
+        dto.projectId = 10;
+        dto.setRecords_amount(10);
+
+        when(boardMapperMock.list()).thenReturn(new ArrayList<>());
+        when(catalogMapperMock.getListByCatalog(any(int[].class))).thenReturn(new ArrayList<>());
+        when(issueTicketMapperMock.ListWorkOrder(anyInt(), eq(0), eq(0), anyInt())).thenReturn(new ArrayList<>());
+
+        // Act
+        sourceTicketDtoResponse response = dao.listSources(dto);
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(0, response.getCount(), "El conteo total debe ser 0");
+        assertEquals(0, response.getPages_amount(), "Las páginas deben ser 1 por defecto si no hay récords");
+        assertTrue(response.getData().isEmpty(), "La lista de resultados (data) debe estar vacía");
+    }
+
+    @Test
+    void listSources_withMismatchedData_handlesGracefully() {
+        // Arrange
+        sourceTicketDtoRequest dto = new sourceTicketDtoRequest();
+        dto.page = 1;
+        dto.projectId = 10;
+        dto.setRecords_amount(5);
+
+        Board board1 = new Board();
+        board1.board_id = 1;
+        board1.name = "Existing Board";
+        when(boardMapperMock.list()).thenReturn(List.of(board1));
+
+
+        // WorkOrder con IDs que no coinciden
+        WorkOrder wo = new WorkOrder();
+        wo.folio = "FOLIO-003";
+        wo.board_id = 99; // ID de board no existente
+        wo.flow_type = 88; // ID de flow_type no existente
+        wo.register_date = new Date();
+        when(issueTicketMapperMock.ListWorkOrder(dto.page, 0, 0, dto.projectId)).thenReturn(List.of(wo));
+
+        // Act
+        sourceTicketDtoResponse response = dao.listSources(dto);
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(1, response.getCount());
+        assertEquals(1, response.getData().size());
+
+        sourceTicketGroupByDtoResponse resultGroup = response.getData().get(0);
+        assertNull(resultGroup.getBoardName(), "El nombre del board debe ser null (de new Board().name)");
+    }
+
+    @Test
+    void listSources_withZeroRecordsAmount_returnsAllResultsUnpaginated() {
+        // Arrange
+        sourceTicketDtoRequest dto = new sourceTicketDtoRequest();
+        dto.page = 1;
+        dto.projectId = 10;
+        dto.setRecords_amount(0); // Sin paginación
+
+        WorkOrder wo1 = new WorkOrder();
+        wo1.folio = "FOLIO-001"; wo1.board_id = 1; wo1.register_date = new Date();
+        WorkOrder wo2 = new WorkOrder();
+        wo2.folio = "FOLIO-002"; wo2.board_id = 2; wo2.register_date = new Date();
+        when(issueTicketMapperMock.ListWorkOrder(anyInt(), anyInt(), anyInt(), anyInt())).thenReturn(List.of(wo1, wo2));
+
+        when(boardMapperMock.list()).thenReturn(new ArrayList<>());
+        when(catalogMapperMock.getListByCatalog(any(int[].class))).thenReturn(new ArrayList<>());
+
+        // Act
+        sourceTicketDtoResponse response = dao.listSources(dto);
+
+        // Assert
+        assertEquals(2, response.getCount(), "El conteo total de grupos debe ser 2");
+        assertEquals(1, response.getPages_amount(), "Las páginas deben ser 1 si records_amount es 0");
+        assertEquals(2, response.getData().size(), "Debe devolver todos los resultados (grupos) sin paginar");
     }
 }

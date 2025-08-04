@@ -2,6 +2,7 @@ package com.bbva.dao;
 
 import com.bbva.database.MyBatisConnectionFactory;
 import com.bbva.database.mappers.ReliabilityMapper;
+import com.bbva.dto.catalog.response.DropDownDto;
 import com.bbva.dto.reliability.request.*;
 import com.bbva.dto.reliability.response.*;
 import org.apache.ibatis.session.SqlSession;
@@ -58,7 +59,7 @@ class ReliabilityDaoTest {
                 new InventoryInputsDtoResponse()
         );
 
-        when(reliabilityMapperMock.inventoryInputsFilter(any(), any(), any(), any(), any(), any(), any())).thenReturn(mockList);
+        when(reliabilityMapperMock.inventoryInputsFilter(any(InventoryInputsFilterDtoRequest.class))).thenReturn(mockList);
 
         InventoryInputsFilterDtoResponse response = reliabilityDao.inventoryInputsFilter(dto);
 
@@ -69,7 +70,7 @@ class ReliabilityDaoTest {
 
         verify(sqlSessionFactoryMock).openSession();
         verify(sqlSessionMock).getMapper(ReliabilityMapper.class);
-        verify(reliabilityMapperMock).inventoryInputsFilter(any(), any(), any(), any(), any(), any(), any());
+        verify(reliabilityMapperMock).inventoryInputsFilter(any(InventoryInputsFilterDtoRequest.class));
         verify(sqlSessionMock).close();
     }
 
@@ -201,7 +202,7 @@ class ReliabilityDaoTest {
     @Test
     void testInsertTransferNoJobs() {
         TransferInputDtoRequest dto = new TransferInputDtoRequest();
-        dto.setTransferInputDtoRequests(null);
+        dto.setTransferInputDtoRequests(List.of());
 
         when(sqlSessionFactoryMock.openSession()).thenReturn(sqlSessionMock);
         when(sqlSessionMock.getMapper(ReliabilityMapper.class)).thenReturn(reliabilityMapperMock);
@@ -216,10 +217,16 @@ class ReliabilityDaoTest {
     @Test
     void testInsertTransferDatabaseError() {
         TransferInputDtoRequest dto = new TransferInputDtoRequest();
-        when(sqlSessionFactoryMock.openSession()).thenThrow(new RuntimeException("DB error"));
 
-        reliabilityDao.insertTransfer(dto);
+        when(sqlSessionFactoryMock.openSession()).thenReturn(sqlSessionMock);
+        when(sqlSessionMock.getMapper(ReliabilityMapper.class))
+                .thenThrow(new RuntimeException("Error al guardar los datos de la transferencia en la base de datos."));
 
+        RuntimeException thrown = assertThrows(RuntimeException.class, () -> {
+            reliabilityDao.insertTransfer(dto);
+        });
+
+        assertEquals("Error al guardar los datos de la transferencia en la base de datos.", thrown.getMessage());
         verify(sqlSessionMock, never()).commit();
     }
 
@@ -251,6 +258,21 @@ class ReliabilityDaoTest {
 
         verify(sqlSessionFactoryMock).openSession();
         verify(sqlSessionMock).getMapper(ReliabilityMapper.class);
+        verify(sqlSessionMock).close();
+    }
+
+    @Test
+    void testGetOriginTypesSuccess() {
+        List<DropDownDto> mockList = List.of(new DropDownDto(), new DropDownDto());
+        when(reliabilityMapperMock.getOriginTypes()).thenReturn(mockList);
+
+        List<DropDownDto> result = reliabilityDao.getOriginTypes();
+
+        assertSame(mockList, result);
+
+        verify(sqlSessionFactoryMock).openSession();
+        verify(sqlSessionMock).getMapper(ReliabilityMapper.class);
+        verify(reliabilityMapperMock).getOriginTypes();
         verify(sqlSessionMock).close();
     }
 }

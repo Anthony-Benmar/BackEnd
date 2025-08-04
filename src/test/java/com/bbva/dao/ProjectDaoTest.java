@@ -195,4 +195,34 @@ class ProjectDaoTest {
 
         assertEquals(result, List.of());
     }
+
+    @Test
+    void testListProjectsSuccess() {
+        ProjectInfoFilterRequest dto = new ProjectInfoFilterRequest();
+        List<ProjectInfoSelectResponse> mockList = List.of(
+                new ProjectInfoSelectResponse(),
+                new ProjectInfoSelectResponse()
+        );
+        when(projectMapperMock.projectInfoFilter(dto)).thenReturn(mockList);
+        List<ProjectInfoSelectResponse> result = projectDao.listProjects(dto);
+
+        assertSame(mockList, result, "Debe devolver exactamente la lista del mapper");
+        verify(sqlSessionFactoryMock).openSession();
+        verify(sqlSessionMock).getMapper(ProjectMapper.class);
+        verify(projectMapperMock).projectInfoFilter(dto);
+        verify(sqlSessionMock).close();
+    }
+
+    @Test
+    void testListProjectsOnExceptionReturnsEmpty() {
+        ProjectInfoFilterRequest dto = new ProjectInfoFilterRequest();
+        when(sqlSessionFactoryMock.openSession())
+                .thenThrow(new RuntimeException("DB down"));
+
+        List<ProjectInfoSelectResponse> result = projectDao.listProjects(dto);
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty(), "En caso de excepción, lista vacía");
+        verify(sqlSessionMock, never()).getMapper(ProjectMapper.class);
+    }
 }

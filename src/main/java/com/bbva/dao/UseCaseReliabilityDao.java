@@ -58,7 +58,8 @@ public class UseCaseReliabilityDao {
             lista = mapper.getFilteredUseCases(
                     dto.getDomainName(),
                     dto.getCritical(),
-                    dto.getProjectName()
+                    dto.getProjectName(),
+                    dto.getPiLargeName()
             );
         }
         recordsCount = (lista.isEmpty()) ? 0 : (int) lista.size();
@@ -75,5 +76,21 @@ public class UseCaseReliabilityDao {
         response.setPagesAmount(pagesAmount);
         response.setData(lista);
         return response;
+    }
+
+    public List<UseCaseInputsDtoResponse> listAllFilteredUseCases(UseCaseInputsFilterDtoRequest dto) {
+        SqlSessionFactory factory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = factory.openSession()) {
+            UseCaseMapper mapper = session.getMapper(UseCaseMapper.class);
+            return mapper.getFilteredUseCases(
+                    dto.getDomainName(),
+                    dto.getCritical(),
+                    dto.getProjectName(),
+                    dto.getPiLargeName()
+            );
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, String.format("Error listAllFilteredUseCases: %s", e.getMessage()), e);
+            return Collections.emptyList();
+        }
     }
 }

@@ -27,6 +27,7 @@ class InventoryInputsDtoResponseTest {
         response.setJobTypeId(2);
         response.setBitBucketUrl("https://bitbucket.org/project/repo");
         response.setPack("DataPack1");
+        response.setOriginTypeId(42);
 
         assertEquals("Data Platform", response.getDomainName());
         assertEquals("ETL for Sales", response.getUseCase());
@@ -45,5 +46,7 @@ class InventoryInputsDtoResponseTest {
         assertEquals(2, response.getJobTypeId());
         assertEquals("https://bitbucket.org/project/repo", response.getBitBucketUrl());
         assertEquals("DataPack1", response.getPack());
+        assertEquals(42, response.getOriginTypeId());
+        assertNull(response.getOrigin());
     }
 }

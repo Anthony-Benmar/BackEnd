@@ -1,9 +1,12 @@
 package com.bbva.resources;
 import com.bbva.core.abstracts.IDataResult;
+import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dao.InfoJiraProjectDao;
 import com.bbva.dao.JiraValidatorLogDao;
 import com.bbva.dto.jira.request.JiraValidatorByUrlRequest;
+import com.bbva.dto.jira.response.DmJiraValidatorResponseDTO;
 import com.bbva.dto.jira.response.JiraResponseDTO;
+import com.bbva.service.DmJiraValidatorService;
 import com.bbva.service.JiraApiService;
 import com.bbva.service.JiraValidatorService;
 
@@ -17,6 +20,7 @@ public class JiraValidatorResources {
     private final JiraValidatorLogDao jiraValidatorLogDao = new JiraValidatorLogDao();
     private final InfoJiraProjectDao infoJiraProjectDao = new InfoJiraProjectDao();
     private final JiraValidatorService jiraValidatorService = new JiraValidatorService(jiraApiService, jiraValidatorLogDao, infoJiraProjectDao);
+    private final DmJiraValidatorService dmJiraValidatorService = new DmJiraValidatorService();
 
     @POST
     @Path("/validator/validate")
@@ -25,5 +29,20 @@ public class JiraValidatorResources {
     public IDataResult<JiraResponseDTO> validatorByUrl(JiraValidatorByUrlRequest dto)
             throws Exception {
         return jiraValidatorService.getValidatorByUrl(dto);
+    }
+
+    @POST
+    @Path("/validator/dm")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public IDataResult<DmJiraValidatorResponseDTO> validatorDataModelling(JiraValidatorByUrlRequest dto) throws Exception {
+        var messages = dmJiraValidatorService.validateHistoriaDM(dto);
+
+        DmJiraValidatorResponseDTO response = new DmJiraValidatorResponseDTO();
+        response.setData(messages);
+        response.setSuccessCount((int) messages.stream().filter(m -> "success".equals(m.getStatus())).count());
+        response.setErrorCount((int) messages.stream().filter(m -> "error".equals(m.getStatus())).count());
+        response.setWarningCount((int) messages.stream().filter(m -> "warning".equals(m.getStatus())).count());
+
+        return new SuccessDataResult<>(response, "Validación Data Modelling ejecutada");
     }
 }

@@ -2,6 +2,7 @@ package com.bbva.resources;
 
 import com.bbva.core.abstracts.IDataResult;
 import com.bbva.core.results.SuccessDataResult;
+import com.bbva.dto.catalog.response.DropDownDto;
 import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
 import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
 import com.bbva.dto.reliability.request.ReliabilityPackInputFilterRequest;
@@ -187,5 +188,26 @@ class ReliabilityResourceTest {
         IDataResult<Void> result = reliabilityResource.updateStatusReliabilityPacksJobStock(null,packs);
 
         assertNotNull(result);
+    }
+
+    @Test
+    void testGetOriginTypes() {
+        DropDownDto dto = new DropDownDto();
+        dto.setValue(1);
+        dto.setLabel("Type A");
+
+        List<DropDownDto> originTypes = Collections.singletonList(dto);
+        IDataResult<List<DropDownDto>> dataResult = new SuccessDataResult<>(originTypes);
+
+        when(reliabilityServiceMock.getOriginTypes()).thenReturn(dataResult);
+
+        IDataResult<List<DropDownDto>> result = reliabilityResource.getOriginTypes();
+
+        assertNotNull(result);
+        assertEquals(1, result.data.size());
+        assertEquals(1, result.data.get(0).getValue());
+        assertEquals("Type A", result.data.get(0).getLabel());
+
+        verify(reliabilityServiceMock).getOriginTypes();
     }
 }

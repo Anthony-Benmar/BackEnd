@@ -2,6 +2,7 @@ package com.bbva.dao;
 
 import com.bbva.database.MyBatisConnectionFactory;
 import com.bbva.database.mappers.ReliabilityMapper;
+import com.bbva.dto.catalog.response.DropDownDto;
 import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
 import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
 import com.bbva.dto.reliability.request.ReliabilityPackInputFilterRequest;
@@ -65,6 +66,7 @@ public class ReliabilityDao {
         }
         return response;
     }
+
     public List<PendingCustodyJobsDtoResponse> getPendingCustodyJobs(String sdatoolId) {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         List<PendingCustodyJobsDtoResponse> pendingCustodyJobsList;
@@ -80,6 +82,12 @@ public class ReliabilityDao {
             for (PendingCustodyJobsDtoResponse item : pendingCustodyJobsList) {
                 if (item.getJobName() != null) {
                     item.setJobName(item.getJobName().replaceAll("\\s+", ""));
+                }
+            }
+            for (PendingCustodyJobsDtoResponse x : pendingCustodyJobsList) {
+                ExecutionValidationDtoResponse executionValidation = mapper.getExecutionValidation(x.getJobName());
+                if (executionValidation != null) {
+                    x.setStatus(executionValidation.getValidation());
                 }
             }
             return pendingCustodyJobsList;
@@ -142,6 +150,12 @@ public class ReliabilityDao {
         }
     }
 
+    public static class PersistenceException extends RuntimeException {
+        public PersistenceException(String message, Throwable cause) {
+            super(message, cause);
+        }
+    }
+
     public void insertTransfer(TransferInputDtoRequest dto) {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         try (SqlSession session = sqlSessionFactory.openSession()) {
@@ -149,8 +163,9 @@ public class ReliabilityDao {
             reliabilityMapper.insertTranfer(dto);
             dto.getTransferInputDtoRequests().forEach(reliabilityMapper::insertJobStock);
             session.commit();
-        }catch (Exception e) {
-            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+        } catch (Exception e) {
+            String errorMessage = "Error al guardar los datos de la transferencia en la base de datos.";
+            throw new PersistenceException(errorMessage, e);
         }
     }
 
@@ -159,19 +174,19 @@ public class ReliabilityDao {
         List<InventoryInputsDtoResponse> lista;
         try (SqlSession session = sqlSessionFactory.openSession()) {
             ReliabilityMapper reliabilityMapper = session.getMapper(ReliabilityMapper.class);
-            lista = reliabilityMapper.inventoryInputsFilter(
-                    dto.getDomainName(),
-                    dto.getUseCase(),
-                    dto.getJobType(),
-                    dto.getFrequency(),
-                    dto.getIsCritical(),
-                    dto.getSearchByInputOutputTable(),
-                    dto.getSearchType()
-            );
+            lista = reliabilityMapper.inventoryInputsFilter(dto);
             return lista;
         }catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
             return List.of();
+        }
+    }
+
+    public List<DropDownDto> getOriginTypes() {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ReliabilityMapper mapper = session.getMapper(ReliabilityMapper.class);
+            return mapper.getOriginTypes();
         }
     }
 

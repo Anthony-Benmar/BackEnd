@@ -15,8 +15,7 @@ import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class UseCaseResourcesTest {
@@ -126,5 +125,21 @@ class UseCaseResourcesTest {
         assertNotNull(result);
         assertEquals(mockResult, result);
         verify(useCaseServiceMock).getFilteredUseCases(dto);
+    }
+
+    @Test
+    void testDownloadUseCasesExcel() {
+        UseCaseInputsFilterDtoRequest dto = new UseCaseInputsFilterDtoRequest();
+        byte[] mockExcel = "FakeExcelContent".getBytes();
+
+        when(useCaseServiceMock.generateDocumentUseCases(dto)).thenReturn(mockExcel);
+
+        Response response = useCaseResources.downloadUseCasesExcel(dto);
+
+        assertNotNull(response);
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertArrayEquals(mockExcel, (byte[]) response.getEntity());
+        assertTrue(response.getHeaderString("Content-Disposition").contains("CasosDeUso_v1.xlsx"));
+        verify(useCaseServiceMock).generateDocumentUseCases(dto);
     }
 }

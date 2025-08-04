@@ -1,5 +1,6 @@
 package com.bbva.dto.use_case.request;
 
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,4 +12,6 @@ public class UseCaseInputsFilterDtoRequest {
     private String critical;
     private String domainName;
     private String projectName;
+    private String piLargeName;
+    private String trimestre;
 }

@@ -8,6 +8,7 @@ import com.bbva.dto.use_case.response.UseCaseInputsFilterDtoResponse;
 import com.bbva.entities.use_case.UseCaseEntity;
 import com.bbva.service.UseCaseService;
 
+
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -17,6 +18,7 @@ import java.util.List;
 @Produces(MediaType.APPLICATION_JSON)
 public class UseCaseResources {
     private final UseCaseService useCaseService = new UseCaseService();
+    private static final String CD = "Content-Disposition";
 
     @GET
     @Path("list")
@@ -45,5 +47,27 @@ public class UseCaseResources {
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<UseCaseInputsFilterDtoResponse> getFilteredUseCases(UseCaseInputsFilterDtoRequest dto) {
         return useCaseService.getFilteredUseCases(dto);
+    }
+
+    @POST
+    @Path("/documentGenerator")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    public Response downloadUseCasesExcel(UseCaseInputsFilterDtoRequest dto) {
+        byte[] excel = useCaseService.generateDocumentUseCases(dto);
+
+        String filename = "CasosDeUso_v1.xlsx";
+
+        return Response
+                .ok(excel)
+                .header(CD, "attachment; filename=\"" + filename + "\"")
+                .header("Access-Control-Expose-Headers", CD)
+                .build();
+    }
+
+    @OPTIONS
+    @Path("/documentGenerator")
+    public Response options() {
+        return Response.ok().build();
     }
 }
