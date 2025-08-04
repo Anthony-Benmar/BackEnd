@@ -25,6 +25,9 @@ public class IngestaService {
 
     private static final String ID_BASE = "xxxxxxxx";
 
+    private static final String CONF_EXTENSION = ".conf";
+    private static final String JSON_EXTENSION = ".json";
+
     public byte[] procesarIngesta(IngestaRequestDto request) throws Exception {
 
         validarRequest(request);
@@ -59,8 +62,8 @@ public class IngestaService {
         Map<String, byte[]> archivosBytes = new HashMap<>();
 
         for (Map.Entry<String, Object> entry : archivosGenerados.entrySet()) {
-            if (entry.getValue() instanceof String) {
-                archivosBytes.put(entry.getKey(), ((String) entry.getValue()).getBytes(StandardCharsets.UTF_8));
+            if (entry.getValue() instanceof String valor) {
+                archivosBytes.put(entry.getKey(), valor.getBytes(StandardCharsets.UTF_8));
             }
         }
 
@@ -71,6 +74,7 @@ public class IngestaService {
             issueTicketService.addLabelToIssue(request.getUsername(), request.getToken(),
                     request.getTicketJira(), "metaknight");
         } catch (Exception ex) {
+            // Continuar con el proceso
         }
         return zipGenerator.crearZip(archivosBytes);
     }
@@ -79,23 +83,25 @@ public class IngestaService {
         byte[] csvBytes = Base64.getDecoder().decode(csvBase64);
         String csvContent = new String(csvBytes, StandardCharsets.UTF_8);
 
-        CSVFormat format = CSVFormat.DEFAULT
-                .withDelimiter(';')
-                .withFirstRecordAsHeader()
-                .withQuote('"')
-                .withTrim();
+        CSVFormat format = CSVFormat.Builder.create()
+                .setDelimiter(';')
+                .setHeader()
+                .setSkipHeaderRecord(true)
+                .setQuote('"')
+                .setTrim(true)
+                .build();
 
-        CSVParser parser = CSVParser.parse(csvContent, format);
+        CSVParser csvParser = CSVParser.parse(csvContent, format);
 
         List<Map<String, Object>> records = new ArrayList<>();
-        for (CSVRecord record : parser) {
+        for (CSVRecord csvRecord : csvParser) {
             Map<String, Object> row = new HashMap<>();
-            for (String header : parser.getHeaderNames()) {
-                row.put(header.trim(), record.get(header));
+            for (String header : csvParser.getHeaderNames()) {
+                row.put(header.trim(), csvRecord.get(header));
             }
             records.add(row);
         }
-        parser.close();
+        csvParser.close();
         return records;
     }
 
@@ -104,18 +110,19 @@ public class IngestaService {
 
         String stagingConf = generarStagingHammurabi(request);
         String stagingJson = generarStagingJson(request);
-        archivos.put("qlt/staging/" + schemaProcessor.getDfMasterName() + ".conf", stagingConf);
-        archivos.put("qlt/staging/" + schemaProcessor.getDfMasterName() + ".json", stagingJson);
+
+        archivos.put("qlt/staging/" + schemaProcessor.getDfMasterName() + CONF_EXTENSION, stagingConf);
+        archivos.put("qlt/staging/" + schemaProcessor.getDfMasterName() + JSON_EXTENSION, stagingJson);
 
         String rawConf = generarRawHammurabi(request);
         String rawJson = generarRawJson(request);
-        archivos.put("qlt/raw/" + schemaProcessor.getDfMasterName() + ".conf", rawConf);
-        archivos.put("qlt/raw/" + schemaProcessor.getDfMasterName() + ".json", rawJson);
+        archivos.put("qlt/raw/" + schemaProcessor.getDfMasterName() + CONF_EXTENSION, rawConf);
+        archivos.put("qlt/raw/" + schemaProcessor.getDfMasterName() + JSON_EXTENSION, rawJson);
 
         String masterConf = generarMasterHammurabi(request);
         String masterJson = generarMasterJson(request);
-        archivos.put("qlt/master/" + schemaProcessor.getDfMasterName() + ".conf", masterConf);
-        archivos.put("qlt/master/" + schemaProcessor.getDfMasterName() + ".json", masterJson);
+        archivos.put("qlt/master/" + schemaProcessor.getDfMasterName() + CONF_EXTENSION, masterConf);
+        archivos.put("qlt/master/" + schemaProcessor.getDfMasterName() + JSON_EXTENSION, masterJson);
 
         return archivos;
     }
@@ -745,19 +752,21 @@ public class IngestaService {
         }
 
         // Rename columns
-        transformations.append("{\n    type : \"renamecolumns\"\n    columnsToRename : {\n");
+        transformations.append("{%n    type : \"renamecolumns\"%n    columnsToRename : {%n");
         for (List<String> field : schemaProcessor.getMasterFieldWithOriginList()) {
             if (!"Calculated".equals(field.get(1))) {
-                transformations.append(String.format("         %s = \"%s\",\n", field.get(1), field.get(0)));
+                transformations.append(String.format(
+                        " %s = \"%s\",%n", field.get(1), field.get(0))
+                );
             }
         }
         transformations.setLength(transformations.length() - 2); // Remove last comma
-        transformations.append("\n    }\n},\n");
+        transformations.append("%n    }%n},%n");
 
         // Select columns
-        transformations.append("{\n    type = \"selectcolumns\"\n    columnsToSelect = [\n");
+        transformations.append("{%n    type = \"selectcolumns\"%n    columnsToSelect = [%n");
         for (String field : schemaProcessor.getMasterFieldList()) {
-            transformations.append(String.format("         \"%s\",\n", field));
+            transformations.append(String.format("         \"%s\",%n", field));
         }
         transformations.setLength(transformations.length() - 2); // Remove last comma
         transformations.append("\n    ]\n}\n");

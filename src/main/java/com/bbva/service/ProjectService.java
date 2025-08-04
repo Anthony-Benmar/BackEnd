@@ -475,13 +475,12 @@ public class ProjectService {
 
     public IDataResult<ProjectRoleAndDevResponse> getProjectRoles(int projectId, String emailDev) {
         try {
-            List<ProjectDevResponse> projectDevResponses = new ArrayList<>();
             ProjectDevResponse projectDev = new ProjectDevResponse();
             List<ProjectRoleDetailEntity> result = projectDao.getProjectRoles(projectId);
 
             List<ProjectRoleDetailResponse> listProjectRole = result.stream()
                     .map(s -> new ProjectRoleDetailResponse(s.getParticipantName(), s.getProjectRolType(), s.getRoleDescription()))
-                            .collect(Collectors.toList());
+                            .toList();
 
             if (!listProjectRole.isEmpty()){
                 projectDev = projectDao.getProjectDevSU(emailDev);

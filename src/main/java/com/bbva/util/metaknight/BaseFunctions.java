@@ -6,6 +6,9 @@ import java.util.regex.Pattern;
 
 public class BaseFunctions {
 
+    private static final String NO_RE_DEFINITION_MESSAGE = "No se pudo definir RE para el formato lógico.";
+    private static final String NO_RULE_DESCRIPTION_MESSAGE = "No se pudo describir la regla para el formato lógico.";
+
     /**
      * Convierte una configuración de regla a formato personalizado
      * Equivalente a convert_to_custom_format en Python
@@ -18,35 +21,38 @@ public class BaseFunctions {
         @SuppressWarnings("unchecked")
         Map<String, Object> config = (Map<String, Object>) data.get("config");
 
+        appendConfigEntries(result, config);
+
+        result.append("   }\n}");
+        return result.toString();
+    }
+    private void appendConfigEntries(StringBuilder result, Map<String, Object> config) {
         for (Map.Entry<String, Object> entry : config.entrySet()) {
             String key = entry.getKey();
             Object value = entry.getValue();
-
             result.append("      ").append(key).append(" = ");
 
-            if (value instanceof List) {
-                List<?> list = (List<?>) value;
-                result.append("[");
-                for (int i = 0; i < list.size(); i++) {
-                    result.append("\"").append(list.get(i)).append("\"");
-                    if (i < list.size() - 1) {
-                        result.append(", ");
-                    }
-                }
-                result.append("]");
-            } else if (value instanceof Boolean) {
-                result.append(((Boolean) value) ? "true" : "false");
+            if (value instanceof List<?> list) {
+                appendListValue(result, list);
+            } else if (value instanceof Boolean boolValue) {
+                result.append(boolValue ? "true" : "false");
             } else if (value instanceof String) {
                 result.append("\"").append(value).append("\"");
             } else {
                 result.append(value);
             }
-
             result.append("\n");
         }
-
-        result.append("   }\n}");
-        return result.toString();
+    }
+    private void appendListValue(StringBuilder result, List<?> list) {
+        result.append("[");
+        for (int i = 0; i < list.size(); i++) {
+            result.append("\"").append(list.get(i)).append("\"");
+            if (i < list.size() - 1) {
+                result.append(", ");
+            }
+        }
+        result.append("]");
     }
 
     /**
@@ -55,7 +61,7 @@ public class BaseFunctions {
      */
     public String getRegularExpression(String logicalFormat) {
         if (logicalFormat == null) {
-            return "No se pudo definir RE para el formato lógico.";
+            return NO_RE_DEFINITION_MESSAGE;
         }
 
         if (logicalFormat.contains("ALPHANUMERIC")) {
@@ -65,12 +71,12 @@ public class BaseFunctions {
                 String contentInsideParentheses = matcher.group(1);
                 return "^(.{" + contentInsideParentheses + "})$";
             } else {
-                return "No se pudo definir RE para el formato lógico.";
+                return NO_RE_DEFINITION_MESSAGE;
             }
         } else if ("DATE".equals(logicalFormat)) {
             return "^([1-9]{1}[0-9]{3})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$";
         } else {
-            return "No se pudo definir RE para el formato lógico.";
+            return NO_RE_DEFINITION_MESSAGE;
         }
     }
 

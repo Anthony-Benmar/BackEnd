@@ -400,11 +400,17 @@ public class IssueTicketService {
             Integer responseCode = putResponseEditAsyncJson(username, token, issueKey, updatePayload.toString());
 
             if (responseCode < 200 || responseCode >= 300) {
-                throw new Exception("Error agregando label a JIRA. HTTP Code: " + responseCode);
+                throw new HandledException(
+                        responseCode.toString(),
+                        "Error agregando label a JIRA. HTTP Code: " + responseCode
+                );
             }
 
         } catch (Exception ex) {
-            throw new Exception("Error en addLabelToIssue: " + ex.getMessage(), ex);
+            throw new HandledException(
+                    "JIRA_LABEL_ERROR",
+                    "Error en addLabelToIssue: " + ex.getMessage()
+            );
         }
     }
 
