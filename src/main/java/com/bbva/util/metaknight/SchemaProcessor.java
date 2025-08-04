@@ -14,7 +14,7 @@ public class SchemaProcessor {
     private static final String OUTPUT_SCHEMA = ".output.schema\"";
     private static final String SCHEMAS_PE_PATH = "\"/schemas/pe/";
 
-    // NOSONAR - Path estándar de Artifactory, valor fijo
+    // NOSONAR - Artifactory standard path, fixed value
     private static final String LATEST_PATH = "/latest/";
     private static final String PE_HMM_QLT = "-pe-hmm-qlt-";
     private static final String SOURCE_FIELD = "Source field";

@@ -287,7 +287,7 @@ public class IngestaService {
      */
     private String generarRawHammurabi(IngestaRequestDto request) {
         StringBuilder config = new StringBuilder();
-        config.append("hammurabi {\n");
+        config.append("HAMMURABI_BLOCK");
 
         // DataFrameInfo
         config.append(String.format("""
@@ -367,21 +367,21 @@ public class IngestaService {
     private String generarRawJson(IngestaRequestDto request) {
         Map<String, Object> json = new HashMap<>();
         json.put("_id", schemaProcessor.getIdJsonRaw());
-        json.put("description", "Job " + schemaProcessor.getIdJsonRaw() + " created with Metaknight.");
-        json.put("kind", "processing");
+        json.put(DESCRIPTION, "Job " + schemaProcessor.getIdJsonRaw() + "CREATED_WITH_METAKNIGHT");
+        json.put("kind", PROCESSING);
 
         Map<String, Object> params = new HashMap<>();
 
-        params.put("configUrl", "\"${repository.endpoint.vdc}/${repository.repo.schemas.dq}/data-quality-configs/${repository.env.dq}/per/" +
-                request.getUuaaMaster() + "/rawdata/" + schemaProcessor.getDfMasterName() + "/${dq.conf.version}/" +
-                schemaProcessor.getDfMasterName() + "-01.conf\"");
+        params.put(CONFIG_URL, REPO_URL_BASE +
+                request.getUuaaMaster() + "/rawdata/" + schemaProcessor.getDfMasterName() + DQ_CONF_VERSION+
+                schemaProcessor.getDfMasterName() + CONF_SUFFIX);
 
-        params.put("sparkHistoryEnabled", "false");
-        json.put("params", params);
+        params.put(SPARK_HISTORY_ENABLED, FALSE);
+        json.put(PARAMS, params);
 
-        json.put("runtime", "hammurabi-lts");
+        json.put(RUNTIME, HAMMURABI_LTS);
         json.put("size", "M");
-        json.put("streaming", false);
+        json.put(STREAMING, false);
 
         return baseFunctions.convertFinalJsonToSelectedFormat(json);
     }
@@ -391,7 +391,7 @@ public class IngestaService {
      */
     private String generarMasterHammurabi(IngestaRequestDto request) {
         StringBuilder config = new StringBuilder();
-        config.append("hammurabi {\n");
+        config.append("HAMMURABI_BLOCK");
 
         // DataFrameInfo
         config.append(String.format("""
@@ -475,19 +475,19 @@ public class IngestaService {
     private String generarMasterJson(IngestaRequestDto request) {
         Map<String, Object> json = new HashMap<>();
         json.put("_id", schemaProcessor.getIdJsonMaster());
-        json.put("description", "Job " + schemaProcessor.getIdJsonMaster() + " created with Metaknight.");
-        json.put("kind", "processing");
+        json.put(DESCRIPTION, "Job " + schemaProcessor.getIdJsonMaster() + CREATED_WITH_METAKNIGHT);
+        json.put("kind", PROCESSING);
 
         Map<String, Object> params = new HashMap<>();
-        params.put("configUrl", "\"${repository.endpoint.vdc}/${repository.repo.schemas.dq}/data-quality-configs/${repository.env.dq}/per/" +
-                request.getUuaaMaster() + "/masterdata/" + schemaProcessor.getDfMasterName() + "/${dq.conf.version}/" +
-                schemaProcessor.getDfMasterName() + "-01.conf\"");
-        params.put("sparkHistoryEnabled", "true");
-        json.put("params", params);
+        params.put(CONFIG_URL, "\"${repository.endpoint.vdc}/${repository.repo.schemas.dq}/data-quality-configs/${repository.env.dq}/per/" +
+                request.getUuaaMaster() + "/masterdata/" + schemaProcessor.getDfMasterName() + DQ_CONF_VERSION +
+                schemaProcessor.getDfMasterName() + CONF_SUFFIX);
+        params.put(SPARK_HISTORY_ENABLED, "true");
+        json.put(PARAMS, params);
 
-        json.put("runtime", "hammurabi-lts");
+        json.put(RUNTIME, HAMMURABI_LTS);
         json.put("size", "M");
-        json.put("streaming", false);
+        json.put(STREAMING, false);
 
         return baseFunctions.convertFinalJsonToSelectedFormat(json);
     }
