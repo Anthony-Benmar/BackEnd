@@ -59,17 +59,14 @@ public class SchemaProcessor {
     }
 
     private void processSchemaData() {
-        // Procesar particiones
         List<String> partitions = Arrays.asList(request.getParticiones().split(","));
 
-        // Equivalente a: df_filtrado = df_csv[df_csv["Key"] == True][~df_csv["Physical Name field"].isin(partiton_values)]
         this.keys = rawData.stream()
                 .filter(row -> "True".equals(String.valueOf(row.get("Key"))))
                 .map(row -> (String) row.get(PHYSICAL_NAME_FIELD))
                 .filter(field -> !partitions.contains(field))
                 .toList();
 
-        // Equivalente a: dict(zip(df_filtrado["Physical Name field"], df_filtrado["Logical Format"]))
         this.keysDict = rawData.stream()
                 .filter(row -> "True".equals(String.valueOf(row.get("Key"))))
                 .filter(row -> !partitions.contains(row.get(PHYSICAL_NAME_FIELD)))
@@ -79,7 +76,6 @@ public class SchemaProcessor {
                         (existing, replacement) -> existing
                 ));
 
-        // Equivalente a: df_csv["Physical name object"].drop_duplicates().to_list()[0]
         this.dfRawName = rawData.stream()
                 .map(row -> (String) row.get("Physical name object"))
                 .distinct()
@@ -92,51 +88,39 @@ public class SchemaProcessor {
                 .findFirst()
                 .orElse("");
 
-        // Equivalente a: df_csv["Physical name of source object"].drop_duplicates().to_list()[0]
         this.originalStagingName = rawData.stream()
                 .map(row -> (String) row.get("Physical name of source object"))
                 .distinct()
                 .findFirst()
                 .orElse("");
 
-        // Procesar staging name
         this.dfStagingName = "\"" + originalStagingName.replace("$", "\"$");
 
-        // Equivalente a: "".join(df_name.split("_")[2:])
         String[] dfNameParts = dfRawName.split("_");
         this.tag = String.join("", Arrays.copyOfRange(dfNameParts, 2, dfNameParts.length));
 
-        // Obtener UUAA
         this.dfUuaa = dfRawName.split("_")[1];
 
-        // Construir paths
         buildPaths();
 
-        // Construir IDs
         buildJsonIds();
 
-        // Procesar campos para Kirby
         processKirbyFields();
     }
 
     private void buildPaths() {
         String artifactoryLink = "${ARTIFACTORY_UNIQUE_CACHE}\"/artifactory/\"${SCHEMAS_REPOSITORY}";
 
-        // Artifactory paths
         this.artifactoryPath = artifactoryLink + SCHEMAS_PE_PATH + request.getUuaaMaster() + "/raw/" + dfRawName + LATEST_PATH + dfRawName + OUTPUT_SCHEMA;
         this.masterArtifactoryPath = artifactoryLink + SCHEMAS_PE_PATH + request.getUuaaMaster() + "/master/" + dfMasterName + LATEST_PATH + dfMasterName + OUTPUT_SCHEMA;
         this.rawArtifactoryPath = artifactoryLink + SCHEMAS_PE_PATH + request.getUuaaMaster() + "/raw/" + dfRawName + LATEST_PATH + dfRawName + OUTPUT_SCHEMA;
 
-        // Data paths
-        // Usar File.separator en lugar de hard-coded path-delimiter
         this.dfStagingPath = File.separator + "in" + File.separator + "staging" + File.separator + "datax" + File.separator + dfUuaa + File.separator + dfStagingName;
         this.dfRawPath = File.separator + "data" + File.separator + "raw" + File.separator + dfUuaa + File.separator + "data" + File.separator + dfRawName;
         this.dfMasterPath = File.separator + "data" + File.separator + "master" + File.separator + request.getUuaaMaster() + File.separator + "data" + File.separator + dfMasterName;
 
-        // Subset para particiones
         this.subset = getSubset(Arrays.asList(request.getParticiones().split(",")));
 
-        // Partition list
         this.partitionList = getPartitionList(Arrays.asList(request.getParticiones().split(",")));
     }
 
@@ -148,7 +132,6 @@ public class SchemaProcessor {
     }
 
     private void processKirbyFields() {
-        // Trim all columns
         StringBuilder trimColumns = new StringBuilder("\"");
         List<String> sourceFields = masterData.stream()
                 .filter(row -> !CALCULATED.equals(row.get(SOURCE_FIELD)))
@@ -164,21 +147,18 @@ public class SchemaProcessor {
         trimColumns.append("\"");
         this.trimAllColumns = trimColumns.toString();
 
-        // Date columns
         this.rawDateColumns = masterData.stream()
                 .filter(row -> "date".equals(row.get("Data Type")))
                 .filter(row -> !CALCULATED.equals(row.get(SOURCE_FIELD)))
                 .map(row -> (String) row.get(SOURCE_FIELD))
                 .toList();
 
-        // Timestamp columns
         this.rawTimestampColumns = masterData.stream()
                 .filter(row -> "timestamp".equals(row.get("Data Type")))
                 .filter(row -> !CALCULATED.equals(row.get(SOURCE_FIELD)))
                 .map(row -> (String) row.get(SOURCE_FIELD))
                 .toList();
 
-        // Master field with origin list
         this.masterFieldWithOriginList = masterData.stream()
                 .map(row -> Arrays.asList(
                         (String) row.get(PHYSICAL_NAME_FIELD),
@@ -186,7 +166,6 @@ public class SchemaProcessor {
                 ))
                 .toList();
 
-        // Master field list
         this.masterFieldList = masterData.stream()
                 .map(row -> (String) row.get(PHYSICAL_NAME_FIELD))
                 .toList();

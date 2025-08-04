@@ -8,9 +8,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 public class ZipGenerator {
 
-    /**
-     * Crear archivo ZIP con todos los archivos generados
-     */
     public byte[] crearZip(Map<String, byte[]> archivos) throws HandledException {
 
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -20,16 +17,13 @@ public class ZipGenerator {
                 String fileName = entry.getKey();
                 byte[] fileData = entry.getValue();
 
-                // Crear entrada en el ZIP
                 ZipEntry zipEntry = new ZipEntry(fileName);
                 zos.putNextEntry(zipEntry);
 
-                // Escribir datos del archivo
                 zos.write(fileData);
                 zos.closeEntry();
             }
 
-            // Finalizar ZIP
             zos.finish();
 
             return baos.toByteArray();

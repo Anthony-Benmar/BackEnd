@@ -9,10 +9,6 @@ public class BaseFunctions {
     private static final String NO_RE_DEFINITION_MESSAGE = "No se pudo definir RE para el formato lógico.";
     private static final String NO_RULE_DESCRIPTION_MESSAGE = "No se pudo describir la regla para el formato lógico";
 
-    /**
-     * Convierte una configuración de regla a formato personalizado
-     * Equivalente a convert_to_custom_format en Python
-     */
     public String convertToCustomFormat(Map<String, Object> data) {
         StringBuilder result = new StringBuilder("{\n");
         result.append("   class = \"").append(data.get("class")).append("\"\n");
@@ -55,10 +51,6 @@ public class BaseFunctions {
         result.append("]");
     }
 
-    /**
-     * Obtiene expresión regular para formato lógico
-     * Equivalente a get_regular_expression en Python
-     */
     public String getRegularExpression(String logicalFormat) {
         if (logicalFormat == null) {
             return NO_RE_DEFINITION_MESSAGE;
@@ -80,9 +72,6 @@ public class BaseFunctions {
         }
     }
 
-    /**
-     * Convierte configuración de input a formato Hammurabi
-     */
     public String convertInputToSelectedFormat(Map<String, Object> inputJson) {
         @SuppressWarnings("unchecked")
         Map<String, Object> input = (Map<String, Object>) inputJson.get("input");
@@ -116,9 +105,6 @@ public class BaseFunctions {
         ).trim();
     }
 
-    /**
-     * Convierte configuración de dataframe a formato Hammurabi
-     */
     public String convertJsonToSelectedFormat(Map<String, Object> inputJson) {
         return String.format("""
             dataFrameInfo {
@@ -138,9 +124,6 @@ public class BaseFunctions {
         ).trim();
     }
 
-    /**
-     * Convierte configuración de input staging a formato Hammurabi
-     */
     public String convertStagingInputToSelectedFormat(Map<String, Object> inputJson) {
         @SuppressWarnings("unchecked")
         Map<String, Object> input = (Map<String, Object>) inputJson.get("input");
@@ -175,9 +158,6 @@ public class BaseFunctions {
         ).trim();
     }
 
-    /**
-     * Convierte configuración staging JSON a formato Hammurabi
-     */
     public String convertStagingJsonToSelectedFormat(Map<String, Object> inputJson) {
         return String.format("""
             dataFrameInfo {
@@ -193,9 +173,6 @@ public class BaseFunctions {
         ).trim();
     }
 
-    /**
-     * Convierte JSON final a formato de salida
-     */
     public String convertFinalJsonToSelectedFormat(Map<String, Object> inputJson) {
         @SuppressWarnings("unchecked")
         Map<String, Object> params = (Map<String, Object>) inputJson.get("params");
@@ -220,9 +197,6 @@ public class BaseFunctions {
         ).trim();
     }
 
-    /**
-     * Obtiene descripción de regla para formato lógico
-     */
     public String getRuleDescription(String logicalFormat) {
         if (logicalFormat == null) {
             return NO_RULE_DESCRIPTION_MESSAGE;

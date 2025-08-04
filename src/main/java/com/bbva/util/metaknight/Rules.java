@@ -12,10 +12,6 @@ public class Rules {
     private static final String CLASS = "class";
     private static final String CONFIG = "config";
 
-    /**
-     * Aplicar regla de duplicados
-     * Equivalente a apply_duplicate_rule en Python
-     */
     public Map<String, Object> applyDuplicateRule(List<String> keys, String functionalId) {
         Map<String, Object> config = new HashMap<>();
         config.put("columns", keys);
@@ -33,10 +29,6 @@ public class Rules {
         return rule;
     }
 
-    /**
-     * Aplicar regla de validez (not null)
-     * Equivalente a apply_validity_rule en Python
-     */
     public Map<String, Object> applyValidityRule(String column, String functionalId) {
         Map<String, Object> config = new HashMap<>();
         config.put("column", column);
@@ -54,10 +46,6 @@ public class Rules {
         return rule;
     }
 
-    /**
-     * Aplicar regla de formato
-     * Equivalente a apply_format_rule en Python
-     */
     public Map<String, Object> applyFormatRule(String column, String regularExpression, String functionalId) {
         Map<String, Object> config = new HashMap<>();
         config.put("columns", Arrays.asList(column));
@@ -76,10 +64,6 @@ public class Rules {
         return rule;
     }
 
-    /**
-     * Regla de staging (completitud)
-     * Equivalente a staging_rule en Python
-     */
     public Map<String, Object> stagingRule(String process) {
         if (!"staging".equals(process)) {
             return Collections.emptyMap();

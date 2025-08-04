@@ -1,6 +1,5 @@
 package com.bbva.util.metaknight;
 
-import com.bbva.core.HandledException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -128,7 +127,7 @@ class ZipGeneratorTest {
     }
 
     @Test
-    void testCrearZip_NullFileName() throws Exception {
+    void testCrearZip_NullFileName() {
         Map<String, byte[]> archivos = new HashMap<>();
         archivos.put(null, "content".getBytes(StandardCharsets.UTF_8));
         archivos.put("valid.txt", "valid content".getBytes(StandardCharsets.UTF_8));
@@ -139,7 +138,7 @@ class ZipGeneratorTest {
     }
 
     @Test
-    void testCrearZip_NullFileContent() throws Exception {
+    void testCrearZip_NullFileContent() {
         Map<String, byte[]> archivos = new HashMap<>();
         archivos.put("file1.txt", null);
         archivos.put("file2.txt", "valid content".getBytes(StandardCharsets.UTF_8));
@@ -151,15 +150,12 @@ class ZipGeneratorTest {
 
     @Test
     void testCrearZip_EmptyFileName() throws Exception {
-        // Arrange
         Map<String, byte[]> archivos = new HashMap<>();
         archivos.put("", "content".getBytes(StandardCharsets.UTF_8));
         archivos.put("valid.txt", "valid content".getBytes(StandardCharsets.UTF_8));
 
-        // Act
         byte[] zipBytes = zipGenerator.crearZip(archivos);
 
-        // Assert
         assertNotNull(zipBytes);
 
         Map<String, String> extractedFiles = extractZipContents(zipBytes);
@@ -170,15 +166,12 @@ class ZipGeneratorTest {
 
     @Test
     void testCrearZip_EmptyFileContent() throws Exception {
-        // Arrange
         Map<String, byte[]> archivos = new HashMap<>();
         archivos.put("empty.txt", new byte[0]);
         archivos.put("nonempty.txt", "content".getBytes(StandardCharsets.UTF_8));
 
-        // Act
         byte[] zipBytes = zipGenerator.crearZip(archivos);
 
-        // Assert
         assertNotNull(zipBytes);
 
         Map<String, String> extractedFiles = extractZipContents(zipBytes);
@@ -196,10 +189,8 @@ class ZipGeneratorTest {
         archivos.put("file_with_underscores.json", "content3".getBytes(StandardCharsets.UTF_8));
         archivos.put("file.with.dots.xml", "content4".getBytes(StandardCharsets.UTF_8));
 
-        // Act
         byte[] zipBytes = zipGenerator.crearZip(archivos);
 
-        // Assert
         assertNotNull(zipBytes);
 
         Map<String, String> extractedFiles = extractZipContents(zipBytes);
@@ -242,19 +233,5 @@ class ZipGeneratorTest {
         }
 
         return contents;
-    }
-
-    private Set<String> extractZipEntryNames(byte[] zipBytes) throws IOException {
-        Set<String> entryNames = new HashSet<>();
-
-        try (ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(zipBytes))) {
-            ZipEntry entry;
-            while ((entry = zis.getNextEntry()) != null) {
-                entryNames.add(entry.getName());
-                zis.closeEntry();
-            }
-        }
-
-        return entryNames;
     }
 }

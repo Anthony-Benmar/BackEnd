@@ -18,13 +18,10 @@ class BaseFunctionsTest {
 
     @Test
     void testConvertToCustomFormat_Success() {
-        // Arrange
         Map<String, Object> data = createTestRuleData();
 
-        // Act
         String result = baseFunctions.convertToCustomFormat(data);
 
-        // Assert
         assertNotNull(result);
         assertTrue(result.contains("class = \"com.datio.hammurabi.rules.validity.NotNullValidationRule\""));
         assertTrue(result.contains("config = {"));
@@ -40,7 +37,6 @@ class BaseFunctionsTest {
 
     @Test
     void testConvertToCustomFormat_WithListValues() {
-        // Arrange
         Map<String, Object> config = new HashMap<>();
         config.put("columns", Arrays.asList("field1", "field2", "field3"));
         config.put("isCritical", true);
@@ -50,10 +46,8 @@ class BaseFunctionsTest {
         data.put("class", "com.datio.hammurabi.rules.consistence.DuplicateRule");
         data.put("config", config);
 
-        // Act
         String result = baseFunctions.convertToCustomFormat(data);
 
-        // Assert
         assertNotNull(result);
         assertTrue(result.contains("columns = [\"field1\", \"field2\", \"field3\"]"));
         assertTrue(result.contains("isCritical = true"));
@@ -62,7 +56,6 @@ class BaseFunctionsTest {
 
     @Test
     void testConvertToCustomFormat_WithBooleanValues() {
-        // Arrange
         Map<String, Object> config = new HashMap<>();
         config.put("isCritical", true);
         config.put("withRefusals", false);
@@ -72,10 +65,8 @@ class BaseFunctionsTest {
         data.put("class", "test.class");
         data.put("config", config);
 
-        // Act
         String result = baseFunctions.convertToCustomFormat(data);
 
-        // Assert
         assertNotNull(result);
         assertTrue(result.contains("isCritical = true"));
         assertTrue(result.contains("withRefusals = false"));
@@ -84,7 +75,6 @@ class BaseFunctionsTest {
 
     @Test
     void testConvertToCustomFormat_WithStringValues() {
-        // Arrange
         Map<String, Object> config = new HashMap<>();
         config.put("format", "^[A-Z]{3}$");
         config.put("description", "Test description");
@@ -94,10 +84,8 @@ class BaseFunctionsTest {
         data.put("class", "test.class");
         data.put("config", config);
 
-        // Act
         String result = baseFunctions.convertToCustomFormat(data);
 
-        // Assert
         assertNotNull(result);
         assertTrue(result.contains("format = \"^[A-Z]{3}$\""));
         assertTrue(result.contains("description = \"Test description\""));
@@ -106,7 +94,6 @@ class BaseFunctionsTest {
 
     @Test
     void testConvertToCustomFormat_WithNumericValues() {
-        // Arrange
         Map<String, Object> config = new HashMap<>();
         config.put("minThreshold", 85);
         config.put("targetThreshold", 95);
@@ -117,10 +104,8 @@ class BaseFunctionsTest {
         data.put("class", "test.class");
         data.put("config", config);
 
-        // Act
         String result = baseFunctions.convertToCustomFormat(data);
 
-        // Assert
         assertNotNull(result);
         assertTrue(result.contains("minThreshold = 85"));
         assertTrue(result.contains("targetThreshold = 95"));
@@ -130,7 +115,6 @@ class BaseFunctionsTest {
 
     @Test
     void testConvertToCustomFormat_EmptyList() {
-        // Arrange
         Map<String, Object> config = new HashMap<>();
         config.put("columns", new ArrayList<>());
         config.put("isCritical", true);
@@ -139,114 +123,35 @@ class BaseFunctionsTest {
         data.put("class", "test.class");
         data.put("config", config);
 
-        // Act
         String result = baseFunctions.convertToCustomFormat(data);
 
-        // Assert
         assertNotNull(result);
         assertTrue(result.contains("columns = []"));
         assertTrue(result.contains("isCritical = true"));
     }
-
     @Test
-    void testGetRegularExpression_AlphanumericFormat() {
-        // Arrange
-        String logicalFormat = "ALPHANUMERIC(10)";
+    void testGetRegularExpression_AllFormats() {
+        assertRegexResult("ALPHANUMERIC(10)", "^(.{10})$");
+        assertRegexResult("ALPHANUMERIC(5)", "^(.{5})$");
+        assertRegexResult("ALPHANUMERIC(255)", "^(.{255})$");
+        assertRegexResult("ALPHANUMERIC()", "^(.{})$");
 
-        // Act
-        String result = baseFunctions.getRegularExpression(logicalFormat);
+        assertRegexResult("DATE", "^([1-9]{1}[0-9]{3})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$");
 
-        // Assert
-        assertEquals("^(.{10})$", result);
+        String errorMessage = "No se pudo definir RE para el formato lógico.";
+        assertRegexResult("UNKNOWN_FORMAT", errorMessage);
+        assertRegexResult(null, errorMessage);
+        assertRegexResult("ALPHANUMERIC", errorMessage);
     }
 
-    @Test
-    void testGetRegularExpression_AlphanumericDifferentLength() {
-        // Arrange
-        String logicalFormat = "ALPHANUMERIC(5)";
-
-        // Act
+    private void assertRegexResult(String logicalFormat, String expectedResult) {
         String result = baseFunctions.getRegularExpression(logicalFormat);
-
-        // Assert
-        assertEquals("^(.{5})$", result);
-    }
-
-    @Test
-    void testGetRegularExpression_AlphanumericLargeLength() {
-        // Arrange
-        String logicalFormat = "ALPHANUMERIC(255)";
-
-        // Act
-        String result = baseFunctions.getRegularExpression(logicalFormat);
-
-        // Assert
-        assertEquals("^(.{255})$", result);
-    }
-
-    @Test
-    void testGetRegularExpression_DateFormat() {
-        // Arrange
-        String logicalFormat = "DATE";
-
-        // Act
-        String result = baseFunctions.getRegularExpression(logicalFormat);
-
-        // Assert
-        assertEquals("^([1-9]{1}[0-9]{3})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$", result);
-    }
-
-    @Test
-    void testGetRegularExpression_UnknownFormat() {
-        // Arrange
-        String logicalFormat = "UNKNOWN_FORMAT";
-
-        // Act
-        String result = baseFunctions.getRegularExpression(logicalFormat);
-
-        // Assert
-        assertEquals("No se pudo definir RE para el formato lógico.", result);
-    }
-
-    @Test
-    void testGetRegularExpression_NullFormat() {
-        // Arrange
-        String logicalFormat = null;
-
-        // Act
-        String result = baseFunctions.getRegularExpression(logicalFormat);
-
-        // Assert
-        assertEquals("No se pudo definir RE para el formato lógico.", result);
-    }
-
-    @Test
-    void testGetRegularExpression_AlphanumericNoParentheses() {
-        // Arrange
-        String logicalFormat = "ALPHANUMERIC";
-
-        // Act
-        String result = baseFunctions.getRegularExpression(logicalFormat);
-
-        // Assert
-        assertEquals("No se pudo definir RE para el formato lógico.", result);
-    }
-
-    @Test
-    void testGetRegularExpression_AlphanumericEmptyParentheses() {
-        // Arrange
-        String logicalFormat = "ALPHANUMERIC()";
-
-        // Act
-        String result = baseFunctions.getRegularExpression(logicalFormat);
-
-        // Assert
-        assertEquals("^(.{})$", result);
+        assertEquals(expectedResult, result,
+                "getRegularExpression failed for input: '" + logicalFormat + "'");
     }
 
     @Test
     void testConvertInputToSelectedFormat_Success() {
-        // Arrange
         Map<String, Object> options = new HashMap<>();
         options.put("overrideSchema", "true");
         options.put("includeMetadataAndDeleted", "false");
@@ -263,10 +168,8 @@ class BaseFunctionsTest {
         Map<String, Object> inputJson = new HashMap<>();
         inputJson.put("input", input);
 
-        // Act
         String result = baseFunctions.convertInputToSelectedFormat(inputJson);
 
-        // Assert
         assertNotNull(result);
         assertTrue(result.contains("input {"));
         assertTrue(result.contains("overrideSchema = true"));
@@ -279,7 +182,6 @@ class BaseFunctionsTest {
 
     @Test
     void testConvertJsonToSelectedFormat_Success() {
-        // Arrange
         Map<String, Object> inputJson = new HashMap<>();
         inputJson.put("frequencyRuleExecution", "daily");
         inputJson.put("targetPathName", "/target/path");
@@ -287,10 +189,8 @@ class BaseFunctionsTest {
         inputJson.put("uuaa", "test_uuaa");
         inputJson.put("subset", "cutoff_date='${DATE}'");
 
-        // Act
         String result = baseFunctions.convertJsonToSelectedFormat(inputJson);
 
-        // Assert
         assertNotNull(result);
         assertTrue(result.contains("dataFrameInfo {"));
         assertTrue(result.contains("cutoffDate = ${?CUTOFF_DATE}"));
@@ -303,7 +203,6 @@ class BaseFunctionsTest {
 
     @Test
     void testConvertStagingInputToSelectedFormat_Success() {
-        // Arrange
         Map<String, Object> options = new HashMap<>();
         options.put("delimiter", ";");
 
@@ -319,10 +218,8 @@ class BaseFunctionsTest {
         Map<String, Object> inputJson = new HashMap<>();
         inputJson.put("input", input);
 
-        // Act
         String result = baseFunctions.convertStagingInputToSelectedFormat(inputJson);
 
-        // Assert
         assertNotNull(result);
         assertTrue(result.contains("input {"));
         assertTrue(result.contains("delimiter= \";\""));
@@ -337,16 +234,13 @@ class BaseFunctionsTest {
 
     @Test
     void testConvertStagingJsonToSelectedFormat_Success() {
-        // Arrange
         Map<String, Object> inputJson = new HashMap<>();
         inputJson.put("targetPathName", "/staging/target");
         inputJson.put("physicalTargetName", "staging_table");
         inputJson.put("uuaa", "staging_uuaa");
 
-        // Act
         String result = baseFunctions.convertStagingJsonToSelectedFormat(inputJson);
 
-        // Assert
         assertNotNull(result);
         assertTrue(result.contains("dataFrameInfo {"));
         assertTrue(result.contains("cutoffDate = ${?CUTOFF_DATE}"));
@@ -357,7 +251,6 @@ class BaseFunctionsTest {
 
     @Test
     void testConvertFinalJsonToSelectedFormat_Success() {
-        // Arrange
         Map<String, Object> params = new HashMap<>();
         params.put("configUrl", "http://config.url/path");
 
@@ -366,10 +259,8 @@ class BaseFunctionsTest {
         inputJson.put("description", "Test job description");
         inputJson.put("params", params);
 
-        // Act
         String result = baseFunctions.convertFinalJsonToSelectedFormat(inputJson);
 
-        // Assert
         assertNotNull(result);
         assertTrue(result.contains("\"_id\": \"test-job-id-01\""));
         assertTrue(result.contains("\"description\": \"Test job description\""));
@@ -380,87 +271,30 @@ class BaseFunctionsTest {
         assertTrue(result.contains("\"size\": \"M\""));
         assertTrue(result.contains("\"streaming\": false"));
     }
-
     @Test
-    void testGetRuleDescription_AlphanumericFormat() {
-        // Arrange
-        String logicalFormat = "ALPHANUMERIC(15)";
+    void testGetRuleDescription_AllFormats() {
+        assertRuleDescription("ALPHANUMERIC(15)", "Comprobación del formato alfabetico de longitud 1 al 15");
+        assertRuleDescription("ALPHANUMERIC(3)", "Comprobación del formato alfabetico de longitud 1 al 3");
 
-        // Act
-        String result = baseFunctions.getRuleDescription(logicalFormat);
+        assertRuleDescription("DATE", "^([1-9]{1}[0-9]{3})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$");
 
-        // Assert
-        assertEquals("Comprobación del formato alfabetico de longitud 1 al 15", result);
+        String errorMessage = "No se pudo describir la regla para el formato lógico";
+        assertRuleDescription("UNKNOWN_FORMAT", errorMessage);
+        assertRuleDescription(null, errorMessage);
+        assertRuleDescription("ALPHANUMERIC", errorMessage);
     }
 
-    @Test
-    void testGetRuleDescription_AlphanumericDifferentLength() {
-        // Arrange
-        String logicalFormat = "ALPHANUMERIC(3)";
-
-        // Act
+    private void assertRuleDescription(String logicalFormat, String expectedResult) {
         String result = baseFunctions.getRuleDescription(logicalFormat);
-
-        // Assert
-        assertEquals("Comprobación del formato alfabetico de longitud 1 al 3", result);
+        assertEquals(expectedResult, result,
+                "getRuleDescription failed for input: '" + logicalFormat + "'");
     }
-
-    @Test
-    void testGetRuleDescription_DateFormat() {
-        // Arrange
-        String logicalFormat = "DATE";
-
-        // Act
-        String result = baseFunctions.getRuleDescription(logicalFormat);
-
-        // Assert
-        assertEquals("^([1-9]{1}[0-9]{3})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$", result);
-    }
-
-    @Test
-    void testGetRuleDescription_UnknownFormat() {
-        // Arrange
-        String logicalFormat = "UNKNOWN_FORMAT";
-
-        // Act
-        String result = baseFunctions.getRuleDescription(logicalFormat);
-
-        // Assert
-        assertEquals("No se pudo describir la regla para el formato lógico", result);
-    }
-
-    @Test
-    void testGetRuleDescription_NullFormat() {
-        // Arrange
-        String logicalFormat = null;
-
-        // Act
-        String result = baseFunctions.getRuleDescription(logicalFormat);
-
-        // Assert
-        assertEquals("No se pudo describir la regla para el formato lógico", result);
-    }
-
-    @Test
-    void testGetRuleDescription_AlphanumericNoParentheses() {
-        // Arrange
-        String logicalFormat = "ALPHANUMERIC";
-
-        // Act
-        String result = baseFunctions.getRuleDescription(logicalFormat);
-
-        // Assert
-        assertEquals("No se pudo describir la regla para el formato lógico", result);
-    }
-
     @Test
     void testConvertToCustomFormat_NullConfig() {
-        // Arrange
         Map<String, Object> data = new HashMap<>();
         data.put("class", "test.class");
         data.put("config", null);
 
-        // Act & Assert
         assertThrows(NullPointerException.class, () -> {
             baseFunctions.convertToCustomFormat(data);
         });
@@ -468,16 +302,13 @@ class BaseFunctionsTest {
 
     @Test
     void testConvertToCustomFormat_EmptyConfig() {
-        // Arrange
         Map<String, Object> config = new HashMap<>();
         Map<String, Object> data = new HashMap<>();
         data.put("class", "test.class");
         data.put("config", config);
 
-        // Act
         String result = baseFunctions.convertToCustomFormat(data);
 
-        // Assert
         assertNotNull(result);
         assertTrue(result.contains("class = \"test.class\""));
         assertTrue(result.contains("config = {"));
@@ -486,7 +317,6 @@ class BaseFunctionsTest {
 
     @Test
     void testConvertToCustomFormat_SingleElementList() {
-        // Arrange
         Map<String, Object> config = new HashMap<>();
         config.put("columns", Arrays.asList("single_column"));
 
@@ -494,17 +324,14 @@ class BaseFunctionsTest {
         data.put("class", "test.class");
         data.put("config", config);
 
-        // Act
         String result = baseFunctions.convertToCustomFormat(data);
 
-        // Assert
         assertNotNull(result);
         assertTrue(result.contains("columns = [\"single_column\"]"));
     }
 
     @Test
     void testConvertToCustomFormat_SpecialCharactersInStrings() {
-        // Arrange
         Map<String, Object> config = new HashMap<>();
         config.put("format", "^[A-Z]{3}\\$[0-9]+$");
         config.put("description", "Test with \"quotes\" and $pecial chars");
@@ -513,10 +340,8 @@ class BaseFunctionsTest {
         data.put("class", "test.class");
         data.put("config", config);
 
-        // Act
         String result = baseFunctions.convertToCustomFormat(data);
 
-        // Assert
         assertNotNull(result);
         assertTrue(result.contains("format = \"^[A-Z]{3}\\$[0-9]+$\""));
         assertTrue(result.contains("description = \"Test with \"quotes\" and $pecial chars\""));
@@ -524,9 +349,8 @@ class BaseFunctionsTest {
 
     @Test
     void testConvertInputToSelectedFormat_BooleanOptions() {
-        // Arrange
         Map<String, Object> options = new HashMap<>();
-        options.put("overrideSchema", true); // boolean instead of string
+        options.put("overrideSchema", true);
         options.put("includeMetadataAndDeleted", false);
 
         Map<String, Object> schema = new HashMap<>();
@@ -541,16 +365,13 @@ class BaseFunctionsTest {
         Map<String, Object> inputJson = new HashMap<>();
         inputJson.put("input", input);
 
-        // Act
         String result = baseFunctions.convertInputToSelectedFormat(inputJson);
 
-        // Assert
         assertNotNull(result);
         assertTrue(result.contains("overrideSchema = true"));
         assertTrue(result.contains("includeMetadataAndDeleted = false"));
     }
 
-    // Helper method to create test rule data
     private Map<String, Object> createTestRuleData() {
         Map<String, Object> config = new HashMap<>();
         config.put("column", "test_column");

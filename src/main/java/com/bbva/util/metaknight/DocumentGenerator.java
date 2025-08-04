@@ -13,9 +13,6 @@ import java.io.*;
 import java.util.*;
 
 public class DocumentGenerator {
-    /**
-     * Cargar template como base64 desde resources/templates/metaknight
-     */
     private String loadTemplateAsBase64(String templateName) throws HandledException{
         String templatePath = "templates/metaknight/" + templateName;
 
@@ -34,9 +31,6 @@ public class DocumentGenerator {
         }
     }
 
-    /**
-     * Generar documento C204 para Hammurabi
-     */
     public byte[] generarDocumentoC204Hammurabi(IngestaRequestDto request, SchemaProcessor schemaProcessor) throws HandledException {
 
         String templateBase64 = loadTemplateAsBase64("hammurabi_template_C204.docx");
@@ -56,9 +50,6 @@ public class DocumentGenerator {
         return generarDocumentoC204(templateBase64, replacements);
     }
 
-    /**
-     * Generar documento C204 para Kirby
-     */
     public byte[] generarDocumentoC204Kirby(IngestaRequestDto request, SchemaProcessor schemaProcessor) throws HandledException {
 
         String templateBase64 = loadTemplateAsBase64("kirby_template_C204.docx");
@@ -77,9 +68,6 @@ public class DocumentGenerator {
         return generarDocumentoC204(templateBase64, replacements);
     }
 
-    /**
-     * Generar documento C204 genérico
-     */
     private byte[] generarDocumentoC204(String templateBase64, Map<String, String> replacements) throws HandledException {
         try {
             byte[] templateBytes = Base64.getDecoder().decode(templateBase64);

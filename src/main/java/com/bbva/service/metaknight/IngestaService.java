@@ -49,7 +49,7 @@ public class IngestaService {
             throw new IllegalArgumentException("Schema Raw es requerido");
         }
         if (request.getSchemaMasterBase64() == null || request.getSchemaMasterBase64().isEmpty()) {
-            throw new IllegalArgumentException("Schema Master es requerido"); //Revisar si ambos son requeridos
+            throw new IllegalArgumentException("Schema Master es requerido");
         }
         List<Map<String, Object>> rawData = parsearCsvDesdeBase64(request.getSchemaRawBase64());
         List<Map<String, Object>> masterData = parsearCsvDesdeBase64(request.getSchemaMasterBase64());
@@ -144,9 +144,6 @@ public class IngestaService {
         return archivos;
     }
 
-    /**
-     * Generar configuraciones Kirby (raw, master)
-     */
     private Map<String, String> generarConfiguracionesKirby(IngestaRequestDto request) {
         Map<String, String> archivos = new HashMap<>();
 
@@ -163,9 +160,6 @@ public class IngestaService {
         return archivos;
     }
 
-    /**
-     * Generar configuraciones L1T
-     */
     private Map<String, String> generarConfiguracionesL1T(IngestaRequestDto request) {
         Map<String, String> archivos = new HashMap<>();
 
@@ -178,9 +172,6 @@ public class IngestaService {
         return archivos;
     }
 
-    /**
-     * Generar configuración Hammurabi Staging
-     */
     private String generarStagingHammurabi(IngestaRequestDto request) {
         StringBuilder config = new StringBuilder();
 
@@ -217,16 +208,13 @@ public class IngestaService {
         config.append(baseFunctions.convertStagingInputToSelectedFormat(inputWrapper));
         config.append("\n");
 
-        // Rules
         config.append(generarReglasStaging());
 
         config.append("\n}");
 
         return config.toString();
     }
-    /**
-     * Generar reglas para staging
-     */
+
     private String generarReglasStaging() {
         StringBuilder rulesConfig = new StringBuilder();
 
@@ -258,9 +246,6 @@ public class IngestaService {
         return rulesConfig.toString();
     }
 
-    /**
-     * Generar JSON para staging
-     */
     private String generarStagingJson(IngestaRequestDto request) {
         Map<String, Object> json = new HashMap<>();
         json.put("_id", schemaProcessor.getIdJsonStaging());
@@ -282,9 +267,6 @@ public class IngestaService {
         return baseFunctions.convertFinalJsonToSelectedFormat(json);
     }
 
-    /**
-     * Generar configuración Raw Hammurabi
-     */
     private String generarRawHammurabi(IngestaRequestDto request) {
         StringBuilder config = new StringBuilder();
         config.append("HAMMURABI_BLOCK");
@@ -361,9 +343,6 @@ public class IngestaService {
         return config.toString();
     }
 
-    /**
-     * Generar JSON para Raw
-     */
     private String generarRawJson(IngestaRequestDto request) {
         Map<String, Object> json = new HashMap<>();
         json.put("_id", schemaProcessor.getIdJsonRaw());
@@ -386,9 +365,6 @@ public class IngestaService {
         return baseFunctions.convertFinalJsonToSelectedFormat(json);
     }
 
-    /**
-     * Generar configuración Master Hammurabi
-     */
     private String generarMasterHammurabi(IngestaRequestDto request) {
         StringBuilder config = new StringBuilder();
         config.append("HAMMURABI_BLOCK");
@@ -469,9 +445,6 @@ public class IngestaService {
         return config.toString();
     }
 
-    /**
-     * Generar JSON para Master
-     */
     private String generarMasterJson(IngestaRequestDto request) {
         Map<String, Object> json = new HashMap<>();
         json.put("_id", schemaProcessor.getIdJsonMaster());
@@ -492,9 +465,6 @@ public class IngestaService {
         return baseFunctions.convertFinalJsonToSelectedFormat(json);
     }
 
-    /**
-     * Generar configuración Kirby Raw
-     */
     private String generarKirbyRaw(IngestaRequestDto request) {
         StringBuilder config = new StringBuilder();
         config.append("kirby {\n");
@@ -580,9 +550,6 @@ public class IngestaService {
         return config.toString();
     }
 
-    /**
-     * Generar JSON para Kirby Raw
-     */
     private String generarKirbyRawJson(IngestaRequestDto request) {
         return String.format("""
             {
@@ -611,9 +578,6 @@ public class IngestaService {
         );
     }
 
-    /**
-     * Generar configuración Kirby Master
-     */
     private String generarKirbyMaster(IngestaRequestDto request) {
         StringBuilder config = new StringBuilder();
         config.append("kirby {\n");
@@ -682,9 +646,6 @@ public class IngestaService {
         return config.toString();
     }
 
-    /**
-     * Generar transformaciones para Kirby Master
-     */
     private String generarTransformacionesKirbyMaster() {
         StringBuilder transformations = new StringBuilder();
         transformations.append("transformations=[\n");
@@ -767,7 +728,6 @@ public class IngestaService {
                 """, column));
         }
 
-        // Rename columns
         transformations.append("{%n    type : \"renamecolumns\"%n    columnsToRename : {%n");
         for (List<String> field : schemaProcessor.getMasterFieldWithOriginList()) {
             if (!"Calculated".equals(field.get(1))) {
@@ -779,12 +739,11 @@ public class IngestaService {
         transformations.setLength(transformations.length() - 2); // Remove last comma
         transformations.append("%n    }%n},%n");
 
-        // Select columns
         transformations.append("{%n    type = \"selectcolumns\"%n    columnsToSelect = [%n");
         for (String field : schemaProcessor.getMasterFieldList()) {
             transformations.append(String.format("         \"%s\",%n", field));
         }
-        transformations.setLength(transformations.length() - 2); // Remove last comma
+        transformations.setLength(transformations.length() - 2);
         transformations.append("\n    ]\n}\n");
 
         transformations.append("]\n");
@@ -792,9 +751,6 @@ public class IngestaService {
         return transformations.toString();
     }
 
-    /**
-     * Generar JSON para Kirby Master
-     */
     private String generarKirbyMasterJson(IngestaRequestDto request) {
         return String.format("""
             {
@@ -823,9 +779,6 @@ public class IngestaService {
         );
     }
 
-    /**
-     * Generar configuración Kirby L1T
-     */
     private String generarKirbyL1T(IngestaRequestDto request) {
         return String.format("""
             kirby {
@@ -879,9 +832,6 @@ public class IngestaService {
         );
     }
 
-    /**
-     * Generar JSON para Kirby L1T
-     */
     private String generarKirbyL1TJson(IngestaRequestDto request) {
         return String.format("""
             {
