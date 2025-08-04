@@ -9,13 +9,10 @@ import java.util.stream.Collectors;
 
 @Getter
 public class SchemaProcessor {
-
     private static final String PHYSICAL_NAME_FIELD = "Physical Name field";
     private static final String OUTPUT_SCHEMA = ".output.schema\"";
     private static final String SCHEMAS_PE_PATH = "\"/schemas/pe/";
-
-    // NOSONAR - Artifactory standard path, fixed value
-    private static final String LATEST_PATH = "/latest/";
+    private static final String LATEST_PATH = "/latest/"; // NOSONAR - Artifactory standard path, fixed value
     private static final String PE_HMM_QLT = "-pe-hmm-qlt-";
     private static final String SOURCE_FIELD = "Source field";
     private static final String CALCULATED = "Calculated";

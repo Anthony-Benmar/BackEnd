@@ -479,7 +479,7 @@ public class IngestaService {
         json.put("kind", PROCESSING);
 
         Map<String, Object> params = new HashMap<>();
-        params.put(CONFIG_URL, "\"${repository.endpoint.vdc}/${repository.repo.schemas.dq}/data-quality-configs/${repository.env.dq}/per/" +
+        params.put(CONFIG_URL, REPO_URL_BASE +
                 request.getUuaaMaster() + "/masterdata/" + schemaProcessor.getDfMasterName() + DQ_CONF_VERSION +
                 schemaProcessor.getDfMasterName() + CONF_SUFFIX);
         params.put(SPARK_HISTORY_ENABLED, "true");
