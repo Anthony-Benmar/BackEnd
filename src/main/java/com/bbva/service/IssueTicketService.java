@@ -22,10 +22,7 @@ import com.bbva.entities.issueticket.WorkOrder;
 import com.bbva.entities.issueticket.WorkOrderDetail;
 import com.bbva.util.GsonConfig;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import com.mysql.cj.util.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -381,6 +378,36 @@ public class IssueTicketService {
         return new SuccessDataResult(modelo);
     }
 
+    public void addLabelToIssue(String username, String token, String issueKey, String newLabel) throws Exception {
+        if (StringUtils.isNullOrEmpty(issueKey) || StringUtils.isNullOrEmpty(newLabel)) {
+            throw new IllegalArgumentException("IssueKey y newLabel son requeridos");
+        }
+
+        try {
+            // Crear payload JSON
+            JsonObject updatePayload = new JsonObject();
+            JsonObject updateSection = new JsonObject();
+            JsonArray labelsUpdate = new JsonArray();
+
+            JsonObject addOperation = new JsonObject();
+            addOperation.addProperty("add", newLabel);
+            labelsUpdate.add(addOperation);
+
+            updateSection.add("labels", labelsUpdate);
+            updatePayload.add("update", updateSection);
+
+            // Ejecutar PUT request
+            Integer responseCode = putResponseEditAsyncJson(username, token, issueKey, updatePayload.toString());
+
+            if (responseCode < 200 || responseCode >= 300) {
+                throw new Exception("Error agregando label a JIRA. HTTP Code: " + responseCode);
+            }
+
+        } catch (Exception ex) {
+            throw new Exception("Error en addLabelToIssue: " + ex.getMessage(), ex);
+        }
+    }
+
    protected void createTicketJira2(WorkOrderDtoRequest objAuth, IssueBulkDto issuesRequests, List<WorkOrderDetail> workOrderDetail)
             throws Exception
     {
@@ -499,26 +526,21 @@ public class IssueTicketService {
         List<IssueBulkResponse> responses = new ArrayList<>();
         final int BATCH_SIZE = 30;
 
-        // Dividir en chunks de 30
         for (int i = 0; i < allIssues.size(); i += BATCH_SIZE) {
             int endIndex = Math.min(i + BATCH_SIZE, allIssues.size());
             List<IssueUpdate> batch = allIssues.subList(i, endIndex);
 
-            // Crear DTO para este batch
             IssueBulkDto batchDto = new IssueBulkDto();
             batchDto.setIssueUpdates(batch);
 
-            // Hacer la petición
             IssueBulkResponse batchResponse = postResponseAsync4(objAuth, batchDto);
             responses.add(batchResponse);
 
-            // Pausa entre requests para no saturar
             if (i + BATCH_SIZE < allIssues.size()) {
-                Thread.sleep(500); // 500ms entre batches
+                Thread.sleep(500);
             }
         }
 
-        // Combinar todas las respuestas
         return combineResponses(responses);
     }
 
@@ -563,6 +585,29 @@ public class IssueTicketService {
         if (responseCode.equals(302)) {
             throw new HandledException(responseCode.toString(), TOKEN_EXPIRED_MESSAGE);
         }
+        return responseCode;
+    }
+
+    protected Integer putResponseEditAsyncJson(String username, String token, String issueTicketCode, String jsonPayload) throws Exception {
+        String url = URL_API_JIRA + issueTicketCode;
+        HttpPut httpPut = new HttpPut(url);
+        StringEntity requestEntity = new StringEntity(jsonPayload, UTF_TYPE);
+        httpPut.setEntity(requestEntity);
+        httpPut.setHeader(CONTENT_TYPE_HEADER, APPLICATION_JSON);
+
+        Integer responseCode = 0;
+        try(CloseableHttpClient httpclient = HttpClients.createDefault()){
+            getBasicSession(username, token, httpclient);
+            httpPut.setHeader(COOKIE_HEADER, createCookieHeader(cookieStore.getCookies()));
+            CloseableHttpResponse response = httpclient.execute(httpPut);
+            responseCode = response.getStatusLine().getStatusCode();
+            response.close();
+        }
+
+        if (responseCode.equals(302)) {
+            throw new HandledException(responseCode.toString(), TOKEN_EXPIRED_MESSAGE);
+        }
+
         return responseCode;
     }
 

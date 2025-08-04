@@ -544,6 +544,35 @@ public class ProjectDao {
             return projectStatusesList;
         }
     }
+    public List<ProjectRoleDetailEntity> getProjectRoles(int projectId) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        List<ProjectRoleDetailEntity> projectRoleDetailEntityList;
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ProjectMapper mapper = session.getMapper(ProjectMapper.class);
+            projectRoleDetailEntityList = mapper.getProjectRoles(projectId);
+            return projectRoleDetailEntityList;
+        }
+    }
+
+    public ProjectDevResponse getProjectDevSU(String email) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        ProjectDevResponse projectDevResponse;
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ProjectMapper mapper = session.getMapper(ProjectMapper.class);
+            projectDevResponse = mapper.getProjectDevSU(email);
+            return projectDevResponse;
+        }
+    }
+
+    public ProjectDevResponse getProjectDevPP(String email) {
+        SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
+        ProjectDevResponse projectDevResponse;
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            ProjectMapper mapper = session.getMapper(ProjectMapper.class);
+            projectDevResponse = mapper.getProjectDevPP(email);
+            return projectDevResponse;
+        }
+    }
 
     public List<ProjectByDomainIdDTO> getAllProjects() {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();

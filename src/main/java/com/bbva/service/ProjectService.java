@@ -13,9 +13,11 @@ import com.bbva.entities.User;
 import com.bbva.entities.common.PeriodPEntity;
 import com.bbva.entities.map_dependecy.MapDependencyEntity;
 import com.bbva.entities.project.ProjectPortafolioEntity;
+import com.bbva.entities.project.ProjectRoleDetailEntity;
 import com.bbva.entities.project.ProjectStatusEntity;
 import com.bbva.entities.use_case_definition.UseCaseDefinitionEntity;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
@@ -413,6 +415,32 @@ public class ProjectService {
         try {
             List<ProjectValidationParamsDtoResponse> result = projectDao.validateInfoProjectByProjectId(projectId);
             return new SuccessDataResult<>(result);
+        } catch (Exception e) {
+            log.log(Level.SEVERE, e.getMessage(), e);
+            return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
+
+    public IDataResult<ProjectRoleAndDevResponse> getProjectRoles(int projectId, String emailDev) {
+        try {
+            List<ProjectDevResponse> projectDevResponses = new ArrayList<>();
+            ProjectDevResponse projectDev = new ProjectDevResponse();
+            List<ProjectRoleDetailEntity> result = projectDao.getProjectRoles(projectId);
+
+            List<ProjectRoleDetailResponse> listProjectRole = result.stream()
+                    .map(s -> new ProjectRoleDetailResponse(s.getParticipantName(), s.getProjectRolType(), s.getRoleDescription()))
+                            .collect(Collectors.toList());
+
+            if (!listProjectRole.isEmpty()){
+                projectDev = projectDao.getProjectDevSU(emailDev);
+                if (projectDev == null){
+                    projectDev = projectDao.getProjectDevPP(emailDev);
+                }
+            }
+
+            ProjectRoleAndDevResponse projectRoleAndDevResponse = new ProjectRoleAndDevResponse(listProjectRole, projectDev);
+
+            return new SuccessDataResult<>(projectRoleAndDevResponse);
         } catch (Exception e) {
             log.log(Level.SEVERE, e.getMessage(), e);
             return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
