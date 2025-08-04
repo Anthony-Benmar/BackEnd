@@ -11,7 +11,7 @@ public class ZipGenerator {
     /**
      * Crear archivo ZIP con todos los archivos generados
      */
-    public byte[] crearZip(Map<String, byte[]> archivos) throws Exception {
+    public byte[] crearZip(Map<String, byte[]> archivos) throws HandledException {
 
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
              ZipOutputStream zos = new ZipOutputStream(baos)) {

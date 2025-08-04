@@ -13,6 +13,8 @@ public class SchemaProcessor {
     private static final String PHYSICAL_NAME_FIELD = "Physical Name field";
     private static final String OUTPUT_SCHEMA = ".output.schema\"";
     private static final String SCHEMAS_PE_PATH = "\"/schemas/pe/";
+
+    // NOSONAR - Path estándar de Artifactory, valor fijo
     private static final String LATEST_PATH = "/latest/";
     private static final String PE_HMM_QLT = "-pe-hmm-qlt-";
     private static final String SOURCE_FIELD = "Source field";
@@ -152,8 +154,8 @@ public class SchemaProcessor {
         // Trim all columns
         StringBuilder trimColumns = new StringBuilder("\"");
         List<String> sourceFields = masterData.stream()
-                .filter(row -> !"Calculated".equals(row.get("Source field")))
-                .map(row -> (String) row.get("Source field"))
+                .filter(row -> !CALCULATED.equals(row.get(SOURCE_FIELD)))
+                .map(row -> (String) row.get(SOURCE_FIELD))
                 .toList();
 
         for (int i = 0; i < sourceFields.size(); i++) {
@@ -168,28 +170,28 @@ public class SchemaProcessor {
         // Date columns
         this.rawDateColumns = masterData.stream()
                 .filter(row -> "date".equals(row.get("Data Type")))
-                .filter(row -> !"Calculated".equals(row.get("Source field")))
-                .map(row -> (String) row.get("Source field"))
+                .filter(row -> !CALCULATED.equals(row.get(SOURCE_FIELD)))
+                .map(row -> (String) row.get(SOURCE_FIELD))
                 .toList();
 
         // Timestamp columns
         this.rawTimestampColumns = masterData.stream()
                 .filter(row -> "timestamp".equals(row.get("Data Type")))
-                .filter(row -> !"Calculated".equals(row.get("Source field")))
-                .map(row -> (String) row.get("Source field"))
+                .filter(row -> !CALCULATED.equals(row.get(SOURCE_FIELD)))
+                .map(row -> (String) row.get(SOURCE_FIELD))
                 .toList();
 
         // Master field with origin list
         this.masterFieldWithOriginList = masterData.stream()
                 .map(row -> Arrays.asList(
-                        (String) row.get("Physical Name field"),
-                        (String) row.get("Source field")
+                        (String) row.get(PHYSICAL_NAME_FIELD),
+                        (String) row.get(SOURCE_FIELD)
                 ))
                 .toList();
 
         // Master field list
         this.masterFieldList = masterData.stream()
-                .map(row -> (String) row.get("Physical Name field"))
+                .map(row -> (String) row.get(PHYSICAL_NAME_FIELD))
                 .toList();
     }
 

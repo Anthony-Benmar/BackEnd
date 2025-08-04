@@ -1,7 +1,6 @@
 package com.bbva.util.metaknight;
 
 import com.bbva.core.HandledException;
-import com.bbva.core.results.ErrorDataResult;
 import com.bbva.dto.metaknight.request.IngestaRequestDto;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
@@ -38,7 +37,7 @@ public class DocumentGenerator {
     /**
      * Generar documento C204 para Hammurabi
      */
-    public byte[] generarDocumentoC204Hammurabi(IngestaRequestDto request, SchemaProcessor schemaProcessor) throws Exception {
+    public byte[] generarDocumentoC204Hammurabi(IngestaRequestDto request, SchemaProcessor schemaProcessor) throws HandledException {
 
         String templateBase64 = loadTemplateAsBase64("hammurabi_template_C204.docx");
 
@@ -60,7 +59,7 @@ public class DocumentGenerator {
     /**
      * Generar documento C204 para Kirby
      */
-    public byte[] generarDocumentoC204Kirby(IngestaRequestDto request, SchemaProcessor schemaProcessor) throws Exception {
+    public byte[] generarDocumentoC204Kirby(IngestaRequestDto request, SchemaProcessor schemaProcessor) throws HandledException {
 
         String templateBase64 = loadTemplateAsBase64("kirby_template_C204.docx");
 

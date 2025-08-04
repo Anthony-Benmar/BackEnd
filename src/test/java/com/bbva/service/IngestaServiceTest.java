@@ -1,4 +1,5 @@
 package com.bbva.service;
+import com.bbva.core.HandledException;
 import com.bbva.dto.metaknight.request.IngestaRequestDto;
 import com.bbva.service.metaknight.IngestaService;
 import com.bbva.util.metaknight.*;
@@ -7,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -73,7 +75,7 @@ class IngestaServiceTest {
         assertEquals(expectedZip, result);
 
         verify(issueTicketServiceMock, times(1)).addLabelToIssue(
-                request.getUsername(), request.getToken(), request.getTicketJira(), "metaknight");
+                request.getUsername(), request.getToken(), request.getTicketJira(), "Metaknight");
         verify(schemaProcessorMock).initialize(any(), any(), eq(request));
         verify(documentGeneratorMock).generarDocumentoC204Hammurabi(eq(request), any());
         verify(documentGeneratorMock).generarDocumentoC204Kirby(eq(request), any());
@@ -211,7 +213,7 @@ class IngestaServiceTest {
         assertEquals(expectedZip, result);
 
         verify(issueTicketServiceMock, times(1)).addLabelToIssue(
-                request.getUsername(), request.getToken(), request.getTicketJira(), "metaknight");
+                request.getUsername(), request.getToken(), request.getTicketJira(), "Metaknight");
     }
 
     @Test
@@ -244,11 +246,13 @@ class IngestaServiceTest {
         Method method = IngestaService.class.getDeclaredMethod("parsearCsvDesdeBase64", String.class);
         method.setAccessible(true);
 
-        Exception exception = assertThrows(Exception.class, () -> {
+        InvocationTargetException exception = assertThrows(InvocationTargetException.class, () -> {
             method.invoke(service, invalidBase64);
         });
 
-        assertTrue(exception.getCause() instanceof IllegalArgumentException);
+        Throwable cause = exception.getCause();
+        assertTrue(cause instanceof HandledException);
+        assertTrue(cause.getCause() instanceof IllegalArgumentException);
     }
 
     @Test

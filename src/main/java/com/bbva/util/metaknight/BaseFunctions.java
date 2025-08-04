@@ -7,7 +7,7 @@ import java.util.regex.Pattern;
 public class BaseFunctions {
 
     private static final String NO_RE_DEFINITION_MESSAGE = "No se pudo definir RE para el formato lógico.";
-    private static final String NO_RULE_DESCRIPTION_MESSAGE = "No se pudo describir la regla para el formato lógico.";
+    private static final String NO_RULE_DESCRIPTION_MESSAGE = "No se pudo describir la regla para el formato lógico";
 
     /**
      * Convierte una configuración de regla a formato personalizado
@@ -35,7 +35,7 @@ public class BaseFunctions {
             if (value instanceof List<?> list) {
                 appendListValue(result, list);
             } else if (value instanceof Boolean boolValue) {
-                result.append(boolValue ? "true" : "false");
+                result.append(boolValue.booleanValue() ? "true" : "false");
             } else if (value instanceof String) {
                 result.append("\"").append(value).append("\"");
             } else {
@@ -225,7 +225,7 @@ public class BaseFunctions {
      */
     public String getRuleDescription(String logicalFormat) {
         if (logicalFormat == null) {
-            return "No se pudo describir la regla para el formato lógico.";
+            return NO_RULE_DESCRIPTION_MESSAGE;
         }
 
         if (logicalFormat.contains("ALPHANUMERIC")) {
@@ -235,12 +235,12 @@ public class BaseFunctions {
                 String contentInsideParentheses = matcher.group(1);
                 return "Comprobación del formato alfabetico de longitud 1 al " + contentInsideParentheses;
             } else {
-                return "No se pudo describir la regla para el formato lógico.";
+                return NO_RULE_DESCRIPTION_MESSAGE;
             }
         } else if ("DATE".equals(logicalFormat)) {
             return "^([1-9]{1}[0-9]{3})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$";
         } else {
-            return "No se pudo describir la regla para el formato lógico.";
+            return NO_RULE_DESCRIPTION_MESSAGE;
         }
     }
 }

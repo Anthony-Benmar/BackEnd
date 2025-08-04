@@ -1,5 +1,6 @@
 package com.bbva.service.metaknight;
 
+import com.bbva.core.HandledException;
 import com.bbva.dto.metaknight.request.IngestaRequestDto;
 import com.bbva.service.IssueTicketService;
 import com.bbva.util.metaknight.*;
@@ -10,6 +11,24 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 
 public class IngestaService {
+
+    private static final String HAMMURABI_BLOCK = "hammurabi {\n";
+    private static final String FALSE = "false";
+    private static final String CREATED_WITH_METAKNIGHT = " created with Metaknight.";
+    private static final String DESCRIPTION = "description";
+    private static final String PROCESSING = "processing";
+    private static final String CONFIG_URL = "configUrl";
+    private static final String REPO_URL_BASE = "\"${repository.endpoint.vdc}/${repository.repo.schemas.dq}/data-quality-configs/${repository.env.dq}/per/";
+    private static final String DQ_CONF_VERSION = "/${dq.conf.version}/";
+    private static final String CONF_SUFFIX = "-01.conf\"";
+    private static final String SPARK_HISTORY_ENABLED = "sparkHistoryEnabled";
+    private static final String PARAMS = "params";
+    private static final String HAMMURABI_LTS = "hammurabi-lts";
+    private static final String RUNTIME = "runtime";
+    private static final String STREAMING = "streaming";
+    private static final String ID_BASE = "xxxxxxxx";
+    private static final String CONF_EXTENSION = ".conf";
+    private static final String JSON_EXTENSION = ".json";
 
     private SchemaProcessor schemaProcessor = new SchemaProcessor();
 
@@ -22,12 +41,6 @@ public class IngestaService {
     private ZipGenerator zipGenerator = new ZipGenerator();
 
     private IssueTicketService issueTicketService = new IssueTicketService();
-
-    private static final String ID_BASE = "xxxxxxxx";
-
-    private static final String CONF_EXTENSION = ".conf";
-    private static final String JSON_EXTENSION = ".json";
-
     public byte[] procesarIngesta(IngestaRequestDto request) throws Exception {
 
         validarRequest(request);
@@ -72,37 +85,41 @@ public class IngestaService {
 
         try {
             issueTicketService.addLabelToIssue(request.getUsername(), request.getToken(),
-                    request.getTicketJira(), "metaknight");
+                    request.getTicketJira(), "Metaknight");
         } catch (Exception ex) {
             // Continuar con el proceso
         }
         return zipGenerator.crearZip(archivosBytes);
     }
 
-    private List<Map<String, Object>> parsearCsvDesdeBase64(String csvBase64) throws Exception {
-        byte[] csvBytes = Base64.getDecoder().decode(csvBase64);
-        String csvContent = new String(csvBytes, StandardCharsets.UTF_8);
+    private List<Map<String, Object>> parsearCsvDesdeBase64(String csvBase64) throws HandledException {
+        try{
+            byte[] csvBytes = Base64.getDecoder().decode(csvBase64);
+            String csvContent = new String(csvBytes, StandardCharsets.UTF_8);
 
-        CSVFormat format = CSVFormat.Builder.create()
-                .setDelimiter(';')
-                .setHeader()
-                .setSkipHeaderRecord(true)
-                .setQuote('"')
-                .setTrim(true)
-                .build();
+            CSVFormat format = CSVFormat.Builder.create()
+                    .setDelimiter(';')
+                    .setHeader()
+                    .setSkipHeaderRecord(true)
+                    .setQuote('"')
+                    .setTrim(true)
+                    .build();
 
-        CSVParser csvParser = CSVParser.parse(csvContent, format);
+            CSVParser csvParser = CSVParser.parse(csvContent, format);
 
-        List<Map<String, Object>> records = new ArrayList<>();
-        for (CSVRecord csvRecord : csvParser) {
-            Map<String, Object> row = new HashMap<>();
-            for (String header : csvParser.getHeaderNames()) {
-                row.put(header.trim(), csvRecord.get(header));
+            List<Map<String, Object>> records = new ArrayList<>();
+            for (CSVRecord csvRecord : csvParser) {
+                Map<String, Object> row = new HashMap<>();
+                for (String header : csvParser.getHeaderNames()) {
+                    row.put(header.trim(), csvRecord.get(header));
+                }
+                records.add(row);
             }
-            records.add(row);
+            csvParser.close();
+            return records;
+        }catch (Exception e){
+            throw new HandledException("CSV_PARSING_ERROR", "Error parseando CSV desde Base64", e);
         }
-        csvParser.close();
-        return records;
     }
 
     private Map<String, String> generarConfiguracionesHammurabi(IngestaRequestDto request) {
@@ -135,13 +152,13 @@ public class IngestaService {
 
         String rawConf = generarKirbyRaw(request);
         String rawJson = generarKirbyRawJson(request);
-        archivos.put("kirby/raw/" + schemaProcessor.getDfMasterName() + ".conf", rawConf);
-        archivos.put("kirby/raw/" + schemaProcessor.getDfMasterName() + ".json", rawJson);
+        archivos.put("kirby/raw/" + schemaProcessor.getDfMasterName() + CONF_EXTENSION, rawConf);
+        archivos.put("kirby/raw/" + schemaProcessor.getDfMasterName() + JSON_EXTENSION, rawJson);
 
         String masterConf = generarKirbyMaster(request);
         String masterJson = generarKirbyMasterJson(request);
-        archivos.put("kirby/master/" + schemaProcessor.getDfMasterName() + ".conf", masterConf);
-        archivos.put("kirby/master/" + schemaProcessor.getDfMasterName() + ".json", masterJson);
+        archivos.put("kirby/master/" + schemaProcessor.getDfMasterName() + CONF_EXTENSION, masterConf);
+        archivos.put("kirby/master/" + schemaProcessor.getDfMasterName() + JSON_EXTENSION, masterJson);
 
         return archivos;
     }
@@ -167,7 +184,7 @@ public class IngestaService {
     private String generarStagingHammurabi(IngestaRequestDto request) {
         StringBuilder config = new StringBuilder();
 
-        config.append("hammurabi {\n");
+        config.append(HAMMURABI_BLOCK);
 
         Map<String, Object> dataFrameInfo = new HashMap<>();
         dataFrameInfo.put("targetPathName", schemaProcessor.getDfRawPath());
@@ -179,7 +196,7 @@ public class IngestaService {
 
         Map<String, Object> options = new HashMap<>();
         options.put("delimiter", request.getDelimitador());
-        options.put("header", "false");
+        options.put("header", FALSE);
         options.put("castMode", "notPermissive");
         options.put("charset", "UTF-8");
 
@@ -247,21 +264,20 @@ public class IngestaService {
     private String generarStagingJson(IngestaRequestDto request) {
         Map<String, Object> json = new HashMap<>();
         json.put("_id", schemaProcessor.getIdJsonStaging());
-        json.put("description", "Job " + schemaProcessor.getIdJsonStaging() + " created with Metaknight.");
-        json.put("kind", "processing");
+        // Usar constantes en lugar de literales duplicados
+        json.put(DESCRIPTION, "Job " + schemaProcessor.getIdJsonStaging() + CREATED_WITH_METAKNIGHT);
+        json.put("kind", PROCESSING);
 
         Map<String, Object> params = new HashMap<>();
+        params.put(CONFIG_URL, REPO_URL_BASE +
+                request.getUuaaMaster() + "/staging/" + schemaProcessor.getDfMasterName() + DQ_CONF_VERSION +
+                schemaProcessor.getDfMasterName() + CONF_SUFFIX);
+        params.put(SPARK_HISTORY_ENABLED, FALSE);
 
-        params.put("configUrl", "\"${repository.endpoint.vdc}/${repository.repo.schemas.dq}/data-quality-configs/${repository.env.dq}/per/" +
-                request.getUuaaMaster() + "/staging/" + schemaProcessor.getDfMasterName() + "/${dq.conf.version}/" +
-                schemaProcessor.getDfMasterName() + "-01.conf\"");
-
-        params.put("sparkHistoryEnabled", "false");
-        json.put("params", params);
-
-        json.put("runtime", "hammurabi-lts");
+        json.put(PARAMS, params);
+        json.put(RUNTIME, HAMMURABI_LTS);
         json.put("size", "M");
-        json.put("streaming", false);
+        json.put(STREAMING, false);
 
         return baseFunctions.convertFinalJsonToSelectedFormat(json);
     }
