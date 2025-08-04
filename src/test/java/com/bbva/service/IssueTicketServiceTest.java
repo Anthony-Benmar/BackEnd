@@ -26,6 +26,7 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -65,6 +66,7 @@ class IssueTicketServiceTest {
 
     @Test
     void testConvertPIToQuarter_invalidInputs() {
+        // Test casos inválidos
         String[] invalidInputs = {null, "INVALID", "PI5-25"};
         for (String input : invalidInputs) {
             IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
@@ -139,6 +141,7 @@ class IssueTicketServiceTest {
         assertEquals("a=b; c=d", result);
     }
 
+    // Reflection helper for static private method
     private String invokeCreateCookieHeader(List<Cookie> cookies) throws Exception {
         var m = IssueTicketService.class.getDeclaredMethod("createCookieHeader", List.class);
         m.setAccessible(true);
@@ -617,40 +620,43 @@ class IssueTicketServiceTest {
     }
 
 
-//
-@Test
-void testGetResponseAsync_throwsHandledException_400() throws Exception {
-    String username = "user";
-    String password = "pass";
-    String apiPath = "/invalid/feature";
+    @Test
+    void testGetResponseAsync_throwsHandledException_400() throws Exception {
+        String username = "user";
+        String password = "pass";
+        String apiPath = "/invalid/feature";
 
-    CloseableHttpClient mockHttpClient = mock(CloseableHttpClient.class);
-    CloseableHttpResponse mockHttpResponse = mock(CloseableHttpResponse.class);
-    StatusLine mockStatusLine = mock(StatusLine.class);
-    HttpEntity mockEntity = mock(HttpEntity.class);
+        CloseableHttpClient mockHttpClient = mock(CloseableHttpClient.class);
+        CloseableHttpResponse mockHttpResponse = mock(CloseableHttpResponse.class);
+        StatusLine mockStatusLine = mock(StatusLine.class);
+        HttpEntity mockEntity = mock(HttpEntity.class);
 
-    IssueTicketService serviceSpy = Mockito.spy(new IssueTicketService());
+        IssueTicketService serviceSpy = Mockito.spy(new IssueTicketService());
 
-    doNothing().when(serviceSpy).getBasicSession(anyString(), anyString(), eq(mockHttpClient));
+        doNothing().when(serviceSpy).getBasicSession(anyString(), anyString(), eq(mockHttpClient));
 
-    when(mockHttpClient.execute(any(HttpGet.class))).thenReturn(mockHttpResponse);
-    when(mockHttpResponse.getStatusLine()).thenReturn(mockStatusLine);
-    when(mockStatusLine.getStatusCode()).thenReturn(403);
-    when(mockHttpResponse.getEntity()).thenReturn(mockEntity);
-    String expectedResponse = "contenido esperado";
-    InputStream inputStream = new ByteArrayInputStream(expectedResponse.getBytes());
+        try (MockedStatic<HttpClients> httpClientsMock = Mockito.mockStatic(HttpClients.class)) {
+            httpClientsMock.when(HttpClients::createDefault)
+                    .thenReturn(mockHttpClient);
+        when(mockHttpClient.execute(any(HttpGet.class))).thenReturn(mockHttpResponse);
+        when(mockHttpResponse.getStatusLine()).thenReturn(mockStatusLine);
+        when(mockStatusLine.getStatusCode()).thenReturn(404);
+        when(mockHttpResponse.getEntity()).thenReturn(mockEntity);
+        String expectedResponse = "contenido esperado";
+        InputStream inputStream = new ByteArrayInputStream(expectedResponse.getBytes());
 
-    when(mockEntity.getContent()).thenReturn(inputStream);
+        when(mockEntity.getContent()).thenReturn(inputStream);
 
 
-    HandledException ex = assertThrows(
-            HandledException.class,
-            () -> serviceSpy.getResponseAsync(username, password, apiPath)
-    );
+        HandledException ex = assertThrows(
+                HandledException.class,
+                () -> serviceSpy.getResponseAsync(username, password, apiPath)
+        );
 
-    assertEquals("403", ex.getCode());
-    assertFalse(ex.getMessage().contains("Error de autenticación"));
-}
+        assertEquals("404", ex.getCode());
+            assertTrue(ex.getMessage().contains("El feature no existe"));
+        }
+    }
 
 
 
@@ -885,7 +891,23 @@ void testGetResponseAsync_throwsHandledException_400() throws Exception {
 
     @Test
     void testPutResponseEditAsync_devuelve200SiActualizacionExitosa() throws Exception {
+        // 1) Preparo el mock de HTTP
+        CloseableHttpClient   mockHttpClient   = mock(CloseableHttpClient.class);
+        CloseableHttpResponse mockResponse     = mock(CloseableHttpResponse.class);
+        StatusLine            mockStatusLine   = mock(StatusLine.class);
+
+        when(mockResponse.getStatusLine()).thenReturn(mockStatusLine);
+        when(mockStatusLine.getStatusCode()).thenReturn(200);
+
+        // 2) Spy del servicio e inyección de sesión y cookies
         IssueTicketService serviceSpy = Mockito.spy(new IssueTicketService());
+        doNothing().when(serviceSpy).getBasicSession(anyString(), anyString(), eq(mockHttpClient));
+
+        CookieStore cookieStore = new BasicCookieStore();
+        cookieStore.addCookie(new BasicClientCookie("JSESSIONID", "mock123"));
+        Field f = IssueTicketService.class.getDeclaredField("cookieStore");
+        f.setAccessible(true);
+        f.set(serviceSpy, cookieStore);
 
         WorkOrderDtoRequest auth = new WorkOrderDtoRequest();
         auth.setUsername("test_user");
@@ -897,17 +919,18 @@ void testGetResponseAsync_throwsHandledException_400() throws Exception {
 
         String code = "TEST-123";
 
-        doNothing().when(serviceSpy).getBasicSession(anyString(), anyString(), any());
+        // 3) Mock estático de HttpClients.createDefault()
+        try (MockedStatic<HttpClients> httpClientsMock = Mockito.mockStatic(HttpClients.class)) {
+            httpClientsMock.when(HttpClients::createDefault)
+                    .thenReturn(mockHttpClient);
 
-        CookieStore cookieStore = new BasicCookieStore();
-        BasicClientCookie cookie = new BasicClientCookie("JSESSIONID", "mock123");
-        cookieStore.addCookie(cookie);
-        Field field = IssueTicketService.class.getDeclaredField("cookieStore");
-        field.setAccessible(true);
-        field.set(serviceSpy, cookieStore);
+            when(mockHttpClient.execute(any(HttpPut.class)))
+                    .thenReturn(mockResponse);
 
-        Integer status = serviceSpy.putResponseEditAsync(auth, code, dto);
-        assertEquals(401, status);
+            // 4) Ejecuto y aserto
+            Integer status = serviceSpy.putResponseEditAsync(auth, code, dto);
+            assertEquals(200, status);
+        }
     }
 
     @Test
