@@ -77,6 +77,7 @@ public interface ReliabilityMapper {
         @Result(property = "originTypeId", column = "origin_type_id")
     @Result(property = "phaseTypeId", column = "phase_type_id")
     @Result(property = "principalJob", column = "principal_job")
+    @Result(property = "status", column = "status")
     List<PendingCustodyJobsDtoResponse> getPendingCustodyJobs(@Param("sdatoolId") String sdatoolId);
 
     @Select("CALL SP_GET_PROJECT_CUSTODY_INFO(#{sdatoolId})")
