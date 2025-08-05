@@ -83,9 +83,13 @@ public class IngestaService {
         archivosBytes.put("hammurabi_C204.docx", hammurabiC204);
         archivosBytes.put("kirby_C204.docx", kirbyC204);
 
+        //MOMENTÁNEO
         try {
-            issueTicketService.addLabelToIssue(request.getUsername(), request.getToken(),
-                    request.getTicketJira(), "Metaknight");
+            issueTicketService.addLabelToIssue(request.getUsername(), request.getToken(), request.getTicketJira(), "Metaknight");
+        } catch (HandledException ex) {
+            if ("302".equals(ex.getCode()) || ex.getMessage().contains("TOKEN_EXPIRED")) {
+                throw ex;
+            }
         } catch (Exception ex) {
             // Continuar con el proceso
         }
