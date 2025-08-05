@@ -81,16 +81,12 @@ public interface ReliabilityMapper {
     List<PendingCustodyJobsDtoResponse> getPendingCustodyJobs(@Param("sdatoolId") String sdatoolId);
 
     @Select("""
-     SELECT period,
-            execution_status
-       FROM job_execution
+     SELECT period, execution_status FROM job_execution
       WHERE job_name = #{jobName}
       ORDER BY period DESC
   """)
-    @Results({
-            @Result(property="period",          column="period"),
-            @Result(property="executionStatus", column="execution_status")
-    })
+    @Result(property = "period",          column = "period")
+    @Result(property = "executionStatus", column = "execution_status")
     List<JobExecutionHistoryDtoResponse> getJobExecutionHistory(@Param("jobName") String jobName);
 
     @Select("CALL SP_GET_PROJECT_CUSTODY_INFO(#{sdatoolId})")
@@ -135,9 +131,18 @@ public interface ReliabilityMapper {
             "#{creatorUserId}," +
             "#{pdfLink}," +
             "#{jobCount}," +
-            "#{statusId}" +
+            "#{statusId}," +
+            "#{sn2}" +
             ")")
     void insertTranfer(TransferInputDtoRequest dto);
+
+    @Select("""
+    SELECT element_id AS value, element_desc AS rawDesc FROM catalog WHERE catalog_id = 9006 AND status_type = 1 AND element_name = (SELECT element_desc FROM catalog
+         WHERE catalog_id = 1027 AND element_id = #{sn1}) ORDER BY element_desc
+    """)
+    @Result(property = "value",   column = "value")
+    @Result(property = "rawDesc", column = "rawDesc")
+    List<RawSn2DtoResponse> fetchRawSn2BySn1(@Param("sn1") Integer sn1);
 
     @Insert("CALL SP_INSERT_JOB_STOCK(" +
             "#{jobTypeId}," +

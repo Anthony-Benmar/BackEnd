@@ -199,6 +199,17 @@ public class ReliabilityDao {
         }
     }
 
+    public List<RawSn2DtoResponse> fetchRawSn2BySn1(Integer sn1) {
+        try (SqlSession session = MyBatisConnectionFactory.getInstance().openSession()) {
+            return session
+                    .getMapper(ReliabilityMapper.class)
+                    .fetchRawSn2BySn1(sn1);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Error fetching raw SN2 by SN1", e);
+            return Collections.emptyList();
+        }
+    }
+
     public PaginationReliabilityPackResponse getReliabilityPacks(ReliabilityPackInputFilterRequest dto) {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         List<ReliabilityPacksDtoResponse> lista;

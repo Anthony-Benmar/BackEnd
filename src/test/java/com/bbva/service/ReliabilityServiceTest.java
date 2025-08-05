@@ -423,4 +423,82 @@ class ReliabilityServiceTest {
         assertTrue(result.message.contains("DB down"));
         verify(reliabilityDaoMock).getOriginTypes();
     }
+
+    @Test
+    void testGetJobExecutionHistorySuccess() {
+        String jobName = "JOB_OK";
+        JobExecutionHistoryDtoResponse dto = new JobExecutionHistoryDtoResponse();
+        List<JobExecutionHistoryDtoResponse> mockHistory = List.of(dto);
+        when(reliabilityDaoMock.getJobExecutionHistory(jobName)).thenReturn(mockHistory);
+
+        IDataResult<List<JobExecutionHistoryDtoResponse>> result =
+                reliabilityService.getJobExecutionHistory(jobName);
+
+        assertNotNull(result);
+        assertTrue(result.success, "Debe ser un SuccessDataResult");
+        assertSame(mockHistory, result.data, "Debe devolver la misma lista");
+        verify(reliabilityDaoMock).getJobExecutionHistory(jobName);
+    }
+
+    @Test
+    void testGetJobExecutionHistoryError() {
+        String jobName = "JOB_FAIL";
+        when(reliabilityDaoMock.getJobExecutionHistory(jobName))
+                .thenThrow(new RuntimeException("DB down"));
+
+        IDataResult<List<JobExecutionHistoryDtoResponse>> result =
+                reliabilityService.getJobExecutionHistory(jobName);
+
+        assertNotNull(result);
+        assertFalse(result.success, "Debe ser un ErrorDataResult");
+        assertNull(result.data, "En error, data debe ser null");
+        assertEquals(HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, result.status);
+        assertEquals("DB down", result.message);
+        verify(reliabilityDaoMock).getJobExecutionHistory(jobName);
+    }
+
+    @Test
+    void testGetSn2OptionsSuccess() {
+        Integer sn1 = 1027;
+        RawSn2DtoResponse raw1 = new RawSn2DtoResponse();
+        raw1.setValue(85226);
+        raw1.setRawDesc("DEDRRCM-COLLECTION & MITIGATION-85226");
+        RawSn2DtoResponse raw2 = new RawSn2DtoResponse();
+        raw2.setValue(85225);
+        raw2.setRawDesc("DEDRRA-RISK ANALYTICS-85225");
+
+        when(reliabilityDaoMock.fetchRawSn2BySn1(sn1)).thenReturn(List.of(raw1, raw2));
+
+        IDataResult<List<DropDownDto>> result = reliabilityService.getSn2Options(sn1);
+
+        assertTrue(result.success);
+        assertNotNull(result.data);
+        assertEquals(2, result.data.size());
+
+        DropDownDto opt1 = result.data.get(0);
+        assertEquals(85226, opt1.getValue());
+        assertEquals("COLLECTION & MITIGATION", opt1.getLabel());
+
+        DropDownDto opt2 = result.data.get(1);
+        assertEquals(85225, opt2.getValue());
+        assertEquals("RISK ANALYTICS", opt2.getLabel());
+
+        verify(reliabilityDaoMock).fetchRawSn2BySn1(sn1);
+    }
+
+    @Test
+    void testGetSn2OptionsError() {
+        Integer sn1 = 9006;
+        when(reliabilityDaoMock.fetchRawSn2BySn1(sn1))
+                .thenThrow(new RuntimeException("DB error"));
+
+        IDataResult<List<DropDownDto>> result = reliabilityService.getSn2Options(sn1);
+
+        assertFalse(result.success);
+        assertNull(result.data);
+        assertEquals("500", result.status);
+        assertTrue(result.message.contains("DB error"));
+
+        verify(reliabilityDaoMock).fetchRawSn2BySn1(sn1);
+    }
 }

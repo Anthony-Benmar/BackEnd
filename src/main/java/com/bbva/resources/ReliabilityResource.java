@@ -95,6 +95,13 @@ public class ReliabilityResource {
         return reliabilityService.insertTransfer(dto);
     }
 
+    @GET
+    @Path("/sn2-options/{sn1}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<List<DropDownDto>> sn2Options(@PathParam("sn1") Integer sn1) {
+        return reliabilityService.getSn2Options(sn1);
+    }
+
     @POST
     @Path("/documentGenerator/inventory")
     @Consumes(MediaType.APPLICATION_JSON)
