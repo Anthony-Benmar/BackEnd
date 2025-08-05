@@ -3,7 +3,7 @@ package com.bbva.dto.reliability.response;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class RawSn2DtoResponseTest {
+class RawSn2DtoResponseTest {
     @Test
     void testValueGetterSetter() {
         RawSn2DtoResponse dto = new RawSn2DtoResponse();

@@ -3,7 +3,7 @@ package com.bbva.dto.reliability.response;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class JobExecutionHistoryDtoResponseTest {
+class JobExecutionHistoryDtoResponseTest {
     @Test
     void testDefaultValues() {
         JobExecutionHistoryDtoResponse dto = new JobExecutionHistoryDtoResponse();

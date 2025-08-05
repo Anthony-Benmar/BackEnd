@@ -118,10 +118,14 @@ public class ReliabilityService {
             var opts = raws.stream()
                     .map(r -> {
                         String d = r.getRawDesc();
-                        int i1 = d.indexOf('-'), i2 = d.lastIndexOf('-');
-                        String label = (i1>=0 && i2>i1)
-                                ? d.substring(i1+1, i2).trim()
-                                : d;
+                        int i1 = d.indexOf('-');
+                        int i2 = d.lastIndexOf('-');
+                        String label;
+                        if (i1 >= 0 && i2 > i1) {
+                            label = d.substring(i1 + 1, i2).trim();
+                        } else {
+                            label = d;
+                        }
                         return new DropDownDto(r.getValue(), label);
                     })
                     .toList();
