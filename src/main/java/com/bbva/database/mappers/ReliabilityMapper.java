@@ -65,7 +65,9 @@ public interface ReliabilityMapper {
             "#{jobTypeId}," +
             "#{useCaseId}," +
             "#{isCritical}," +
-            "#{domainId})")
+            "#{domainId}," +
+            "#{exception}" +
+            ")")
     void updateInventoryJobStock(InventoryJobUpdateDtoRequest dto);
 
     @Select("CALL SP_GET_PENDING_CUSTODY_JOBS(#{sdatoolId})")
@@ -161,8 +163,7 @@ public interface ReliabilityMapper {
             "#{domainId}," +
             "#{pack}," +
             "#{statusId}," +
-            "#{sn1}," +
-            "#{sn2}" +
+            "#{exception}" +
             ")")
     void insertJobStock(JobTransferInputDtoRequest dto);
 
