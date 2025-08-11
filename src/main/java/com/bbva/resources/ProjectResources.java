@@ -308,4 +308,16 @@ public class ProjectResources {
     public IDataResult<List<ProjectValidationParamsDtoResponse>> validateInfoProjectByProjectId(@Context HttpServletRequest request, @PathParam("projectId") int projectId){
         return projectService.validateInfoProjectByProjectId(projectId);
     }
+
+    @GET
+    @Path("/{projectId}/roles/{emailDev}/dev")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<ProjectRoleAndDevResponse> getProjectRoles(@Context HttpServletRequest request,
+                                                                  @PathParam("projectId") int projectId,
+                                                                  @PathParam("emailDev") String emailDev){
+        return projectService.getProjectRoles(projectId, emailDev);
+    }
+
+
 }

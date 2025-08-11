@@ -912,9 +912,11 @@ class IssueTicketServiceTest {
         WorkOrderDtoRequest auth = new WorkOrderDtoRequest();
         auth.setUsername("test_user");
         auth.setToken("secret");
+
         IssueDto dto = new IssueDto();
         dto.setKey("ISSUE-1");
         dto.setSelf("self");
+
         String code = "TEST-123";
 
         // 3) Mock estático de HttpClients.createDefault()
