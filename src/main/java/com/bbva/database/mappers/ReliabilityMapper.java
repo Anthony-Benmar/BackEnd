@@ -83,13 +83,22 @@ public interface ReliabilityMapper {
     List<PendingCustodyJobsDtoResponse> getPendingCustodyJobs(@Param("sdatoolId") String sdatoolId);
 
     @Select("""
-     SELECT period, execution_status FROM job_execution
-      WHERE job_name = #{jobName}
-      ORDER BY period DESC
-  """)
+    SELECT period, execution_status FROM ( SELECT je.period, je.execution_status,
+        CASE 
+            WHEN j.folder LIKE '%DIA%' OR j.folder LIKE '%DAY%' THEN 7
+            ELSE 1
+          END AS keep_n,
+          ROW_NUMBER() OVER ( PARTITION BY je.job_name ORDER BY je.period DESC, je.end_time DESC) AS rn
+        FROM job_execution je
+        JOIN job j ON j.job_name = je.job_name
+        WHERE je.job_name = #{jobName}
+    ) t
+    WHERE t.rn <= t.keep_n ORDER BY period DESC
+    """)
     @Result(property = "period",          column = "period")
     @Result(property = "executionStatus", column = "execution_status")
     List<JobExecutionHistoryDtoResponse> getJobExecutionHistory(@Param("jobName") String jobName);
+
 
     @Select("CALL SP_GET_PROJECT_CUSTODY_INFO(#{sdatoolId})")
 
