@@ -504,7 +504,7 @@ public class IssueTicketService {
         String responseBodyString = "";
         HttpEntity entity = null;
         try(CloseableHttpClient httpclient = HttpClients.createDefault()){
-            getBasicSession(objAuth.getUsername(), objAuth.getUsername(), httpclient);
+            getBasicSession(objAuth.getUsername(), objAuth.getToken(), httpclient);
             httpPost.setHeader(COOKIE_HEADER, createCookieHeader(cookieStore.getCookies()));
             CloseableHttpResponse response = httpclient.execute(httpPost);
             responseCode = response.getStatusLine().getStatusCode();

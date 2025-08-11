@@ -315,7 +315,10 @@ class IngestaServiceTest {
             @SuppressWarnings("unchecked")
             Map<String, byte[]> archivos = invocation.getArgument(0);
 
-            assertTrue(archivos.keySet().stream().anyMatch(key -> key.contains("kirby/l1t")));
+            assertTrue(archivos.keySet().stream().anyMatch(key -> key.contains("qlt/l1t")),
+                    "Debe contener archivos L1T de Hammurabi");
+            assertTrue(archivos.keySet().stream().anyMatch(key -> key.contains("kirby/l1t")),
+                    "Debe contener archivos L1T de Kirby");
 
             return "zip-with-l1t".getBytes();
         });
@@ -460,5 +463,126 @@ class IngestaServiceTest {
                 Arrays.asList("master_field1", "master_field2", "master_field3", "calculated_field"));
         when(schemaProcessorMock.getMasterArtifactoryPath()).thenReturn("\"master-artifactory-path\"");
         when(schemaProcessorMock.getRawArtifactoryPath()).thenReturn("\"raw-artifactory-path\"");
+    }
+
+    @Test
+    void testGenerarConfiguracionesL1T_WithHammurabiAndKirby() throws Exception {
+        IngestaRequestDto request = createValidRequestWithRealCSV();
+        request.setTieneL1T(true);
+        setupSchemaProcessorMocks();
+
+        byte[] hammurabiDoc = "hammurabi-doc".getBytes();
+        byte[] kirbyDoc = "kirby-doc".getBytes();
+        when(documentGeneratorMock.generarDocumentoC204Hammurabi(eq(request), any()))
+                .thenReturn(hammurabiDoc);
+        when(documentGeneratorMock.generarDocumentoC204Kirby(eq(request), any()))
+                .thenReturn(kirbyDoc);
+
+        when(zipGeneratorMock.crearZip(any())).thenAnswer(invocation -> {
+            @SuppressWarnings("unchecked")
+            Map<String, byte[]> archivos = invocation.getArgument(0);
+
+            assertTrue(archivos.keySet().stream().anyMatch(key -> key.contains("qlt/l1t")),
+                    "Debe contener archivos L1T de Hammurabi (qlt/l1t)");
+            assertTrue(archivos.keySet().stream().anyMatch(key -> key.contains("kirby/l1t")),
+                    "Debe contener archivos L1T de Kirby (kirby/l1t)");
+
+            assertTrue(archivos.keySet().stream().anyMatch(key ->
+                            key.equals("qlt/l1t/" + schemaProcessorMock.getDfMasterName() + "_l1t.conf")),
+                    "Debe contener archivo .conf de L1T Hammurabi");
+            assertTrue(archivos.keySet().stream().anyMatch(key ->
+                            key.equals("qlt/l1t/" + schemaProcessorMock.getDfMasterName() + "_l1t.json")),
+                    "Debe contener archivo .json de L1T Hammurabi");
+
+            assertTrue(archivos.keySet().stream().anyMatch(key ->
+                            key.equals("kirby/l1t/" + schemaProcessorMock.getDfMasterName() + "_l1t.conf")),
+                    "Debe contener archivo .conf de L1T Kirby");
+            assertTrue(archivos.keySet().stream().anyMatch(key ->
+                            key.equals("kirby/l1t/" + schemaProcessorMock.getDfMasterName() + "_l1t.json")),
+                    "Debe contener archivo .json de L1T Kirby");
+
+            return "zip-with-complete-l1t".getBytes();
+        });
+
+        doNothing().when(issueTicketServiceMock).addLabelToIssue(anyString(), anyString(), anyString(), anyString());
+
+        byte[] result = service.procesarIngesta(request);
+
+        assertNotNull(result);
+        assertEquals("zip-with-complete-l1t", new String(result));
+    }
+
+    @Test
+    void testGenerarHammurabiL1T_Content() throws Exception {
+        IngestaRequestDto request = createValidRequestWithRealCSV();
+        setupSchemaProcessorMocks();
+
+        Method method = IngestaService.class.getDeclaredMethod("generarHammurabiL1T", IngestaRequestDto.class);
+        method.setAccessible(true);
+        String result = (String) method.invoke(service, request);
+
+        assertNotNull(result);
+        assertTrue(result.contains("hammurabi {"), "Debe contener bloque hammurabi");
+        assertTrue(result.contains("dataFrameInfo {"), "Debe contener dataFrameInfo");
+        assertTrue(result.contains("_l1t"), "Debe contener sufijo _l1t en paths");
+        assertTrue(result.contains("ConditionalPerimeterCompletenessRule"),
+                "Debe contener regla de completitud L1T");
+        assertTrue(result.contains(request.getUuaaMaster()), "Debe contener UUAA master");
+        assertTrue(result.contains("${?DATE}"), "Debe contener placeholder de fecha");
+    }
+
+    @Test
+    void testGenerarHammurabiL1TJson_Content() throws Exception {
+        IngestaRequestDto request = createValidRequestWithRealCSV();
+        setupSchemaProcessorMocks();
+
+        Method method = IngestaService.class.getDeclaredMethod("generarHammurabiL1TJson", IngestaRequestDto.class);
+        method.setAccessible(true);
+        String result = (String) method.invoke(service, request);
+
+        assertNotNull(result);
+        assertTrue(result.contains("\"_id\""), "Debe contener campo _id");
+        assertTrue(result.contains("l1tm-01"), "Debe contener sufijo l1tm-01 en ID");
+        assertTrue(result.contains("\"description\""), "Debe contener descripción");
+        assertTrue(result.contains("Metaknight"), "Debe mencionar Metaknight");
+        assertTrue(result.contains("\"configUrl\""), "Debe contener configUrl");
+        assertTrue(result.contains("masterdata"), "Debe apuntar a masterdata");
+        assertTrue(result.contains("_l1t"), "Debe contener sufijo _l1t en paths");
+        assertTrue(result.contains("hammurabi-lts"), "Debe usar runtime hammurabi-lts");
+    }
+
+    @Test
+    void testGenerarConfiguracionesL1T_DisabledL1T() throws Exception {
+        IngestaRequestDto request = createValidRequestWithRealCSV();
+        request.setTieneL1T(false);
+        setupSchemaProcessorMocks();
+
+        byte[] hammurabiDoc = "hammurabi-doc".getBytes();
+        byte[] kirbyDoc = "kirby-doc".getBytes();
+        when(documentGeneratorMock.generarDocumentoC204Hammurabi(eq(request), any()))
+                .thenReturn(hammurabiDoc);
+        when(documentGeneratorMock.generarDocumentoC204Kirby(eq(request), any()))
+                .thenReturn(kirbyDoc);
+
+        when(zipGeneratorMock.crearZip(any())).thenAnswer(invocation -> {
+            @SuppressWarnings("unchecked")
+            Map<String, byte[]> archivos = invocation.getArgument(0);
+
+            assertFalse(archivos.keySet().stream().anyMatch(key -> key.contains("qlt/l1t")),
+                    "NO debe contener archivos L1T de Hammurabi cuando está deshabilitado");
+            assertFalse(archivos.keySet().stream().anyMatch(key -> key.contains("kirby/l1t")),
+                    "NO debe contener archivos L1T de Kirby cuando está deshabilitado");
+
+            return "zip-without-l1t".getBytes();
+        });
+
+        doNothing().when(issueTicketServiceMock).addLabelToIssue(anyString(), anyString(), anyString(), anyString());
+
+        // Act
+        byte[] result = service.procesarIngesta(request);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals("zip-without-l1t", new String(result));
     }
 }

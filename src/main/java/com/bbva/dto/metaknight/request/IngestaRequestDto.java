@@ -26,4 +26,8 @@ public class IngestaRequestDto {
     private String username;
     private String token;
     private String ticketJira;
+
+    public void setUuaaMaster(String uuaaMaster) {
+        this.uuaaMaster = uuaaMaster != null ? uuaaMaster.toLowerCase() : null;
+    }
 }

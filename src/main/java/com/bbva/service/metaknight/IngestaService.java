@@ -167,6 +167,11 @@ public class IngestaService {
     private Map<String, String> generarConfiguracionesL1T(IngestaRequestDto request) {
         Map<String, String> archivos = new HashMap<>();
 
+        String hammurabiL1TConf = generarHammurabiL1T(request);
+        String hammurabiL1TJson = generarHammurabiL1TJson(request);
+        archivos.put("qlt/l1t/" + schemaProcessor.getDfMasterName() + "_l1t.conf", hammurabiL1TConf);
+        archivos.put("qlt/l1t/" + schemaProcessor.getDfMasterName() + "_l1t.json", hammurabiL1TJson);
+
         // L1T Kirby
         String kirbyL1TConf = generarKirbyL1T(request);
         String kirbyL1TJson = generarKirbyL1TJson(request);
@@ -253,7 +258,6 @@ public class IngestaService {
     private String generarStagingJson(IngestaRequestDto request) {
         Map<String, Object> json = new HashMap<>();
         json.put("_id", schemaProcessor.getIdJsonStaging());
-        // Usar constantes en lugar de literales duplicados
         json.put(DESCRIPTION, "Job " + schemaProcessor.getIdJsonStaging() + CREATED_WITH_METAKNIGHT);
         json.put("kind", PROCESSING);
 
@@ -887,5 +891,96 @@ public class IngestaService {
         if (!errores.isEmpty()) {
             throw new IllegalArgumentException("Errores de validación: " + String.join(", ", errores));
         }
+    }
+
+    private String generarHammurabiL1T(IngestaRequestDto request) {
+        return String.format("""
+        hammurabi {
+            dataFrameInfo {
+                cutoffDate = ${?DATE}
+                targetPathName = "%s_l1t"
+                physicalTargetName = "%s_l1t"
+                uuaa = "%s"
+                subset = "%s"
+            }
+            input {
+                options {
+                    includeMetadataAndDeleted = "true"
+                    overrideSchema = "true"
+                }
+                paths = [
+                    "%s_l1t"
+                ]
+                schema {
+                    path=${ARTIFACTORY_UNIQUE_CACHE}"/artifactory/"${SCHEMAS_REPOSITORY}"/schemas/pe/%s/master/%s_l1t/latest/%s_l1t.output.schema"
+                }
+                type = "parquet"
+            }
+            rules=[
+                {
+                    class = "com.datio.hammurabi.rules.completeness.ConditionalPerimeterCompletenessRule"
+                    config {
+                        dataValues {
+                            options {
+                                includeMetadataAndDeleted = "true"
+                                overrideSchema = "true"
+                            }
+                            paths = ["%s"]
+                            schema{
+                                path=${ARTIFACTORY_UNIQUE_CACHE}"/artifactory/"${SCHEMAS_REPOSITORY}"/schemas/pe/%s/master/%s/latest/%s.input.schema"
+                            }
+                            type = "parquet"
+                        }
+                        dataValuesSubset = "%s"
+                        acceptanceMin = 100.0
+                        minThreshold = 100.0
+                        targetThreshold = 100.0
+                        isCritical = true
+                        withRefusals = false
+                        id = "xxxxxxxx"
+                    }
+                }
+            ]
+        }
+        """,
+                schemaProcessor.getDfMasterPath(),
+                schemaProcessor.getDfMasterName(),
+                request.getUuaaMaster(),
+                schemaProcessor.getSubset(),
+                schemaProcessor.getDfMasterPath(),
+                request.getUuaaMaster(),
+                schemaProcessor.getDfMasterName(),
+                schemaProcessor.getDfMasterName(),
+                schemaProcessor.getDfMasterPath(),
+                request.getUuaaMaster(),
+                schemaProcessor.getDfMasterName(),
+                schemaProcessor.getDfMasterName(),
+                schemaProcessor.getSubset()
+        );
+    }
+
+    private String generarHammurabiL1TJson(IngestaRequestDto request) {
+        return String.format("""
+        {
+            "_id" : "%s-pe-hmm-qlt-%sl1tm-01",
+            "description" : "Job %s-pe-hmm-qlt-%sl1tm-01 created with Metaknight.",
+            "kind" : "processing",
+            "params" : {
+                "configUrl" : "${repository.endpoint.vdc}/${repository.repo.schemas.dq}/data-quality-configs/${repository.env.dq}/per/%s/masterdata/%s_l1t/${dq.conf.version}/%s_l1t.conf",
+                "sparkHistoryEnabled" : "false"
+            },
+            "runtime" : "hammurabi-lts",
+            "size" : "M",
+            "streaming" : false
+        }
+        """,
+                request.getUuaaMaster(),
+                schemaProcessor.getTag(),
+                request.getUuaaMaster(),
+                schemaProcessor.getTag(),
+                request.getUuaaMaster(),
+                schemaProcessor.getDfMasterName(),
+                schemaProcessor.getDfMasterName()
+        );
     }
 }
