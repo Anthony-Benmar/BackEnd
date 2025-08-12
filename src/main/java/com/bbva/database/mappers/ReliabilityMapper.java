@@ -65,7 +65,9 @@ public interface ReliabilityMapper {
             "#{jobTypeId}," +
             "#{useCaseId}," +
             "#{isCritical}," +
-            "#{domainId})")
+            "#{domainId}," +
+            "#{exception}" +
+            ")")
     void updateInventoryJobStock(InventoryJobUpdateDtoRequest dto);
 
     @Select("CALL SP_GET_PENDING_CUSTODY_JOBS(#{sdatoolId})")
@@ -79,6 +81,24 @@ public interface ReliabilityMapper {
     @Result(property = "principalJob", column = "principal_job")
     @Result(property = "status", column = "status")
     List<PendingCustodyJobsDtoResponse> getPendingCustodyJobs(@Param("sdatoolId") String sdatoolId);
+
+    @Select("""
+    SELECT period, execution_status FROM ( SELECT je.period, je.execution_status,
+        CASE 
+            WHEN j.folder LIKE '%DIA%' OR j.folder LIKE '%DAY%' THEN 7
+            ELSE 1
+          END AS keep_n,
+          ROW_NUMBER() OVER ( PARTITION BY je.job_name ORDER BY je.period DESC, je.end_time DESC) AS rn
+        FROM job_execution je
+        JOIN job j ON j.job_name = je.job_name
+        WHERE je.job_name = #{jobName}
+    ) t
+    WHERE t.rn <= t.keep_n ORDER BY period DESC
+    """)
+    @Result(property = "period",          column = "period")
+    @Result(property = "executionStatus", column = "execution_status")
+    List<JobExecutionHistoryDtoResponse> getJobExecutionHistory(@Param("jobName") String jobName);
+
 
     @Select("CALL SP_GET_PROJECT_CUSTODY_INFO(#{sdatoolId})")
 
@@ -122,9 +142,18 @@ public interface ReliabilityMapper {
             "#{creatorUserId}," +
             "#{pdfLink}," +
             "#{jobCount}," +
-            "#{statusId}" +
+            "#{statusId}," +
+            "#{sn2}" +
             ")")
     void insertTranfer(TransferInputDtoRequest dto);
+
+    @Select("""
+    SELECT element_id AS value, element_desc AS rawDesc FROM catalog WHERE catalog_id = 9006 AND status_type = 1 AND element_name = (SELECT element_desc FROM catalog
+         WHERE catalog_id = 1027 AND element_id = #{sn1}) ORDER BY element_desc
+    """)
+    @Result(property = "value",   column = "value")
+    @Result(property = "rawDesc", column = "rawDesc")
+    List<RawSn2DtoResponse> fetchRawSn2BySn1(@Param("sn1") Integer sn1);
 
     @Insert("CALL SP_INSERT_JOB_STOCK(" +
             "#{jobTypeId}," +
@@ -143,8 +172,7 @@ public interface ReliabilityMapper {
             "#{domainId}," +
             "#{pack}," +
             "#{statusId}," +
-            "#{sn1}," +
-            "#{sn2}" +
+            "#{exception}" +
             ")")
     void insertJobStock(JobTransferInputDtoRequest dto);
 

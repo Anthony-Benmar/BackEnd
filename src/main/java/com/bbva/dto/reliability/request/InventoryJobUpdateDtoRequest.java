@@ -16,4 +16,5 @@ public class InventoryJobUpdateDtoRequest {
     private int useCaseId;
     private String isCritical;
     private int domainId;
+    private String exception;
 }

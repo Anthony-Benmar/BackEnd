@@ -22,6 +22,5 @@ public class JobTransferInputDtoRequest {
     private Integer domainId;
     private String pack;
     private Integer statusId;
-    private String sn1;
-    private String sn2;
+    private String exception;
 }

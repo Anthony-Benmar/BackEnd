@@ -1,6 +1,7 @@
 package com.bbva.resources;
 
 import com.bbva.core.abstracts.IDataResult;
+import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dto.catalog.response.DropDownDto;
 import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import javax.ws.rs.core.Response;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -209,5 +211,79 @@ class ReliabilityResourceTest {
         assertEquals("Type A", result.data.get(0).getLabel());
 
         verify(reliabilityServiceMock).getOriginTypes();
+    }
+
+    @Test
+    void testGetExecutionHistory() {
+        String jobName = "JOB_TEST";
+        JobExecutionHistoryDtoResponse dto = new JobExecutionHistoryDtoResponse();
+        List<JobExecutionHistoryDtoResponse> history = List.of(dto);
+        IDataResult<List<JobExecutionHistoryDtoResponse>> dataResult =
+                new SuccessDataResult<>(history);
+
+        when(reliabilityServiceMock.getJobExecutionHistory(jobName))
+                .thenReturn(dataResult);
+
+        IDataResult<List<JobExecutionHistoryDtoResponse>> response =
+                reliabilityResource.getExecutionHistory(jobName);
+
+        assertNotNull(response, "La respuesta no debe ser null");
+        assertTrue(response.success, "Debe ser un SuccessDataResult");
+        assertSame(history, response.data, "Debe devolver la misma lista que el service");
+        verify(reliabilityServiceMock).getJobExecutionHistory(jobName);
+    }
+
+    @Test
+    void testGetExecutionHistoryError() {
+        String jobName = "JOB_ERR";
+        IDataResult<List<JobExecutionHistoryDtoResponse>> errorResult =
+                new ErrorDataResult<>(null, "500", "Error interno");
+        when(reliabilityServiceMock.getJobExecutionHistory(jobName))
+                .thenReturn(errorResult);
+
+        IDataResult<List<JobExecutionHistoryDtoResponse>> response =
+                reliabilityResource.getExecutionHistory(jobName);
+
+        assertFalse(response.success, "Debe ser un ErrorDataResult");
+        assertNull(response.data, "En error la data debe ser null");
+        assertEquals("500", response.status);
+        verify(reliabilityServiceMock).getJobExecutionHistory(jobName);
+    }
+
+    @Test
+    void testSn2OptionsSuccess() {
+        int sn1 = 99;
+        DropDownDto dto1 = new DropDownDto();
+        dto1.setValue(10);
+        dto1.setLabel("Opción A");
+        DropDownDto dto2 = new DropDownDto();
+        dto2.setValue(20);
+        dto2.setLabel("Opción B");
+        List<DropDownDto> opts = Arrays.asList(dto1, dto2);
+
+        IDataResult<List<DropDownDto>> dataResult = new SuccessDataResult<>(opts);
+        when(reliabilityServiceMock.getSn2Options(sn1)).thenReturn(dataResult);
+
+        IDataResult<List<DropDownDto>> result = reliabilityResource.sn2Options(sn1);
+
+        assertNotNull(result);
+        assertEquals(2, result.data.size());
+        assertEquals(10, result.data.get(0).getValue());
+        assertEquals("Opción A", result.data.get(0).getLabel());
+        verify(reliabilityServiceMock).getSn2Options(sn1);
+    }
+
+    @Test
+    void testSn2OptionsError() {
+        int sn1 = 42;
+        IDataResult<List<DropDownDto>> errorResult = new ErrorDataResult<>(null, "500", "Error interno");
+        when(reliabilityServiceMock.getSn2Options(sn1)).thenReturn(errorResult);
+
+        IDataResult<List<DropDownDto>> result = reliabilityResource.sn2Options(sn1);
+
+        assertFalse(result.success);
+        assertNull(result.data);
+        assertEquals("500", result.status);
+        verify(reliabilityServiceMock).getSn2Options(sn1);
     }
 }

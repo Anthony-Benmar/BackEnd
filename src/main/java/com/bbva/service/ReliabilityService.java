@@ -50,6 +50,16 @@ public class ReliabilityService {
         }
     }
 
+    public IDataResult<List<JobExecutionHistoryDtoResponse>> getJobExecutionHistory(String jobName) {
+        try {
+            var history = reliabilityDao.getJobExecutionHistory(jobName);
+            return new SuccessDataResult<>(history);
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "Error in getJobExecutionHistory", e);
+            return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
+
     public IDataResult<List<ProjectCustodyInfoDtoResponse>> getProjectCustodyInfo(String sdatoolId) {
         try {
             var result = reliabilityDao.getProjectCustodyInfo(sdatoolId);
@@ -99,6 +109,30 @@ public class ReliabilityService {
         } catch (Exception e) {
             log.severe("Error insert transfer: " + e.getMessage());
             return new ErrorDataResult<>(null, "500", e.getMessage());
+        }
+    }
+
+    public IDataResult<List<DropDownDto>> getSn2Options(Integer sn1) {
+        try {
+            List<RawSn2DtoResponse> raws = reliabilityDao.fetchRawSn2BySn1(sn1);
+            var opts = raws.stream()
+                    .map(r -> {
+                        String d = r.getRawDesc();
+                        int i1 = d.indexOf('-');
+                        int i2 = d.lastIndexOf('-');
+                        String label;
+                        if (i1 >= 0 && i2 > i1) {
+                            label = d.substring(i1 + 1, i2).trim();
+                        } else {
+                            label = d;
+                        }
+                        return new DropDownDto(r.getValue(), label);
+                    })
+                    .toList();
+            return new SuccessDataResult<>(opts);
+        } catch (Exception ex) {
+            log.log(Level.SEVERE, "Error fetching SN2 options", ex);
+            return new ErrorDataResult<>(null, "500", ex.getMessage());
         }
     }
 
