@@ -4,15 +4,13 @@ import com.bbva.core.abstracts.IDataResult;
 import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dto.catalog.response.DropDownDto;
-import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
-import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
-import com.bbva.dto.reliability.request.ReliabilityPackInputFilterRequest;
-import com.bbva.dto.reliability.request.TransferInputDtoRequest;
+import com.bbva.dto.reliability.request.*;
 import com.bbva.dto.reliability.response.*;
 import com.bbva.service.ReliabilityService;
 import com.google.common.collect.Lists;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 import javax.ws.rs.core.Response;
 import java.util.Arrays;
@@ -285,5 +283,99 @@ class ReliabilityResourceTest {
         assertNull(result.data);
         assertEquals("500", result.status);
         verify(reliabilityServiceMock).getSn2Options(sn1);
+    }
+
+    @Test
+    void testGetReliabilityPacksV2_UsaRoleDelBody_siViene() {
+        var dto = new ReliabilityPackAdvancedFilterRequest();
+        dto.setRole("SM"); // body manda SM
+        dto.setTab("EN_PROGRESO");
+
+        var mockResp = new PaginationReliabilityPackResponse();
+        var dataResult = new SuccessDataResult<>(mockResp);
+        ArgumentCaptor<ReliabilityPackAdvancedFilterRequest> captor =
+                ArgumentCaptor.forClass(ReliabilityPackAdvancedFilterRequest.class);
+
+        when(reliabilityServiceMock.getReliabilityPacksAdvanced(any()))
+                .thenReturn(dataResult);
+
+        var result = reliabilityResource.getReliabilityPacksV2(dto, "KM"); // header dice KM
+
+        assertNotNull(result);
+        assertSame(mockResp, result.data);
+
+        verify(reliabilityServiceMock).getReliabilityPacksAdvanced(captor.capture());
+        var dtoEnviado = captor.getValue();
+        assertEquals("SM", dtoEnviado.getRole(), "Debe respetar el role del body (tiene precedencia sobre header)");
+        assertEquals("EN_PROGRESO", dtoEnviado.getTab());
+    }
+
+    @Test
+    void testGetReliabilityPacksV2_FallbackAlHeader_siBodyNoTraeRole() {
+        var dto = new ReliabilityPackAdvancedFilterRequest();
+        dto.setRole(""); // body vacío
+        dto.setTab("APROBADOS");
+
+        var mockResp = new PaginationReliabilityPackResponse();
+        var dataResult = new SuccessDataResult<>(mockResp);
+        ArgumentCaptor<ReliabilityPackAdvancedFilterRequest> captor =
+                ArgumentCaptor.forClass(ReliabilityPackAdvancedFilterRequest.class);
+
+        when(reliabilityServiceMock.getReliabilityPacksAdvanced(any()))
+                .thenReturn(dataResult);
+
+        var result = reliabilityResource.getReliabilityPacksV2(dto, "KM"); // header KM
+
+        assertNotNull(result);
+        assertSame(mockResp, result.data);
+
+        verify(reliabilityServiceMock).getReliabilityPacksAdvanced(captor.capture());
+        var dtoEnviado = captor.getValue();
+        assertEquals("KM", dtoEnviado.getRole(), "Si body no trae role, debe usar el header");
+        assertEquals("APROBADOS", dtoEnviado.getTab());
+    }
+
+    @Test
+    void testGetReliabilityPacksV2_SinRoleEnBodyNiHeader_pasaNull() {
+        var dto = new ReliabilityPackAdvancedFilterRequest(); // role null
+        dto.setTab("EN_PROGRESO");
+
+        var mockResp = new PaginationReliabilityPackResponse();
+        var dataResult = new SuccessDataResult<>(mockResp);
+        ArgumentCaptor<ReliabilityPackAdvancedFilterRequest> captor =
+                ArgumentCaptor.forClass(ReliabilityPackAdvancedFilterRequest.class);
+
+        when(reliabilityServiceMock.getReliabilityPacksAdvanced(any()))
+                .thenReturn(dataResult);
+
+        var result = reliabilityResource.getReliabilityPacksV2(dto, null);
+
+        assertNotNull(result);
+
+        verify(reliabilityServiceMock).getReliabilityPacksAdvanced(captor.capture());
+        var dtoEnviado = captor.getValue();
+        assertNull(dtoEnviado.getRole(), "Sin body ni header, debe quedar null");
+        assertEquals("EN_PROGRESO", dtoEnviado.getTab());
+    }
+
+    @Test
+    void testGetReliabilityPacksV2_PropagaErrorDelService() {
+        var dto = new ReliabilityPackAdvancedFilterRequest();
+        dto.setRole("KM");
+        dto.setTab("APROBADOS");
+
+        IDataResult<PaginationReliabilityPackResponse> error =
+                new ErrorDataResult<>(null, "500", "Fallo");
+
+        when(reliabilityServiceMock.getReliabilityPacksAdvanced(any()))
+                .thenReturn(error);
+
+        var result = reliabilityResource.getReliabilityPacksV2(dto, null);
+
+        assertFalse(result.success);
+        assertNull(result.data);
+        assertEquals("500", result.status);
+        assertEquals("Fallo", result.message);
+        verify(reliabilityServiceMock).getReliabilityPacksAdvanced(any());
     }
 }

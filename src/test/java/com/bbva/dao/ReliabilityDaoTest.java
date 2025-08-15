@@ -485,4 +485,34 @@ class ReliabilityDaoTest {
         assertNotNull(resultados);
         assertTrue(resultados.isEmpty());
     }
+
+    @Test
+    void testListTransfersByStatusSuccess() {
+        var expected = List.of(new ReliabilityPacksDtoResponse());
+        when(reliabilityMapperMock.listTransfersByStatus("DCSV", "UCSV", "2,5"))
+                .thenReturn(expected);
+
+        List<ReliabilityPacksDtoResponse> out =
+                reliabilityDao.listTransfersByStatus("DCSV", "UCSV", "2,5");
+
+        assertNotNull(out);
+        assertEquals(1, out.size());
+        assertSame(expected.get(0), out.get(0));
+
+        verify(sqlSessionFactoryMock).openSession();
+        verify(sqlSessionMock).getMapper(ReliabilityMapper.class);
+        verify(reliabilityMapperMock).listTransfersByStatus("DCSV", "UCSV", "2,5");
+    }
+
+    @Test
+    void testListTransfersByStatusException() {
+        when(reliabilityMapperMock.listTransfersByStatus(anyString(), anyString(), anyString()))
+                .thenThrow(new RuntimeException("DB error"));
+
+        List<ReliabilityPacksDtoResponse> out =
+                reliabilityDao.listTransfersByStatus("", "", "1");
+
+        assertNotNull(out);
+        assertTrue(out.isEmpty(), "Ante excepción, el DAO debe devolver lista vacía");
+    }
 }

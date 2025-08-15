@@ -5,19 +5,18 @@ import com.bbva.core.abstracts.IDataResult;
 import com.bbva.dao.ReliabilityDao;
 import com.bbva.database.mappers.ReliabilityMapper;
 import com.bbva.dto.catalog.response.DropDownDto;
-import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
-import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
-import com.bbva.dto.reliability.request.ReliabilityPackInputFilterRequest;
-import com.bbva.dto.reliability.request.TransferInputDtoRequest;
+import com.bbva.dto.reliability.request.*;
 import com.bbva.dto.reliability.response.*;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.poi.ss.usermodel.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
 
 import java.io.ByteArrayInputStream;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -500,5 +499,112 @@ class ReliabilityServiceTest {
         assertTrue(result.message.contains("DB error"));
 
         verify(reliabilityDaoMock).fetchRawSn2BySn1(sn1);
+    }
+
+    @Test
+    void km_enProgreso_mapea_2_5() {
+        var svc = new ReliabilityService();
+        var dto = new ReliabilityPackAdvancedFilterRequest();
+        dto.setRole("KM");
+        dto.setTab("EN_PROGRESO");
+        dto.setPage(1);
+        dto.setRecordsAmount(10);
+
+        var daoMock = mock(ReliabilityDao.class);
+        when(daoMock.listTransfersByStatus(eq(""), eq(""), eq("2,5")))
+                .thenReturn(Collections.emptyList());
+
+        try (MockedStatic<ReliabilityDao> mocked = mockStatic(ReliabilityDao.class)) {
+            mocked.when(ReliabilityDao::getInstance).thenReturn(daoMock);
+
+            IDataResult<?> res = svc.getReliabilityPacksAdvanced(dto);
+
+            assertTrue(res.success);
+            verify(daoMock).listTransfersByStatus("", "", "2,5");
+        }
+    }
+
+    @Test
+    void km_aprobados_mapea_1() {
+        var svc = new ReliabilityService();
+        var dto = new ReliabilityPackAdvancedFilterRequest();
+        dto.setRole("KM");
+        dto.setTab("APROBADOS");
+
+        var daoMock = mock(ReliabilityDao.class);
+        when(daoMock.listTransfersByStatus(eq(""), eq(""), eq("1")))
+                .thenReturn(Collections.emptyList());
+
+        try (MockedStatic<ReliabilityDao> mocked = mockStatic(ReliabilityDao.class)) {
+            mocked.when(ReliabilityDao::getInstance).thenReturn(daoMock);
+
+            var res = svc.getReliabilityPacksAdvanced(dto);
+
+            assertTrue(res.success);
+            verify(daoMock).listTransfersByStatus("", "", "1");
+        }
+    }
+
+    @Test
+    void sm_enProgreso_mapea_3_2_4_5() {
+        var svc = new ReliabilityService();
+        var dto = new ReliabilityPackAdvancedFilterRequest();
+        dto.setRole("SM");
+        dto.setTab("EN_PROGRESO");
+
+        var daoMock = mock(ReliabilityDao.class);
+        when(daoMock.listTransfersByStatus(eq(""), eq(""), eq("3,2,4,5")))
+                .thenReturn(List.of(new ReliabilityPacksDtoResponse()));
+
+        try (MockedStatic<ReliabilityDao> mocked = mockStatic(ReliabilityDao.class)) {
+            mocked.when(ReliabilityDao::getInstance).thenReturn(daoMock);
+
+            var res = svc.getReliabilityPacksAdvanced(dto);
+
+            assertTrue(res.success);
+            verify(daoMock).listTransfersByStatus("", "", "3,2,4,5");
+        }
+    }
+
+    @Test
+    void sm_aprobados_mapea_1() {
+        var svc = new ReliabilityService();
+        var dto = new ReliabilityPackAdvancedFilterRequest();
+        dto.setRole("SM");
+        dto.setTab("APROBADOS");
+
+        var daoMock = mock(ReliabilityDao.class);
+        when(daoMock.listTransfersByStatus(eq(""), eq(""), eq("1")))
+                .thenReturn(Collections.emptyList());
+
+        try (MockedStatic<ReliabilityDao> mocked = mockStatic(ReliabilityDao.class)) {
+            mocked.when(ReliabilityDao::getInstance).thenReturn(daoMock);
+
+            var res = svc.getReliabilityPacksAdvanced(dto);
+
+            assertTrue(res.success);
+            verify(daoMock).listTransfersByStatus("", "", "1");
+        }
+    }
+
+    @Test
+    void roleDesconocido_fallback_a_KM_EN_PROGRESO_2_5() {
+        var svc = new ReliabilityService();
+        var dto = new ReliabilityPackAdvancedFilterRequest();
+        dto.setRole("???");
+        dto.setTab("EN_PROGRESO");
+
+        var daoMock = mock(ReliabilityDao.class);
+        when(daoMock.listTransfersByStatus(eq(""), eq(""), eq("2,5")))
+                .thenReturn(Collections.emptyList());
+
+        try (MockedStatic<ReliabilityDao> mocked = mockStatic(ReliabilityDao.class)) {
+            mocked.when(ReliabilityDao::getInstance).thenReturn(daoMock);
+
+            var res = svc.getReliabilityPacksAdvanced(dto);
+
+            assertTrue(res.success);
+            verify(daoMock).listTransfersByStatus("", "", "2,5");
+        }
     }
 }

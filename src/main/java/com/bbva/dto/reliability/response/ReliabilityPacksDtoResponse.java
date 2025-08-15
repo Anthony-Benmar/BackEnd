@@ -19,4 +19,6 @@ public class ReliabilityPacksDtoResponse {
     private Integer creatorUserId;
     private String pdfLink;
     private Integer jobCount;
+    private Integer statusId;
+    private String  statusName;
 }

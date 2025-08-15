@@ -22,35 +22,35 @@ public interface ReliabilityMapper {
             "#{c.searchType}," +
             "#{c.origin}" +
             ")")
-    @Result(property = "domainName",    column = "domain_name")
-    @Result(property = "useCase",       column = "use_case")
-    @Result(property = "originTypeId",  column = "origin_type_id")
-    @Result(property = "origin",        column = "origin")
-    @Result(property = "jobName",       column = "job_name")
+    @Result(property = "domainName", column = "domain_name")
+    @Result(property = "useCase", column = "use_case")
+    @Result(property = "originTypeId", column = "origin_type_id")
+    @Result(property = "origin", column = "origin")
+    @Result(property = "jobName", column = "job_name")
     @Result(property = "componentName", column = "component_name")
-    @Result(property = "jobType",       column = "job_type")
-    @Result(property = "isCritical",    column = "is_critical")
-    @Result(property = "frequency",     column = "frequency")
-    @Result(property = "inputPaths",    column = "input_paths")
-    @Result(property = "outputPath",    column = "output_path")
-    @Result(property = "jobPhase",      column = "job_phase")
-    @Result(property = "domainId",      column = "domain_id")
-    @Result(property = "useCaseId",     column = "use_case_id")
-    @Result(property = "frequencyId",   column = "frequency_id")
-    @Result(property = "jobTypeId",     column = "job_type_id")
-    @Result(property = "bitBucketUrl",  column = "bitbucket_url")
-    @Result(property = "pack",          column = "pack")
+    @Result(property = "jobType", column = "job_type")
+    @Result(property = "isCritical", column = "is_critical")
+    @Result(property = "frequency", column = "frequency")
+    @Result(property = "inputPaths", column = "input_paths")
+    @Result(property = "outputPath", column = "output_path")
+    @Result(property = "jobPhase", column = "job_phase")
+    @Result(property = "domainId", column = "domain_id")
+    @Result(property = "useCaseId", column = "use_case_id")
+    @Result(property = "frequencyId", column = "frequency_id")
+    @Result(property = "jobTypeId", column = "job_type_id")
+    @Result(property = "bitBucketUrl", column = "bitbucket_url")
+    @Result(property = "pack", column = "pack")
     List<InventoryInputsDtoResponse> inventoryInputsFilter(
             @Param("c") InventoryInputsFilterDtoRequest c
     );
 
     @Select("""
-        SELECT element_id AS value, element_name AS label
-          FROM catalog
-         WHERE catalog_id = 1003
-           AND element_id <> 1003
-         ORDER BY element_name
-        """)
+            SELECT element_id AS value, element_name AS label
+              FROM catalog
+             WHERE catalog_id = 1003
+               AND element_id <> 1003
+             ORDER BY element_name
+            """)
     @Result(property = "value", column = "value")
     @Result(property = "label", column = "label")
     List<DropDownDto> getOriginTypes();
@@ -76,26 +76,26 @@ public interface ReliabilityMapper {
     @Result(property = "jsonName", column = "json_name")
     @Result(property = "frequencyId", column = "frequency_id")
     @Result(property = "jobTypeId", column = "job_type_id")
-        @Result(property = "originTypeId", column = "origin_type_id")
+    @Result(property = "originTypeId", column = "origin_type_id")
     @Result(property = "phaseTypeId", column = "phase_type_id")
     @Result(property = "principalJob", column = "principal_job")
     @Result(property = "status", column = "status")
     List<PendingCustodyJobsDtoResponse> getPendingCustodyJobs(@Param("sdatoolId") String sdatoolId);
 
     @Select("""
-    SELECT period, execution_status FROM ( SELECT je.period, je.execution_status,
-        CASE 
-            WHEN j.folder LIKE '%DIA%' OR j.folder LIKE '%DAY%' THEN 7
-            ELSE 1
-          END AS keep_n,
-          ROW_NUMBER() OVER ( PARTITION BY je.job_name ORDER BY je.period DESC, je.end_time DESC) AS rn
-        FROM job_execution je
-        JOIN job j ON j.job_name = je.job_name
-        WHERE je.job_name = #{jobName}
-    ) t
-    WHERE t.rn <= t.keep_n ORDER BY period DESC
-    """)
-    @Result(property = "period",          column = "period")
+            SELECT period, execution_status FROM ( SELECT je.period, je.execution_status,
+                CASE 
+                    WHEN j.folder LIKE '%DIA%' OR j.folder LIKE '%DAY%' THEN 7
+                    ELSE 1
+                  END AS keep_n,
+                  ROW_NUMBER() OVER ( PARTITION BY je.job_name ORDER BY je.period DESC, je.end_time DESC) AS rn
+                FROM job_execution je
+                JOIN job j ON j.job_name = je.job_name
+                WHERE je.job_name = #{jobName}
+            ) t
+            WHERE t.rn <= t.keep_n ORDER BY period DESC
+            """)
+    @Result(property = "period", column = "period")
     @Result(property = "executionStatus", column = "execution_status")
     List<JobExecutionHistoryDtoResponse> getJobExecutionHistory(@Param("jobName") String jobName);
 
@@ -148,10 +148,10 @@ public interface ReliabilityMapper {
     void insertTranfer(TransferInputDtoRequest dto);
 
     @Select("""
-    SELECT element_id AS value, element_desc AS rawDesc FROM catalog WHERE catalog_id = 9006 AND status_type = 1 AND element_name = (SELECT element_desc FROM catalog
-         WHERE catalog_id = 1027 AND element_id = #{sn1}) ORDER BY element_desc
-    """)
-    @Result(property = "value",   column = "value")
+            SELECT element_id AS value, element_desc AS rawDesc FROM catalog WHERE catalog_id = 9006 AND status_type = 1 AND element_name = (SELECT element_desc FROM catalog
+                 WHERE catalog_id = 1027 AND element_id = #{sn1}) ORDER BY element_desc
+            """)
+    @Result(property = "value", column = "value")
     @Result(property = "rawDesc", column = "rawDesc")
     List<RawSn2DtoResponse> fetchRawSn2BySn1(@Param("sn1") Integer sn1);
 
@@ -181,4 +181,28 @@ public interface ReliabilityMapper {
 
     @Update("UPDATE job_stock SET status_id = #{estado} WHERE pack = #{pack}")
     void updateProjectInfoStatus(@Param("pack") String pack, @Param("estado") int estado);
+
+    @Select("CALL SP_LIST_TRANSFERS_BY_STATUS(" +
+            "#{domainName}," +
+            "#{useCase}," +
+            "#{statusList})"
+    )
+    @Result(property = "pack", column = "pack")
+    @Result(property = "domainId", column = "domainId")
+    @Result(property = "domainName", column = "domain_name")
+    @Result(property = "productOwnerUserId", column = "productOwnerUserId")
+    @Result(property = "useCaseId", column = "useCaseId")
+    @Result(property = "useCase", column = "use_case")
+    @Result(property = "projectId", column = "projectId")
+    @Result(property = "sdaToolId", column = "sdaToolId")
+    @Result(property = "creatorUserId", column = "creatorUserId")
+    @Result(property = "pdfLink", column = "pdfLink")
+    @Result(property = "jobCount", column = "jobCount")
+    @Result(property = "statusId", column = "statusId")
+    @Result(property = "statusName", column = "status_name")
+    List<ReliabilityPacksDtoResponse> listTransfersByStatus(
+            @Param("domainName") String domainNameCsv,
+            @Param("useCase") String useCaseCsv,
+            @Param("statusList") String statusListCsv
+    );
 }

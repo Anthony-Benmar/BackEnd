@@ -6,14 +6,11 @@ import com.bbva.core.results.ErrorDataResult;
 import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dao.ReliabilityDao;
 import com.bbva.dto.catalog.response.DropDownDto;
-import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
-import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
-import com.bbva.dto.reliability.request.ReliabilityPackInputFilterRequest;
+import com.bbva.dto.reliability.request.*;
 import com.bbva.dto.reliability.response.ExecutionValidationDtoResponse;
 import com.bbva.dto.reliability.response.InventoryInputsFilterDtoResponse;
 import com.bbva.dto.reliability.response.PendingCustodyJobsDtoResponse;
 import com.bbva.dto.reliability.response.ProjectCustodyInfoDtoResponse;
-import com.bbva.dto.reliability.request.TransferInputDtoRequest;
 import com.bbva.dto.reliability.response.*;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -26,6 +23,24 @@ public class ReliabilityService {
     private final ReliabilityDao reliabilityDao = new ReliabilityDao();
     private static final Logger log= Logger.getLogger(ReliabilityService.class.getName());
     private static final String ERROR = "ERROR DOCUMENTOSSERVICE: ";
+    private static final Map<String, Map<String, String>> STATUS_MATRIX = Map.of(
+            "KM", Map.of(
+                    "EN_PROGRESO", "2,5",   // Aprobado por PO, Devuelto por RLB
+                    "APROBADOS",   "1"      // Aprobado por RLB
+            ),
+            "SM", Map.of(
+                    "EN_PROGRESO", "3,2,4,5", // En progreso, Aprob PO, Dev PO, Dev RLB
+                    "APROBADOS",   "1"        // Aprobado por RLB
+            )
+    );
+
+    private String statusCsvByRoleTab(String role, String tab) {
+        String r = (role == null || role.isBlank()) ? "KM" : role.trim().toUpperCase();
+        String t = (tab  == null || tab.isBlank())  ? "EN_PROGRESO" : tab.trim().toUpperCase();
+        Map<String,String> perRole = STATUS_MATRIX.getOrDefault(r, STATUS_MATRIX.get("KM"));
+        return perRole.getOrDefault(t, perRole.get("EN_PROGRESO"));
+    }
+
     public IDataResult<InventoryInputsFilterDtoResponse> inventoryInputsFilter(InventoryInputsFilterDtoRequest dto) {
         var result = reliabilityDao.inventoryInputsFilter(dto);
         return new SuccessDataResult<>(result);
@@ -218,6 +233,39 @@ public class ReliabilityService {
             return new SuccessDataResult<>(null, "ReliabilityPacks and JobStock updated successfully");
         } catch (Exception e) {
             log.severe("Error updating reliability packs and Job stock: " + e.getMessage());
+            return new ErrorDataResult<>(null, "500", e.getMessage());
+        }
+    }
+
+    public IDataResult<PaginationReliabilityPackResponse> getReliabilityPacksAdvanced(
+            ReliabilityPackAdvancedFilterRequest dto) {
+        try {
+            String statusCsv = statusCsvByRoleTab(dto.getRole(), dto.getTab());
+            var lista = ReliabilityDao.getInstance()
+                    .listTransfersByStatus(
+                            dto.getDomainName()==null ? "" : dto.getDomainName(),
+                            dto.getUseCase()==null    ? "" : dto.getUseCase(),
+                            statusCsv
+                    );
+
+            int recordsCount = lista.isEmpty() ? 0 : lista.size();
+            int pages = (dto.getRecordsAmount()!=null && dto.getRecordsAmount() > 0)
+                    ? (int)Math.ceil(recordsCount / (double)dto.getRecordsAmount())
+                    : 1;
+
+            if (dto.getRecordsAmount()!=null && dto.getRecordsAmount() > 0) {
+                lista = lista.stream()
+                        .skip((long) dto.getRecordsAmount() * (Math.max(dto.getPage(),1) - 1))
+                        .limit(dto.getRecordsAmount())
+                        .toList();
+            }
+
+            var res = new PaginationReliabilityPackResponse();
+            res.setCount(recordsCount);
+            res.setPagesAmount(pages);
+            res.setData(lista);
+            return new SuccessDataResult<>(res);
+        } catch (Exception e) {
             return new ErrorDataResult<>(null, "500", e.getMessage());
         }
     }

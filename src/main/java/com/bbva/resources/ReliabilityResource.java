@@ -4,10 +4,7 @@ package com.bbva.resources;
 import com.bbva.common.HttpStatusCodes;
 import com.bbva.core.abstracts.IDataResult;
 import com.bbva.dto.catalog.response.DropDownDto;
-import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
-import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
-import com.bbva.dto.reliability.request.ReliabilityPackInputFilterRequest;
-import com.bbva.dto.reliability.request.TransferInputDtoRequest;
+import com.bbva.dto.reliability.request.*;
 import com.bbva.dto.reliability.response.*;
 import com.bbva.service.ReliabilityService;
 
@@ -139,5 +136,19 @@ public class ReliabilityResource {
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<List<DropDownDto>> getOriginTypes() {
         return reliabilityService.getOriginTypes();
+    }
+
+    @POST
+    @Path("/info/reliability_packs_v2")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<PaginationReliabilityPackResponse> getReliabilityPacksV2(
+            ReliabilityPackAdvancedFilterRequest dto,
+            @HeaderParam("X-USER-ROLE") String roleFromHeader   // <-- nuevo
+    ) {
+        if (dto.getRole() == null || dto.getRole().isBlank()) {
+            dto.setRole(roleFromHeader);
+        }
+        return reliabilityService.getReliabilityPacksAdvanced(dto);
     }
 }

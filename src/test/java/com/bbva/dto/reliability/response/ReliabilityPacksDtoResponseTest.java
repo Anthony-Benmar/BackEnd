@@ -18,6 +18,8 @@ class ReliabilityPacksDtoResponseTest {
                 .creatorUserId(501)
                 .pdfLink("https://example.com/doc.pdf")
                 .jobCount(10)
+                .statusId(2)
+                .statusName("Aprobado por PO")
                 .build();
 
         assertEquals("PACK123", dto.getPack());
@@ -31,14 +33,26 @@ class ReliabilityPacksDtoResponseTest {
         assertEquals(501, dto.getCreatorUserId());
         assertEquals("https://example.com/doc.pdf", dto.getPdfLink());
         assertEquals(10, dto.getJobCount());
+        assertEquals(2, dto.getStatusId());
+        assertEquals("Aprobado por PO", dto.getStatusName());
     }
 
     @Test
     void testAllArgsConstructor() {
         ReliabilityPacksDtoResponse dto = new ReliabilityPacksDtoResponse(
-                "PACK999", 2001, "DOMX", 202, 302,
-                "Use Case Y", 402, "SDATOOL_999",
-                502, "https://bbva.com/file.pdf", 5
+                "PACK999",         // pack
+                2001,              // domainId
+                "DOMX",            // domainName
+                202,               // productOwnerUserId
+                302,               // useCaseId
+                "Use Case Y",      // useCase
+                402,               // projectId
+                "SDATOOL_999",     // sdaToolId
+                502,               // creatorUserId
+                "https://bbva.com/file.pdf", // pdfLink
+                5,                 // jobCount
+                1,                 // statusId
+                "Aprobado por Reliability" // statusName
         );
 
         assertEquals("PACK999", dto.getPack());
@@ -52,6 +66,8 @@ class ReliabilityPacksDtoResponseTest {
         assertEquals(502, dto.getCreatorUserId());
         assertEquals("https://bbva.com/file.pdf", dto.getPdfLink());
         assertEquals(5, dto.getJobCount());
+        assertEquals(1, dto.getStatusId());
+        assertEquals("Aprobado por Reliability", dto.getStatusName());
     }
 
     @Test
@@ -62,10 +78,14 @@ class ReliabilityPacksDtoResponseTest {
         dto.setDomainId(1111);
         dto.setDomainName("TestDomain");
         dto.setJobCount(3);
+        dto.setStatusId(5);
+        dto.setStatusName("Devuelto por Reliability");
 
         assertEquals("PACK000", dto.getPack());
         assertEquals(1111, dto.getDomainId());
         assertEquals("TestDomain", dto.getDomainName());
         assertEquals(3, dto.getJobCount());
+        assertEquals(5, dto.getStatusId());
+        assertEquals("Devuelto por Reliability", dto.getStatusName());
     }
 }
