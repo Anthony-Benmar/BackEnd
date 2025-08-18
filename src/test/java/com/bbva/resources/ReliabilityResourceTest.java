@@ -287,14 +287,14 @@ class ReliabilityResourceTest {
 
     @Test
     void testGetReliabilityPacksV2_UsaRoleDelBody_siViene() {
-        var dto = new ReliabilityPackAdvancedFilterRequest();
+        var dto = new ReliabilityPackInputFilterRequest();
         dto.setRole("SM"); // body manda SM
         dto.setTab("EN_PROGRESO");
 
         var mockResp = new PaginationReliabilityPackResponse();
         var dataResult = new SuccessDataResult<>(mockResp);
-        ArgumentCaptor<ReliabilityPackAdvancedFilterRequest> captor =
-                ArgumentCaptor.forClass(ReliabilityPackAdvancedFilterRequest.class);
+        ArgumentCaptor<ReliabilityPackInputFilterRequest> captor =
+                ArgumentCaptor.forClass(ReliabilityPackInputFilterRequest.class);
 
         when(reliabilityServiceMock.getReliabilityPacksAdvanced(any()))
                 .thenReturn(dataResult);
@@ -312,14 +312,14 @@ class ReliabilityResourceTest {
 
     @Test
     void testGetReliabilityPacksV2_FallbackAlHeader_siBodyNoTraeRole() {
-        var dto = new ReliabilityPackAdvancedFilterRequest();
+        var dto = new ReliabilityPackInputFilterRequest();
         dto.setRole(""); // body vacío
         dto.setTab("APROBADOS");
 
         var mockResp = new PaginationReliabilityPackResponse();
         var dataResult = new SuccessDataResult<>(mockResp);
-        ArgumentCaptor<ReliabilityPackAdvancedFilterRequest> captor =
-                ArgumentCaptor.forClass(ReliabilityPackAdvancedFilterRequest.class);
+        ArgumentCaptor<ReliabilityPackInputFilterRequest> captor =
+                ArgumentCaptor.forClass(ReliabilityPackInputFilterRequest.class);
 
         when(reliabilityServiceMock.getReliabilityPacksAdvanced(any()))
                 .thenReturn(dataResult);
@@ -337,13 +337,13 @@ class ReliabilityResourceTest {
 
     @Test
     void testGetReliabilityPacksV2_SinRoleEnBodyNiHeader_pasaNull() {
-        var dto = new ReliabilityPackAdvancedFilterRequest(); // role null
+        var dto = new ReliabilityPackInputFilterRequest(); // role null
         dto.setTab("EN_PROGRESO");
 
         var mockResp = new PaginationReliabilityPackResponse();
         var dataResult = new SuccessDataResult<>(mockResp);
-        ArgumentCaptor<ReliabilityPackAdvancedFilterRequest> captor =
-                ArgumentCaptor.forClass(ReliabilityPackAdvancedFilterRequest.class);
+        ArgumentCaptor<ReliabilityPackInputFilterRequest> captor =
+                ArgumentCaptor.forClass(ReliabilityPackInputFilterRequest.class);
 
         when(reliabilityServiceMock.getReliabilityPacksAdvanced(any()))
                 .thenReturn(dataResult);
@@ -360,7 +360,7 @@ class ReliabilityResourceTest {
 
     @Test
     void testGetReliabilityPacksV2_PropagaErrorDelService() {
-        var dto = new ReliabilityPackAdvancedFilterRequest();
+        var dto = new ReliabilityPackInputFilterRequest();
         dto.setRole("KM");
         dto.setTab("APROBADOS");
 
@@ -377,5 +377,61 @@ class ReliabilityResourceTest {
         assertEquals("500", result.status);
         assertEquals("Fallo", result.message);
         verify(reliabilityServiceMock).getReliabilityPacksAdvanced(any());
+    }
+
+    @Test
+    void testChangeTransferStatus_DelegatesToService_ok() {
+        String pack = "PACK_123";
+        var req = new TransferStatusChangeRequest();
+        req.setActorRole("KM");
+        req.setAction("APROBAR");
+
+        var svcResp = TransferStatusChangeResponse.builder()
+                .pack(pack).oldStatus(3).newStatus(4).build();
+        var dataResult = new SuccessDataResult<>(svcResp, "Estado actualizado");
+
+        ArgumentCaptor<String> packCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<TransferStatusChangeRequest> reqCaptor = ArgumentCaptor.forClass(TransferStatusChangeRequest.class);
+
+        when(reliabilityServiceMock.changeTransferStatus(anyString(), any()))
+                .thenReturn(dataResult);
+
+        var result = reliabilityResource.changeTransferStatus(pack, req);
+
+        assertNotNull(result);
+        assertTrue(result.success);
+        assertEquals("Estado actualizado", result.message);
+        assertNotNull(result.data);
+        assertEquals(pack, result.data.getPack());
+        assertEquals(3, result.data.getOldStatus());
+        assertEquals(4, result.data.getNewStatus());
+
+        verify(reliabilityServiceMock).changeTransferStatus(packCaptor.capture(), reqCaptor.capture());
+        assertEquals("PACK_123", packCaptor.getValue());
+        assertEquals("KM", reqCaptor.getValue().getActorRole());
+        assertEquals("APROBAR", reqCaptor.getValue().getAction());
+    }
+
+    @Test
+    void testChangeTransferStatus_DelegatesToService_error() {
+        String pack = "PACK_404";
+        var req = new TransferStatusChangeRequest();
+        req.setActorRole("KM");
+        req.setAction("APROBAR");
+
+        var error = new ErrorDataResult<TransferStatusChangeResponse>(null, "404", "Pack no encontrado");
+
+        when(reliabilityServiceMock.changeTransferStatus(anyString(), any()))
+                .thenReturn(error);
+
+        var result = reliabilityResource.changeTransferStatus(pack, req);
+
+        assertNotNull(result);
+        assertFalse(result.success);
+        assertNull(result.data);
+        assertEquals("404", result.status);
+        assertEquals("Pack no encontrado", result.message);
+
+        verify(reliabilityServiceMock).changeTransferStatus(eq("PACK_404"), any(TransferStatusChangeRequest.class));
     }
 }

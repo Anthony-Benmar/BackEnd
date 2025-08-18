@@ -12,6 +12,7 @@ import com.bbva.dto.reliability.response.InventoryInputsFilterDtoResponse;
 import com.bbva.dto.reliability.response.PendingCustodyJobsDtoResponse;
 import com.bbva.dto.reliability.response.ProjectCustodyInfoDtoResponse;
 import com.bbva.dto.reliability.response.*;
+import com.bbva.util.policy.TransferStatusPolicy;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import java.io.ByteArrayOutputStream;
@@ -19,27 +20,12 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static com.bbva.util.policy.TransferStatusPolicy.Action;
+
 public class ReliabilityService {
     private final ReliabilityDao reliabilityDao = new ReliabilityDao();
     private static final Logger log= Logger.getLogger(ReliabilityService.class.getName());
     private static final String ERROR = "ERROR DOCUMENTOSSERVICE: ";
-    private static final Map<String, Map<String, String>> STATUS_MATRIX = Map.of(
-            "KM", Map.of(
-                    "EN_PROGRESO", "2,5",   // Aprobado por PO, Devuelto por RLB
-                    "APROBADOS",   "1"      // Aprobado por RLB
-            ),
-            "SM", Map.of(
-                    "EN_PROGRESO", "3,2,4,5", // En progreso, Aprob PO, Dev PO, Dev RLB
-                    "APROBADOS",   "1"        // Aprobado por RLB
-            )
-    );
-
-    private String statusCsvByRoleTab(String role, String tab) {
-        String r = (role == null || role.isBlank()) ? "KM" : role.trim().toUpperCase();
-        String t = (tab  == null || tab.isBlank())  ? "EN_PROGRESO" : tab.trim().toUpperCase();
-        Map<String,String> perRole = STATUS_MATRIX.getOrDefault(r, STATUS_MATRIX.get("KM"));
-        return perRole.getOrDefault(t, perRole.get("EN_PROGRESO"));
-    }
 
     public IDataResult<InventoryInputsFilterDtoResponse> inventoryInputsFilter(InventoryInputsFilterDtoRequest dto) {
         var result = reliabilityDao.inventoryInputsFilter(dto);
@@ -238,25 +224,31 @@ public class ReliabilityService {
     }
 
     public IDataResult<PaginationReliabilityPackResponse> getReliabilityPacksAdvanced(
-            ReliabilityPackAdvancedFilterRequest dto) {
+            ReliabilityPackInputFilterRequest dto) {
         try {
-            String statusCsv = statusCsvByRoleTab(dto.getRole(), dto.getTab());
-            var lista = ReliabilityDao.getInstance()
-                    .listTransfersByStatus(
-                            dto.getDomainName()==null ? "" : dto.getDomainName(),
-                            dto.getUseCase()==null    ? "" : dto.getUseCase(),
-                            statusCsv
-                    );
+            String statusCsv = TransferStatusPolicy.toCsv(dto.getRole(), dto.getTab());
 
-            int recordsCount = lista.isEmpty() ? 0 : lista.size();
-            int pages = (dto.getRecordsAmount()!=null && dto.getRecordsAmount() > 0)
-                    ? (int)Math.ceil(recordsCount / (double)dto.getRecordsAmount())
-                    : 1;
+            var lista = reliabilityDao.listTransfersByStatus(
+                    dto.getDomainName() == null ? "" : dto.getDomainName(),
+                    dto.getUseCase()    == null ? "" : dto.getUseCase(),
+                    statusCsv
+            );
 
-            if (dto.getRecordsAmount()!=null && dto.getRecordsAmount() > 0) {
+            lista.forEach(row -> {
+                row.setCanEdit( TransferStatusPolicy.canEdit(dto.getRole(), row.getStatusId()) );
+                row.setCanEditComments( TransferStatusPolicy.canEditComments(dto.getRole(), row.getStatusId()) );
+            });
+
+            int size = Optional.ofNullable(dto.getRecordsAmount()).orElse(10);
+            int page = Optional.ofNullable(dto.getPage()).orElse(1);
+
+            int recordsCount = lista.size();
+            int pages = size > 0 ? (int) Math.ceil(recordsCount / (double) size) : 1;
+
+            if (size > 0) {
                 lista = lista.stream()
-                        .skip((long) dto.getRecordsAmount() * (Math.max(dto.getPage(),1) - 1))
-                        .limit(dto.getRecordsAmount())
+                        .skip((long) size * (Math.max(page, 1) - 1))
+                        .limit(size)
                         .toList();
             }
 
@@ -265,6 +257,33 @@ public class ReliabilityService {
             res.setPagesAmount(pages);
             res.setData(lista);
             return new SuccessDataResult<>(res);
+        } catch (Exception e) {
+            return new ErrorDataResult<>(null, "500", e.getMessage());
+        }
+    }
+
+    public IDataResult<TransferStatusChangeResponse> changeTransferStatus(String pack, TransferStatusChangeRequest req) {
+        try {
+            Integer oldSt = reliabilityDao.getPackCurrentStatus(pack);
+            if (oldSt == null) {
+                return new ErrorDataResult<>(null, "404", "Pack no encontrado");
+            }
+            Action action;
+            try {
+                action = Action.valueOf(req.getAction().toUpperCase(Locale.ROOT));
+            } catch (Exception ex) {
+                return new ErrorDataResult<>(null, "400", "Acción inválida");
+            }
+
+            int newSt = TransferStatusPolicy.computeNextStatusOrThrow(req.getActorRole(), oldSt, action);
+
+            reliabilityDao.changeTransferStatus(pack, newSt);
+
+            var resp = TransferStatusChangeResponse.builder()
+                    .pack(pack).oldStatus(oldSt).newStatus(newSt).build();
+            return new SuccessDataResult<>(resp, "Estado actualizado");
+        } catch (IllegalArgumentException iae) {
+            return new ErrorDataResult<>(null, "409", iae.getMessage());
         } catch (Exception e) {
             return new ErrorDataResult<>(null, "500", e.getMessage());
         }

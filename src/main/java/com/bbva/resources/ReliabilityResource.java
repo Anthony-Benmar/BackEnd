@@ -143,12 +143,23 @@ public class ReliabilityResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<PaginationReliabilityPackResponse> getReliabilityPacksV2(
-            ReliabilityPackAdvancedFilterRequest dto,
+            ReliabilityPackInputFilterRequest dto,
             @HeaderParam("X-USER-ROLE") String roleFromHeader   // <-- nuevo
     ) {
         if (dto.getRole() == null || dto.getRole().isBlank()) {
             dto.setRole(roleFromHeader);
         }
         return reliabilityService.getReliabilityPacksAdvanced(dto);
+    }
+
+    @PUT
+    @Path("/transfers/{pack}/status")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<TransferStatusChangeResponse> changeTransferStatus(
+            @PathParam("pack") String pack,
+            TransferStatusChangeRequest request
+    ) {
+        return reliabilityService.changeTransferStatus(pack, request);
     }
 }

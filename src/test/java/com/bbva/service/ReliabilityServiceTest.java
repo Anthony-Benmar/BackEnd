@@ -7,12 +7,14 @@ import com.bbva.database.mappers.ReliabilityMapper;
 import com.bbva.dto.catalog.response.DropDownDto;
 import com.bbva.dto.reliability.request.*;
 import com.bbva.dto.reliability.response.*;
+import com.bbva.util.policy.TransferStatusPolicy;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.poi.ss.usermodel.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
 import java.io.ByteArrayInputStream;
 import java.util.Arrays;
@@ -502,109 +504,92 @@ class ReliabilityServiceTest {
     }
 
     @Test
-    void km_enProgreso_mapea_2_5() {
-        var svc = new ReliabilityService();
-        var dto = new ReliabilityPackAdvancedFilterRequest();
+    void mapsCsv_km_enProgreso_usa_2_5() {
+        var dto = new ReliabilityPackInputFilterRequest();
         dto.setRole("KM");
         dto.setTab("EN_PROGRESO");
-        dto.setPage(1);
-        dto.setRecordsAmount(10);
 
-        var daoMock = mock(ReliabilityDao.class);
-        when(daoMock.listTransfersByStatus(eq(""), eq(""), eq("2,5")))
-                .thenReturn(Collections.emptyList());
+        try (MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
+            mocked.when(() -> TransferStatusPolicy.toCsv("KM", "EN_PROGRESO")).thenReturn("2,5");
+            when(reliabilityDaoMock.listTransfersByStatus(eq(""), eq(""), eq("2,5")))
+                    .thenReturn(Collections.emptyList());
 
-        try (MockedStatic<ReliabilityDao> mocked = mockStatic(ReliabilityDao.class)) {
-            mocked.when(ReliabilityDao::getInstance).thenReturn(daoMock);
-
-            IDataResult<?> res = svc.getReliabilityPacksAdvanced(dto);
+            var res = reliabilityService.getReliabilityPacksAdvanced(dto);
 
             assertTrue(res.success);
-            verify(daoMock).listTransfersByStatus("", "", "2,5");
+            verify(reliabilityDaoMock).listTransfersByStatus("", "", "2,5");
         }
     }
 
     @Test
-    void km_aprobados_mapea_1() {
-        var svc = new ReliabilityService();
-        var dto = new ReliabilityPackAdvancedFilterRequest();
+    void mapsCsv_km_aprobados_usa_1() {
+        var dto = new ReliabilityPackInputFilterRequest();
         dto.setRole("KM");
         dto.setTab("APROBADOS");
 
-        var daoMock = mock(ReliabilityDao.class);
-        when(daoMock.listTransfersByStatus(eq(""), eq(""), eq("1")))
-                .thenReturn(Collections.emptyList());
+        try (MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
+            mocked.when(() -> TransferStatusPolicy.toCsv("KM", "APROBADOS")).thenReturn("1");
+            when(reliabilityDaoMock.listTransfersByStatus(eq(""), eq(""), eq("1")))
+                    .thenReturn(Collections.emptyList());
 
-        try (MockedStatic<ReliabilityDao> mocked = mockStatic(ReliabilityDao.class)) {
-            mocked.when(ReliabilityDao::getInstance).thenReturn(daoMock);
-
-            var res = svc.getReliabilityPacksAdvanced(dto);
+            var res = reliabilityService.getReliabilityPacksAdvanced(dto);
 
             assertTrue(res.success);
-            verify(daoMock).listTransfersByStatus("", "", "1");
+            verify(reliabilityDaoMock).listTransfersByStatus("", "", "1");
         }
     }
 
     @Test
-    void sm_enProgreso_mapea_3_2_4_5() {
-        var svc = new ReliabilityService();
-        var dto = new ReliabilityPackAdvancedFilterRequest();
+    void mapsCsv_sm_enProgreso_usa_3_2_4_5() {
+        var dto = new ReliabilityPackInputFilterRequest();
         dto.setRole("SM");
         dto.setTab("EN_PROGRESO");
 
-        var daoMock = mock(ReliabilityDao.class);
-        when(daoMock.listTransfersByStatus(eq(""), eq(""), eq("3,2,4,5")))
-                .thenReturn(List.of(new ReliabilityPacksDtoResponse()));
+        try (MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
+            mocked.when(() -> TransferStatusPolicy.toCsv("SM", "EN_PROGRESO")).thenReturn("3,2,4,5");
+            when(reliabilityDaoMock.listTransfersByStatus(eq(""), eq(""), eq("3,2,4,5")))
+                    .thenReturn(Collections.emptyList());
 
-        try (MockedStatic<ReliabilityDao> mocked = mockStatic(ReliabilityDao.class)) {
-            mocked.when(ReliabilityDao::getInstance).thenReturn(daoMock);
-
-            var res = svc.getReliabilityPacksAdvanced(dto);
+            var res = reliabilityService.getReliabilityPacksAdvanced(dto);
 
             assertTrue(res.success);
-            verify(daoMock).listTransfersByStatus("", "", "3,2,4,5");
+            verify(reliabilityDaoMock).listTransfersByStatus("", "", "3,2,4,5");
         }
     }
 
     @Test
-    void sm_aprobados_mapea_1() {
-        var svc = new ReliabilityService();
-        var dto = new ReliabilityPackAdvancedFilterRequest();
+    void mapsCsv_sm_aprobados_usa_1() {
+        var dto = new ReliabilityPackInputFilterRequest();
         dto.setRole("SM");
         dto.setTab("APROBADOS");
 
-        var daoMock = mock(ReliabilityDao.class);
-        when(daoMock.listTransfersByStatus(eq(""), eq(""), eq("1")))
-                .thenReturn(Collections.emptyList());
+        try (MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
+            mocked.when(() -> TransferStatusPolicy.toCsv("SM", "APROBADOS")).thenReturn("1");
+            when(reliabilityDaoMock.listTransfersByStatus(eq(""), eq(""), eq("1")))
+                    .thenReturn(Collections.emptyList());
 
-        try (MockedStatic<ReliabilityDao> mocked = mockStatic(ReliabilityDao.class)) {
-            mocked.when(ReliabilityDao::getInstance).thenReturn(daoMock);
-
-            var res = svc.getReliabilityPacksAdvanced(dto);
+            var res = reliabilityService.getReliabilityPacksAdvanced(dto);
 
             assertTrue(res.success);
-            verify(daoMock).listTransfersByStatus("", "", "1");
+            verify(reliabilityDaoMock).listTransfersByStatus("", "", "1");
         }
     }
 
     @Test
-    void roleDesconocido_fallback_a_KM_EN_PROGRESO_2_5() {
-        var svc = new ReliabilityService();
-        var dto = new ReliabilityPackAdvancedFilterRequest();
+    void mapsCsv_roleDesconocido_fallback_usa_2_5() {
+        var dto = new ReliabilityPackInputFilterRequest();
         dto.setRole("???");
         dto.setTab("EN_PROGRESO");
 
-        var daoMock = mock(ReliabilityDao.class);
-        when(daoMock.listTransfersByStatus(eq(""), eq(""), eq("2,5")))
-                .thenReturn(Collections.emptyList());
+        try (MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
+            mocked.when(() -> TransferStatusPolicy.toCsv("???", "EN_PROGRESO")).thenReturn("2,5");
+            when(reliabilityDaoMock.listTransfersByStatus(eq(""), eq(""), eq("2,5")))
+                    .thenReturn(Collections.emptyList());
 
-        try (MockedStatic<ReliabilityDao> mocked = mockStatic(ReliabilityDao.class)) {
-            mocked.when(ReliabilityDao::getInstance).thenReturn(daoMock);
-
-            var res = svc.getReliabilityPacksAdvanced(dto);
+            var res = reliabilityService.getReliabilityPacksAdvanced(dto);
 
             assertTrue(res.success);
-            verify(daoMock).listTransfersByStatus("", "", "2,5");
+            verify(reliabilityDaoMock).listTransfersByStatus("", "", "2,5");
         }
     }
 }

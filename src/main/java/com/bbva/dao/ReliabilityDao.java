@@ -256,7 +256,6 @@ public class ReliabilityDao {
     public List<ReliabilityPacksDtoResponse> listTransfersByStatus(
             String domainCsv, String useCaseCsv, String statusCsv) {
 
-        // Log de la llamada al SP
         LOGGER.info(() -> String.format(
                 "CALL sidedb.SP_LIST_TRANSFERS_BY_STATUS('%s','%s','%s')",
                 domainCsv, useCaseCsv, statusCsv
@@ -268,6 +267,27 @@ public class ReliabilityDao {
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
             return Collections.emptyList();
+        }
+    }
+
+    public Integer getPackCurrentStatus(String pack) {
+        try (SqlSession session = MyBatisConnectionFactory.getInstance().openSession()) {
+            return session.getMapper(ReliabilityMapper.class).getPackStatus(pack);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            return null;
+        }
+    }
+
+    public void changeTransferStatus(String pack, int newStatus) {
+        try (SqlSession session = MyBatisConnectionFactory.getInstance().openSession()) {
+            ReliabilityMapper m = session.getMapper(ReliabilityMapper.class);
+            m.updateReliabilityStatus(pack, newStatus);
+            m.updateProjectInfoStatus(pack, newStatus);
+            session.commit();
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            throw new PersistenceException("No se pudo actualizar el estado del pack "+pack, e);
         }
     }
 }

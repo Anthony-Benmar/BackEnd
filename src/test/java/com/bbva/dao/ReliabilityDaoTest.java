@@ -515,4 +515,73 @@ class ReliabilityDaoTest {
         assertNotNull(out);
         assertTrue(out.isEmpty(), "Ante excepción, el DAO debe devolver lista vacía");
     }
+
+    @Test
+    void testGetPackCurrentStatus_success() {
+        String pack = "PACK_OK";
+        when(reliabilityMapperMock.getPackStatus(pack)).thenReturn(3);
+
+        Integer st = reliabilityDao.getPackCurrentStatus(pack);
+
+        assertNotNull(st);
+        assertEquals(3, st);
+        verify(sqlSessionFactoryMock).openSession();
+        verify(sqlSessionMock).getMapper(ReliabilityMapper.class);
+        verify(reliabilityMapperMock).getPackStatus(pack);
+    }
+
+    @Test
+    void testGetPackCurrentStatus_exception_returnsNull() {
+        String pack = "PACK_ERR";
+        when(reliabilityMapperMock.getPackStatus(pack)).thenThrow(new RuntimeException("DB error"));
+
+        Integer st = reliabilityDao.getPackCurrentStatus(pack);
+
+        assertNull(st, "Ante excepción el DAO debe retornar null");
+        verify(sqlSessionFactoryMock).openSession();
+        verify(sqlSessionMock).getMapper(ReliabilityMapper.class);
+        verify(reliabilityMapperMock).getPackStatus(pack);
+    }
+
+    @Test
+    void testChangeTransferStatus_success_commitsAndUpdatesBoth() {
+        String pack = "PACK_123";
+        int newStatus = 4;
+
+        // no exception -> commit esperado
+        assertDoesNotThrow(() -> reliabilityDao.changeTransferStatus(pack, newStatus));
+
+        verify(sqlSessionFactoryMock).openSession();
+        verify(sqlSessionMock).getMapper(ReliabilityMapper.class);
+        verify(reliabilityMapperMock).updateReliabilityStatus(pack, newStatus);
+        verify(reliabilityMapperMock).updateProjectInfoStatus(pack, newStatus);
+        verify(sqlSessionMock).commit();
+    }
+
+    @Test
+    void testChangeTransferStatus_mapperThrows_wrapsInPersistenceException_sinJPAImport() {
+        String pack = "PACK_500";
+        int newStatus = 6;
+
+        // El mapper falla en la primera actualización
+        doThrow(new RuntimeException("DB down"))
+                .when(reliabilityMapperMock).updateReliabilityStatus(pack, newStatus);
+
+        // Como PersistenceException extiende RuntimeException, no necesitamos importar JPA
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> reliabilityDao.changeTransferStatus(pack, newStatus));
+
+        // Validamos que efectivamente sea una PersistenceException sin importarla
+        assertEquals("PersistenceException", ex.getClass().getSimpleName());
+        assertTrue(ex.getMessage().contains("No se pudo actualizar el estado del pack PACK_500"));
+        assertNotNull(ex.getCause());
+        assertEquals("DB down", ex.getCause().getMessage());
+
+        // No debe hacer commit ni llamar al segundo update cuando falla
+        verify(sqlSessionFactoryMock).openSession();
+        verify(sqlSessionMock).getMapper(ReliabilityMapper.class);
+        verify(reliabilityMapperMock).updateReliabilityStatus(pack, newStatus);
+        verify(reliabilityMapperMock, never()).updateProjectInfoStatus(anyString(), anyInt());
+        verify(sqlSessionMock, never()).commit();
+    }
 }

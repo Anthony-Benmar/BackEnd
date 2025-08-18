@@ -176,6 +176,9 @@ public interface ReliabilityMapper {
             ")")
     void insertJobStock(JobTransferInputDtoRequest dto);
 
+    @Select("SELECT status_id FROM reliability_packs WHERE pack = #{pack} LIMIT 1")
+    Integer getPackStatus(@Param("pack") String pack);
+
     @Update("UPDATE reliability_packs SET status_id = #{estado} WHERE pack = #{pack}")
     void updateReliabilityStatus(@Param("pack") String pack, @Param("estado") int estado);
 

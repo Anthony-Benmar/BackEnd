@@ -1,7 +1,9 @@
 package com.bbva.dto.reliability.response;
+
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
+
 class ReliabilityPacksDtoResponseTest {
 
     @Test
@@ -20,6 +22,8 @@ class ReliabilityPacksDtoResponseTest {
                 .jobCount(10)
                 .statusId(2)
                 .statusName("Aprobado por PO")
+                .canEdit(1)
+                .canEditComments(0)
                 .build();
 
         assertEquals("PACK123", dto.getPack());
@@ -35,6 +39,8 @@ class ReliabilityPacksDtoResponseTest {
         assertEquals(10, dto.getJobCount());
         assertEquals(2, dto.getStatusId());
         assertEquals("Aprobado por PO", dto.getStatusName());
+        assertEquals(1, dto.getCanEdit());
+        assertEquals(0, dto.getCanEditComments());
     }
 
     @Test
@@ -52,7 +58,9 @@ class ReliabilityPacksDtoResponseTest {
                 "https://bbva.com/file.pdf", // pdfLink
                 5,                 // jobCount
                 1,                 // statusId
-                "Aprobado por Reliability" // statusName
+                "Aprobado por Reliability", // statusName
+                1,                 // canEdit
+                1                  // canEditComments
         );
 
         assertEquals("PACK999", dto.getPack());
@@ -68,6 +76,8 @@ class ReliabilityPacksDtoResponseTest {
         assertEquals(5, dto.getJobCount());
         assertEquals(1, dto.getStatusId());
         assertEquals("Aprobado por Reliability", dto.getStatusName());
+        assertEquals(1, dto.getCanEdit());
+        assertEquals(1, dto.getCanEditComments());
     }
 
     @Test
@@ -80,6 +90,8 @@ class ReliabilityPacksDtoResponseTest {
         dto.setJobCount(3);
         dto.setStatusId(5);
         dto.setStatusName("Devuelto por Reliability");
+        dto.setCanEdit(0);
+        dto.setCanEditComments(1);
 
         assertEquals("PACK000", dto.getPack());
         assertEquals(1111, dto.getDomainId());
@@ -87,5 +99,7 @@ class ReliabilityPacksDtoResponseTest {
         assertEquals(3, dto.getJobCount());
         assertEquals(5, dto.getStatusId());
         assertEquals("Devuelto por Reliability", dto.getStatusName());
+        assertEquals(0, dto.getCanEdit());
+        assertEquals(1, dto.getCanEditComments());
     }
 }
