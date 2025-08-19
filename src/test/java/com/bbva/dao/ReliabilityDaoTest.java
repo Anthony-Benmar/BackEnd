@@ -639,4 +639,31 @@ class ReliabilityDaoTest {
         assertTrue(ex.getMessage().contains("Pack sin jobs para comentar"));
         verify(sqlSessionMock, never()).commit();
     }
+    @Test
+    void testGetTransferDetail_headerNull_returnsNull() {
+        String pack = "PACK_X";
+
+        // El mapper devuelve header null
+        when(reliabilityMapperMock.getTransferHeader(pack)).thenReturn(null);
+
+        TransferDetailResponse out = reliabilityDao.getTransferDetail(pack);
+
+        assertNull(out, "Si el header es null, el DAO debe retornar null");
+        verify(reliabilityMapperMock).getTransferHeader(pack);
+        // No debe pedir los jobs si no hay header
+        verify(reliabilityMapperMock, never()).getTransferJobs(anyString());
+    }
+
+    @Test
+    void testGetTransferDetail_exception_returnsNull() {
+        String pack = "PACK_ERR";
+
+        // Simulamos fallo al abrir la sesión (o cualquier excepción interna)
+        when(sqlSessionFactoryMock.openSession()).thenThrow(new RuntimeException("boom"));
+
+        TransferDetailResponse out = reliabilityDao.getTransferDetail(pack);
+
+        assertNull(out, "Ante excepción, el DAO debe retornar null");
+        // No hay más verificaciones porque ni siquiera se llega al mapper
+    }
 }

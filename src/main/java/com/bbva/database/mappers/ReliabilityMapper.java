@@ -215,4 +215,60 @@ public interface ReliabilityMapper {
             @Param("useCase") String useCaseCsv,
             @Param("statusList") String statusListCsv
     );
+
+    @Select("""
+  SELECT
+    rp.pack,
+    pi2.sdatool_id                       AS sdaToolId,
+    rp.domain_id                         AS domainId,
+    domain.element_name                  AS domain_name,
+    rp.use_case_id                       AS useCaseId,
+    uc.use_case_name                     AS use_case,
+    rp.status_id                         AS statusId,
+    st.element_name                      AS status_name,
+    (SELECT MAX(js.comments) FROM job_stock js WHERE js.pack = rp.pack) AS comments
+  FROM reliability_packs rp
+  LEFT JOIN project_info pi2    ON rp.project_id = pi2.project_id
+  LEFT JOIN catalog domain      ON COALESCE(rp.domain_id,9)=domain.element_id AND domain.catalog_id=1027
+  LEFT JOIN use_case uc         ON rp.use_case_id = uc.use_case_id
+  LEFT JOIN catalog st          ON st.catalog_id = 3003 AND st.element_id = rp.status_id
+  WHERE rp.pack = #{pack}
+  LIMIT 1
+""")
+    @Results({
+            @Result(property="pack",        column="pack"),
+            @Result(property="sdaToolId",   column="sdaToolId"),
+            @Result(property="domainId",    column="domainId"),
+            @Result(property="domainName",  column="domain_name"),
+            @Result(property="useCaseId",   column="useCaseId"),
+            @Result(property="useCase",     column="use_case"),
+            @Result(property="statusId",    column="statusId"),
+            @Result(property="statusName",  column="status_name"),
+            @Result(property="comments",    column="comments")
+    })
+    TransferDetailResponse.Header getTransferHeader(@Param("pack") String pack);
+
+    @Select("""
+  SELECT
+    job_name       AS jobName,
+    component_name AS jsonName,
+    frequency_id   AS frequencyId,
+    job_type_id    AS jobTypeId,
+    job_phase_id   AS jobPhaseId,
+    origin_type_id AS originTypeId,
+    input_paths    AS inputPaths,
+    output_path    AS outputPath,
+    bitbucket_url  AS bitBucketUrl,
+    responsible    AS responsible,
+    use_case_id    AS useCaseId,
+    domain_id      AS domainId,
+    is_critical    AS isCritical,
+    status_id      AS statusId,
+    comments       AS comments
+  FROM job_stock
+  WHERE pack = #{pack}
+  ORDER BY job_name
+""")
+    List<TransferDetailResponse.JobRow> getTransferJobs(@Param("pack") String pack);
+
 }

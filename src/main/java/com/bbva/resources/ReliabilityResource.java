@@ -200,4 +200,11 @@ public class ReliabilityResource {
 
         return reliabilityService.updateCommentsForPack(pack, actor, comments);
     }
+
+    @GET
+    @Path("/transfers/{pack}/detail")
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<TransferDetailResponse> getTransferDetail(@PathParam("pack") String pack) {
+        return reliabilityService.getTransferDetail(pack);
+    }
 }

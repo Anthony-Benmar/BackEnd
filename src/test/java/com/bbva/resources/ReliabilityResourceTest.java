@@ -505,4 +505,38 @@ class ReliabilityResourceTest {
         assertTrue(resp.success);
         verify(reliabilityServiceMock).updateCommentsForPack(pack, "KM", "otra nota");
     }
+
+    @Test
+    void testGetTransferDetail_success() {
+        String pack = "PACK_OK";
+        TransferDetailResponse detail = new TransferDetailResponse();
+        IDataResult<TransferDetailResponse> dataResult = new SuccessDataResult<>(detail);
+
+        when(reliabilityServiceMock.getTransferDetail(pack)).thenReturn(dataResult);
+
+        IDataResult<TransferDetailResponse> result = reliabilityResource.getTransferDetail(pack);
+
+        assertNotNull(result);
+        assertTrue(result.success);
+        assertSame(detail, result.data);
+        verify(reliabilityServiceMock).getTransferDetail(pack);
+    }
+
+    @Test
+    void testGetTransferDetail_error() {
+        String pack = "PACK_404";
+        IDataResult<TransferDetailResponse> error =
+                new ErrorDataResult<>(null, "404", "Pack no encontrado");
+
+        when(reliabilityServiceMock.getTransferDetail(pack)).thenReturn(error);
+
+        IDataResult<TransferDetailResponse> result = reliabilityResource.getTransferDetail(pack);
+
+        assertNotNull(result);
+        assertFalse(result.success);
+        assertNull(result.data);
+        assertEquals("404", result.status);
+        assertEquals("Pack no encontrado", result.message);
+        verify(reliabilityServiceMock).getTransferDetail(pack);
+    }
 }

@@ -359,12 +359,10 @@ public class ReliabilityService {
                 return new ErrorDataResult<>(null, CODE_404, MSG_PACK_NOT_FOUND);
             }
 
-            // Si mantienes la regla de KM, valida aquí (opcional si ya lo validas antes)
-            if (TransferStatusPolicy.canEditComments(role, st) != 1) {
-                return new ErrorDataResult<>(null, CODE_409, "Sólo KM puede comentar cuando está Aprobado por PO");
+            if (TransferStatusPolicy.canWriteGeneralComment(role, st) != 1) {
+                return new ErrorDataResult<>(null, CODE_409, "No tienes permisos para comentar en este estado");
             }
 
-            // Firma existente del DAO: no recibe role
             reliabilityDao.updatePackComments(pack, comments);
             return new SuccessDataResult<>(null, "Comentarios actualizados");
 
@@ -375,4 +373,15 @@ public class ReliabilityService {
             return new ErrorDataResult<>(null, CODE_500, e.getMessage());
         }
     }
+
+    public IDataResult<TransferDetailResponse> getTransferDetail(String pack) {
+        try {
+            var detail = reliabilityDao.getTransferDetail(pack);
+            if (detail == null) return new ErrorDataResult<>(null, "404", "Pack no encontrado");
+            return new SuccessDataResult<>(detail);
+        } catch (Exception e) {
+            return new ErrorDataResult<>(null, "500", e.getMessage());
+        }
+    }
+
 }

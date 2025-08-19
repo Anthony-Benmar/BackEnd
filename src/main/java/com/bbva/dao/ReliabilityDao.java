@@ -304,4 +304,17 @@ public class ReliabilityDao {
             s.commit();
         }
     }
+
+    public TransferDetailResponse getTransferDetail(String pack) {
+        try (SqlSession s = MyBatisConnectionFactory.getInstance().openSession()) {
+            var m = s.getMapper(ReliabilityMapper.class);
+            var header = m.getTransferHeader(pack);
+            if (header == null) return null;
+            var jobs = m.getTransferJobs(pack);
+            return TransferDetailResponse.builder().header(header).jobs(jobs).build();
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Error getTransferDetail", e);
+            return null;
+        }
+    }
 }

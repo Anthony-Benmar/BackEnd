@@ -115,4 +115,11 @@ public class TransferStatusPolicy {
         }
         throw new IllegalStateException("No se pudo calcular la transición");
     }
+
+    public static int canWriteGeneralComment(String role, Integer statusId) {
+        int st = statusId == null ? 0 : statusId;
+        if (isKM(role) && st == APROBADO_PO) return 1;   // KM comenta en 2
+        if (isSM(role) && st == EN_PROGRESO) return 1;   // PO comenta al devolver (3)
+        return 0;
+    }
 }

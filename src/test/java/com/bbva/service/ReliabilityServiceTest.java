@@ -789,13 +789,15 @@ class ReliabilityServiceTest {
         when(reliabilityDaoMock.getPackCurrentStatus("P2")).thenReturn(TransferStatusPolicy.APROBADO_PO); // 2
 
         try (MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
-            mocked.when(() -> TransferStatusPolicy.canEditComments("KM", TransferStatusPolicy.APROBADO_PO))
+            mocked.when(() -> TransferStatusPolicy.canWriteGeneralComment("KM", TransferStatusPolicy.APROBADO_PO))
                     .thenReturn(1);
+
             doNothing().when(reliabilityDaoMock).updatePackComments("P2", "nota");
 
             var res = reliabilityService.updateCommentsForPack("P2", "KM", "nota");
             assertTrue(res.success);
             assertEquals("Comentarios actualizados", res.message);
+            verify(reliabilityDaoMock).updatePackComments("P2", "nota");
         }
     }
 
@@ -804,7 +806,7 @@ class ReliabilityServiceTest {
         when(reliabilityDaoMock.getPackCurrentStatus("P2")).thenReturn(TransferStatusPolicy.EN_PROGRESO); // 3
 
         try (MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
-            mocked.when(() -> TransferStatusPolicy.canEditComments("KM", 3)).thenReturn(0);
+            mocked.when(() -> TransferStatusPolicy.canWriteGeneralComment("KM", 3)).thenReturn(0);
 
             var res = reliabilityService.updateCommentsForPack("P2", "KM", "x");
             assertFalse(res.success);
@@ -823,10 +825,12 @@ class ReliabilityServiceTest {
 
     @Test
     void updateCommentsForPack_errorDao404() {
-        when(reliabilityDaoMock.getPackCurrentStatus("P2")).thenReturn(2);
+        when(reliabilityDaoMock.getPackCurrentStatus("P2")).thenReturn(TransferStatusPolicy.APROBADO_PO); // 2
 
         try (MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
-            mocked.when(() -> TransferStatusPolicy.canEditComments("KM", 2)).thenReturn(1);
+            mocked.when(() -> TransferStatusPolicy.canWriteGeneralComment("KM", TransferStatusPolicy.APROBADO_PO))
+                    .thenReturn(1);
+
             doThrow(new PersistenceException("Pack sin jobs para comentar", null))
                     .when(reliabilityDaoMock).updatePackComments("P2", "x");
 
@@ -838,10 +842,12 @@ class ReliabilityServiceTest {
 
     @Test
     void updateCommentsForPack_errorDao500() {
-        when(reliabilityDaoMock.getPackCurrentStatus("P2")).thenReturn(2);
+        when(reliabilityDaoMock.getPackCurrentStatus("P2")).thenReturn(TransferStatusPolicy.APROBADO_PO); // 2
 
         try (MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
-            mocked.when(() -> TransferStatusPolicy.canEditComments("KM", 2)).thenReturn(1);
+            mocked.when(() -> TransferStatusPolicy.canWriteGeneralComment("KM", TransferStatusPolicy.APROBADO_PO))
+                    .thenReturn(1);
+
             doThrow(new RuntimeException("DB down"))
                     .when(reliabilityDaoMock).updatePackComments("P2", "x");
 
@@ -849,5 +855,50 @@ class ReliabilityServiceTest {
             assertFalse(res.success);
             assertEquals("500", res.status);
         }
+    }
+    @Test
+    void getTransferDetail_success() {
+        String pack = "PACK_OK";
+        TransferDetailResponse detail = new TransferDetailResponse();
+
+        when(reliabilityDaoMock.getTransferDetail(pack)).thenReturn(detail);
+
+        IDataResult<TransferDetailResponse> res = reliabilityService.getTransferDetail(pack);
+
+        assertNotNull(res);
+        assertTrue(res.success);
+        assertSame(detail, res.data);
+        verify(reliabilityDaoMock).getTransferDetail(pack);
+    }
+
+    @Test
+    void getTransferDetail_notFound() {
+        String pack = "PACK_404";
+        when(reliabilityDaoMock.getTransferDetail(pack)).thenReturn(null);
+
+        IDataResult<TransferDetailResponse> res = reliabilityService.getTransferDetail(pack);
+
+        assertNotNull(res);
+        assertFalse(res.success);
+        assertNull(res.data);
+        assertEquals("404", res.status);
+        assertEquals("Pack no encontrado", res.message);
+        verify(reliabilityDaoMock).getTransferDetail(pack);
+    }
+
+    @Test
+    void getTransferDetail_error() {
+        String pack = "PACK_ERR";
+        when(reliabilityDaoMock.getTransferDetail(pack))
+                .thenThrow(new RuntimeException("DB down"));
+
+        IDataResult<TransferDetailResponse> res = reliabilityService.getTransferDetail(pack);
+
+        assertNotNull(res);
+        assertFalse(res.success);
+        assertNull(res.data);
+        assertEquals("500", res.status);
+        assertTrue(res.message.contains("DB down"));
+        verify(reliabilityDaoMock).getTransferDetail(pack);
     }
 }
