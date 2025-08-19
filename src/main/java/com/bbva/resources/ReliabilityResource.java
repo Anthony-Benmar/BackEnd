@@ -190,10 +190,12 @@ public class ReliabilityResource {
             UpdateJobCommentsRequest body,
             @HeaderParam("X-USER-ROLE") String roleFromHeader
     ) {
-        String actor = (body != null && body.getActorRole() != null && !body.getActorRole().isBlank())
-                ? body.getActorRole()
-                : (roleFromHeader != null ? roleFromHeader : "");
-
+        String actor;
+        if (body != null && body.getActorRole() != null && !body.getActorRole().isBlank()) {
+            actor = body.getActorRole();
+        } else {
+            actor = (roleFromHeader != null) ? roleFromHeader : "";
+        }
         String comments = (body != null) ? body.getComments() : null;
 
         return reliabilityService.updateCommentsForPack(pack, actor, comments);
