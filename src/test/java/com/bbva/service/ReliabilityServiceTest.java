@@ -14,7 +14,7 @@ import org.apache.poi.ss.usermodel.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
-import org.mockito.Mockito;
+import com.bbva.dao.ReliabilityDao.PersistenceException;
 
 import java.io.ByteArrayInputStream;
 import java.util.Arrays;
@@ -529,7 +529,7 @@ class ReliabilityServiceTest {
 
         try (MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
             mocked.when(() -> TransferStatusPolicy.toCsv("KM", "APROBADOS")).thenReturn("1");
-            when(reliabilityDaoMock.listTransfersByStatus(eq(""), eq(""), eq("1")))
+            when(reliabilityDaoMock.listTransfersByStatus("", "", "1"))
                     .thenReturn(Collections.emptyList());
 
             var res = reliabilityService.getReliabilityPacksAdvanced(dto);
@@ -546,8 +546,10 @@ class ReliabilityServiceTest {
         dto.setTab("EN_PROGRESO");
 
         try (MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
-            mocked.when(() -> TransferStatusPolicy.toCsv("SM", "EN_PROGRESO")).thenReturn("3,2,4,5");
-            when(reliabilityDaoMock.listTransfersByStatus(eq(""), eq(""), eq("3,2,4,5")))
+            mocked.when(() -> TransferStatusPolicy.toCsv("SM", "EN_PROGRESO"))
+                    .thenReturn("3,2,4,5");
+
+            when(reliabilityDaoMock.listTransfersByStatus("", "", "3,2,4,5"))
                     .thenReturn(Collections.emptyList());
 
             var res = reliabilityService.getReliabilityPacksAdvanced(dto);
@@ -565,7 +567,8 @@ class ReliabilityServiceTest {
 
         try (MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
             mocked.when(() -> TransferStatusPolicy.toCsv("SM", "APROBADOS")).thenReturn("1");
-            when(reliabilityDaoMock.listTransfersByStatus(eq(""), eq(""), eq("1")))
+
+            when(reliabilityDaoMock.listTransfersByStatus("", "", "1"))
                     .thenReturn(Collections.emptyList());
 
             var res = reliabilityService.getReliabilityPacksAdvanced(dto);
@@ -583,13 +586,268 @@ class ReliabilityServiceTest {
 
         try (MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
             mocked.when(() -> TransferStatusPolicy.toCsv("???", "EN_PROGRESO")).thenReturn("2,5");
-            when(reliabilityDaoMock.listTransfersByStatus(eq(""), eq(""), eq("2,5")))
+
+            when(reliabilityDaoMock.listTransfersByStatus("", "", "2,5"))
                     .thenReturn(Collections.emptyList());
 
             var res = reliabilityService.getReliabilityPacksAdvanced(dto);
 
             assertTrue(res.success);
             verify(reliabilityDaoMock).listTransfersByStatus("", "", "2,5");
+        }
+    }
+
+    @Test
+    void changeTransferStatus_success() {
+        String pack = "PACK1";
+        var req = new TransferStatusChangeRequest();
+        req.setActorRole("SM");
+        req.setAction("APPROVE");
+
+        when(reliabilityDaoMock.getPackCurrentStatus(pack)).thenReturn(TransferStatusPolicy.EN_PROGRESO); // 3
+
+        try (MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
+
+            mocked.when(() -> TransferStatusPolicy.computeNextStatusOrThrow(
+                            "SM", TransferStatusPolicy.EN_PROGRESO, TransferStatusPolicy.Action.APPROVE))
+                    .thenReturn(TransferStatusPolicy.APROBADO_PO);
+
+            // DAO actualiza
+            doNothing().when(reliabilityDaoMock).changeTransferStatus(pack, TransferStatusPolicy.APROBADO_PO);
+
+            var res = reliabilityService.changeTransferStatus(pack, req);
+
+            assertTrue(res.success);
+            assertNotNull(res.data);
+            assertEquals(TransferStatusPolicy.EN_PROGRESO, res.data.getOldStatus());
+            assertEquals(TransferStatusPolicy.APROBADO_PO, res.data.getNewStatus());
+            verify(reliabilityDaoMock).changeTransferStatus(pack, TransferStatusPolicy.APROBADO_PO);
+        }
+    }
+
+    @Test
+    void changeTransferStatus_packNoEncontrado() {
+        when(reliabilityDaoMock.getPackCurrentStatus("P404")).thenReturn(null);
+
+        var req = new TransferStatusChangeRequest();
+        req.setActorRole("SM");
+        req.setAction("APPROVE");
+
+        var res = reliabilityService.changeTransferStatus("P404", req);
+
+        assertFalse(res.success);
+        assertEquals("404", res.status);
+        assertNull(res.data);
+    }
+
+    @Test
+    void changeTransferStatus_accionInvalida() {
+        when(reliabilityDaoMock.getPackCurrentStatus("P1")).thenReturn(3);
+
+        var req = new TransferStatusChangeRequest();
+        req.setActorRole("SM");
+        req.setAction("fooBAR");
+
+        var res = reliabilityService.changeTransferStatus("P1", req);
+
+        assertFalse(res.success);
+        assertEquals("400", res.status);
+        verify(reliabilityDaoMock, never()).changeTransferStatus(anyString(), anyInt());
+    }
+
+    @Test
+    void changeTransferStatus_transicionNoPermitida() {
+        when(reliabilityDaoMock.getPackCurrentStatus("P1")).thenReturn(2); // Aprobado PO
+
+        var req = new TransferStatusChangeRequest();
+        req.setActorRole("SM");
+        req.setAction("APPROVE");
+
+        try (MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
+            mocked.when(() -> TransferStatusPolicy.computeNextStatusOrThrow("SM", 2, TransferStatusPolicy.Action.APPROVE))
+                    .thenThrow(new IllegalArgumentException("Transición no permitida"));
+            var res = reliabilityService.changeTransferStatus("P1", req);
+            assertFalse(res.success);
+            assertEquals("409", res.status);
+        }
+    }
+
+    @Test
+    void changeTransferStatus_errorDao() {
+        when(reliabilityDaoMock.getPackCurrentStatus("P1")).thenReturn(3);
+
+        var req = new TransferStatusChangeRequest();
+        req.setActorRole("SM");
+        req.setAction("APPROVE");
+
+        try (MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
+            mocked.when(() -> TransferStatusPolicy.computeNextStatusOrThrow("SM", 3, TransferStatusPolicy.Action.APPROVE))
+                    .thenReturn(2);
+            doThrow(new RuntimeException("DB down")).when(reliabilityDaoMock).changeTransferStatus("P1", 2);
+
+            var res = reliabilityService.changeTransferStatus("P1", req);
+            assertFalse(res.success);
+            assertEquals("500", res.status);
+        }
+    }
+
+    // --- updateJobBySm ---
+
+    @Test
+    void updateJobBySm_success() {
+        var dto = new UpdateJobDtoRequest();
+        dto.setActorRole("SM");
+        dto.setPack("P1");
+        dto.setJobName("JOB_A");
+
+        when(reliabilityDaoMock.getPackCurrentStatus("P1")).thenReturn(TransferStatusPolicy.DEVUELTO_PO); // 4
+
+        try (MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
+            mocked.when(() -> TransferStatusPolicy.canEdit("SM", TransferStatusPolicy.DEVUELTO_PO))
+                    .thenReturn(1);
+            doNothing().when(reliabilityDaoMock).updateJobByPackAndName(dto);
+
+            var res = reliabilityService.updateJobBySm(dto);
+            assertTrue(res.success);
+            assertEquals("Job actualizado", res.message);
+        }
+    }
+
+    @Test
+    void updateJobBySm_forbiddenCuandoNoDevuelto() {
+        var dto = new UpdateJobDtoRequest();
+        dto.setActorRole("SM");
+        dto.setPack("P1");
+        dto.setJobName("JOB_A");
+
+        when(reliabilityDaoMock.getPackCurrentStatus("P1")).thenReturn(TransferStatusPolicy.EN_PROGRESO); // 3
+
+        try (MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
+            mocked.when(() -> TransferStatusPolicy.canEdit("SM", TransferStatusPolicy.EN_PROGRESO))
+                    .thenReturn(0);
+            var res = reliabilityService.updateJobBySm(dto);
+            assertFalse(res.success);
+            assertEquals("409", res.status);
+        }
+    }
+
+    @Test
+    void updateJobBySm_packNoEncontrado() {
+        var dto = new UpdateJobDtoRequest();
+        dto.setActorRole("SM");
+        dto.setPack("P404");
+
+        when(reliabilityDaoMock.getPackCurrentStatus("P404")).thenReturn(null);
+
+        var res = reliabilityService.updateJobBySm(dto);
+        assertFalse(res.success);
+        assertEquals("404", res.status);
+    }
+
+    @Test
+    void updateJobBySm_errorDao404() {
+        var dto = new UpdateJobDtoRequest();
+        dto.setActorRole("SM");
+        dto.setPack("P1");
+
+        when(reliabilityDaoMock.getPackCurrentStatus("P1")).thenReturn(TransferStatusPolicy.DEVUELTO_RLB); // 5
+
+        try (MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
+            mocked.when(() -> TransferStatusPolicy.canEdit("SM", 5)).thenReturn(1);
+            doThrow(new PersistenceException("No se encontró el job", null))
+                    .when(reliabilityDaoMock).updateJobByPackAndName(dto);
+
+            var res = reliabilityService.updateJobBySm(dto);
+            assertFalse(res.success);
+            assertEquals("404", res.status);
+        }
+    }
+
+    @Test
+    void updateJobBySm_errorDao500() {
+        var dto = new UpdateJobDtoRequest();
+        dto.setActorRole("SM");
+        dto.setPack("P1");
+
+        when(reliabilityDaoMock.getPackCurrentStatus("P1")).thenReturn(5);
+
+        try (MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
+            mocked.when(() -> TransferStatusPolicy.canEdit("SM", 5)).thenReturn(1);
+            doThrow(new RuntimeException("DB down"))
+                    .when(reliabilityDaoMock).updateJobByPackAndName(dto);
+
+            var res = reliabilityService.updateJobBySm(dto);
+            assertFalse(res.success);
+            assertEquals("500", res.status);
+        }
+    }
+
+    // --- updateCommentsForPack (KM) ---
+
+    @Test
+    void updateCommentsForPack_success() {
+        when(reliabilityDaoMock.getPackCurrentStatus("P2")).thenReturn(TransferStatusPolicy.APROBADO_PO); // 2
+
+        try (MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
+            mocked.when(() -> TransferStatusPolicy.canEditComments("KM", TransferStatusPolicy.APROBADO_PO))
+                    .thenReturn(1);
+            doNothing().when(reliabilityDaoMock).updatePackComments("P2", "nota");
+
+            var res = reliabilityService.updateCommentsForPack("P2", "KM", "nota");
+            assertTrue(res.success);
+            assertEquals("Comentarios actualizados", res.message);
+        }
+    }
+
+    @Test
+    void updateCommentsForPack_forbidden() {
+        when(reliabilityDaoMock.getPackCurrentStatus("P2")).thenReturn(TransferStatusPolicy.EN_PROGRESO); // 3
+
+        try (MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
+            mocked.when(() -> TransferStatusPolicy.canEditComments("KM", 3)).thenReturn(0);
+
+            var res = reliabilityService.updateCommentsForPack("P2", "KM", "x");
+            assertFalse(res.success);
+            assertEquals("409", res.status);
+        }
+    }
+
+    @Test
+    void updateCommentsForPack_packNoEncontrado() {
+        when(reliabilityDaoMock.getPackCurrentStatus("P404")).thenReturn(null);
+
+        var res = reliabilityService.updateCommentsForPack("P404", "KM", "x");
+        assertFalse(res.success);
+        assertEquals("404", res.status);
+    }
+
+    @Test
+    void updateCommentsForPack_errorDao404() {
+        when(reliabilityDaoMock.getPackCurrentStatus("P2")).thenReturn(2);
+
+        try (MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
+            mocked.when(() -> TransferStatusPolicy.canEditComments("KM", 2)).thenReturn(1);
+            doThrow(new PersistenceException("Pack sin jobs para comentar", null))
+                    .when(reliabilityDaoMock).updatePackComments("P2", "x");
+
+            var res = reliabilityService.updateCommentsForPack("P2", "KM", "x");
+            assertFalse(res.success);
+            assertEquals("404", res.status);
+        }
+    }
+
+    @Test
+    void updateCommentsForPack_errorDao500() {
+        when(reliabilityDaoMock.getPackCurrentStatus("P2")).thenReturn(2);
+
+        try (MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
+            mocked.when(() -> TransferStatusPolicy.canEditComments("KM", 2)).thenReturn(1);
+            doThrow(new RuntimeException("DB down"))
+                    .when(reliabilityDaoMock).updatePackComments("P2", "x");
+
+            var res = reliabilityService.updateCommentsForPack("P2", "KM", "x");
+            assertFalse(res.success);
+            assertEquals("500", res.status);
         }
     }
 }

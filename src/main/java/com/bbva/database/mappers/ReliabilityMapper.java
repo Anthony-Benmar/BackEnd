@@ -1,10 +1,7 @@
 package com.bbva.database.mappers;
 
 import com.bbva.dto.catalog.response.DropDownDto;
-import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
-import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
-import com.bbva.dto.reliability.request.JobTransferInputDtoRequest;
-import com.bbva.dto.reliability.request.TransferInputDtoRequest;
+import com.bbva.dto.reliability.request.*;
 import com.bbva.dto.reliability.response.*;
 import org.apache.ibatis.annotations.*;
 
@@ -178,6 +175,16 @@ public interface ReliabilityMapper {
 
     @Select("SELECT status_id FROM reliability_packs WHERE pack = #{pack} LIMIT 1")
     Integer getPackStatus(@Param("pack") String pack);
+
+    @Update("""
+    UPDATE job_stock SET component_name = #{componentName}, frequency_id   = #{frequencyId}, input_paths    = #{inputPaths}, output_path    = #{outputPath}, job_type_id    = #{jobTypeId},
+    use_case_id    = #{useCaseId}, is_critical    = #{isCritical}, domain_id      = #{domainId}, bitbucket_url  = #{bitBucketUrl}, responsible    = #{responsible}, job_phase_id   = #{jobPhaseId}, origin_type_id = #{originTypeId}, exception      = #{exception}
+    WHERE pack = #{pack} AND job_name = #{jobName}
+    """)
+    int updateJobByPackAndName(UpdateJobDtoRequest dto);
+
+    @Update("UPDATE job_stock SET comments = #{comments} WHERE pack = #{pack}")
+    int updatePackComments(@Param("pack") String pack, @Param("comments") String comments);
 
     @Update("UPDATE reliability_packs SET status_id = #{estado} WHERE pack = #{pack}")
     void updateReliabilityStatus(@Param("pack") String pack, @Param("estado") int estado);

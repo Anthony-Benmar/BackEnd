@@ -304,13 +304,16 @@ class ReliabilityDaoTest {
         req.setRecordsAmount(5);
         req.setDomainName("D");
         req.setUseCase("U");
-        when(sqlSessionMock.getMapper(ReliabilityMapper.class))
-                .thenReturn(reliabilityMapperMock);
 
-        PaginationReliabilityPackResponse resp =
-                reliabilityDao.getReliabilityPacks(req);
+        when(reliabilityMapperMock.getReliabilityPacks("D", "U"))
+                .thenReturn(List.of(new ReliabilityPacksDtoResponse()));
+
+        PaginationReliabilityPackResponse resp = reliabilityDao.getReliabilityPacks(req);
 
         assertNotNull(resp);
+        assertEquals(1, resp.getCount());
+        assertEquals(1, resp.getPagesAmount());
+        assertEquals(1, resp.getData().size());
     }
 
     @Test
@@ -582,6 +585,58 @@ class ReliabilityDaoTest {
         verify(sqlSessionMock).getMapper(ReliabilityMapper.class);
         verify(reliabilityMapperMock).updateReliabilityStatus(pack, newStatus);
         verify(reliabilityMapperMock, never()).updateProjectInfoStatus(anyString(), anyInt());
+        verify(sqlSessionMock, never()).commit();
+    }
+
+    @Test
+    void testUpdateJobByPackAndName_success() {
+        UpdateJobDtoRequest dto = new UpdateJobDtoRequest();
+        dto.setPack("P1"); dto.setJobName("J1");
+
+        when(sqlSessionMock.getMapper(ReliabilityMapper.class))
+                .thenReturn(reliabilityMapperMock);
+        when(reliabilityMapperMock.updateJobByPackAndName(dto)).thenReturn(1);
+
+        assertDoesNotThrow(() -> reliabilityDao.updateJobByPackAndName(dto));
+        verify(sqlSessionMock).commit();
+    }
+
+    @Test
+    void testUpdateJobByPackAndName_noRows_throwsPersistenceException() {
+        UpdateJobDtoRequest dto = new UpdateJobDtoRequest();
+        dto.setPack("P1"); dto.setJobName("JX");
+
+        when(sqlSessionMock.getMapper(ReliabilityMapper.class))
+                .thenReturn(reliabilityMapperMock);
+        when(reliabilityMapperMock.updateJobByPackAndName(dto)).thenReturn(0);
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> reliabilityDao.updateJobByPackAndName(dto));
+        assertEquals("PersistenceException", ex.getClass().getSimpleName());
+        assertTrue(ex.getMessage().contains("No se encontró el job en ese pack"));
+        verify(sqlSessionMock, never()).commit();
+    }
+
+    @Test
+    void testUpdatePackComments_success() {
+        when(sqlSessionMock.getMapper(ReliabilityMapper.class))
+                .thenReturn(reliabilityMapperMock);
+        when(reliabilityMapperMock.updatePackComments("P1", "nota")).thenReturn(2); // 2 jobs actualizados
+
+        assertDoesNotThrow(() -> reliabilityDao.updatePackComments("P1", "nota"));
+        verify(sqlSessionMock).commit();
+    }
+
+    @Test
+    void testUpdatePackComments_noRows_throwsPersistenceException() {
+        when(sqlSessionMock.getMapper(ReliabilityMapper.class))
+                .thenReturn(reliabilityMapperMock);
+        when(reliabilityMapperMock.updatePackComments("P1", "nota")).thenReturn(0);
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> reliabilityDao.updatePackComments("P1", "nota"));
+        assertEquals("PersistenceException", ex.getClass().getSimpleName());
+        assertTrue(ex.getMessage().contains("Pack sin jobs para comentar"));
         verify(sqlSessionMock, never()).commit();
     }
 }

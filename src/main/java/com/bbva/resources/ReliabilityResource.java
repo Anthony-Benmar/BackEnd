@@ -162,4 +162,36 @@ public class ReliabilityResource {
     ) {
         return reliabilityService.changeTransferStatus(pack, request);
     }
+
+    @PUT
+    @Path("/transfers/{pack}/jobs/{jobName}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<Void> updateJobBySm(
+            @PathParam("pack") String pack,
+            @PathParam("jobName") String jobName,
+            UpdateJobDtoRequest body,
+            @HeaderParam("X-USER-ROLE") String roleFromHeader
+    ) {
+        body.setPack(pack);
+        body.setJobName(jobName);
+        if (body.getActorRole()==null || body.getActorRole().isBlank()) {
+            body.setActorRole(roleFromHeader);
+        }
+        return reliabilityService.updateJobBySm(body);
+    }
+
+    @PUT
+    @Path("/transfers/{pack}/comments")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<Void> updateCommentsForPack(
+            @PathParam("pack") String pack,
+            UpdateJobCommentsRequest body,
+            @HeaderParam("X-USER-ROLE") String roleFromHeader
+    ) {
+        String actor = (body!=null && body.getActorRole()!=null && !body.getActorRole().isBlank())
+                ? body.getActorRole() : roleFromHeader;
+        return reliabilityService.updateCommentsForPack(pack, actor, body.getComments());
+    }
 }

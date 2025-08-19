@@ -3,10 +3,7 @@ package com.bbva.dao;
 import com.bbva.database.MyBatisConnectionFactory;
 import com.bbva.database.mappers.ReliabilityMapper;
 import com.bbva.dto.catalog.response.DropDownDto;
-import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
-import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
-import com.bbva.dto.reliability.request.ReliabilityPackInputFilterRequest;
-import com.bbva.dto.reliability.request.TransferInputDtoRequest;
+import com.bbva.dto.reliability.request.*;
 import com.bbva.dto.reliability.response.*;
 import com.bbva.util.JSONUtils;
 import org.apache.ibatis.session.SqlSession;
@@ -286,8 +283,25 @@ public class ReliabilityDao {
             m.updateProjectInfoStatus(pack, newStatus);
             session.commit();
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, e.getMessage(), e);
-            throw new PersistenceException("No se pudo actualizar el estado del pack "+pack, e);
+            throw new PersistenceException("No se pudo actualizar el estado del pack " + pack, e);
+        }
+    }
+
+    public void updateJobByPackAndName(UpdateJobDtoRequest dto) {
+        try (SqlSession s = MyBatisConnectionFactory.getInstance().openSession()) {
+            int rows = s.getMapper(ReliabilityMapper.class).updateJobByPackAndName(dto);
+            if (rows == 0) {
+                throw new PersistenceException("No se encontró el job en ese pack", null);
+            }
+            s.commit();
+        }
+    }
+
+    public void updatePackComments(String pack, String comments) {
+        try (SqlSession s = MyBatisConnectionFactory.getInstance().openSession()) {
+            int rows = s.getMapper(ReliabilityMapper.class).updatePackComments(pack, comments);
+            if (rows == 0) throw new PersistenceException("Pack sin jobs para comentar: " + pack, null);
+            s.commit();
         }
     }
 }

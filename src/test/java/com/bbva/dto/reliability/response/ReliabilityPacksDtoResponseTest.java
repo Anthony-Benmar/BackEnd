@@ -22,8 +22,7 @@ class ReliabilityPacksDtoResponseTest {
                 .jobCount(10)
                 .statusId(2)
                 .statusName("Aprobado por PO")
-                .canEdit(1)
-                .canEditComments(0)
+                .cambiedit(1)
                 .build();
 
         assertEquals("PACK123", dto.getPack());
@@ -39,28 +38,26 @@ class ReliabilityPacksDtoResponseTest {
         assertEquals(10, dto.getJobCount());
         assertEquals(2, dto.getStatusId());
         assertEquals("Aprobado por PO", dto.getStatusName());
-        assertEquals(1, dto.getCanEdit());
-        assertEquals(0, dto.getCanEditComments());
+        assertEquals(1, dto.getCambiedit());
     }
 
     @Test
     void testAllArgsConstructor() {
         ReliabilityPacksDtoResponse dto = new ReliabilityPacksDtoResponse(
-                "PACK999",         // pack
-                2001,              // domainId
-                "DOMX",            // domainName
-                202,               // productOwnerUserId
-                302,               // useCaseId
-                "Use Case Y",      // useCase
-                402,               // projectId
-                "SDATOOL_999",     // sdaToolId
-                502,               // creatorUserId
+                "PACK999",                 // pack
+                2001,                      // domainId
+                "DOMX",                    // domainName
+                202,                       // productOwnerUserId
+                302,                       // useCaseId
+                "Use Case Y",              // useCase
+                402,                       // projectId
+                "SDATOOL_999",             // sdaToolId
+                502,                       // creatorUserId
                 "https://bbva.com/file.pdf", // pdfLink
-                5,                 // jobCount
-                1,                 // statusId
-                "Aprobado por Reliability", // statusName
-                1,                 // canEdit
-                1                  // canEditComments
+                5,                         // jobCount
+                1,                         // statusId
+                "Aprobado por Reliability",// statusName
+                0                          // cambiedit
         );
 
         assertEquals("PACK999", dto.getPack());
@@ -76,8 +73,7 @@ class ReliabilityPacksDtoResponseTest {
         assertEquals(5, dto.getJobCount());
         assertEquals(1, dto.getStatusId());
         assertEquals("Aprobado por Reliability", dto.getStatusName());
-        assertEquals(1, dto.getCanEdit());
-        assertEquals(1, dto.getCanEditComments());
+        assertEquals(0, dto.getCambiedit());
     }
 
     @Test
@@ -90,8 +86,7 @@ class ReliabilityPacksDtoResponseTest {
         dto.setJobCount(3);
         dto.setStatusId(5);
         dto.setStatusName("Devuelto por Reliability");
-        dto.setCanEdit(0);
-        dto.setCanEditComments(1);
+        dto.setCambiedit(1);
 
         assertEquals("PACK000", dto.getPack());
         assertEquals(1111, dto.getDomainId());
@@ -99,7 +94,6 @@ class ReliabilityPacksDtoResponseTest {
         assertEquals(3, dto.getJobCount());
         assertEquals(5, dto.getStatusId());
         assertEquals("Devuelto por Reliability", dto.getStatusName());
-        assertEquals(0, dto.getCanEdit());
-        assertEquals(1, dto.getCanEditComments());
+        assertEquals(1, dto.getCambiedit());
     }
 }

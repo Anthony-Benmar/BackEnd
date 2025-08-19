@@ -434,4 +434,75 @@ class ReliabilityResourceTest {
 
         verify(reliabilityServiceMock).changeTransferStatus(eq("PACK_404"), any(TransferStatusChangeRequest.class));
     }
+
+    @Test
+    void testUpdateJobBySm_UsaPathYHeader_actorFallback() {
+        String pack = "PACK_X";
+        String job = "JOB_X";
+        String headerRole = "SM";
+
+        UpdateJobDtoRequest body = new UpdateJobDtoRequest(); // sin actorRole -> debe usar header
+        IDataResult<Void> ok = new SuccessDataResult<>(null, "Job actualizado");
+
+        ArgumentCaptor<UpdateJobDtoRequest> captor = ArgumentCaptor.forClass(UpdateJobDtoRequest.class);
+        when(reliabilityServiceMock.updateJobBySm(any())).thenReturn(ok);
+
+        IDataResult<Void> resp = reliabilityResource.updateJobBySm(pack, job, body, headerRole);
+
+        assertNotNull(resp);
+        assertTrue(resp.success);
+        verify(reliabilityServiceMock).updateJobBySm(captor.capture());
+
+        UpdateJobDtoRequest enviado = captor.getValue();
+        assertEquals(pack, enviado.getPack());
+        assertEquals(job, enviado.getJobName());
+        assertEquals("SM", enviado.getActorRole(), "Debe tomar el rol del header");
+    }
+
+    @Test
+    void testUpdateJobBySm_PropagaErrorDelService() {
+        UpdateJobDtoRequest body = new UpdateJobDtoRequest();
+        when(reliabilityServiceMock.updateJobBySm(any()))
+                .thenReturn(new ErrorDataResult<>(null, "409", "Solo se puede editar cuando fue devuelto"));
+
+        IDataResult<Void> resp = reliabilityResource.updateJobBySm("P1", "J1", body, "SM");
+
+        assertFalse(resp.success);
+        assertEquals("409", resp.status);
+        assertEquals("Solo se puede editar cuando fue devuelto", resp.message);
+        verify(reliabilityServiceMock).updateJobBySm(any());
+    }
+
+    @Test
+    void testUpdateCommentsForPack_UsaHeaderSiBodyNoTraeActor() {
+        String pack = "PACK_C";
+        UpdateJobCommentsRequest body = new UpdateJobCommentsRequest();
+        body.setComments("nota de KM");
+        String headerRole = "KM";
+
+        IDataResult<Void> ok = new SuccessDataResult<>(null, "Comentarios actualizados");
+        when(reliabilityServiceMock.updateCommentsForPack(eq(pack), eq(headerRole), eq("nota de KM")))
+                .thenReturn(ok);
+
+        IDataResult<Void> resp = reliabilityResource.updateCommentsForPack(pack, body, headerRole);
+
+        assertTrue(resp.success);
+        verify(reliabilityServiceMock).updateCommentsForPack(eq(pack), eq("KM"), eq("nota de KM"));
+    }
+
+    @Test
+    void testUpdateCommentsForPack_UsaActorDelBodySiViene() {
+        String pack = "PACK_C2";
+        UpdateJobCommentsRequest body = new UpdateJobCommentsRequest();
+        body.setActorRole("KM");
+        body.setComments("otra nota");
+
+        when(reliabilityServiceMock.updateCommentsForPack(eq(pack), eq("KM"), eq("otra nota")))
+                .thenReturn(new SuccessDataResult<>(null, "ok"));
+
+        IDataResult<Void> resp = reliabilityResource.updateCommentsForPack(pack, body, "SM"); // header distinto
+
+        assertTrue(resp.success);
+        verify(reliabilityServiceMock).updateCommentsForPack(eq(pack), eq("KM"), eq("otra nota"));
+    }
 }

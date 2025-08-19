@@ -234,10 +234,16 @@ public class ReliabilityService {
                     statusCsv
             );
 
-            lista.forEach(row -> {
-                row.setCanEdit( TransferStatusPolicy.canEdit(dto.getRole(), row.getStatusId()) );
-                row.setCanEditComments( TransferStatusPolicy.canEditComments(dto.getRole(), row.getStatusId()) );
-            });
+            String role = (dto.getRole()==null ? "" : dto.getRole().trim().toUpperCase());
+            String tab  = (dto.getTab()==null  ? "" : dto.getTab().trim().toUpperCase());
+
+            for (var row : lista) {
+                int st = row.getStatusId()==null ? 0 : row.getStatusId();
+                int cambie = ("SM".equals(role) && (st == TransferStatusPolicy.DEVUELTO_PO
+                        || st == TransferStatusPolicy.DEVUELTO_RLB)) ? 1 : 0;
+                if ("APROBADOS".equals(tab)) cambie = 0; // en aprobados siempre read-only
+                row.setCambiedit(cambie);
+            }
 
             int size = Optional.ofNullable(dto.getRecordsAmount()).orElse(10);
             int page = Optional.ofNullable(dto.getPage()).orElse(1);
@@ -268,10 +274,9 @@ public class ReliabilityService {
             if (oldSt == null) {
                 return new ErrorDataResult<>(null, "404", "Pack no encontrado");
             }
-            Action action;
-            try {
-                action = Action.valueOf(req.getAction().toUpperCase(Locale.ROOT));
-            } catch (Exception ex) {
+
+            Action action = validateAction(req.getAction());
+            if (action == null) {
                 return new ErrorDataResult<>(null, "400", "Acción inválida");
             }
 
@@ -282,8 +287,53 @@ public class ReliabilityService {
             var resp = TransferStatusChangeResponse.builder()
                     .pack(pack).oldStatus(oldSt).newStatus(newSt).build();
             return new SuccessDataResult<>(resp, "Estado actualizado");
+
         } catch (IllegalArgumentException iae) {
             return new ErrorDataResult<>(null, "409", iae.getMessage());
+        } catch (Exception e) {
+            return new ErrorDataResult<>(null, "500", e.getMessage());
+        }
+    }
+
+    private Action validateAction(String actionStr) {
+        try {
+            return Action.valueOf(actionStr.toUpperCase(Locale.ROOT));
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
+    public IDataResult<Void> updateJobBySm(UpdateJobDtoRequest dto) {
+        Integer st = reliabilityDao.getPackCurrentStatus(dto.getPack());
+        if (st == null) return new ErrorDataResult<>(null, "404", "Pack no encontrado");
+
+        // Sólo SM puede editar si el pack está Devuelto (4/5)
+        if (TransferStatusPolicy.canEdit(dto.getActorRole(), st) != 1) {
+            return new ErrorDataResult<>(null, "409", "Solo se puede editar cuando fue devuelto");
+        }
+        try {
+            reliabilityDao.updateJobByPackAndName(dto);
+            return new SuccessDataResult<>(null, "Job actualizado");
+        } catch (ReliabilityDao.PersistenceException pe) {
+            return new ErrorDataResult<>(null, "404", pe.getMessage());
+        } catch (Exception e) {
+            return new ErrorDataResult<>(null, "500", e.getMessage());
+        }
+    }
+
+    public IDataResult<Void> updateCommentsForPack(String pack, String role, String comments) {
+        Integer st = reliabilityDao.getPackCurrentStatus(pack);
+        if (st == null) return new ErrorDataResult<>(null, "404", "Pack no encontrado");
+
+        // KM sólo cuando Aprobado por PO (2)
+        if (TransferStatusPolicy.canEditComments(role, st) != 1) {
+            return new ErrorDataResult<>(null, "409", "Sólo KM puede comentar cuando está Aprobado por PO");
+        }
+        try {
+            reliabilityDao.updatePackComments(pack, comments);
+            return new SuccessDataResult<>(null, "Comentarios actualizados");
+        } catch (ReliabilityDao.PersistenceException pe) {
+            return new ErrorDataResult<>(null, "404", pe.getMessage());
         } catch (Exception e) {
             return new ErrorDataResult<>(null, "500", e.getMessage());
         }

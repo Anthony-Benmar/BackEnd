@@ -1,7 +1,6 @@
 package com.bbva.dto.reliability.response;
 
 import lombok.*;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Getter
 @Setter
@@ -22,9 +21,5 @@ public class ReliabilityPacksDtoResponse {
     private Integer jobCount;
     private Integer statusId;
     private String  statusName;
-
-    private Integer canEdit;
-
-    private Integer canEditComments;
-
+    private Integer cambiedit;
 }
