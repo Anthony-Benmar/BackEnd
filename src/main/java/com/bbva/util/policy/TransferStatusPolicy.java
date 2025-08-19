@@ -23,7 +23,8 @@ public class TransferStatusPolicy {
         return role == null ? "" : role.trim().toUpperCase(Locale.ROOT);
     }
     private static boolean isKM(String role){ return ROLE_KM.equals(norm(role)); }
-    private static boolean isSM(String role){ return !isKM(role); } // por ahora SM = Rol Consulta/PO
+
+    private static boolean isSM(String role){ return !isKM(role); }
 
     public static int canEdit(String role, Integer statusId){
         int st = statusId == null ? 0 : statusId;
@@ -79,27 +80,39 @@ public class TransferStatusPolicy {
     }
 
     public static int computeNextStatusOrThrow(String actorRole, int currentStatus, Action action) {
+        ensureAllowed(actorRole, currentStatus, action);
+        return isKM(actorRole)
+                ? nextForKm(currentStatus, action)
+                : nextForSm(currentStatus, action);
+    }
+
+    private static void ensureAllowed(String actorRole, int currentStatus, Action action) {
         Set<Action> allowed = allowedActions(actorRole, currentStatus);
         if (!allowed.contains(action)) {
             throw new IllegalArgumentException(
                     "Transición no permitida para rol=" + actorRole +
                             " desde estado=" + currentStatus + " con acción=" + action);
         }
+    }
 
-        String r = actorRole == null ? "" : actorRole.trim().toUpperCase(Locale.ROOT);
+    private static int nextForKm(int status, Action action) {
 
-        if (ROLE_KM.equals(r)) {
-            if (currentStatus == APROBADO_PO && action == Action.APPROVE) return APROBADO_RLB;
-            if (currentStatus == APROBADO_PO && action == Action.RETURN)  return DEVUELTO_RLB;
-            throw new IllegalStateException("No se pudo calcular la transición");
+        if (status == APROBADO_PO) {
+            if (action == Action.APPROVE) return APROBADO_RLB;
+            if (action == Action.RETURN)  return DEVUELTO_RLB;
         }
+        throw new IllegalStateException("No se pudo calcular la transición");
+    }
 
-        if (currentStatus == EN_PROGRESO && action == Action.APPROVE) return APROBADO_PO;
-        if (currentStatus == EN_PROGRESO && action == Action.RETURN)  return DEVUELTO_PO;
-        if ((currentStatus == DEVUELTO_PO || currentStatus == DEVUELTO_RLB) && action == Action.RESEND) {
+    private static int nextForSm(int status, Action action) {
+
+        if (status == EN_PROGRESO) {
+            if (action == Action.APPROVE) return APROBADO_PO;
+            if (action == Action.RETURN)  return DEVUELTO_PO;
+        }
+        if ((status == DEVUELTO_PO || status == DEVUELTO_RLB) && action == Action.RESEND) {
             return EN_PROGRESO;
         }
-
         throw new IllegalStateException("No se pudo calcular la transición");
     }
 }

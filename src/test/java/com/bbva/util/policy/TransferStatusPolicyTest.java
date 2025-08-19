@@ -9,7 +9,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class TransferStatusPolicyTest {
 
-    // -------- canEdit --------
 
     @Test
     void canEdit_SM_enDevueltos_es1() {
@@ -38,7 +37,6 @@ class TransferStatusPolicyTest {
         assertEquals(0, canEdit("KM", null));
     }
 
-    // -------- canEditComments --------
 
     @Test
     void canEditComments_KM_enAprobadoPO_es1() {
@@ -66,7 +64,6 @@ class TransferStatusPolicyTest {
         assertEquals(0, canEditComments("KM", null));
     }
 
-    // -------- toCsv --------
 
     @Test
     void toCsv_defaults_rolYTabNull_fallback_KM_EN_PROGRESO() {
@@ -102,8 +99,6 @@ class TransferStatusPolicyTest {
         assertEquals("3,2,4,5", toCsv(" sm ", " en_progreso "));
     }
 
-    // -------- allowedActions --------
-
     @Test
     void allowed_KM_enAprobadoPO_approve_y_return() {
         Set<Action> a = allowedActions("KM", APROBADO_PO);
@@ -132,7 +127,6 @@ class TransferStatusPolicyTest {
         assertTrue(allowedActions(null, EN_PROGRESO).contains(Action.APPROVE));
     }
 
-    // -------- computeNextStatusOrThrow --------
 
     @Test
     void compute_KM_APROBADO_PO_APPROVE_va_A_APROBADO_RLB() {

@@ -481,13 +481,13 @@ class ReliabilityResourceTest {
         String headerRole = "KM";
 
         IDataResult<Void> ok = new SuccessDataResult<>(null, "Comentarios actualizados");
-        when(reliabilityServiceMock.updateCommentsForPack(eq(pack), eq(headerRole), eq("nota de KM")))
+        when(reliabilityServiceMock.updateCommentsForPack(pack, headerRole, "nota de KM"))
                 .thenReturn(ok);
 
         IDataResult<Void> resp = reliabilityResource.updateCommentsForPack(pack, body, headerRole);
 
         assertTrue(resp.success);
-        verify(reliabilityServiceMock).updateCommentsForPack(eq(pack), eq("KM"), eq("nota de KM"));
+        verify(reliabilityServiceMock).updateCommentsForPack(pack, "KM", "nota de KM");
     }
 
     @Test
@@ -497,12 +497,12 @@ class ReliabilityResourceTest {
         body.setActorRole("KM");
         body.setComments("otra nota");
 
-        when(reliabilityServiceMock.updateCommentsForPack(eq(pack), eq("KM"), eq("otra nota")))
+        when(reliabilityServiceMock.updateCommentsForPack(pack, "KM", "otra nota"))
                 .thenReturn(new SuccessDataResult<>(null, "ok"));
 
         IDataResult<Void> resp = reliabilityResource.updateCommentsForPack(pack, body, "SM"); // header distinto
 
         assertTrue(resp.success);
-        verify(reliabilityServiceMock).updateCommentsForPack(eq(pack), eq("KM"), eq("otra nota"));
+        verify(reliabilityServiceMock).updateCommentsForPack(pack, "KM", "otra nota");
     }
 }
