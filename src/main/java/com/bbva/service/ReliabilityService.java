@@ -377,11 +377,12 @@ public class ReliabilityService {
     public IDataResult<TransferDetailResponse> getTransferDetail(String pack) {
         try {
             var detail = reliabilityDao.getTransferDetail(pack);
-            if (detail == null) return new ErrorDataResult<>(null, "404", "Pack no encontrado");
+            if (detail == null) {
+                return new ErrorDataResult<>(null, CODE_404, MSG_PACK_NOT_FOUND);
+            }
             return new SuccessDataResult<>(detail);
         } catch (Exception e) {
-            return new ErrorDataResult<>(null, "500", e.getMessage());
+            return new ErrorDataResult<>(null, CODE_500, e.getMessage());
         }
     }
-
 }

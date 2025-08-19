@@ -235,17 +235,15 @@ public interface ReliabilityMapper {
   WHERE rp.pack = #{pack}
   LIMIT 1
 """)
-    @Results({
-            @Result(property="pack",        column="pack"),
-            @Result(property="sdaToolId",   column="sdaToolId"),
-            @Result(property="domainId",    column="domainId"),
-            @Result(property="domainName",  column="domain_name"),
-            @Result(property="useCaseId",   column="useCaseId"),
-            @Result(property="useCase",     column="use_case"),
-            @Result(property="statusId",    column="statusId"),
-            @Result(property="statusName",  column="status_name"),
-            @Result(property="comments",    column="comments")
-    })
+    @Result(property = "pack",       column = "pack")
+    @Result(property = "sdaToolId",  column = "sdaToolId")
+    @Result(property = "domainId",   column = "domainId")
+    @Result(property = "domainName", column = "domain_name")
+    @Result(property = "useCaseId",  column = "useCaseId")
+    @Result(property = "useCase",    column = "use_case")
+    @Result(property = "statusId",   column = "statusId")
+    @Result(property = "statusName", column = "status_name")
+    @Result(property = "comments",   column = "comments")
     TransferDetailResponse.Header getTransferHeader(@Param("pack") String pack);
 
     @Select("""
