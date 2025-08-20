@@ -3,7 +3,6 @@ package com.bbva.util.metaknight;
 import com.bbva.dto.metaknight.request.IngestaRequestDto;
 import lombok.Getter;
 
-import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -94,7 +93,7 @@ public class SchemaProcessor {
                 .findFirst()
                 .orElse("");
 
-        this.dfStagingName = "\"" + originalStagingName.replace("$", "\"$");
+        this.dfStagingName = originalStagingName.replace("${?", "\"${?").replace("}", "}\"");
 
         String[] dfNameParts = dfRawName.split("_");
         this.tag = String.join("", Arrays.copyOfRange(dfNameParts, 2, dfNameParts.length));
@@ -115,10 +114,9 @@ public class SchemaProcessor {
         this.masterArtifactoryPath = artifactoryLink + SCHEMAS_PE_PATH + request.getUuaaMaster() + "/master/" + dfMasterName + LATEST_PATH + dfMasterName + OUTPUT_SCHEMA;
         this.rawArtifactoryPath = artifactoryLink + SCHEMAS_PE_PATH + request.getUuaaMaster() + "/raw/" + dfRawName + LATEST_PATH + dfRawName + OUTPUT_SCHEMA;
 
-        this.dfStagingPath = File.separator + "in" + File.separator + "staging" + File.separator + "datax" + File.separator + dfUuaa + File.separator + dfStagingName;
-        this.dfRawPath = File.separator + "data" + File.separator + "raw" + File.separator + dfUuaa + File.separator + "data" + File.separator + dfRawName;
-        this.dfMasterPath = File.separator + "data" + File.separator + "master" + File.separator + request.getUuaaMaster() + File.separator + "data" + File.separator + dfMasterName;
-
+        this.dfStagingPath = "/in/staging/datax/" + dfUuaa + "/" + dfStagingName; // NOSONAR - Artifactory standard path, fixed value
+        this.dfRawPath = "/data/raw/" + dfUuaa + "/data/" + dfRawName;
+        this.dfMasterPath = "/data/master/" + request.getUuaaMaster() + "/data/" + dfMasterName;
         this.subset = getSubset(Arrays.asList(request.getParticiones().split(",")));
 
         this.partitionList = getPartitionList(Arrays.asList(request.getParticiones().split(",")));
@@ -182,7 +180,7 @@ public class SchemaProcessor {
             if (i > 0) {
                 subsetBuilder.append(" and ");
             }
-            subsetBuilder.append(key).append("='\"${?").append(parameter).append("}\"'");
+            subsetBuilder.append(key).append("='\"").append("${?").append(parameter).append("}").append("\"'");
         }
         return subsetBuilder.toString();
     }

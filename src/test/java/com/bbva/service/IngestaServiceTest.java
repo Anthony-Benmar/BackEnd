@@ -463,6 +463,19 @@ class IngestaServiceTest {
                 Arrays.asList("master_field1", "master_field2", "master_field3", "calculated_field"));
         when(schemaProcessorMock.getMasterArtifactoryPath()).thenReturn("\"master-artifactory-path\"");
         when(schemaProcessorMock.getRawArtifactoryPath()).thenReturn("\"raw-artifactory-path\"");
+        when(rulesMock.stagingRule(anyString())).thenReturn(Map.of("class", "CompletenessRule", "config", Map.of()));
+        when(rulesMock.applyValidityRule(anyString(), anyString())).thenReturn(Map.of("class", "ValidityRule", "config", Map.of()));
+        when(rulesMock.applyFormatRule(anyString(), anyString(), anyString())).thenReturn(Map.of("class", "FormatRule", "config", Map.of()));
+        when(rulesMock.applyDuplicateRule(any(), anyString())).thenReturn(Map.of("class", "DuplicateRule", "config", Map.of()));
+        when(rulesMock.rawCompletenessRule(anyString(), anyString(), anyString())).thenReturn(Map.of("class", "BasicPerimeterCompletenessRule", "config", Map.of()));
+        when(rulesMock.masterCompletenessRule(anyString(), anyString(), anyString(), anyString())).thenReturn(Map.of("class", "ConditionalPerimeterCompletenessRule", "config", Map.of()));
+        when(rulesMock.hammurabiL1TRule(anyString(), anyString(), anyString(), anyString(), anyString())).thenReturn(Map.of("class", "ConditionalPerimeterCompletenessRule", "config", Map.of()));
+
+        when(baseFunctionsMock.convertToCustomFormat(any())).thenReturn("mocked-rule-config");
+        when(baseFunctionsMock.convertStagingJsonToSelectedFormat(any())).thenReturn("staging-json-config");
+        when(baseFunctionsMock.convertStagingInputToSelectedFormat(any())).thenReturn("staging-input-config");
+        when(baseFunctionsMock.convertFinalJsonToSelectedFormat(any())).thenReturn("{}");
+        when(baseFunctionsMock.getRegularExpression(anyString())).thenReturn("^[A-Z0-9]+$");
     }
 
     @Test
@@ -517,6 +530,10 @@ class IngestaServiceTest {
         IngestaRequestDto request = createValidRequestWithRealCSV();
         setupSchemaProcessorMocks();
 
+        when(rulesMock.hammurabiL1TRule(anyString(), anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(Map.of("class", "ConditionalPerimeterCompletenessRule", "config", Map.of()));
+        when(baseFunctionsMock.convertToCustomFormat(any())).thenReturn("mocked-l1t-rule");
+
         Method method = IngestaService.class.getDeclaredMethod("generarHammurabiL1T", IngestaRequestDto.class);
         method.setAccessible(true);
         String result = (String) method.invoke(service, request);
@@ -525,10 +542,17 @@ class IngestaServiceTest {
         assertTrue(result.contains("hammurabi {"), "Debe contener bloque hammurabi");
         assertTrue(result.contains("dataFrameInfo {"), "Debe contener dataFrameInfo");
         assertTrue(result.contains("_l1t"), "Debe contener sufijo _l1t en paths");
-        assertTrue(result.contains("ConditionalPerimeterCompletenessRule"),
+
+        assertTrue(result.contains("rules = ["),
                 "Debe contener regla de completitud L1T");
+        assertTrue(result.contains("mocked-l1t-rule"),
+                "Debe contener la regla L1T formateada");
+
         assertTrue(result.contains(request.getUuaaMaster()), "Debe contener UUAA master");
         assertTrue(result.contains("${?DATE}"), "Debe contener placeholder de fecha");
+
+        verify(rulesMock, times(1)).hammurabiL1TRule(anyString(), anyString(), anyString(), anyString(), anyString());
+        verify(baseFunctionsMock, times(1)).convertToCustomFormat(any());
     }
 
     @Test
@@ -578,11 +602,192 @@ class IngestaServiceTest {
 
         doNothing().when(issueTicketServiceMock).addLabelToIssue(anyString(), anyString(), anyString(), anyString());
 
-        // Act
         byte[] result = service.procesarIngesta(request);
 
-        // Assert
         assertNotNull(result);
         assertEquals("zip-without-l1t", new String(result));
+    }
+
+    @Test
+    void testGenerarKirbyRawOptions_FixedType() throws Exception {
+        Method method = IngestaService.class.getDeclaredMethod("generarKirbyRawOptions", String.class, String.class);
+        method.setAccessible(true);
+
+        String result = (String) method.invoke(service, "fixed", ";");
+
+        assertNotNull(result);
+        assertTrue(result.contains("castMode = \"notPermissive\""));
+        assertTrue(result.contains("charset = \"UTF-8\""));
+        assertTrue(result.contains("header = \"false\""));
+        assertFalse(result.contains("delimiter"));
+    }
+
+    @Test
+    void testGenerarKirbyRawOptions_CsvType() throws Exception {
+        Method method = IngestaService.class.getDeclaredMethod("generarKirbyRawOptions", String.class, String.class);
+        method.setAccessible(true);
+
+        String result = (String) method.invoke(service, "csv", ",");
+
+        assertNotNull(result);
+        assertTrue(result.contains("delimiter = \",\""));
+        assertTrue(result.contains("header = \"True\""));
+        assertTrue(result.contains("castMode = \"notPermissive\""));
+        assertTrue(result.contains("charset = \"UTF-8\""));
+        assertTrue(result.contains("includeMetadataAndDeleted = \"true\""));
+    }
+
+    @Test
+    void testGenerarKirbyRawOptions_OtherType() throws Exception {
+        Method method = IngestaService.class.getDeclaredMethod("generarKirbyRawOptions", String.class, String.class);
+        method.setAccessible(true);
+
+        String result = (String) method.invoke(service, "json", "|");
+
+        assertNotNull(result);
+        assertTrue(result.contains("castMode = \"notPermissive\""));
+        assertTrue(result.contains("charset = \"UTF-8\""));
+        assertTrue(result.contains("header = \"false\""));
+        assertFalse(result.contains("delimiter"));
+    }
+
+    @Test
+    void testGenerarTransformacionesKirbyMaster() throws Exception {
+        setupSchemaProcessorMocks();
+        when(schemaProcessorMock.getSubset()).thenReturn("cutoff_date='${?DATE}'");
+        when(schemaProcessorMock.getTrimAllColumns()).thenReturn("\"field1|field2|field3\"");
+        when(schemaProcessorMock.getRawDateColumns()).thenReturn(Arrays.asList("date_field"));
+        when(schemaProcessorMock.getRawTimestampColumns()).thenReturn(Arrays.asList("timestamp_field"));
+        when(schemaProcessorMock.getMasterFieldWithOriginList()).thenReturn(
+                Arrays.asList(
+                        Arrays.asList("master_field1", "source_field1"),
+                        Arrays.asList("calculated_field", "Calculated")
+                ));
+        when(schemaProcessorMock.getMasterFieldList()).thenReturn(Arrays.asList("master_field1", "calculated_field"));
+
+        Method method = IngestaService.class.getDeclaredMethod("generarTransformacionesKirbyMaster");
+        method.setAccessible(true);
+
+        String result = (String) method.invoke(service);
+
+        assertNotNull(result);
+        assertTrue(result.contains("transformations=["));
+        assertTrue(result.contains("type = \"sqlFilter\""));
+        assertTrue(result.contains("cutoff_date='${?DATE}'"));
+        assertTrue(result.contains("type = \"trim\""));
+        assertTrue(result.contains("type = \"literal\""));
+        assertTrue(result.contains("type = \"setCurrentDate\""));
+        assertTrue(result.contains("type = \"dateformatter\""));
+        assertTrue(result.contains("type : \"renamecolumns\""));
+        assertTrue(result.contains("type = \"selectcolumns\""));
+        assertTrue(result.contains("date_field"));
+        assertTrue(result.contains("timestamp_field"));
+        assertTrue(result.contains("source_field1 = \"master_field1\""));
+        assertFalse(result.contains("Calculated = \"calculated_field\""));
+    }
+
+    @Test
+    void testGenerarReglasStagingConRules() throws Exception {
+        setupSchemaProcessorMocks();
+        when(schemaProcessorMock.getKeys()).thenReturn(Arrays.asList("key1", "key2"));
+        when(schemaProcessorMock.getKeysDict()).thenReturn(Map.of("key1", "ALPHANUMERIC(10)", "key2", "DATE"));
+
+        when(baseFunctionsMock.convertToCustomFormat(any())).thenReturn("mocked-rule-config");
+        when(baseFunctionsMock.getRegularExpression("ALPHANUMERIC(10)")).thenReturn("^[A-Z0-9]{10}$");
+        when(baseFunctionsMock.getRegularExpression("DATE")).thenReturn("^\\d{4}-\\d{2}-\\d{2}$");
+
+        when(rulesMock.stagingRule("staging")).thenReturn(Map.of("class", "StagingRule", "config", Map.of()));
+        when(rulesMock.applyValidityRule(anyString(), anyString())).thenReturn(Map.of("class", "ValidityRule", "config", Map.of()));
+        when(rulesMock.applyFormatRule(anyString(), anyString(), anyString())).thenReturn(Map.of("class", "FormatRule", "config", Map.of()));
+        when(rulesMock.applyDuplicateRule(any(), anyString())).thenReturn(Map.of("class", "DuplicateRule", "config", Map.of()));
+
+        Method method = IngestaService.class.getDeclaredMethod("generarReglasStagingConRules");
+        method.setAccessible(true);
+
+        String result = (String) method.invoke(service);
+
+        assertNotNull(result);
+        assertTrue(result.contains("rules = ["));
+        assertTrue(result.contains("]"));
+
+        verify(rulesMock, times(1)).stagingRule("staging");
+        verify(rulesMock, times(2)).applyValidityRule(anyString(), anyString());
+        verify(rulesMock, times(2)).applyFormatRule(anyString(), anyString(), anyString());
+        verify(rulesMock, times(1)).applyDuplicateRule(any(), anyString());
+        verify(baseFunctionsMock, times(6)).convertToCustomFormat(any());
+        verify(baseFunctionsMock, times(2)).getRegularExpression(anyString());
+    }
+
+    @Test
+    void testGenerarKirbyRaw_HostFileType() throws Exception {
+        IngestaRequestDto request = createValidRequestWithRealCSV();
+        request.setTipoArchivo("host");
+        request.setTieneCompactacion(false);
+        setupSchemaProcessorMocks();
+
+        Method method = IngestaService.class.getDeclaredMethod("generarKirbyRaw", IngestaRequestDto.class);
+        method.setAccessible(true);
+
+        String result = (String) method.invoke(service, request);
+
+        assertNotNull(result);
+        assertTrue(result.contains("kirby {"));
+        assertTrue(result.contains("type=\"fixed\""));
+        assertTrue(result.contains("castMode = \"notPermissive\""));
+        assertTrue(result.contains("header = \"false\""));
+        assertTrue(result.contains("partitionsFilter"));
+        assertFalse(result.contains("partitionDiscovery"));
+    }
+
+    @Test
+    void testGenerarKirbyRaw_WithCompactacion() throws Exception {
+        IngestaRequestDto request = createValidRequestWithRealCSV();
+        request.setTipoArchivo("csv");
+        request.setTieneCompactacion(true);
+        setupSchemaProcessorMocks();
+
+        Method method = IngestaService.class.getDeclaredMethod("generarKirbyRaw", IngestaRequestDto.class);
+        method.setAccessible(true);
+
+        String result = (String) method.invoke(service, request);
+
+        assertNotNull(result);
+        assertTrue(result.contains("partitionDiscovery = true"));
+        assertFalse(result.contains("partitionsFilter"));
+    }
+
+    @Test
+    void testGenerarKirbyMaster_WithCompactacion() throws Exception {
+        IngestaRequestDto request = createValidRequestWithRealCSV();
+        request.setTieneCompactacion(true);
+        setupSchemaProcessorMocks();
+
+        Method method = IngestaService.class.getDeclaredMethod("generarKirbyMaster", IngestaRequestDto.class);
+        method.setAccessible(true);
+
+        String result = (String) method.invoke(service, request);
+
+        assertNotNull(result);
+        assertTrue(result.contains("kirby {"));
+        assertTrue(result.contains("partitionDiscovery = true"));
+        assertTrue(result.contains("type=parquet"));
+        assertTrue(result.contains("transformations=["));
+        assertFalse(result.contains("partitionsFilter"));
+    }
+
+    @Test
+    void testGenerarKirbyMaster_WithoutCompactacion() throws Exception {
+        IngestaRequestDto request = createValidRequestWithRealCSV();
+        request.setTieneCompactacion(false);
+        setupSchemaProcessorMocks();
+
+        Method method = IngestaService.class.getDeclaredMethod("generarKirbyMaster", IngestaRequestDto.class);
+        method.setAccessible(true);
+
+        String result = (String) method.invoke(service, request);
+
+        assertNotNull(result);
+        assertTrue(result.contains("partitionsFilter"));
+        assertFalse(result.contains("partitionDiscovery"));
     }
 }
