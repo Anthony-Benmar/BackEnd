@@ -4,7 +4,6 @@ import com.bbva.dto.metaknight.request.IngestaRequestDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
 import java.lang.reflect.Method;
 import java.util.*;
 
