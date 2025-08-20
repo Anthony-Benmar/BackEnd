@@ -1,7 +1,8 @@
 package com.bbva.dto.reliability.request;
 
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class UpdateJobDtoRequestTest {
 
@@ -25,6 +26,7 @@ class UpdateJobDtoRequestTest {
         dto.setJobPhaseId(1);
         dto.setOriginTypeId(1004);
         dto.setException("sin_excepcion");
+        dto.setComments("nota de prueba"); // <-- nuevo campo
 
         assertEquals("SM", dto.getActorRole());
         assertEquals("@-AEAL_PACK_004_25.07.2025", dto.getPack());
@@ -42,5 +44,6 @@ class UpdateJobDtoRequestTest {
         assertEquals(1, dto.getJobPhaseId());
         assertEquals(1004, dto.getOriginTypeId());
         assertEquals("sin_excepcion", dto.getException());
+        assertEquals("nota de prueba", dto.getComments()); // <-- aserción para comments
     }
 }

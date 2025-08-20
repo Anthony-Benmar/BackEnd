@@ -9,7 +9,6 @@ public class UpdateJobDtoRequest {
     private String actorRole;
     private String pack;
     private String jobName;
-
     private String componentName;
     private Integer frequencyId;
     private String inputPaths;
@@ -23,5 +22,6 @@ public class UpdateJobDtoRequest {
     private Integer jobPhaseId;
     private Integer originTypeId;
     private String exception;
+    private String comments;
 }
 

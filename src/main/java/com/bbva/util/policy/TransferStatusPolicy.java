@@ -24,7 +24,9 @@ public class TransferStatusPolicy {
     }
     private static boolean isKM(String role){ return ROLE_KM.equals(norm(role)); }
 
-    private static boolean isSM(String role){ return !isKM(role); }
+    private static boolean isSM(String role){
+        return ROLE_SM.equals(norm(role));
+    }
 
     public static int canEdit(String role, Integer statusId){
         int st = statusId == null ? 0 : statusId;
@@ -77,6 +79,11 @@ public class TransferStatusPolicy {
             }
         }
         return res;
+    }
+
+    public static int canWriteJobComment(String role, Integer statusId){
+        int st = statusId == null ? 0 : statusId;
+        return isSM(role) && (st == EN_PROGRESO || st == DEVUELTO_PO || st == DEVUELTO_RLB) ? 1 : 0;
     }
 
     public static int computeNextStatusOrThrow(String actorRole, int currentStatus, Action action) {

@@ -901,4 +901,56 @@ class ReliabilityServiceTest {
         assertTrue(res.message.contains("DB down"));
         verify(reliabilityDaoMock).getTransferDetail(pack);
     }
+
+    @Test
+    void updateJobBySm_commentsOnly_success() {
+        var dto = new UpdateJobDtoRequest();
+        dto.setActorRole("SM");
+        dto.setPack("P1");
+        dto.setJobName("JOB_X");
+        dto.setComments("Nueva nota"); // <-- solo comments
+
+        when(reliabilityDaoMock.getPackCurrentStatus("P1"))
+                .thenReturn(TransferStatusPolicy.EN_PROGRESO); // st = 3
+
+        try (MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
+            mocked.when(() -> TransferStatusPolicy.canWriteJobComment("SM", 3))
+                    .thenReturn(1);
+
+            doNothing().when(reliabilityDaoMock)
+                    .updateJobComment("P1", "JOB_X", "Nueva nota");
+
+            var res = reliabilityService.updateJobBySm(dto);
+
+            assertTrue(res.success);
+            assertEquals("Comentario del job actualizado", res.message);
+            verify(reliabilityDaoMock).updateJobComment("P1", "JOB_X", "Nueva nota");
+            verify(reliabilityDaoMock, never()).updateJobByPackAndName(any());
+        }
+    }
+
+    @Test
+    void updateJobBySm_commentsOnly_forbidden() {
+        var dto = new UpdateJobDtoRequest();
+        dto.setActorRole("SM");
+        dto.setPack("P1");
+        dto.setJobName("JOB_X");
+        dto.setComments("Nota no permitida");
+
+        when(reliabilityDaoMock.getPackCurrentStatus("P1"))
+                .thenReturn(TransferStatusPolicy.EN_PROGRESO);
+
+        try (MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
+            mocked.when(() -> TransferStatusPolicy.canWriteJobComment("SM", 3))
+                    .thenReturn(0); // no permitido
+
+            var res = reliabilityService.updateJobBySm(dto);
+
+            assertFalse(res.success);
+            assertEquals("409", res.status);
+            assertEquals("No puedes comentar este job en este estado", res.message);
+            verify(reliabilityDaoMock, never()).updateJobComment(any(), any(), any());
+            verify(reliabilityDaoMock, never()).updateJobByPackAndName(any());
+        }
+    }
 }

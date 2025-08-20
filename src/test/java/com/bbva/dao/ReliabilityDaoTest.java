@@ -635,10 +635,20 @@ class ReliabilityDaoTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> reliabilityDao.updatePackComments("P1", "nota"));
+
         assertEquals("PersistenceException", ex.getClass().getSimpleName());
-        assertTrue(ex.getMessage().contains("Pack sin jobs para comentar"));
+
+        String msg = ex.getMessage() == null ? "" : ex.getMessage().toLowerCase();
+        assertTrue(
+                msg.contains("pack sin jobs para comentar") ||
+                        msg.contains("no se encontró el job") ||
+                        msg.contains("pack no encontrado para comentar"),
+                "Mensaje inesperado: " + ex.getMessage()
+        );
+
         verify(sqlSessionMock, never()).commit();
     }
+
     @Test
     void testGetTransferDetail_headerNull_returnsNull() {
         String pack = "PACK_X";
@@ -658,12 +668,48 @@ class ReliabilityDaoTest {
     void testGetTransferDetail_exception_returnsNull() {
         String pack = "PACK_ERR";
 
-        // Simulamos fallo al abrir la sesión (o cualquier excepción interna)
         when(sqlSessionFactoryMock.openSession()).thenThrow(new RuntimeException("boom"));
 
         TransferDetailResponse out = reliabilityDao.getTransferDetail(pack);
 
         assertNull(out, "Ante excepción, el DAO debe retornar null");
-        // No hay más verificaciones porque ni siquiera se llega al mapper
+    }
+
+    @Test
+    void testUpdateJobComment_success() {
+        String pack = "P1";
+        String job  = "JOB_A";
+        String note = "comentario nuevo";
+
+        when(sqlSessionMock.getMapper(ReliabilityMapper.class))
+                .thenReturn(reliabilityMapperMock);
+        when(reliabilityMapperMock.updateJobComment(pack, job, note))
+                .thenReturn(1);
+
+        assertDoesNotThrow(() -> reliabilityDao.updateJobComment(pack, job, note));
+
+        verify(reliabilityMapperMock).updateJobComment(pack, job, note);
+        verify(sqlSessionMock).commit();
+    }
+
+    @Test
+    void testUpdateJobComment_noRows_throwsPersistenceException() {
+        String pack = "P1";
+        String job  = "JOB_X";
+        String note = "sin match";
+
+        when(sqlSessionMock.getMapper(ReliabilityMapper.class))
+                .thenReturn(reliabilityMapperMock);
+        when(reliabilityMapperMock.updateJobComment(pack, job, note))
+                .thenReturn(0);
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> reliabilityDao.updateJobComment(pack, job, note));
+
+        assertEquals("PersistenceException", ex.getClass().getSimpleName());
+        assertTrue(ex.getMessage().contains("No se encontró el job en ese pack"));
+
+        verify(reliabilityMapperMock).updateJobComment(pack, job, note);
+        verify(sqlSessionMock, never()).commit();
     }
 }

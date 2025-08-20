@@ -262,7 +262,6 @@ public class ReliabilityService {
         return (s == null) ? "" : s.trim().toUpperCase(Locale.ROOT);
     }
 
-    /** Marca el flag de edición por fila (SM sólo en Devueltos; en APROBADOS siempre 0). */
     private static void applyEditFlags(List<ReliabilityPacksDtoResponse> lista, String role, String tab) {
         boolean readOnly = "APROBADOS".equals(tab);
         for (var row : lista) {
@@ -271,7 +270,6 @@ public class ReliabilityService {
         }
     }
 
-    /** Construye la respuesta paginada sin ramificar en el método principal. */
     private static PaginationReliabilityPackResponse buildPagedResponse(
             List<ReliabilityPacksDtoResponse> full, int size, int page) {
 
@@ -331,16 +329,20 @@ public class ReliabilityService {
     public IDataResult<Void> updateJobBySm(UpdateJobDtoRequest dto) {
         try {
             Integer st = reliabilityDao.getPackCurrentStatus(dto.getPack());
-            if (st == null) {
-                return new ErrorDataResult<>(null, CODE_404, MSG_PACK_NOT_FOUND);
+            if (st == null) return new ErrorDataResult<>(null, CODE_404, MSG_PACK_NOT_FOUND);
+
+            if (isCommentsOnly(dto)) {
+                if (TransferStatusPolicy.canWriteJobComment(dto.getActorRole(), st) != 1) {
+                    return new ErrorDataResult<>(null, CODE_409, "No puedes comentar este job en este estado");
+                }
+                reliabilityDao.updateJobComment(dto.getPack(), dto.getJobName(), dto.getComments());
+                return new SuccessDataResult<>(null, "Comentario del job actualizado");
             }
 
-            // (La verificación de permisos la puedes dejar como la tenías si quieres)
             if (TransferStatusPolicy.canEdit(dto.getActorRole(), st) != 1) {
                 return new ErrorDataResult<>(null, CODE_409, "Solo se puede editar cuando fue devuelto");
             }
 
-            // Usa el método real del DAO
             reliabilityDao.updateJobByPackAndName(dto);
             return new SuccessDataResult<>(null, "Job actualizado");
 
@@ -350,6 +352,22 @@ public class ReliabilityService {
             log.severe(ERROR + e.getMessage());
             return new ErrorDataResult<>(null, CODE_500, e.getMessage());
         }
+    }
+    private static boolean isCommentsOnly(UpdateJobDtoRequest d) {
+        return d.getComments() != null
+                && d.getComponentName() == null
+                && d.getFrequencyId() == null
+                && d.getInputPaths() == null
+                && d.getOutputPath() == null
+                && d.getJobTypeId() == null
+                && d.getUseCaseId() == null
+                && d.getIsCritical() == null
+                && d.getDomainId() == null
+                && d.getBitBucketUrl() == null
+                && d.getResponsible() == null
+                && d.getJobPhaseId() == null
+                && d.getOriginTypeId() == null
+                && d.getException() == null;
     }
 
     public IDataResult<Void> updateCommentsForPack(String pack, String role, String comments) {

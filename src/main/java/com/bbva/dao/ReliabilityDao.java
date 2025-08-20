@@ -300,7 +300,7 @@ public class ReliabilityDao {
     public void updatePackComments(String pack, String comments) {
         try (SqlSession s = MyBatisConnectionFactory.getInstance().openSession()) {
             int rows = s.getMapper(ReliabilityMapper.class).updatePackComments(pack, comments);
-            if (rows == 0) throw new PersistenceException("Pack sin jobs para comentar: " + pack, null);
+            if (rows == 0) throw new PersistenceException("Pack no encontrado para comentar: " + pack, null);
             s.commit();
         }
     }
@@ -315,6 +315,14 @@ public class ReliabilityDao {
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Error getTransferDetail", e);
             return null;
+        }
+    }
+
+    public void updateJobComment(String pack, String jobName, String comments){
+        try (SqlSession s = MyBatisConnectionFactory.getInstance().openSession()) {
+            int rows = s.getMapper(ReliabilityMapper.class).updateJobComment(pack, jobName, comments);
+            if (rows == 0) throw new PersistenceException("No se encontró el job en ese pack", null);
+            s.commit();
         }
     }
 }

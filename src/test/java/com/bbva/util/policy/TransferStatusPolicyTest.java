@@ -164,4 +164,30 @@ class TransferStatusPolicyTest {
                 () -> computeNextStatusOrThrow("KM", EN_PROGRESO, Action.APPROVE));
         assertTrue(ex.getMessage().contains("Transición no permitida"));
     }
+
+    @Test
+    void canWriteJobComment_SM_permitido_enEnProgreso_y_Devueltos() {
+        assertEquals(1, canWriteJobComment("SM", EN_PROGRESO));
+        assertEquals(1, canWriteJobComment("sm", DEVUELTO_PO));   // case-insensitive
+        assertEquals(1, canWriteJobComment("SM", DEVUELTO_RLB));
+    }
+
+    @Test
+    void canWriteJobComment_SM_noPermitido_enAprobados_oDesestimado() {
+        assertEquals(0, canWriteJobComment("SM", APROBADO_PO));
+        assertEquals(0, canWriteJobComment("SM", APROBADO_RLB));
+        assertEquals(0, canWriteJobComment("SM", DESESTIMADO));
+    }
+
+    @Test
+    void canWriteJobComment_noSM_siempre0() {
+        assertEquals(0, canWriteJobComment("KM", EN_PROGRESO));
+        assertEquals(0, canWriteJobComment("PO", DEVUELTO_PO));
+        assertEquals(0, canWriteJobComment("otro", DEVUELTO_RLB));
+    }
+
+    @Test
+    void canWriteJobComment_statusNull_es0() {
+        assertEquals(0, canWriteJobComment("SM", null));
+    }
 }

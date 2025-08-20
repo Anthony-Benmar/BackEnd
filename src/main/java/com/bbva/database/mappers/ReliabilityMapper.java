@@ -177,13 +177,26 @@ public interface ReliabilityMapper {
     Integer getPackStatus(@Param("pack") String pack);
 
     @Update("""
-    UPDATE job_stock SET component_name = #{componentName}, frequency_id   = #{frequencyId}, input_paths    = #{inputPaths}, output_path    = #{outputPath}, job_type_id    = #{jobTypeId},
-    use_case_id    = #{useCaseId}, is_critical    = #{isCritical}, domain_id      = #{domainId}, bitbucket_url  = #{bitBucketUrl}, responsible    = #{responsible}, job_phase_id   = #{jobPhaseId}, origin_type_id = #{originTypeId}, exception      = #{exception}
-    WHERE pack = #{pack} AND job_name = #{jobName}
-    """)
+UPDATE job_stock SET
+  component_name = #{componentName},
+  frequency_id   = #{frequencyId},
+  input_paths    = #{inputPaths},
+  output_path    = #{outputPath},
+  job_type_id    = #{jobTypeId},
+  use_case_id    = #{useCaseId},
+  is_critical    = #{isCritical},
+  domain_id      = #{domainId},
+  bitbucket_url  = #{bitBucketUrl},
+  responsible    = #{responsible},
+  job_phase_id   = #{jobPhaseId},
+  origin_type_id = #{originTypeId},
+  exception      = #{exception},
+  comments       = COALESCE(#{comments}, comments)
+WHERE pack = #{pack} AND job_name = #{jobName}
+""")
     int updateJobByPackAndName(UpdateJobDtoRequest dto);
 
-    @Update("UPDATE job_stock SET comments = #{comments} WHERE pack = #{pack}")
+    @Update("UPDATE reliability_packs SET comments = #{comments} WHERE pack = #{pack}")
     int updatePackComments(@Param("pack") String pack, @Param("comments") String comments);
 
     @Update("UPDATE reliability_packs SET status_id = #{estado} WHERE pack = #{pack}")
@@ -226,7 +239,7 @@ public interface ReliabilityMapper {
     uc.use_case_name                     AS use_case,
     rp.status_id                         AS statusId,
     st.element_name                      AS status_name,
-    (SELECT MAX(js.comments) FROM job_stock js WHERE js.pack = rp.pack) AS comments
+    rp.comments                          AS comments
   FROM reliability_packs rp
   LEFT JOIN project_info pi2    ON rp.project_id = pi2.project_id
   LEFT JOIN catalog domain      ON COALESCE(rp.domain_id,9)=domain.element_id AND domain.catalog_id=1027
@@ -245,6 +258,13 @@ public interface ReliabilityMapper {
     @Result(property = "statusName", column = "status_name")
     @Result(property = "comments",   column = "comments")
     TransferDetailResponse.Header getTransferHeader(@Param("pack") String pack);
+
+    @Update("""
+    UPDATE job_stock SET comments = #{comments} WHERE pack = #{pack} AND job_name = #{jobName}
+    """)
+    int updateJobComment(@Param("pack") String pack,
+                         @Param("jobName") String jobName,
+                         @Param("comments") String comments);
 
     @Select("""
   SELECT
