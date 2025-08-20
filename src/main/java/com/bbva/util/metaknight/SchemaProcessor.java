@@ -114,7 +114,7 @@ public class SchemaProcessor {
         this.masterArtifactoryPath = artifactoryLink + SCHEMAS_PE_PATH + request.getUuaaMaster() + "/master/" + dfMasterName + LATEST_PATH + dfMasterName + OUTPUT_SCHEMA;
         this.rawArtifactoryPath = artifactoryLink + SCHEMAS_PE_PATH + request.getUuaaMaster() + "/raw/" + dfRawName + LATEST_PATH + dfRawName + OUTPUT_SCHEMA;
 
-        this.dfStagingPath = "/in/staging/datax/" + dfUuaa + "/" + dfStagingName;
+        this.dfStagingPath = "/in/staging/datax/" + dfUuaa + "/" + dfStagingName; // NOSONAR - Artifactory standard path, fixed value
         this.dfRawPath = "/data/raw/" + dfUuaa + "/data/" + dfRawName;
         this.dfMasterPath = "/data/master/" + request.getUuaaMaster() + "/data/" + dfMasterName;
         this.subset = getSubset(Arrays.asList(request.getParticiones().split(",")));

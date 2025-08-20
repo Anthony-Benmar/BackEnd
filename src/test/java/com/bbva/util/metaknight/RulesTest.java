@@ -535,7 +535,6 @@ class RulesTest {
 
     @Test
     void testAllCompletenessRules_HaveConsistentThresholds() {
-        // Test que verifica que todas las reglas de completitud tienen los mismos umbrales
         Map<String, Object> rawRule = rules.rawCompletenessRule("/path", "artifactory", "id1");
         Map<String, Object> masterRule = rules.masterCompletenessRule("/path", "artifactory", "subset", "id2");
         Map<String, Object> l1tRule = rules.hammurabiL1TRule("/path", "uuaa", "table", "subset", "id3");
@@ -546,13 +545,10 @@ class RulesTest {
             @SuppressWarnings("unchecked")
             Map<String, Object> config = (Map<String, Object>) rule.get("config");
 
-            // ✅ CORRECCIÓN: Algunos usan Integer (100) y otros Double (100.0)
-            // Verificar que el valor sea 100, independientemente del tipo
             Object acceptanceMin = config.get("acceptanceMin");
             Object minThreshold = config.get("minThreshold");
             Object targetThreshold = config.get("targetThreshold");
 
-            // Convertir a double para comparación uniforme
             double acceptanceMinValue = acceptanceMin instanceof Integer ?
                     ((Integer) acceptanceMin).doubleValue() : (Double) acceptanceMin;
             double minThresholdValue = minThreshold instanceof Integer ?

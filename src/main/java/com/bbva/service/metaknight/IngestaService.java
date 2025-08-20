@@ -29,6 +29,8 @@ public class IngestaService {
     private static final String ID_BASE = "xxxxxxxx";
     private static final String CONF_EXTENSION = ".conf";
     private static final String JSON_EXTENSION = ".json";
+    private static final String FIXED = "fixed";
+    private static final String RULES = "rules = [\n";
 
     private SchemaProcessor schemaProcessor = new SchemaProcessor();
 
@@ -203,7 +205,7 @@ public class IngestaService {
         Map<String, Object> schema = new HashMap<>();
         schema.put("path", schemaProcessor.getArtifactoryPath());
 
-        String inputType = "host".equals(request.getTipoArchivo()) ? "fixed" : request.getTipoArchivo();
+        String inputType = "host".equals(request.getTipoArchivo()) ? FIXED : request.getTipoArchivo();
 
         Map<String, Object> inputData = new HashMap<>();
         inputData.put("options", options);
@@ -225,7 +227,7 @@ public class IngestaService {
     }
     private String generarReglasStagingConRules() {
         StringBuilder rulesConfig = new StringBuilder();
-        rulesConfig.append("rules = [\n");
+        rulesConfig.append(RULES);
 
         rulesConfig.append(baseFunctions.convertToCustomFormat(rules.stagingRule("staging")));
         rulesConfig.append(",\n");
@@ -312,7 +314,7 @@ public class IngestaService {
                 "288735c36b"
         );
 
-        config.append("rules = [\n");
+        config.append(RULES);
         config.append(baseFunctions.convertToCustomFormat(rawRule));
         config.append("\n]");
 
@@ -340,86 +342,6 @@ public class IngestaService {
 
         return baseFunctions.convertFinalJsonToSelectedFormat(json);
     }
-
-//    private String generarMasterHammurabi(IngestaRequestDto request) {
-//        StringBuilder config = new StringBuilder();
-//        config.append("HAMMURABI_BLOCK");
-//
-//        // DataFrameInfo
-//        config.append(String.format("""
-//            dataFrameInfo {
-//                cutoffDate = ${?REPROCESS_DATE}
-//                targetPathName = "%s"
-//                physicalTargetName = "%s"
-//                subset = "%s"
-//                uuaa = "%s"
-//            }
-//            """,
-//                schemaProcessor.getDfMasterPath(),
-//                schemaProcessor.getDfMasterName(),
-//                schemaProcessor.getSubset(),
-//                request.getUuaaMaster()
-//        ));
-//
-//        // Input
-//        config.append(String.format("""
-//            input {
-//                options {
-//                    includeMetadataAndDeleted = true
-//                    overrideSchema = true
-//                }
-//                paths = [
-//                    "%s"
-//                ]
-//                schema {
-//                    path = %s
-//                }
-//                type = "parquet"
-//            }
-//            """,
-//                schemaProcessor.getDfMasterPath(),
-//                schemaProcessor.getMasterArtifactoryPath()
-//        ));
-//
-//        // Rules
-//        config.append(String.format("""
-//            rules =  [
-//                 {
-//                class = "com.datio.hammurabi.rules.completeness.ConditionalPerimeterCompletenessRule"
-//                config {
-//                    id = "xxxxxxxx"
-//                    isCritical=true
-//                    withRefusals=false
-//                    minThreshold=100.0
-//                    targetThreshold=100.0
-//                    acceptanceMin=100.0
-//                    dataValuesSubset = "%s"
-//                    dataValues {
-//                        applyConversions = false
-//                        castMode = "notPermissive"
-//                        options {
-//                                includeMetadataAndDeleted = true
-//                            }
-//                        paths = [
-//                            "%s"
-//                        ]
-//                        schema {
-//                            path = %s
-//                        }
-//                        type = "avro"
-//                    }
-//                }
-//            }
-//            ]
-//            """,
-//                schemaProcessor.getSubset(),
-//                schemaProcessor.getDfRawPath(),
-//                schemaProcessor.getArtifactoryPath()
-//        ));
-//
-//        config.append("\n}");
-//        return config.toString();
-//    }
 
     private String generarMasterHammurabi(IngestaRequestDto request) {
         StringBuilder config = new StringBuilder();
@@ -465,10 +387,10 @@ public class IngestaService {
                 schemaProcessor.getDfRawPath(),
                 schemaProcessor.getArtifactoryPath(),
                 schemaProcessor.getSubset(),
-                "xxxxxxxx"
+                ID_BASE
         );
 
-        config.append("rules = [\n");
+        config.append(RULES);
         config.append(baseFunctions.convertToCustomFormat(masterRule));
         config.append("\n]");
 
@@ -502,7 +424,7 @@ public class IngestaService {
         String inputType = request.getTipoArchivo();
 
         if ("host".equals(inputType)) {
-            inputType = "fixed";
+            inputType = FIXED;
         }
 
         String options = generarKirbyRawOptions(inputType, request.getDelimitador());
@@ -584,7 +506,7 @@ public class IngestaService {
     }
 
     private String generarKirbyRawOptions(String inputType, String delimiter) {
-        if ("fixed".equals(inputType)) {
+        if (FIXED.equals(inputType)) {
             return """
             options {
                 castMode = "notPermissive"
@@ -795,7 +717,7 @@ public class IngestaService {
         for (List<String> field : schemaProcessor.getMasterFieldWithOriginList()) {
             if (!"Calculated".equals(field.get(1))) {
                 transformations.append(String.format(
-                        "         %s = \"%s\",\n", field.get(1), field.get(0))
+                        "         %s = \"%s\",%n", field.get(1), field.get(0))
                 );
             }
         }
@@ -804,7 +726,7 @@ public class IngestaService {
 
         transformations.append("{\n    type = \"selectcolumns\"\n    columnsToSelect = [\n");
         for (String field : schemaProcessor.getMasterFieldList()) {
-            transformations.append(String.format("         \"%s\",\n", field));
+            transformations.append(String.format("         \"%s\",%n", field));
         }
         transformations.setLength(transformations.length() - 2);
         transformations.append("\n    ]\n}\n");
@@ -993,10 +915,10 @@ public class IngestaService {
                 request.getUuaaMaster(),
                 schemaProcessor.getDfMasterName(),
                 schemaProcessor.getSubset(),
-                "xxxxxxxx"
+                ID_BASE
         );
 
-        config.append("rules = [\n");
+        config.append(RULES);
         config.append(baseFunctions.convertToCustomFormat(l1tRule));
         config.append("\n]");
 
