@@ -30,7 +30,7 @@ public class IngestaService {
     private static final String CONF_EXTENSION = ".conf";
     private static final String JSON_EXTENSION = ".json";
     private static final String FIXED = "fixed";
-    private static final String RULES_ = "rules = [\n";
+    private static final String RULES_N = "rules = [\n";
 
     private SchemaProcessor schemaProcessor = new SchemaProcessor();
 
@@ -227,7 +227,7 @@ public class IngestaService {
     }
     private String generarReglasStagingConRules() {
         StringBuilder rulesConfig = new StringBuilder();
-        rulesConfig.append(RULES_);
+        rulesConfig.append(RULES_N);
 
         rulesConfig.append(baseFunctions.convertToCustomFormat(rules.stagingRule("staging")));
         rulesConfig.append(",\n");
@@ -314,7 +314,7 @@ public class IngestaService {
                 "288735c36b"
         );
 
-        config.append(RULES_);
+        config.append(RULES_N);
         config.append(baseFunctions.convertToCustomFormat(rawRule));
         config.append("\n]");
 
@@ -390,7 +390,7 @@ public class IngestaService {
                 ID_BASE
         );
 
-        config.append(RULES_);
+        config.append(RULES_N);
         config.append(baseFunctions.convertToCustomFormat(masterRule));
         config.append("\n]");
 
@@ -918,7 +918,7 @@ public class IngestaService {
                 ID_BASE
         );
 
-        config.append(RULES_);
+        config.append(RULES_N);
         config.append(baseFunctions.convertToCustomFormat(l1tRule));
         config.append("\n]");
 
