@@ -16,7 +16,7 @@ public class ReliabilityPacksDtoResponse {
     private String useCase;
     private Integer projectId;
     private String sdaToolId;
-    private Integer creatorUserId;
+    private String creatorUser;
     private String pdfLink;
     private Integer jobCount;
     private Integer statusId;

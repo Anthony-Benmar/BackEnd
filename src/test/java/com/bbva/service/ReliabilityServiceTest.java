@@ -953,4 +953,96 @@ class ReliabilityServiceTest {
             verify(reliabilityDaoMock, never()).updateJobByPackAndName(any());
         }
     }
+
+    @Test
+    void updateTransferDetail_packNotFound() {
+        String pack = "PACK404";
+        when(reliabilityDaoMock.getPackCurrentStatus(pack)).thenReturn(null);
+
+        var dto = new TransferDetailUpdateRequest();
+
+        var result = reliabilityService.updateTransferDetail(pack, "SM", dto);
+
+        assertFalse(result.success);
+        assertEquals("404", result.status);
+        verify(reliabilityDaoMock, never()).updateTransferDetail(any(), any());
+    }
+
+    @Test
+    void updateTransferDetail_enProgreso_sm_conDatosNoPermitidos() {
+        String pack = "PACK1";
+        when(reliabilityDaoMock.getPackCurrentStatus(pack))
+                .thenReturn(TransferStatusPolicy.EN_PROGRESO);
+
+        var dto = new TransferDetailUpdateRequest();
+        var header = new TransferDetailUpdateRequest.Header();
+        header.setDomainId(1); // <-- hace que no sea solo comentarios
+        dto.setHeader(header);
+
+        var result = reliabilityService.updateTransferDetail(pack, "SM", dto);
+
+        assertFalse(result.success);
+        assertEquals("409", result.status);
+        assertTrue(result.message.contains("solo se permiten comentarios"));
+        verify(reliabilityDaoMock, never()).updateTransferDetail(any(), any());
+    }
+
+    @Test
+    void updateTransferDetail_aprobadoPo_km_conDatosNoPermitidos() {
+        String pack = "PACK2";
+        when(reliabilityDaoMock.getPackCurrentStatus(pack))
+                .thenReturn(TransferStatusPolicy.APROBADO_PO);
+
+        var dto = new TransferDetailUpdateRequest();
+        var header = new TransferDetailUpdateRequest.Header();
+        header.setComments("ok");
+        header.setDomainId(123); // no permitido en este caso
+        dto.setHeader(header);
+
+        var result = reliabilityService.updateTransferDetail(pack, "KM", dto);
+
+        assertFalse(result.success);
+        assertEquals("409", result.status);
+        assertTrue(result.message.contains("solo puede editar el comentario general"));
+        verify(reliabilityDaoMock, never()).updateTransferDetail(any(), any());
+    }
+
+    @Test
+    void updateTransferDetail_success() {
+        String pack = "PACK_OK";
+        when(reliabilityDaoMock.getPackCurrentStatus(pack))
+                .thenReturn(TransferStatusPolicy.EN_PROGRESO);
+
+        var dto = new TransferDetailUpdateRequest();
+        var header = new TransferDetailUpdateRequest.Header();
+        header.setComments("solo comentario"); // válido
+        dto.setHeader(header);
+
+        var snapshot = new TransferDetailResponse();
+        when(reliabilityDaoMock.getTransferDetail(pack)).thenReturn(snapshot);
+
+        var result = reliabilityService.updateTransferDetail(pack, "SM", dto);
+
+        assertTrue(result.success);
+        assertSame(snapshot, result.data);
+        verify(reliabilityDaoMock).updateTransferDetail(pack, dto);
+        verify(reliabilityDaoMock).getTransferDetail(pack);
+    }
+
+    @Test
+    void updateTransferDetail_genericException() {
+        String pack = "PACK_ERR";
+        when(reliabilityDaoMock.getPackCurrentStatus(pack)).thenReturn(1);
+        var dto = new TransferDetailUpdateRequest();
+
+        doThrow(new RuntimeException("DB down"))
+                .when(reliabilityDaoMock).updateTransferDetail(pack, dto);
+
+        var result = reliabilityService.updateTransferDetail(pack, "SM", dto);
+
+        assertFalse(result.success);
+        assertEquals("500", result.status);
+        assertTrue(result.message.contains("DB down"));
+    }
+
 }

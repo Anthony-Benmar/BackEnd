@@ -539,4 +539,66 @@ class ReliabilityResourceTest {
         assertEquals("Pack no encontrado", result.message);
         verify(reliabilityServiceMock).getTransferDetail(pack);
     }
+
+    @Test
+    void testUpdateTransferDetail_success() {
+        String pack = "PACK_OK";
+        String role = "SM";
+
+        // Crear body simulado
+        TransferDetailUpdateRequest body = new TransferDetailUpdateRequest();
+        TransferDetailUpdateRequest.Header header = new TransferDetailUpdateRequest.Header();
+        header.setDomainId(1);
+        header.setUseCaseId(2);
+        header.setComments("comentario test");
+        body.setHeader(header);
+
+        TransferDetailUpdateRequest.Job job = new TransferDetailUpdateRequest.Job();
+        job.setJobName("JobTest");
+        body.setJobs(List.of(job));
+
+        // Respuesta mock
+        TransferDetailResponse detailResponse = new TransferDetailResponse();
+        IDataResult<TransferDetailResponse> dataResult = new SuccessDataResult<>(detailResponse, "OK");
+
+        when(reliabilityServiceMock.updateTransferDetail(pack, role, body))
+                .thenReturn(dataResult);
+
+        // Ejecutar
+        IDataResult<TransferDetailResponse> result =
+                reliabilityResource.updateTransferDetail(pack, body, role);
+
+        // Verificar
+        assertNotNull(result);
+        assertTrue(result.success);
+        assertSame(detailResponse, result.data);
+        assertEquals("OK", result.message);
+
+        verify(reliabilityServiceMock).updateTransferDetail(pack, role, body);
+    }
+
+    @Test
+    void testUpdateTransferDetail_error() {
+        String pack = "PACK_ERR";
+        String role = "KM";
+
+        TransferDetailUpdateRequest body = new TransferDetailUpdateRequest();
+        IDataResult<TransferDetailResponse> errorResult =
+                new ErrorDataResult<>(null, "500", "Error interno");
+
+        when(reliabilityServiceMock.updateTransferDetail(pack, role, body))
+                .thenReturn(errorResult);
+
+        IDataResult<TransferDetailResponse> result =
+                reliabilityResource.updateTransferDetail(pack, body, role);
+
+        assertNotNull(result);
+        assertFalse(result.success);
+        assertNull(result.data);
+        assertEquals("500", result.status);
+        assertEquals("Error interno", result.message);
+
+        verify(reliabilityServiceMock).updateTransferDetail(pack, role, body);
+    }
+
 }

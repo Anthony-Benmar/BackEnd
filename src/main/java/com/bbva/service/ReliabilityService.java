@@ -403,4 +403,68 @@ public class ReliabilityService {
             return new ErrorDataResult<>(null, CODE_500, e.getMessage());
         }
     }
+
+    public IDataResult<TransferDetailResponse> updateTransferDetail(
+            String pack, String role, TransferDetailUpdateRequest dto) {
+        try {
+            Integer st = reliabilityDao.getPackCurrentStatus(pack);
+            if (st == null) return new ErrorDataResult<>(null, CODE_404, MSG_PACK_NOT_FOUND);
+
+            String r = (role == null) ? "" : role.trim().toUpperCase(Locale.ROOT);
+
+            boolean headerOnlyComment =
+                    dto.getHeader() == null
+                            || (dto.getHeader().getComments() != null
+                            && dto.getHeader().getDomainId() == null
+                            && dto.getHeader().getUseCaseId() == null);
+
+            boolean jobsOnlyComments =
+                    dto.getJobs() == null || dto.getJobs().isEmpty()
+                            || dto.getJobs().stream().allMatch(j ->
+                            j != null
+                                    && j.getJobName() != null
+                                    && j.getComments() != null
+                                    && j.getComponentName() == null
+                                    && j.getFrequencyId() == null
+                                    && j.getInputPaths() == null
+                                    && j.getOutputPath() == null
+                                    && j.getJobTypeId() == null
+                                    && j.getUseCaseId() == null
+                                    && j.getIsCritical() == null
+                                    && j.getDomainId() == null
+                                    && j.getBitBucketUrl() == null
+                                    && j.getResponsible() == null
+                                    && j.getJobPhaseId() == null
+                                    && j.getOriginTypeId() == null
+                                    && j.getException() == null
+                    );
+
+            boolean onlyComments = headerOnlyComment && jobsOnlyComments;
+
+            boolean onlyGeneralComment =
+                    dto.getHeader() != null
+                            && dto.getHeader().getComments() != null
+                            && dto.getHeader().getDomainId() == null
+                            && dto.getHeader().getUseCaseId() == null
+                            && (dto.getJobs() == null || dto.getJobs().isEmpty());
+
+            if (st == TransferStatusPolicy.EN_PROGRESO && "SM".equals(r) && !onlyComments) {
+                return new ErrorDataResult<>(null, CODE_409, "En EN_PROGRESO solo se permiten comentarios (general y por job)");
+            }
+            if (st == TransferStatusPolicy.APROBADO_PO && "KM".equals(r) && !onlyGeneralComment) {
+                return new ErrorDataResult<>(null, CODE_409, "KM solo puede editar el comentario general en APROBADO_PO");
+            }
+
+            reliabilityDao.updateTransferDetail(pack, dto);
+
+            var snapshot = reliabilityDao.getTransferDetail(pack);
+            return new SuccessDataResult<>(snapshot, "Detalle actualizado");
+
+        } catch (ReliabilityDao.PersistenceException pe) {
+            return new ErrorDataResult<>(null, CODE_404, pe.getMessage());
+        } catch (Exception e) {
+            log.severe(ERROR + e.getMessage());
+            return new ErrorDataResult<>(null, CODE_500, e.getMessage());
+        }
+    }
 }

@@ -218,7 +218,7 @@ WHERE pack = #{pack} AND job_name = #{jobName}
     @Result(property = "useCase", column = "use_case")
     @Result(property = "projectId", column = "projectId")
     @Result(property = "sdaToolId", column = "sdaToolId")
-    @Result(property = "creatorUserId", column = "creatorUserId")
+    @Result(property = "creatorUser", column = "creatorUser")
     @Result(property = "pdfLink", column = "pdfLink")
     @Result(property = "jobCount", column = "jobCount")
     @Result(property = "statusId", column = "statusId")
@@ -289,4 +289,16 @@ WHERE pack = #{pack} AND job_name = #{jobName}
 """)
     List<TransferDetailResponse.JobRow> getTransferJobs(@Param("pack") String pack);
 
+    @Update("""
+UPDATE reliability_packs
+SET
+  domain_id   = COALESCE(#{domainId},  domain_id),
+  use_case_id = COALESCE(#{useCaseId}, use_case_id),
+  comments    = COALESCE(#{comments},  comments)
+WHERE pack = #{pack}
+""")
+    int patchPackHeader(@Param("pack") String pack,
+                        @Param("domainId") Integer domainId,
+                        @Param("useCaseId") Integer useCaseId,
+                        @Param("comments") String comments);
 }
