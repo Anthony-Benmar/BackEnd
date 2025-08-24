@@ -177,23 +177,23 @@ public interface ReliabilityMapper {
     Integer getPackStatus(@Param("pack") String pack);
 
     @Update("""
-UPDATE job_stock SET
-  component_name = #{componentName},
-  frequency_id   = #{frequencyId},
-  input_paths    = #{inputPaths},
-  output_path    = #{outputPath},
-  job_type_id    = #{jobTypeId},
-  use_case_id    = #{useCaseId},
-  is_critical    = #{isCritical},
-  domain_id      = #{domainId},
-  bitbucket_url  = #{bitBucketUrl},
-  responsible    = #{responsible},
-  job_phase_id   = #{jobPhaseId},
-  origin_type_id = #{originTypeId},
-  exception      = #{exception},
-  comments       = COALESCE(#{comments}, comments)
-WHERE pack = #{pack} AND job_name = #{jobName}
-""")
+        UPDATE job_stock SET
+        component_name = COALESCE(#{componentName}, component_name),
+        frequency_id   = COALESCE(#{frequencyId},   frequency_id),
+        input_paths    = COALESCE(#{inputPaths},    input_paths),
+        output_path    = COALESCE(#{outputPath},    output_path),
+        job_type_id    = COALESCE(#{jobTypeId},     job_type_id),
+        use_case_id    = COALESCE(#{useCaseId},     use_case_id),
+        is_critical    = COALESCE(#{isCritical},    is_critical),
+        domain_id      = COALESCE(#{domainId},      domain_id),
+        bitbucket_url  = COALESCE(#{bitBucketUrl},  bitbucket_url),
+        responsible    = COALESCE(#{responsible},   responsible),
+        job_phase_id   = COALESCE(#{jobPhaseId},    job_phase_id),
+        origin_type_id = COALESCE(#{originTypeId},  origin_type_id),
+        exception      = COALESCE(#{exception},     exception),
+        comments       = COALESCE(#{comments},      comments)
+        WHERE pack = #{pack} AND job_name = #{jobName}
+        """)
     int updateJobByPackAndName(UpdateJobDtoRequest dto);
 
     @Update("UPDATE reliability_packs SET comments = #{comments} WHERE pack = #{pack}")
@@ -230,24 +230,24 @@ WHERE pack = #{pack} AND job_name = #{jobName}
     );
 
     @Select("""
-  SELECT
-    rp.pack,
-    pi2.sdatool_id                       AS sdaToolId,
-    rp.domain_id                         AS domainId,
-    domain.element_name                  AS domain_name,
-    rp.use_case_id                       AS useCaseId,
-    uc.use_case_name                     AS use_case,
-    rp.status_id                         AS statusId,
-    st.element_name                      AS status_name,
-    rp.comments                          AS comments
-  FROM reliability_packs rp
-  LEFT JOIN project_info pi2    ON rp.project_id = pi2.project_id
-  LEFT JOIN catalog domain      ON COALESCE(rp.domain_id,9)=domain.element_id AND domain.catalog_id=1027
-  LEFT JOIN use_case uc         ON rp.use_case_id = uc.use_case_id
-  LEFT JOIN catalog st          ON st.catalog_id = 3003 AND st.element_id = rp.status_id
-  WHERE rp.pack = #{pack}
-  LIMIT 1
-""")
+        SELECT
+            rp.pack,
+            pi2.sdatool_id                       AS sdaToolId,
+            rp.domain_id                         AS domainId,
+            domain.element_name                  AS domain_name,
+            rp.use_case_id                       AS useCaseId,
+            uc.use_case_name                     AS use_case,
+            rp.status_id                         AS statusId,
+            st.element_name                      AS status_name,
+            rp.comments                          AS comments
+        FROM reliability_packs rp
+        LEFT JOIN project_info pi2    ON rp.project_id = pi2.project_id
+        LEFT JOIN catalog domain      ON COALESCE(rp.domain_id,9)=domain.element_id AND domain.catalog_id=1027
+        LEFT JOIN use_case uc         ON rp.use_case_id = uc.use_case_id
+        LEFT JOIN catalog st          ON st.catalog_id = 3003 AND st.element_id = rp.status_id
+        WHERE rp.pack = #{pack}
+        LIMIT 1
+        """)
     @Result(property = "pack",       column = "pack")
     @Result(property = "sdaToolId",  column = "sdaToolId")
     @Result(property = "domainId",   column = "domainId")
@@ -267,36 +267,25 @@ WHERE pack = #{pack} AND job_name = #{jobName}
                          @Param("comments") String comments);
 
     @Select("""
-  SELECT
-    job_name       AS jobName,
-    component_name AS jsonName,
-    frequency_id   AS frequencyId,
-    job_type_id    AS jobTypeId,
-    job_phase_id   AS jobPhaseId,
-    origin_type_id AS originTypeId,
-    input_paths    AS inputPaths,
-    output_path    AS outputPath,
-    bitbucket_url  AS bitBucketUrl,
-    responsible    AS responsible,
-    use_case_id    AS useCaseId,
-    domain_id      AS domainId,
-    is_critical    AS isCritical,
-    status_id      AS statusId,
-    comments       AS comments
-  FROM job_stock
-  WHERE pack = #{pack}
-  ORDER BY job_name
-""")
+        SELECT
+            job_name       AS jobName, component_name AS jsonName,
+            frequency_id   AS frequencyId, job_type_id    AS jobTypeId,
+            job_phase_id   AS jobPhaseId, origin_type_id AS originTypeId,
+            input_paths    AS inputPaths, output_path    AS outputPath,
+            bitbucket_url  AS bitBucketUrl, responsible    AS responsible,
+            use_case_id    AS useCaseId, domain_id      AS domainId,
+            is_critical    AS isCritical, status_id      AS statusId,
+            comments       AS comments
+        FROM job_stock
+        WHERE pack = #{pack}
+        ORDER BY job_name
+        """)
     List<TransferDetailResponse.JobRow> getTransferJobs(@Param("pack") String pack);
 
     @Update("""
-UPDATE reliability_packs
-SET
-  domain_id   = COALESCE(#{domainId},  domain_id),
-  use_case_id = COALESCE(#{useCaseId}, use_case_id),
-  comments    = COALESCE(#{comments},  comments)
-WHERE pack = #{pack}
-""")
+        UPDATE reliability_packs SET domain_id   = COALESCE(#{domainId},  domain_id), use_case_id = COALESCE(#{useCaseId}, use_case_id), comments    = COALESCE(#{comments},  comments)
+        WHERE pack = #{pack}
+        """)
     int patchPackHeader(@Param("pack") String pack,
                         @Param("domainId") Integer domainId,
                         @Param("useCaseId") Integer useCaseId,

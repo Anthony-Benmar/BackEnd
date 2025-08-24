@@ -18,7 +18,7 @@ public class TransferDetailResponse {
         private String  useCase;
         private Integer statusId;
         private String  statusName;
-        private String  comments; // viene de job_stock.comments (no se cambia el esquema)
+        private String  comments;
     }
 
     @Getter @Setter @AllArgsConstructor @NoArgsConstructor @Builder

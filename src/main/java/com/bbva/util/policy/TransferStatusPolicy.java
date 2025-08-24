@@ -66,16 +66,16 @@ public class TransferStatusPolicy {
 
         if (ROLE_KM.equals(r)) {
             if (currentStatus == APROBADO_PO) {
-                res.add(Action.APPROVE); // -> 1
-                res.add(Action.RETURN);  // -> 5
+                res.add(Action.APPROVE);
+                res.add(Action.RETURN);
             }
         } else { // Rol Consulta = SM/PO
             if (currentStatus == EN_PROGRESO) {
-                res.add(Action.APPROVE); // -> 2
-                res.add(Action.RETURN);  // -> 4
+                res.add(Action.APPROVE);
+                res.add(Action.RETURN);
             }
             if (currentStatus == DEVUELTO_PO || currentStatus == DEVUELTO_RLB) {
-                res.add(Action.RESEND);  // -> 3
+                res.add(Action.RESEND);
             }
         }
         return res;
@@ -125,8 +125,8 @@ public class TransferStatusPolicy {
 
     public static int canWriteGeneralComment(String role, Integer statusId) {
         int st = statusId == null ? 0 : statusId;
-        if (isKM(role) && st == APROBADO_PO) return 1;   // KM comenta en 2
-        if (isSM(role) && st == EN_PROGRESO) return 1;   // PO comenta al devolver (3)
+        if (isKM(role) && st == APROBADO_PO) return 1;
+        if (isSM(role) && st == EN_PROGRESO) return 1;
         return 0;
     }
 }

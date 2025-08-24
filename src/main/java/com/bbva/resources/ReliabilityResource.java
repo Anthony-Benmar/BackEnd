@@ -14,6 +14,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
+import java.util.Map;
 
 @Path("/reliability")
 @Produces(MediaType.APPLICATION_JSON)
@@ -187,17 +188,13 @@ public class ReliabilityResource {
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<Void> updateCommentsForPack(
             @PathParam("pack") String pack,
-            UpdateJobCommentsRequest body,
+            Map<String, String> body,
             @HeaderParam("X-USER-ROLE") String roleFromHeader
     ) {
-        String actor;
-        if (body != null && body.getActorRole() != null && !body.getActorRole().isBlank()) {
-            actor = body.getActorRole();
-        } else {
-            actor = (roleFromHeader != null) ? roleFromHeader : "";
-        }
-        String comments = (body != null) ? body.getComments() : null;
-
+        String actor = (body != null && body.get("actorRole") != null && !body.get("actorRole").isBlank())
+                ? body.get("actorRole")
+                : (roleFromHeader == null ? "" : roleFromHeader);
+        String comments = (body != null) ? body.get("comments") : null;
         return reliabilityService.updateCommentsForPack(pack, actor, comments);
     }
 

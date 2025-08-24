@@ -13,9 +13,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -53,7 +50,6 @@ class ReliabilityDaoTest {
         if (mockedJsonUtils != null) mockedJsonUtils.close();
     }
 
-    // ----------------- Inventory -----------------
 
     @Test
     void inventoryInputsFilter_successAndSplitInputPaths() {
@@ -80,7 +76,7 @@ class ReliabilityDaoTest {
     void inventoryInputsFilter_jsonError_doesNotFail() {
         InventoryInputsFilterDtoRequest req = new InventoryInputsFilterDtoRequest();
         req.setPage(1);
-        req.setRecordsAmount(5); // evitar NPE
+        req.setRecordsAmount(5);
 
         when(reliabilityMapperMock.inventoryInputsFilter(any()))
                 .thenThrow(new RuntimeException("JSON parse error"));
@@ -93,11 +89,8 @@ class ReliabilityDaoTest {
 
     @Test
     void listinventory_mapperThrows_returnsEmptyList() {
-        // given
         InventoryInputsFilterDtoRequest request = new InventoryInputsFilterDtoRequest();
 
-        // when -> como el dao ya captura la excepción, no necesitas mockear MyBatis,
-        // simplemente simulas el comportamiento del dao con excepción interna
         List<InventoryInputsDtoResponse> result = reliabilityDao.listinventory(request);
 
         // then
@@ -105,7 +98,6 @@ class ReliabilityDaoTest {
         assertTrue(result.isEmpty());
     }
 
-    // ----------------- Custody / Jobs -----------------
 
     @Test
     void getPendingCustodyJobs_successAndTrim() {
@@ -135,8 +127,6 @@ class ReliabilityDaoTest {
         assertTrue(reliabilityDao.getProjectCustodyInfo("X").isEmpty());
     }
 
-    // ----------------- Execution validation -----------------
-
     @Test
     void getExecutionValidation_success() {
         when(reliabilityMapperMock.getExecutionValidation("job")).thenReturn(new ExecutionValidationDtoResponse());
@@ -155,8 +145,6 @@ class ReliabilityDaoTest {
         when(reliabilityMapperMock.getExecutionValidation("j2")).thenReturn(new ExecutionValidationDtoResponse());
         assertEquals(2, reliabilityDao.getExecutionValidationAll(List.of("j1","j2")).size());
     }
-
-    // ----------------- Transfer insert / update -----------------
 
     @Test
     void insertTransfer_withJobs_commits() {
@@ -195,19 +183,18 @@ class ReliabilityDaoTest {
         assertEquals("PersistenceException", ex.getClass().getSimpleName());
     }
 
-
     @Test
     void getReliabilityPacks_success() {
         ReliabilityPackInputFilterRequest req = new ReliabilityPackInputFilterRequest();
         req.setPage(1);
-        req.setRecordsAmount(5); // evitar NPE
+        req.setRecordsAmount(5);
 
         when(reliabilityMapperMock.getReliabilityPacks(any(), any()))
                 .thenReturn(List.of(new ReliabilityPacksDtoResponse()));
 
         var resp = reliabilityDao.getReliabilityPacks(req);
 
-        assertEquals(1, resp.getData().size()); // <-- corregido
+        assertEquals(1, resp.getData().size());
     }
 
     @Test
@@ -242,8 +229,6 @@ class ReliabilityDaoTest {
         when(reliabilityMapperMock.getPackStatus("P")).thenThrow(new RuntimeException());
         assertNull(reliabilityDao.getPackCurrentStatus("P"));
     }
-
-    // ----------------- Misc -----------------
 
     @Test
     void getOriginTypes_success() {

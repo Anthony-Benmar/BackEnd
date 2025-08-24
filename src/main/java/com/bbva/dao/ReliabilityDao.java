@@ -330,66 +330,44 @@ public class ReliabilityDao {
         try (SqlSession s = MyBatisConnectionFactory.getInstance().openSession()) {
             var m = s.getMapper(ReliabilityMapper.class);
 
-            if (dto.getHeader()!=null) {
+            if (dto.getHeader() != null) {
                 var h = dto.getHeader();
-                boolean soloComentario = h.getComments()!=null && h.getDomainId()==null && h.getUseCaseId()==null;
-                if (soloComentario) {
-                    m.updatePackComments(pack, h.getComments());
-                } else {
-                    m.patchPackHeader(pack, h.getDomainId(), h.getUseCaseId(), h.getComments());
-                }
+                m.patchPackHeader(pack, h.getDomainId(), h.getUseCaseId(), h.getComments());
             }
 
-            // --- Jobs ---
-            if (dto.getJobs()!=null) {
+            if (dto.getJobs() != null) {
                 for (var j : dto.getJobs()) {
-                    if (j == null || j.getJobName()==null || j.getJobName().isBlank()) {
+                    if (j == null || j.getJobName() == null || j.getJobName().isBlank()) {
                         throw new PersistenceException("jobName es obligatorio para actualizar un job", null);
                     }
-                    boolean soloCommentJob =
-                            j.getComments()!=null &&
-                                    j.getComponentName()==null &&
-                                    j.getFrequencyId()==null &&
-                                    j.getInputPaths()==null &&
-                                    j.getOutputPath()==null &&
-                                    j.getJobTypeId()==null &&
-                                    j.getUseCaseId()==null &&
-                                    j.getIsCritical()==null &&
-                                    j.getDomainId()==null &&
-                                    j.getBitBucketUrl()==null &&
-                                    j.getResponsible()==null &&
-                                    j.getJobPhaseId()==null &&
-                                    j.getOriginTypeId()==null &&
-                                    j.getException()==null;
 
-                    if (soloCommentJob) {
-                        int rows = m.updateJobComment(pack, j.getJobName(), j.getComments());
-                        if (rows == 0) throw new PersistenceException("No se encontró el job en ese pack", null);
-                    } else {
-                        UpdateJobDtoRequest up = new UpdateJobDtoRequest();
-                        up.setPack(pack);
-                        up.setJobName(j.getJobName());
-                        up.setComponentName(j.getComponentName());
-                        up.setFrequencyId(j.getFrequencyId());
-                        up.setInputPaths(j.getInputPaths());
-                        up.setOutputPath(j.getOutputPath());
-                        up.setJobTypeId(j.getJobTypeId());
-                        up.setUseCaseId(j.getUseCaseId());
-                        up.setIsCritical(j.getIsCritical());
-                        up.setDomainId(j.getDomainId());
-                        up.setBitBucketUrl(j.getBitBucketUrl());
-                        up.setResponsible(j.getResponsible());
-                        up.setJobPhaseId(j.getJobPhaseId());
-                        up.setOriginTypeId(j.getOriginTypeId());
-                        up.setException(j.getException());
-                        up.setComments(j.getComments());
+                    UpdateJobDtoRequest up = new UpdateJobDtoRequest();
+                    up.setPack(pack);
+                    up.setJobName(j.getJobName());
 
-                        int rows = m.updateJobByPackAndName(up);
-                        if (rows == 0) throw new PersistenceException("No se encontró el job en ese pack", null);
+                    try {
+                        for (var f : TransferDetailUpdateRequest.Job.class.getDeclaredFields()) {
+                            f.setAccessible(true);
+                            Object v = f.get(j);
+                            if (v == null) continue;
+
+                            try {
+                                var tf = UpdateJobDtoRequest.class.getDeclaredField(f.getName());
+                                tf.setAccessible(true);
+                                tf.set(up, v);
+                            } catch (NoSuchFieldException ignore) {
+                            }
+                        }
+                    } catch (IllegalAccessException iae) {
+                        throw new PersistenceException("No se pudo mapear los campos del job " + j.getJobName(), iae);
+                    }
+
+                    int rows = m.updateJobByPackAndName(up);
+                    if (rows == 0) {
+                        throw new PersistenceException("No se encontró el job en ese pack", null);
                     }
                 }
             }
-
             s.commit();
         } catch (PersistenceException pe) {
             throw pe;

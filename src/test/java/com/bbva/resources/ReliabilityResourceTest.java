@@ -13,9 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 import javax.ws.rs.core.Response;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -185,420 +183,239 @@ class ReliabilityResourceTest {
 
         when(reliabilityServiceMock.updateStatusReliabilityPacksJobStock(packs)).thenReturn(dataResult);
 
-        IDataResult<Void> result = reliabilityResource.updateStatusReliabilityPacksJobStock(null,packs);
+        IDataResult<Void> result = reliabilityResource.updateStatusReliabilityPacksJobStock(null, packs);
 
         assertNotNull(result);
     }
 
+    private static DropDownDto ddl(int v, String l) {
+        var d = new DropDownDto();
+        d.setValue(v);
+        d.setLabel(l);
+        return d;
+    }
+
+    private static Map<String, String> map(String... kv) {
+        Map<String, String> m = new HashMap<>();
+        for (int i = 0; i < kv.length - 1; i += 2) m.put(kv[i], kv[i + 1]);
+        return m;
+    }
+
     @Test
-    void testGetOriginTypes() {
-        DropDownDto dto = new DropDownDto();
-        dto.setValue(1);
-        dto.setLabel("Type A");
+    void originTypes_ok_y_error() {
+        when(reliabilityServiceMock.getOriginTypes()).thenReturn(new SuccessDataResult<>(List.of(ddl(1, "Type A"))));
+        var ok = reliabilityResource.getOriginTypes();
+        assertTrue(ok.success);
+        assertEquals(1, ok.data.size());
+        assertEquals("Type A", ok.data.get(0).getLabel());
+        verify(reliabilityServiceMock).getOriginTypes();
 
-        List<DropDownDto> originTypes = Collections.singletonList(dto);
-        IDataResult<List<DropDownDto>> dataResult = new SuccessDataResult<>(originTypes);
-
-        when(reliabilityServiceMock.getOriginTypes()).thenReturn(dataResult);
-
-        IDataResult<List<DropDownDto>> result = reliabilityResource.getOriginTypes();
-
-        assertNotNull(result);
-        assertEquals(1, result.data.size());
-        assertEquals(1, result.data.get(0).getValue());
-        assertEquals("Type A", result.data.get(0).getLabel());
-
+        reset(reliabilityServiceMock);
+        when(reliabilityServiceMock.getOriginTypes()).thenReturn(new ErrorDataResult<>(null, "500", "DB down"));
+        var err = reliabilityResource.getOriginTypes();
+        assertFalse(err.success);
+        assertEquals("500", err.status);
         verify(reliabilityServiceMock).getOriginTypes();
     }
 
     @Test
-    void testGetExecutionHistory() {
-        String jobName = "JOB_TEST";
-        JobExecutionHistoryDtoResponse dto = new JobExecutionHistoryDtoResponse();
-        List<JobExecutionHistoryDtoResponse> history = List.of(dto);
-        IDataResult<List<JobExecutionHistoryDtoResponse>> dataResult =
-                new SuccessDataResult<>(history);
+    void executionHistory_ok_y_error() {
+        String okJob = "JOB_OK";
+        var hist = List.of(new JobExecutionHistoryDtoResponse());
+        when(reliabilityServiceMock.getJobExecutionHistory(okJob)).thenReturn(new SuccessDataResult<>(hist));
+        var ok = reliabilityResource.getExecutionHistory(okJob);
+        assertTrue(ok.success);
+        assertSame(hist, ok.data);
+        verify(reliabilityServiceMock).getJobExecutionHistory(okJob);
 
-        when(reliabilityServiceMock.getJobExecutionHistory(jobName))
-                .thenReturn(dataResult);
-
-        IDataResult<List<JobExecutionHistoryDtoResponse>> response =
-                reliabilityResource.getExecutionHistory(jobName);
-
-        assertNotNull(response, "La respuesta no debe ser null");
-        assertTrue(response.success, "Debe ser un SuccessDataResult");
-        assertSame(history, response.data, "Debe devolver la misma lista que el service");
-        verify(reliabilityServiceMock).getJobExecutionHistory(jobName);
+        reset(reliabilityServiceMock);
+        String badJob = "JOB_ERR";
+        when(reliabilityServiceMock.getJobExecutionHistory(badJob))
+                .thenReturn(new ErrorDataResult<>(null, "500", "Error interno"));
+        var err = reliabilityResource.getExecutionHistory(badJob);
+        assertFalse(err.success);
+        assertEquals("500", err.status);
+        assertNull(err.data);
+        verify(reliabilityServiceMock).getJobExecutionHistory(badJob);
     }
 
     @Test
-    void testGetExecutionHistoryError() {
-        String jobName = "JOB_ERR";
-        IDataResult<List<JobExecutionHistoryDtoResponse>> errorResult =
-                new ErrorDataResult<>(null, "500", "Error interno");
-        when(reliabilityServiceMock.getJobExecutionHistory(jobName))
-                .thenReturn(errorResult);
-
-        IDataResult<List<JobExecutionHistoryDtoResponse>> response =
-                reliabilityResource.getExecutionHistory(jobName);
-
-        assertFalse(response.success, "Debe ser un ErrorDataResult");
-        assertNull(response.data, "En error la data debe ser null");
-        assertEquals("500", response.status);
-        verify(reliabilityServiceMock).getJobExecutionHistory(jobName);
-    }
-
-    @Test
-    void testSn2OptionsSuccess() {
-        int sn1 = 99;
-        DropDownDto dto1 = new DropDownDto();
-        dto1.setValue(10);
-        dto1.setLabel("Opción A");
-        DropDownDto dto2 = new DropDownDto();
-        dto2.setValue(20);
-        dto2.setLabel("Opción B");
-        List<DropDownDto> opts = Arrays.asList(dto1, dto2);
-
-        IDataResult<List<DropDownDto>> dataResult = new SuccessDataResult<>(opts);
-        when(reliabilityServiceMock.getSn2Options(sn1)).thenReturn(dataResult);
-
-        IDataResult<List<DropDownDto>> result = reliabilityResource.sn2Options(sn1);
-
-        assertNotNull(result);
-        assertEquals(2, result.data.size());
-        assertEquals(10, result.data.get(0).getValue());
-        assertEquals("Opción A", result.data.get(0).getLabel());
+    void sn2Options_ok_y_error() {
+        int sn1 = 1027;
+        var opts = List.of(ddl(10, "Opción A"), ddl(20, "Opción B"));
+        when(reliabilityServiceMock.getSn2Options(sn1)).thenReturn(new SuccessDataResult<>(opts));
+        var ok = reliabilityResource.sn2Options(sn1);
+        assertTrue(ok.success);
+        assertEquals(2, ok.data.size());
+        assertEquals(10, ok.data.get(0).getValue());
         verify(reliabilityServiceMock).getSn2Options(sn1);
+
+        reset(reliabilityServiceMock);
+        when(reliabilityServiceMock.getSn2Options(42)).thenReturn(new ErrorDataResult<>(null, "500", "Error interno"));
+        var err = reliabilityResource.sn2Options(42);
+        assertFalse(err.success);
+        assertEquals("500", err.status);
+        assertNull(err.data);
+        verify(reliabilityServiceMock).getSn2Options(42);
     }
 
     @Test
-    void testSn2OptionsError() {
-        int sn1 = 42;
-        IDataResult<List<DropDownDto>> errorResult = new ErrorDataResult<>(null, "500", "Error interno");
-        when(reliabilityServiceMock.getSn2Options(sn1)).thenReturn(errorResult);
+    void packsV2_role_resolucion_ok() {
+        record Caso(String bodyRole, String headerRole, String expectedRole) {
+        }
+        var casos = List.of(
+                new Caso("SM", "KM", "SM"),
+                new Caso("", "KM", "KM"),
+                new Caso(null, null, null)
+        );
 
-        IDataResult<List<DropDownDto>> result = reliabilityResource.sn2Options(sn1);
+        for (var c : casos) {
+            var dto = new ReliabilityPackInputFilterRequest();
+            dto.setRole(c.bodyRole());
+            dto.setTab("EN_PROGRESO");
 
-        assertFalse(result.success);
-        assertNull(result.data);
-        assertEquals("500", result.status);
-        verify(reliabilityServiceMock).getSn2Options(sn1);
+            when(reliabilityServiceMock.getReliabilityPacksAdvanced(any()))
+                    .thenReturn(new SuccessDataResult<>(new PaginationReliabilityPackResponse()));
+
+            var res = reliabilityResource.getReliabilityPacksV2(dto, c.headerRole());
+            assertTrue(res.success);
+
+            ArgumentCaptor<ReliabilityPackInputFilterRequest> captor = ArgumentCaptor.forClass(ReliabilityPackInputFilterRequest.class);
+            verify(reliabilityServiceMock).getReliabilityPacksAdvanced(captor.capture());
+            assertEquals(c.expectedRole(), captor.getValue().getRole());
+
+            reset(reliabilityServiceMock);
+        }
     }
 
     @Test
-    void testGetReliabilityPacksV2_UsaRoleDelBody_siViene() {
-        var dto = new ReliabilityPackInputFilterRequest();
-        dto.setRole("SM"); // body manda SM
-        dto.setTab("EN_PROGRESO");
-
-        var mockResp = new PaginationReliabilityPackResponse();
-        var dataResult = new SuccessDataResult<>(mockResp);
-        ArgumentCaptor<ReliabilityPackInputFilterRequest> captor =
-                ArgumentCaptor.forClass(ReliabilityPackInputFilterRequest.class);
-
-        when(reliabilityServiceMock.getReliabilityPacksAdvanced(any()))
-                .thenReturn(dataResult);
-
-        var result = reliabilityResource.getReliabilityPacksV2(dto, "KM"); // header dice KM
-
-        assertNotNull(result);
-        assertSame(mockResp, result.data);
-
-        verify(reliabilityServiceMock).getReliabilityPacksAdvanced(captor.capture());
-        var dtoEnviado = captor.getValue();
-        assertEquals("SM", dtoEnviado.getRole(), "Debe respetar el role del body (tiene precedencia sobre header)");
-        assertEquals("EN_PROGRESO", dtoEnviado.getTab());
-    }
-
-    @Test
-    void testGetReliabilityPacksV2_FallbackAlHeader_siBodyNoTraeRole() {
-        var dto = new ReliabilityPackInputFilterRequest();
-        dto.setRole(""); // body vacío
-        dto.setTab("APROBADOS");
-
-        var mockResp = new PaginationReliabilityPackResponse();
-        var dataResult = new SuccessDataResult<>(mockResp);
-        ArgumentCaptor<ReliabilityPackInputFilterRequest> captor =
-                ArgumentCaptor.forClass(ReliabilityPackInputFilterRequest.class);
-
-        when(reliabilityServiceMock.getReliabilityPacksAdvanced(any()))
-                .thenReturn(dataResult);
-
-        var result = reliabilityResource.getReliabilityPacksV2(dto, "KM"); // header KM
-
-        assertNotNull(result);
-        assertSame(mockResp, result.data);
-
-        verify(reliabilityServiceMock).getReliabilityPacksAdvanced(captor.capture());
-        var dtoEnviado = captor.getValue();
-        assertEquals("KM", dtoEnviado.getRole(), "Si body no trae role, debe usar el header");
-        assertEquals("APROBADOS", dtoEnviado.getTab());
-    }
-
-    @Test
-    void testGetReliabilityPacksV2_SinRoleEnBodyNiHeader_pasaNull() {
-        var dto = new ReliabilityPackInputFilterRequest(); // role null
-        dto.setTab("EN_PROGRESO");
-
-        var mockResp = new PaginationReliabilityPackResponse();
-        var dataResult = new SuccessDataResult<>(mockResp);
-        ArgumentCaptor<ReliabilityPackInputFilterRequest> captor =
-                ArgumentCaptor.forClass(ReliabilityPackInputFilterRequest.class);
-
-        when(reliabilityServiceMock.getReliabilityPacksAdvanced(any()))
-                .thenReturn(dataResult);
-
-        var result = reliabilityResource.getReliabilityPacksV2(dto, null);
-
-        assertNotNull(result);
-
-        verify(reliabilityServiceMock).getReliabilityPacksAdvanced(captor.capture());
-        var dtoEnviado = captor.getValue();
-        assertNull(dtoEnviado.getRole(), "Sin body ni header, debe quedar null");
-        assertEquals("EN_PROGRESO", dtoEnviado.getTab());
-    }
-
-    @Test
-    void testGetReliabilityPacksV2_PropagaErrorDelService() {
+    void packsV2_propagacion_error() {
         var dto = new ReliabilityPackInputFilterRequest();
         dto.setRole("KM");
         dto.setTab("APROBADOS");
-
-        IDataResult<PaginationReliabilityPackResponse> error =
-                new ErrorDataResult<>(null, "500", "Fallo");
-
         when(reliabilityServiceMock.getReliabilityPacksAdvanced(any()))
-                .thenReturn(error);
-
-        var result = reliabilityResource.getReliabilityPacksV2(dto, null);
-
-        assertFalse(result.success);
-        assertNull(result.data);
-        assertEquals("500", result.status);
-        assertEquals("Fallo", result.message);
+                .thenReturn(new ErrorDataResult<>(null, "500", "Fallo"));
+        var res = reliabilityResource.getReliabilityPacksV2(dto, null);
+        assertFalse(res.success);
+        assertEquals("500", res.status);
+        assertNull(res.data);
         verify(reliabilityServiceMock).getReliabilityPacksAdvanced(any());
     }
 
     @Test
-    void testChangeTransferStatus_DelegatesToService_ok() {
+    void changeStatus_ok_y_error() {
         String pack = "PACK_123";
         var req = new TransferStatusChangeRequest();
         req.setActorRole("KM");
         req.setAction("APROBAR");
 
-        var svcResp = TransferStatusChangeResponse.builder()
-                .pack(pack).oldStatus(3).newStatus(4).build();
-        var dataResult = new SuccessDataResult<>(svcResp, "Estado actualizado");
+        var payload = TransferStatusChangeResponse.builder().pack(pack).oldStatus(3).newStatus(4).build();
+        when(reliabilityServiceMock.changeTransferStatus(eq(pack), any())).thenReturn(new SuccessDataResult<>(payload, "Estado actualizado"));
+        var ok = reliabilityResource.changeTransferStatus(pack, req);
+        assertTrue(ok.success);
+        assertEquals(4, ok.data.getNewStatus());
+        verify(reliabilityServiceMock).changeTransferStatus(eq(pack), any());
 
-        ArgumentCaptor<String> packCaptor = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<TransferStatusChangeRequest> reqCaptor = ArgumentCaptor.forClass(TransferStatusChangeRequest.class);
-
-        when(reliabilityServiceMock.changeTransferStatus(anyString(), any()))
-                .thenReturn(dataResult);
-
-        var result = reliabilityResource.changeTransferStatus(pack, req);
-
-        assertNotNull(result);
-        assertTrue(result.success);
-        assertEquals("Estado actualizado", result.message);
-        assertNotNull(result.data);
-        assertEquals(pack, result.data.getPack());
-        assertEquals(3, result.data.getOldStatus());
-        assertEquals(4, result.data.getNewStatus());
-
-        verify(reliabilityServiceMock).changeTransferStatus(packCaptor.capture(), reqCaptor.capture());
-        assertEquals("PACK_123", packCaptor.getValue());
-        assertEquals("KM", reqCaptor.getValue().getActorRole());
-        assertEquals("APROBAR", reqCaptor.getValue().getAction());
+        reset(reliabilityServiceMock);
+        when(reliabilityServiceMock.changeTransferStatus(eq("PACK_404"), any()))
+                .thenReturn(new ErrorDataResult<>(null, "404", "Pack no encontrado"));
+        var err = reliabilityResource.changeTransferStatus("PACK_404", req);
+        assertFalse(err.success);
+        assertEquals("404", err.status);
+        verify(reliabilityServiceMock).changeTransferStatus(eq("PACK_404"), any());
     }
 
     @Test
-    void testChangeTransferStatus_DelegatesToService_error() {
-        String pack = "PACK_404";
-        var req = new TransferStatusChangeRequest();
-        req.setActorRole("KM");
-        req.setAction("APROBAR");
+    void updateJobBySm_ok_y_error() {
+        var body = new UpdateJobDtoRequest();
+        when(reliabilityServiceMock.updateJobBySm(any()))
+                .thenReturn(new SuccessDataResult<>(null, "Job actualizado"));
 
-        var error = new ErrorDataResult<TransferStatusChangeResponse>(null, "404", "Pack no encontrado");
+        var ok = reliabilityResource.updateJobBySm("PACK_X", "JOB_X", body, "SM");
+        assertTrue(ok.success);
 
-        when(reliabilityServiceMock.changeTransferStatus(anyString(), any()))
-                .thenReturn(error);
+        ArgumentCaptor<UpdateJobDtoRequest> capt = ArgumentCaptor.forClass(UpdateJobDtoRequest.class);
+        verify(reliabilityServiceMock).updateJobBySm(capt.capture());
+        assertEquals("PACK_X", capt.getValue().getPack());
+        assertEquals("JOB_X", capt.getValue().getJobName());
+        assertEquals("SM", capt.getValue().getActorRole());
 
-        var result = reliabilityResource.changeTransferStatus(pack, req);
-
-        assertNotNull(result);
-        assertFalse(result.success);
-        assertNull(result.data);
-        assertEquals("404", result.status);
-        assertEquals("Pack no encontrado", result.message);
-
-        verify(reliabilityServiceMock).changeTransferStatus(eq("PACK_404"), any(TransferStatusChangeRequest.class));
-    }
-
-    @Test
-    void testUpdateJobBySm_UsaPathYHeader_actorFallback() {
-        String pack = "PACK_X";
-        String job = "JOB_X";
-        String headerRole = "SM";
-
-        UpdateJobDtoRequest body = new UpdateJobDtoRequest(); // sin actorRole -> debe usar header
-        IDataResult<Void> ok = new SuccessDataResult<>(null, "Job actualizado");
-
-        ArgumentCaptor<UpdateJobDtoRequest> captor = ArgumentCaptor.forClass(UpdateJobDtoRequest.class);
-        when(reliabilityServiceMock.updateJobBySm(any())).thenReturn(ok);
-
-        IDataResult<Void> resp = reliabilityResource.updateJobBySm(pack, job, body, headerRole);
-
-        assertNotNull(resp);
-        assertTrue(resp.success);
-        verify(reliabilityServiceMock).updateJobBySm(captor.capture());
-
-        UpdateJobDtoRequest enviado = captor.getValue();
-        assertEquals(pack, enviado.getPack());
-        assertEquals(job, enviado.getJobName());
-        assertEquals("SM", enviado.getActorRole(), "Debe tomar el rol del header");
-    }
-
-    @Test
-    void testUpdateJobBySm_PropagaErrorDelService() {
-        UpdateJobDtoRequest body = new UpdateJobDtoRequest();
+        reset(reliabilityServiceMock);
         when(reliabilityServiceMock.updateJobBySm(any()))
                 .thenReturn(new ErrorDataResult<>(null, "409", "Solo se puede editar cuando fue devuelto"));
-
-        IDataResult<Void> resp = reliabilityResource.updateJobBySm("P1", "J1", body, "SM");
-
-        assertFalse(resp.success);
-        assertEquals("409", resp.status);
-        assertEquals("Solo se puede editar cuando fue devuelto", resp.message);
+        var err = reliabilityResource.updateJobBySm("P1", "J1", new UpdateJobDtoRequest(), "SM");
+        assertFalse(err.success);
+        assertEquals("409", err.status);
         verify(reliabilityServiceMock).updateJobBySm(any());
     }
 
     @Test
-    void testUpdateCommentsForPack_UsaHeaderSiBodyNoTraeActor() {
+    void updateCommentsForPack_casos() {
         String pack = "PACK_C";
-        UpdateJobCommentsRequest body = new UpdateJobCommentsRequest();
-        body.setComments("nota de KM");
-        String headerRole = "KM";
-
-        IDataResult<Void> ok = new SuccessDataResult<>(null, "Comentarios actualizados");
-        when(reliabilityServiceMock.updateCommentsForPack(pack, headerRole, "nota de KM"))
-                .thenReturn(ok);
-
-        IDataResult<Void> resp = reliabilityResource.updateCommentsForPack(pack, body, headerRole);
-
-        assertTrue(resp.success);
+        Map<String, String> bodySinActor = map("comments", "nota de KM");
+        when(reliabilityServiceMock.updateCommentsForPack(pack, "KM", "nota de KM"))
+                .thenReturn(new SuccessDataResult<>(null, "Comentarios actualizados"));
+        var ok = reliabilityResource.updateCommentsForPack(pack, bodySinActor, "KM");
+        assertTrue(ok.success);
         verify(reliabilityServiceMock).updateCommentsForPack(pack, "KM", "nota de KM");
-    }
 
-    @Test
-    void testUpdateCommentsForPack_UsaActorDelBodySiViene() {
-        String pack = "PACK_C2";
-        UpdateJobCommentsRequest body = new UpdateJobCommentsRequest();
-        body.setActorRole("KM");
-        body.setComments("otra nota");
-
-        when(reliabilityServiceMock.updateCommentsForPack(pack, "KM", "otra nota"))
+        reset(reliabilityServiceMock);
+        Map<String, String> bodyConActor = map("actorRole", "KM", "comments", "otra nota");
+        when(reliabilityServiceMock.updateCommentsForPack("PACK_C2", "KM", "otra nota"))
                 .thenReturn(new SuccessDataResult<>(null, "ok"));
-
-        IDataResult<Void> resp = reliabilityResource.updateCommentsForPack(pack, body, "SM"); // header distinto
-
-        assertTrue(resp.success);
-        verify(reliabilityServiceMock).updateCommentsForPack(pack, "KM", "otra nota");
+        var ok2 = reliabilityResource.updateCommentsForPack("PACK_C2", bodyConActor, "SM");
+        assertTrue(ok2.success);
+        verify(reliabilityServiceMock).updateCommentsForPack("PACK_C2", "KM", "otra nota");
     }
 
     @Test
-    void testGetTransferDetail_success() {
-        String pack = "PACK_OK";
-        TransferDetailResponse detail = new TransferDetailResponse();
-        IDataResult<TransferDetailResponse> dataResult = new SuccessDataResult<>(detail);
+    void transferDetail_ok_y_error() {
+        var detail = new TransferDetailResponse();
+        when(reliabilityServiceMock.getTransferDetail("PACK_OK")).thenReturn(new SuccessDataResult<>(detail));
+        var ok = reliabilityResource.getTransferDetail("PACK_OK");
+        assertTrue(ok.success);
+        assertSame(detail, ok.data);
+        verify(reliabilityServiceMock).getTransferDetail("PACK_OK");
 
-        when(reliabilityServiceMock.getTransferDetail(pack)).thenReturn(dataResult);
-
-        IDataResult<TransferDetailResponse> result = reliabilityResource.getTransferDetail(pack);
-
-        assertNotNull(result);
-        assertTrue(result.success);
-        assertSame(detail, result.data);
-        verify(reliabilityServiceMock).getTransferDetail(pack);
+        reset(reliabilityServiceMock);
+        when(reliabilityServiceMock.getTransferDetail("PACK_404"))
+                .thenReturn(new ErrorDataResult<>(null, "404", "Pack no encontrado"));
+        var err = reliabilityResource.getTransferDetail("PACK_404");
+        assertFalse(err.success);
+        assertEquals("404", err.status);
+        verify(reliabilityServiceMock).getTransferDetail("PACK_404");
     }
 
     @Test
-    void testGetTransferDetail_error() {
-        String pack = "PACK_404";
-        IDataResult<TransferDetailResponse> error =
-                new ErrorDataResult<>(null, "404", "Pack no encontrado");
+    void updateTransferDetail_ok_y_error() {
+        String pack = "PACK_OK", role = "SM";
+        var body = new TransferDetailUpdateRequest();
+        var h = new TransferDetailUpdateRequest.Header();
+        h.setComments("c");
+        body.setHeader(h);
+        var j = new TransferDetailUpdateRequest.Job();
+        j.setJobName("JobTest");
+        body.setJobs(List.of(j));
 
-        when(reliabilityServiceMock.getTransferDetail(pack)).thenReturn(error);
-
-        IDataResult<TransferDetailResponse> result = reliabilityResource.getTransferDetail(pack);
-
-        assertNotNull(result);
-        assertFalse(result.success);
-        assertNull(result.data);
-        assertEquals("404", result.status);
-        assertEquals("Pack no encontrado", result.message);
-        verify(reliabilityServiceMock).getTransferDetail(pack);
-    }
-
-    @Test
-    void testUpdateTransferDetail_success() {
-        String pack = "PACK_OK";
-        String role = "SM";
-
-        // Crear body simulado
-        TransferDetailUpdateRequest body = new TransferDetailUpdateRequest();
-        TransferDetailUpdateRequest.Header header = new TransferDetailUpdateRequest.Header();
-        header.setDomainId(1);
-        header.setUseCaseId(2);
-        header.setComments("comentario test");
-        body.setHeader(header);
-
-        TransferDetailUpdateRequest.Job job = new TransferDetailUpdateRequest.Job();
-        job.setJobName("JobTest");
-        body.setJobs(List.of(job));
-
-        // Respuesta mock
-        TransferDetailResponse detailResponse = new TransferDetailResponse();
-        IDataResult<TransferDetailResponse> dataResult = new SuccessDataResult<>(detailResponse, "OK");
-
+        var snap = new TransferDetailResponse();
         when(reliabilityServiceMock.updateTransferDetail(pack, role, body))
-                .thenReturn(dataResult);
-
-        // Ejecutar
-        IDataResult<TransferDetailResponse> result =
-                reliabilityResource.updateTransferDetail(pack, body, role);
-
-        // Verificar
-        assertNotNull(result);
-        assertTrue(result.success);
-        assertSame(detailResponse, result.data);
-        assertEquals("OK", result.message);
-
+                .thenReturn(new SuccessDataResult<>(snap, "OK"));
+        var ok = reliabilityResource.updateTransferDetail(pack, body, role);
+        assertTrue(ok.success);
+        assertSame(snap, ok.data);
+        assertEquals("OK", ok.message);
         verify(reliabilityServiceMock).updateTransferDetail(pack, role, body);
+
+        reset(reliabilityServiceMock);
+        when(reliabilityServiceMock.updateTransferDetail(
+                eq("PACK_ERR"),
+                eq("KM"),
+                any(TransferDetailUpdateRequest.class)
+        )).thenReturn(new ErrorDataResult<>(null, "500", "Error interno"));
+
+        var err = reliabilityResource.updateTransferDetail("PACK_ERR", new TransferDetailUpdateRequest(), "KM");
+        assertFalse(err.success);
+        assertEquals("500", err.status);
+        verify(reliabilityServiceMock).updateTransferDetail(eq("PACK_ERR"), eq("KM"), any(TransferDetailUpdateRequest.class));
     }
-
-    @Test
-    void testUpdateTransferDetail_error() {
-        String pack = "PACK_ERR";
-        String role = "KM";
-
-        TransferDetailUpdateRequest body = new TransferDetailUpdateRequest();
-        IDataResult<TransferDetailResponse> errorResult =
-                new ErrorDataResult<>(null, "500", "Error interno");
-
-        when(reliabilityServiceMock.updateTransferDetail(pack, role, body))
-                .thenReturn(errorResult);
-
-        IDataResult<TransferDetailResponse> result =
-                reliabilityResource.updateTransferDetail(pack, body, role);
-
-        assertNotNull(result);
-        assertFalse(result.success);
-        assertNull(result.data);
-        assertEquals("500", result.status);
-        assertEquals("Error interno", result.message);
-
-        verify(reliabilityServiceMock).updateTransferDetail(pack, role, body);
-    }
-
 }

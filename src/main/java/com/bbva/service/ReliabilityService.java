@@ -24,13 +24,8 @@ import static com.bbva.util.policy.TransferStatusPolicy.Action;
 
 public class ReliabilityService {
     private final ReliabilityDao reliabilityDao = new ReliabilityDao();
-    private static final Logger log= Logger.getLogger(ReliabilityService.class.getName());
+    private static final Logger log = Logger.getLogger(ReliabilityService.class.getName());
     private static final String ERROR = "ERROR DOCUMENTOSSERVICE: ";
-    private static final String MSG_PACK_NOT_FOUND = "Pack no encontrado";
-    private static final String MSG_ACCION_INVALIDA = "Acción inválida";
-    private static final String CODE_500 = "500";
-    private static final String CODE_404 = "404";
-    private static final String CODE_409 = "409";
 
     public IDataResult<InventoryInputsFilterDtoResponse> inventoryInputsFilter(InventoryInputsFilterDtoRequest dto) {
         var result = reliabilityDao.inventoryInputsFilter(dto);
@@ -46,6 +41,7 @@ public class ReliabilityService {
             return new ErrorDataResult<>(null, "500", e.getMessage());
         }
     }
+
     public IDataResult<List<PendingCustodyJobsDtoResponse>> getPendingCustodyJobs(String sdatoolId) {
         try {
             var result = reliabilityDao.getPendingCustodyJobs(sdatoolId);
@@ -194,6 +190,10 @@ public class ReliabilityService {
         }
     }
 
+    private String nullSafe(String value) {
+        return value != null ? value : "";
+    }
+
     public IDataResult<List<DropDownDto>> getOriginTypes() {
         try {
             List<DropDownDto> lista = reliabilityDao.getOriginTypes();
@@ -202,10 +202,6 @@ public class ReliabilityService {
             log.severe("Error al obtener tipos de origen: " + e.getMessage());
             return new ErrorDataResult<>(null, "500", e.getMessage());
         }
-    }
-
-    private String nullSafe(String value) {
-        return value != null ? value : "";
     }
 
     public IDataResult<PaginationReliabilityPackResponse> getReliabilityPacks(ReliabilityPackInputFilterRequest dto) {
@@ -232,77 +228,64 @@ public class ReliabilityService {
             ReliabilityPackInputFilterRequest dto) {
         try {
             String statusCsv = TransferStatusPolicy.toCsv(dto.getRole(), dto.getTab());
+            String domainCsv = (dto.getDomainName() == null) ? "" : dto.getDomainName();
+            String useCaseCsv = (dto.getUseCase() == null) ? "" : dto.getUseCase();
 
-            var lista = reliabilityDao.listTransfersByStatus(
-                    safe(dto.getDomainName()),
-                    safe(dto.getUseCase()),
-                    statusCsv
-            );
+            var lista = reliabilityDao.listTransfersByStatus(domainCsv, useCaseCsv, statusCsv);
 
-            String role = norm(dto.getRole());
-            String tab  = norm(dto.getTab());
+            String role = (dto.getRole() == null) ? "" : dto.getRole().trim().toUpperCase(Locale.ROOT);
+            String tab  = (dto.getTab()  == null) ? "" : dto.getTab().trim().toUpperCase(Locale.ROOT);
 
-            applyEditFlags(lista, role, tab);
+            boolean readOnly = "APROBADOS".equals(tab);
+            for (var row : lista) {
+                int can = readOnly ? 0 : TransferStatusPolicy.canEdit(role, row.getStatusId());
+                row.setCambiedit(can);
+            }
 
-            int size = Optional.ofNullable(dto.getRecordsAmount()).orElse(10);
-            int page = Optional.ofNullable(dto.getPage()).orElse(1);
+            int size = (dto.getRecordsAmount() == null) ? 10 : dto.getRecordsAmount();
+            int page = (dto.getPage() == null) ? 1 : dto.getPage();
+            int safePage = Math.max(page, 1);
+            int recordsCount = lista.size();
+            boolean paginate = size > 0;
+            int pages = paginate ? (int) Math.ceil(recordsCount / (double) size) : 1;
 
-            var res = buildPagedResponse(lista, size, page);
+            List<ReliabilityPacksDtoResponse> pageData = paginate
+                    ? lista.stream()
+                    .skip((long) size * (safePage - 1))
+                    .limit(size)
+                    .toList()
+                    : lista;
+
+            var res = new PaginationReliabilityPackResponse();
+            res.setCount(recordsCount);
+            res.setPagesAmount(pages);
+            res.setData(pageData);
+
             return new SuccessDataResult<>(res);
         } catch (Exception e) {
             return new ErrorDataResult<>(null, "500", e.getMessage());
         }
     }
 
-    private static String safe(String s) {
-        return s == null ? "" : s;
-    }
-
-    private static String norm(String s) {
-        return (s == null) ? "" : s.trim().toUpperCase(Locale.ROOT);
-    }
-
-    private static void applyEditFlags(List<ReliabilityPacksDtoResponse> lista, String role, String tab) {
-        boolean readOnly = "APROBADOS".equals(tab);
-        for (var row : lista) {
-            int can = readOnly ? 0 : TransferStatusPolicy.canEdit(role, row.getStatusId());
-            row.setCambiedit(can);
-        }
-    }
-
-    private static PaginationReliabilityPackResponse buildPagedResponse(
-            List<ReliabilityPacksDtoResponse> full, int size, int page) {
-
-        int recordsCount = full.size();
-        int pages = size > 0 ? (int) Math.ceil(recordsCount / (double) size) : 1;
-
-        List<ReliabilityPacksDtoResponse> pageData = (size > 0)
-                ? full.stream()
-                .skip((long) size * (Math.max(page, 1) - 1))
-                .limit(size)
-                .toList()
-                : full;
-
-        var res = new PaginationReliabilityPackResponse();
-        res.setCount(recordsCount);
-        res.setPagesAmount(pages);
-        res.setData(pageData);
-        return res;
-    }
-
     public IDataResult<TransferStatusChangeResponse> changeTransferStatus(String pack, TransferStatusChangeRequest req) {
         try {
             Integer oldSt = reliabilityDao.getPackCurrentStatus(pack);
             if (oldSt == null) {
-                return new ErrorDataResult<>(null, CODE_404, MSG_PACK_NOT_FOUND);
+                return new ErrorDataResult<>(null, "404", "Pack no encontrado");
             }
 
-            Action action = validateAction(req.getAction());
+            Action action = null;
+            try {
+                String actStr = (req == null || req.getAction() == null)
+                        ? ""
+                        : req.getAction().trim().toUpperCase(Locale.ROOT);
+                action = Action.valueOf(actStr);
+            } catch (Exception ignore) {
+            }
             if (action == null) {
-                return new ErrorDataResult<>(null, "400", MSG_ACCION_INVALIDA);
+                return new ErrorDataResult<>(null, "400", "Acción inválida");
             }
 
-            // Calcula el nuevo estado con la policy y actualiza con el DAO (firma existente)
             int newSt = TransferStatusPolicy.computeNextStatusOrThrow(req.getActorRole(), oldSt, action);
             reliabilityDao.changeTransferStatus(pack, newSt);
 
@@ -311,84 +294,73 @@ public class ReliabilityService {
             return new SuccessDataResult<>(resp, "Estado actualizado");
 
         } catch (IllegalArgumentException iae) {
-            return new ErrorDataResult<>(null, CODE_409, iae.getMessage());
+            return new ErrorDataResult<>(null, "409", iae.getMessage());
         } catch (Exception e) {
             log.severe(ERROR + e.getMessage());
-            return new ErrorDataResult<>(null, CODE_500, e.getMessage());
-        }
-    }
-
-    private Action validateAction(String actionStr) {
-        try {
-            return Action.valueOf(actionStr.toUpperCase(Locale.ROOT));
-        } catch (Exception ex) {
-            return null;
+            return new ErrorDataResult<>(null, "500", e.getMessage());
         }
     }
 
     public IDataResult<Void> updateJobBySm(UpdateJobDtoRequest dto) {
         try {
             Integer st = reliabilityDao.getPackCurrentStatus(dto.getPack());
-            if (st == null) return new ErrorDataResult<>(null, CODE_404, MSG_PACK_NOT_FOUND);
+            if (st == null) return new ErrorDataResult<>(null, "404", "Pack no encontrado");
 
-            if (isCommentsOnly(dto)) {
+            boolean hasNonCommentChanges =
+                    dto.getComponentName() != null ||
+                            dto.getFrequencyId()  != null || dto.getInputPaths()   != null ||
+                            dto.getOutputPath()   != null || dto.getJobTypeId()    != null ||
+                            dto.getUseCaseId()    != null || dto.getIsCritical()   != null ||
+                            dto.getDomainId()     != null || dto.getBitBucketUrl() != null ||
+                            dto.getResponsible()  != null || dto.getJobPhaseId()   != null ||
+                            dto.getOriginTypeId() != null || dto.getException()    != null;
+
+            boolean commentsOnly =
+                    dto.getComments() != null &&
+                            !hasNonCommentChanges;
+
+            if (commentsOnly) {
                 if (TransferStatusPolicy.canWriteJobComment(dto.getActorRole(), st) != 1) {
-                    return new ErrorDataResult<>(null, CODE_409, "No puedes comentar este job en este estado");
+                    return new ErrorDataResult<>(null, "409", "No puedes comentar este job en este estado");
                 }
                 reliabilityDao.updateJobComment(dto.getPack(), dto.getJobName(), dto.getComments());
                 return new SuccessDataResult<>(null, "Comentario del job actualizado");
             }
 
             if (TransferStatusPolicy.canEdit(dto.getActorRole(), st) != 1) {
-                return new ErrorDataResult<>(null, CODE_409, "Solo se puede editar cuando fue devuelto");
+                return new ErrorDataResult<>(null, "409", "Solo se puede editar cuando fue devuelto");
             }
 
             reliabilityDao.updateJobByPackAndName(dto);
             return new SuccessDataResult<>(null, "Job actualizado");
 
         } catch (ReliabilityDao.PersistenceException pe) {
-            return new ErrorDataResult<>(null, CODE_404, pe.getMessage());
+            return new ErrorDataResult<>(null, "404", pe.getMessage());
         } catch (Exception e) {
             log.severe(ERROR + e.getMessage());
-            return new ErrorDataResult<>(null, CODE_500, e.getMessage());
+            return new ErrorDataResult<>(null, "500", e.getMessage());
         }
-    }
-    private static boolean isCommentsOnly(UpdateJobDtoRequest d) {
-        return d.getComments() != null
-                && d.getComponentName() == null
-                && d.getFrequencyId() == null
-                && d.getInputPaths() == null
-                && d.getOutputPath() == null
-                && d.getJobTypeId() == null
-                && d.getUseCaseId() == null
-                && d.getIsCritical() == null
-                && d.getDomainId() == null
-                && d.getBitBucketUrl() == null
-                && d.getResponsible() == null
-                && d.getJobPhaseId() == null
-                && d.getOriginTypeId() == null
-                && d.getException() == null;
     }
 
     public IDataResult<Void> updateCommentsForPack(String pack, String role, String comments) {
         try {
             Integer st = reliabilityDao.getPackCurrentStatus(pack);
             if (st == null) {
-                return new ErrorDataResult<>(null, CODE_404, MSG_PACK_NOT_FOUND);
+                return new ErrorDataResult<>(null, "404", "Pack no encontrado");
             }
 
             if (TransferStatusPolicy.canWriteGeneralComment(role, st) != 1) {
-                return new ErrorDataResult<>(null, CODE_409, "No tienes permisos para comentar en este estado");
+                return new ErrorDataResult<>(null, "409", "No tienes permisos para comentar en este estado");
             }
 
             reliabilityDao.updatePackComments(pack, comments);
             return new SuccessDataResult<>(null, "Comentarios actualizados");
 
         } catch (ReliabilityDao.PersistenceException pe) {
-            return new ErrorDataResult<>(null, CODE_404, pe.getMessage());
+            return new ErrorDataResult<>(null, "404", pe.getMessage());
         } catch (Exception e) {
             log.severe(ERROR + e.getMessage());
-            return new ErrorDataResult<>(null, CODE_500, e.getMessage());
+            return new ErrorDataResult<>(null, "500", e.getMessage());
         }
     }
 
@@ -396,11 +368,11 @@ public class ReliabilityService {
         try {
             var detail = reliabilityDao.getTransferDetail(pack);
             if (detail == null) {
-                return new ErrorDataResult<>(null, CODE_404, MSG_PACK_NOT_FOUND);
+                return new ErrorDataResult<>(null, "404", "Pack no encontrado");
             }
             return new SuccessDataResult<>(detail);
         } catch (Exception e) {
-            return new ErrorDataResult<>(null, CODE_500, e.getMessage());
+            return new ErrorDataResult<>(null, "500", e.getMessage());
         }
     }
 
@@ -408,34 +380,26 @@ public class ReliabilityService {
             String pack, String role, TransferDetailUpdateRequest dto) {
         try {
             Integer st = reliabilityDao.getPackCurrentStatus(pack);
-            if (st == null) return new ErrorDataResult<>(null, CODE_404, MSG_PACK_NOT_FOUND);
+            if (st == null) return new ErrorDataResult<>(null, "404", "Pack no encontrado");
 
             String r = (role == null) ? "" : role.trim().toUpperCase(Locale.ROOT);
 
             boolean headerOnlyComment =
                     dto.getHeader() == null
                             || (dto.getHeader().getComments() != null
-                            && dto.getHeader().getDomainId() == null
-                            && dto.getHeader().getUseCaseId() == null);
+                            && dto.getHeader().getDomainId() == null && dto.getHeader().getUseCaseId() == null);
 
             boolean jobsOnlyComments =
                     dto.getJobs() == null || dto.getJobs().isEmpty()
                             || dto.getJobs().stream().allMatch(j ->
                             j != null
-                                    && j.getJobName() != null
-                                    && j.getComments() != null
-                                    && j.getComponentName() == null
-                                    && j.getFrequencyId() == null
-                                    && j.getInputPaths() == null
-                                    && j.getOutputPath() == null
-                                    && j.getJobTypeId() == null
-                                    && j.getUseCaseId() == null
-                                    && j.getIsCritical() == null
-                                    && j.getDomainId() == null
-                                    && j.getBitBucketUrl() == null
-                                    && j.getResponsible() == null
-                                    && j.getJobPhaseId() == null
-                                    && j.getOriginTypeId() == null
+                                    && j.getJobName() != null && j.getComments() != null
+                                    && j.getComponentName() == null && j.getFrequencyId() == null
+                                    && j.getInputPaths() == null && j.getOutputPath() == null
+                                    && j.getJobTypeId() == null && j.getUseCaseId() == null
+                                    && j.getIsCritical() == null && j.getDomainId() == null
+                                    && j.getBitBucketUrl() == null && j.getResponsible() == null
+                                    && j.getJobPhaseId() == null && j.getOriginTypeId() == null
                                     && j.getException() == null
                     );
 
@@ -443,16 +407,14 @@ public class ReliabilityService {
 
             boolean onlyGeneralComment =
                     dto.getHeader() != null
-                            && dto.getHeader().getComments() != null
-                            && dto.getHeader().getDomainId() == null
-                            && dto.getHeader().getUseCaseId() == null
-                            && (dto.getJobs() == null || dto.getJobs().isEmpty());
+                            && dto.getHeader().getComments() != null && dto.getHeader().getDomainId() == null
+                            && dto.getHeader().getUseCaseId() == null && (dto.getJobs() == null || dto.getJobs().isEmpty());
 
             if (st == TransferStatusPolicy.EN_PROGRESO && "SM".equals(r) && !onlyComments) {
-                return new ErrorDataResult<>(null, CODE_409, "En EN_PROGRESO solo se permiten comentarios (general y por job)");
+                return new ErrorDataResult<>(null, "409", "En EN_PROGRESO solo se permiten comentarios (general y por job)");
             }
             if (st == TransferStatusPolicy.APROBADO_PO && "KM".equals(r) && !onlyGeneralComment) {
-                return new ErrorDataResult<>(null, CODE_409, "KM solo puede editar el comentario general en APROBADO_PO");
+                return new ErrorDataResult<>(null, "409", "KM solo puede editar el comentario general en APROBADO_PO");
             }
 
             reliabilityDao.updateTransferDetail(pack, dto);
@@ -461,10 +423,10 @@ public class ReliabilityService {
             return new SuccessDataResult<>(snapshot, "Detalle actualizado");
 
         } catch (ReliabilityDao.PersistenceException pe) {
-            return new ErrorDataResult<>(null, CODE_404, pe.getMessage());
+            return new ErrorDataResult<>(null, "404", pe.getMessage());
         } catch (Exception e) {
             log.severe(ERROR + e.getMessage());
-            return new ErrorDataResult<>(null, CODE_500, e.getMessage());
+            return new ErrorDataResult<>(null, "500", e.getMessage());
         }
     }
 }
