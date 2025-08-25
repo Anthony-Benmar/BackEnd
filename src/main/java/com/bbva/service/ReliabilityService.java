@@ -280,7 +280,7 @@ public class ReliabilityService {
                 return new ErrorDataResult<>(null, "400", "Acción inválida");
             }
 
-            String actorRole = (req == null || req.getActorRole() == null) ? "" : req.getActorRole();
+            String actorRole = (req.getActorRole() == null) ? "" : req.getActorRole();
 
             int newSt = TransferStatusPolicy.computeNextStatusOrThrow(actorRole, oldSt, action);
             reliabilityDao.changeTransferStatus(pack, newSt);

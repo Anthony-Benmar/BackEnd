@@ -371,20 +371,26 @@ public class ReliabilityDao {
 
             java.util.Map<String, java.beans.PropertyDescriptor> destProps = new java.util.HashMap<>();
             for (var pd : destInfo.getPropertyDescriptors()) {
-                if (pd.getWriteMethod() != null) destProps.put(pd.getName(), pd);
+                if (pd.getWriteMethod() != null) {
+                    destProps.put(pd.getName(), pd);
+                }
             }
 
             for (var spd : srcInfo.getPropertyDescriptors()) {
                 var read = spd.getReadMethod();
-                if (read == null) continue;
-                Object value = read.invoke(src);
-                if (value == null) continue;
-                var dpd = destProps.get(spd.getName());
-                if (dpd == null) continue;
-                var write = dpd.getWriteMethod();
-                if (write == null) continue;
-                if (!dpd.getPropertyType().isAssignableFrom(value.getClass())) continue;
-                write.invoke(dest, value);
+                Object value = (read != null) ? read.invoke(src) : null;
+                var dpd   = destProps.get(spd.getName());
+                var write = (dpd != null) ? dpd.getWriteMethod() : null;
+
+                boolean canCopy =
+                        read != null &&
+                                value != null &&
+                                dpd != null &&
+                                write != null &&
+                                dpd.getPropertyType().isAssignableFrom(value.getClass());
+                if (canCopy) {
+                    write.invoke(dest, value);
+                }
             }
         } catch (Exception e) {
             throw new PersistenceException("Error copiando propiedades no nulas", e);

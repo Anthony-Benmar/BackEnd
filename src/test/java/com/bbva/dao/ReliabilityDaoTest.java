@@ -12,6 +12,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
+import org.junit.jupiter.api.function.Executable;
 
 import java.util.List;
 
@@ -322,8 +323,10 @@ class ReliabilityDaoTest {
     @Test
     void updateJobByPackAndName_zeroRows_throwsPersistenceException() {
         when(reliabilityMapperMock.updateJobByPackAndName(any())).thenReturn(0);
-        RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> reliabilityDao.updateJobByPackAndName(new UpdateJobDtoRequest()));
+        UpdateJobDtoRequest up = new UpdateJobDtoRequest();
+        Executable call = () -> reliabilityDao.updateJobByPackAndName(up);
+        ReliabilityDao.PersistenceException ex =
+                assertThrows(ReliabilityDao.PersistenceException.class, call);
         assertEquals("PersistenceException", ex.getClass().getSimpleName());
     }
 

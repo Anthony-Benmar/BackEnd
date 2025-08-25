@@ -739,4 +739,61 @@ class ReliabilityServiceTest {
             assertEquals(3, nopag.data.getData().size());
         }
     }
+    @Test
+    void changeTransferStatus_reqNull_returns400() {
+        when(reliabilityDaoMock.getPackCurrentStatus("P")).thenReturn(TransferStatusPolicy.EN_PROGRESO);
+        var r = reliabilityService.changeTransferStatus("P", null);
+        assertFalse(r.success);
+        assertEquals("400", r.status);
+    }
+
+    @Test
+    void packsAdvanced_daoThrows_returns500() {
+        var dto = new ReliabilityPackInputFilterRequest();
+        dto.setRole("KM"); dto.setTab("X");
+        try (MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
+            mocked.when(() -> TransferStatusPolicy.toCsv("KM","X")).thenReturn("CSV");
+            when(reliabilityDaoMock.listTransfersByStatus("", "", "CSV"))
+                    .thenThrow(new RuntimeException("DB down"));
+            var res = reliabilityService.getReliabilityPacksAdvanced(dto);
+            assertFalse(res.success);
+            assertEquals("500", res.status);
+        }
+    }
+
+    @Test
+    void packsAdvanced_defaults_paginaPorDefecto() {
+        var dto = new ReliabilityPackInputFilterRequest();
+        dto.setRole("KM"); dto.setTab("X"); // sin page/recordsAmount
+        var r1 = new ReliabilityPacksDtoResponse(); r1.setStatusId(1);
+        when(reliabilityDaoMock.listTransfersByStatus("", "", "CSV"))
+                .thenReturn(List.of(r1));
+        try (MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
+            mocked.when(() -> TransferStatusPolicy.toCsv("KM", "X")).thenReturn("CSV");
+            var res = reliabilityService.getReliabilityPacksAdvanced(dto);
+            assertTrue(res.success);
+            assertEquals(1, res.data.getData().size());
+            assertEquals(1, res.data.getPagesAmount());
+        }
+    }
+
+    @Test
+    void sn2Options_sinGuiones_usaRawCompleto() {
+        var raw = new RawSn2DtoResponse(); raw.setValue(1); raw.setRawDesc("SIN-GUIONES? no, sin ambos");
+        when(reliabilityDaoMock.fetchRawSn2BySn1(1)).thenReturn(List.of(raw));
+        var res = reliabilityService.getSn2Options(1);
+        assertTrue(res.success);
+        assertEquals("SIN-GUIONES? no, sin ambos", res.data.get(0).getLabel());
+    }
+
+    @Test
+    void updateTransferDetail_kmAprobadoPo_soloGeneralComment_ok() {
+        when(reliabilityDaoMock.getPackCurrentStatus("P")).thenReturn(TransferStatusPolicy.APROBADO_PO);
+        var dto = new TransferDetailUpdateRequest();
+        var h = new TransferDetailUpdateRequest.Header(); h.setComments("ok"); dto.setHeader(h);
+        when(reliabilityDaoMock.getTransferDetail("P")).thenReturn(new TransferDetailResponse());
+        assertTrue(reliabilityService.updateTransferDetail("P", "KM", dto).success);
+        verify(reliabilityDaoMock).updateTransferDetail("P", dto);
+        verify(reliabilityDaoMock).getTransferDetail("P");
+    }
 }
