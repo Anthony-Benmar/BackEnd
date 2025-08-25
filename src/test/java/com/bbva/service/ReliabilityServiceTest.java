@@ -489,19 +489,7 @@ class ReliabilityServiceTest {
                 assertTrue(res.success);
                 verify(reliabilityDaoMock).listTransfersByStatus("", "", csv);
             }
-
             reset(reliabilityDaoMock);
-        }
-    }
-
-    void packsAdvanced_mapeaCsv_y_llamaDao(String role, String tab, String csv) {
-        var dto = new ReliabilityPackInputFilterRequest(); dto.setRole(role); dto.setTab(tab);
-        try (org.mockito.MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
-            mocked.when(() -> TransferStatusPolicy.toCsv(role, tab)).thenReturn(csv);
-            when(reliabilityDaoMock.listTransfersByStatus("", "", csv)).thenReturn(Collections.emptyList());
-            var res = reliabilityService.getReliabilityPacksAdvanced(dto);
-            assertOk(res);
-            verify(reliabilityDaoMock).listTransfersByStatus("", "", csv);
         }
     }
 
@@ -590,7 +578,6 @@ class ReliabilityServiceTest {
         var dto = new UpdateJobDtoRequest();
         dto.setActorRole("SM"); dto.setPack("P1"); dto.setJobName("JOB_X"); dto.setComments("Nueva nota");
 
-        // --- Subcaso OK ---
         when(reliabilityDaoMock.getPackCurrentStatus("P1")).thenReturn(TransferStatusPolicy.EN_PROGRESO);
         try (MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
             mocked.when(() -> TransferStatusPolicy.canWriteJobComment("SM", 3)).thenReturn(1);
@@ -658,7 +645,6 @@ class ReliabilityServiceTest {
 
     @Test
     void updateTransferDetail_todos() {
-        // 404
         when(reliabilityDaoMock.getPackCurrentStatus("PX")).thenReturn(null);
         assertErr(reliabilityService.updateTransferDetail("PX", "SM", new TransferDetailUpdateRequest()), "404");
 
@@ -795,5 +781,67 @@ class ReliabilityServiceTest {
         assertTrue(reliabilityService.updateTransferDetail("P", "KM", dto).success);
         verify(reliabilityDaoMock).updateTransferDetail("P", dto);
         verify(reliabilityDaoMock).getTransferDetail("P");
+    }
+
+    @Test
+    void packsAdvanced_noAprobados_seteaCambiedit() {
+        var dto = new ReliabilityPackInputFilterRequest();
+        dto.setRole("KM"); dto.setTab("EN_PROGRESO");
+        var row = new ReliabilityPacksDtoResponse(); row.setStatusId(2);
+        when(reliabilityDaoMock.listTransfersByStatus("", "", "CSV"))
+                .thenReturn(List.of(row));
+
+        try (MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
+            mocked.when(() -> TransferStatusPolicy.toCsv("KM", "EN_PROGRESO")).thenReturn("CSV");
+            mocked.when(() -> TransferStatusPolicy.canEdit("KM", 2)).thenReturn(1);
+
+            var res = reliabilityService.getReliabilityPacksAdvanced(dto);
+
+            assertTrue(res.success);
+            assertEquals(1, res.data.getData().get(0).getCambiedit());
+        }
+    }
+
+    @Test
+    void updateTransferDetail_soloComentariosPorJob_ok() {
+        when(reliabilityDaoMock.getPackCurrentStatus("P")).thenReturn(TransferStatusPolicy.EN_PROGRESO);
+        var dto = new TransferDetailUpdateRequest();
+        var j  = new TransferDetailUpdateRequest.Job();
+        j.setJobName("J1"); j.setComments("nota");
+        dto.setJobs(List.of(j));
+
+        when(reliabilityDaoMock.getTransferDetail("P")).thenReturn(new TransferDetailResponse());
+
+        var res = reliabilityService.updateTransferDetail("P", "SM", dto);
+        assertTrue(res.success);
+        verify(reliabilityDaoMock).updateTransferDetail("P", dto);
+    }
+
+    @Test
+    void changeTransferStatus_normalizaAccion() {
+        when(reliabilityDaoMock.getPackCurrentStatus("P")).thenReturn(TransferStatusPolicy.EN_PROGRESO);
+        var req = new TransferStatusChangeRequest(); req.setActorRole("SM"); req.setAction("  approve  ");
+
+        try (MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
+            mocked.when(() -> TransferStatusPolicy.computeNextStatusOrThrow("SM",
+                            TransferStatusPolicy.EN_PROGRESO, TransferStatusPolicy.Action.APPROVE))
+                    .thenReturn(TransferStatusPolicy.APROBADO_PO);
+            var r = reliabilityService.changeTransferStatus("P", req);
+            assertTrue(r.success);
+        }
+    }
+    @Test
+    void generateDocumentInventory_listaVacia_yNulls() throws Exception {
+        when(reliabilityDaoMock.listinventory(any())).thenReturn(List.of(new InventoryInputsDtoResponse()));
+        var bytes = reliabilityService.generateDocumentInventory(new InventoryInputsFilterDtoRequest());
+        assertTrue(bytes.length > 0);
+
+        try (var wb = WorkbookFactory.create(new ByteArrayInputStream(bytes))) {
+            var sh = wb.getSheet("Inventario");
+            assertNotNull(sh);
+            assertEquals("PACK", sh.getRow(0).getCell(10).getStringCellValue());
+            assertNotNull(sh.getRow(1));
+            assertEquals("", sh.getRow(1).getCell(8).getStringCellValue());
+        }
     }
 }
