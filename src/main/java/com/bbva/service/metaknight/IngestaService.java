@@ -41,6 +41,8 @@ public class IngestaService {
     private ZipGenerator zipGenerator = new ZipGenerator();
 
     private IssueTicketService issueTicketService = new IssueTicketService();
+
+    private MallaGeneratorService mallaGeneratorService = new MallaGeneratorService();
     public byte[] procesarIngesta(IngestaRequestDto request) throws Exception {
 
         validarRequest(request);
@@ -70,6 +72,17 @@ public class IngestaService {
         if (request.isTieneL1T()) {
             Map<String, String> l1tFiles = generarConfiguracionesL1T(request);
             archivosGenerados.putAll(l1tFiles);
+        }
+
+        request.setGenerarMallas(true);
+
+        if (request.isGenerarMallas()) {
+            try {
+                Map<String, String> mallasXml = mallaGeneratorService.generarMallasXml(request, schemaProcessor);
+                archivosGenerados.putAll(mallasXml);
+            } catch (HandledException e) {
+                System.err.println("Error generando mallas XML: " + e.getMessage());
+            }
         }
 
         Map<String, byte[]> archivosBytes = new HashMap<>();
