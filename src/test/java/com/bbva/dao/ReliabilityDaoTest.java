@@ -160,18 +160,23 @@ class ReliabilityDaoTest {
     @Test
     void insertTransfer_mapperThrows_wrapsInPersistenceException() {
         when(sqlSessionMock.getMapper(ReliabilityMapper.class)).thenThrow(new RuntimeException("fail"));
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> reliabilityDao.insertTransfer(new TransferInputDtoRequest()));
+        TransferInputDtoRequest dto = new TransferInputDtoRequest();
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> reliabilityDao.insertTransfer(dto));
         assertEquals("PersistenceException", ex.getClass().getSimpleName());
     }
 
     @Test
     void updateTransferDetail_headerSoloComentario_success() {
         TransferDetailUpdateRequest dto = new TransferDetailUpdateRequest();
-        TransferDetailUpdateRequest.Header h = new TransferDetailUpdateRequest.Header();
-        h.setComments("nota"); dto.setHeader(h);
+        var h = new TransferDetailUpdateRequest.Header();
+        h.setComments("nota");
+        dto.setHeader(h);
 
-        when(reliabilityMapperMock.updatePackComments("P", "nota")).thenReturn(1);
+        when(reliabilityMapperMock.patchPackHeader("P", null, null, "nota"))
+                .thenReturn(1);
+
         assertDoesNotThrow(() -> reliabilityDao.updateTransferDetail("P", dto));
+        verify(reliabilityMapperMock).patchPackHeader("P", null, null, "nota");
         verify(sqlSessionMock).commit();
     }
 
@@ -245,5 +250,162 @@ class ReliabilityDaoTest {
     @Test
     void singletonInstance_isSame() {
         assertSame(ReliabilityDao.getInstance(), ReliabilityDao.getInstance());
+    }
+
+    @Test
+    void updateInventoryJobStock_success_commits() {
+        InventoryJobUpdateDtoRequest dto = new InventoryJobUpdateDtoRequest();
+        assertDoesNotThrow(() -> reliabilityDao.updateInventoryJobStock(dto));
+        verify(sqlSessionMock).commit();
+    }
+
+    @Test
+    void updateInventoryJobStock_mapperThrows_doesNotCommit() {
+        doThrow(new RuntimeException("DB"))
+                .when(reliabilityMapperMock).updateInventoryJobStock(any());
+        assertDoesNotThrow(() -> reliabilityDao.updateInventoryJobStock(new InventoryJobUpdateDtoRequest()));
+        verify(sqlSessionMock, never()).commit();
+    }
+
+    @Test
+    void fetchRawSn2BySn1_success() {
+        RawSn2DtoResponse r = new RawSn2DtoResponse();
+        when(reliabilityMapperMock.fetchRawSn2BySn1(10)).thenReturn(List.of(r));
+        assertEquals(1, reliabilityDao.fetchRawSn2BySn1(10).size());
+    }
+
+    @Test
+    void fetchRawSn2BySn1_exception_returnsEmpty() {
+        when(reliabilityMapperMock.fetchRawSn2BySn1(any())).thenThrow(new RuntimeException());
+        assertTrue(reliabilityDao.fetchRawSn2BySn1(1).isEmpty());
+    }
+
+    @Test
+    void updateStatusReliabilityPacksJobStock_success_commitsAndCallsBothUpdates() {
+        reliabilityDao.updateStatusReliabilityPacksJobStock(List.of("P1","P2"));
+        verify(reliabilityMapperMock, times(1)).updateReliabilityStatus("P1", 1);
+        verify(reliabilityMapperMock, times(1)).updateProjectInfoStatus("P1", 1);
+        verify(reliabilityMapperMock, times(1)).updateReliabilityStatus("P2", 1);
+        verify(reliabilityMapperMock, times(1)).updateProjectInfoStatus("P2", 1);
+        verify(sqlSessionMock).commit();
+    }
+
+    @Test
+    void updateStatusReliabilityPacksJobStock_exception_doesNotCommit() {
+        doThrow(new RuntimeException("DB"))
+                .when(reliabilityMapperMock).updateReliabilityStatus("P1", 1);
+        assertDoesNotThrow(() -> reliabilityDao.updateStatusReliabilityPacksJobStock(List.of("P1")));
+        verify(sqlSessionMock, never()).commit();
+    }
+
+    @Test
+    void listTransfersByStatus_success() {
+        when(reliabilityMapperMock.listTransfersByStatus("D","U","S"))
+                .thenReturn(List.of(new ReliabilityPacksDtoResponse()));
+        assertEquals(1, reliabilityDao.listTransfersByStatus("D","U","S").size());
+    }
+
+    @Test
+    void listTransfersByStatus_exception_returnsEmpty() {
+        when(reliabilityMapperMock.listTransfersByStatus(any(), any(), any()))
+                .thenThrow(new RuntimeException());
+        assertTrue(reliabilityDao.listTransfersByStatus("","","").isEmpty());
+    }
+
+    @Test
+    void updateJobByPackAndName_success_commits() {
+        when(reliabilityMapperMock.updateJobByPackAndName(any())).thenReturn(1);
+        assertDoesNotThrow(() -> reliabilityDao.updateJobByPackAndName(new UpdateJobDtoRequest()));
+        verify(sqlSessionMock).commit();
+    }
+
+    @Test
+    void updateJobByPackAndName_zeroRows_throwsPersistenceException() {
+        when(reliabilityMapperMock.updateJobByPackAndName(any())).thenReturn(0);
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> reliabilityDao.updateJobByPackAndName(new UpdateJobDtoRequest()));
+        assertEquals("PersistenceException", ex.getClass().getSimpleName());
+    }
+
+    @Test
+    void updatePackComments_success_commits() {
+        when(reliabilityMapperMock.updatePackComments("P","C")).thenReturn(1);
+        assertDoesNotThrow(() -> reliabilityDao.updatePackComments("P","C"));
+        verify(sqlSessionMock).commit();
+    }
+
+    @Test
+    void updatePackComments_zeroRows_throws() {
+        when(reliabilityMapperMock.updatePackComments("P","C")).thenReturn(0);
+        assertThrows(RuntimeException.class, () -> reliabilityDao.updatePackComments("P","C"));
+    }
+
+    @Test
+    void getTransferDetail_headerNull_returnsNull() {
+        when(reliabilityMapperMock.getTransferHeader("P")).thenReturn(null);
+        assertNull(reliabilityDao.getTransferDetail("P"));
+    }
+
+    @Test
+    void getTransferDetail_success_returnsSnapshot() {
+        TransferDetailResponse.Header h = new TransferDetailResponse.Header();
+        when(reliabilityMapperMock.getTransferHeader("P")).thenReturn(h);
+        when(reliabilityMapperMock.getTransferJobs("P")).thenReturn(List.of());
+        assertNotNull(reliabilityDao.getTransferDetail("P"));
+    }
+
+    @Test
+    void updateJobComment_success_commits() {
+        when(reliabilityMapperMock.updateJobComment("P","J","c")).thenReturn(1);
+        assertDoesNotThrow(() -> reliabilityDao.updateJobComment("P","J","c"));
+        verify(sqlSessionMock).commit();
+    }
+
+    @Test
+    void updateJobComment_zeroRows_throws() {
+        when(reliabilityMapperMock.updateJobComment("P","J","c")).thenReturn(0);
+        assertThrows(RuntimeException.class, () -> reliabilityDao.updateJobComment("P","J","c"));
+    }
+
+    @Test
+    void updateTransferDetail_success_headerAndJob_copiesNonNullsAndCommits() {
+        TransferDetailUpdateRequest dto = new TransferDetailUpdateRequest();
+        TransferDetailUpdateRequest.Header h = new TransferDetailUpdateRequest.Header();
+        h.setComments("gc");
+        dto.setHeader(h);
+
+        TransferDetailUpdateRequest.Job j = new TransferDetailUpdateRequest.Job();
+        j.setJobName("J1");
+        j.setComments("jc");
+        j.setFrequencyId(7);
+        dto.setJobs(List.of(j));
+
+        when(reliabilityMapperMock.updatePackComments("P", "gc")).thenReturn(1);
+        when(reliabilityMapperMock.updateJobByPackAndName(any())).thenReturn(1);
+
+        var captor = org.mockito.ArgumentCaptor.forClass(UpdateJobDtoRequest.class);
+
+        assertDoesNotThrow(() -> reliabilityDao.updateTransferDetail("P", dto));
+        verify(sqlSessionMock).commit();
+
+        verify(reliabilityMapperMock).updateJobByPackAndName(captor.capture());
+        UpdateJobDtoRequest sent = captor.getValue();
+        assertEquals("P",  sent.getPack());
+        assertEquals("J1", sent.getJobName());
+        assertEquals(Integer.valueOf(7), sent.getFrequencyId());
+        assertEquals("jc", sent.getComments());
+    }
+
+    @Test
+    void updateTransferDetail_updateJobReturnsZero_throws() {
+        TransferDetailUpdateRequest dto = new TransferDetailUpdateRequest();
+        TransferDetailUpdateRequest.Job j = new TransferDetailUpdateRequest.Job();
+        j.setJobName("J1");
+        j.setComments("x");
+        dto.setJobs(List.of(j));
+
+        when(reliabilityMapperMock.updateJobByPackAndName(any())).thenReturn(0);
+
+        assertThrows(RuntimeException.class, () -> reliabilityDao.updateTransferDetail("P", dto));
     }
 }

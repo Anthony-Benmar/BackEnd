@@ -21,6 +21,7 @@ public class ReliabilityDao {
     private static final Logger LOGGER = Logger.getLogger(ReliabilityDao.class.getName());
     private static final org.slf4j.Logger log = LoggerFactory.getLogger(ReliabilityDao.class);
     private static ReliabilityDao instance = null;
+    private static final String ERR_JOB_NOT_FOUND_IN_PACK = "No se encontró el job en ese pack";
 
     public static synchronized ReliabilityDao getInstance() {
         if (Objects.isNull(instance)) {
@@ -157,9 +158,8 @@ public class ReliabilityDao {
     }
 
     public static class PersistenceException extends RuntimeException {
-        public PersistenceException(String message, Throwable cause) {
-            super(message, cause);
-        }
+        private static final long serialVersionUID = 1L;
+        public PersistenceException(String message, Throwable cause) { super(message, cause); }
     }
 
     public void insertTransfer(TransferInputDtoRequest dto) {
@@ -291,7 +291,7 @@ public class ReliabilityDao {
         try (SqlSession s = MyBatisConnectionFactory.getInstance().openSession()) {
             int rows = s.getMapper(ReliabilityMapper.class).updateJobByPackAndName(dto);
             if (rows == 0) {
-                throw new PersistenceException("No se encontró el job en ese pack", null);
+                throw new PersistenceException(ERR_JOB_NOT_FOUND_IN_PACK, null);
             }
             s.commit();
         }
@@ -321,7 +321,7 @@ public class ReliabilityDao {
     public void updateJobComment(String pack, String jobName, String comments){
         try (SqlSession s = MyBatisConnectionFactory.getInstance().openSession()) {
             int rows = s.getMapper(ReliabilityMapper.class).updateJobComment(pack, jobName, comments);
-            if (rows == 0) throw new PersistenceException("No se encontró el job en ese pack", null);
+            if (rows == 0) throw new PersistenceException(ERR_JOB_NOT_FOUND_IN_PACK, null);
             s.commit();
         }
     }
@@ -337,42 +337,57 @@ public class ReliabilityDao {
 
             if (dto.getJobs() != null) {
                 for (var j : dto.getJobs()) {
-                    if (j == null || j.getJobName() == null || j.getJobName().isBlank()) {
-                        throw new PersistenceException("jobName es obligatorio para actualizar un job", null);
-                    }
+                    validateJobForUpdate(j);
 
                     UpdateJobDtoRequest up = new UpdateJobDtoRequest();
                     up.setPack(pack);
                     up.setJobName(j.getJobName());
 
-                    try {
-                        for (var f : TransferDetailUpdateRequest.Job.class.getDeclaredFields()) {
-                            f.setAccessible(true);
-                            Object v = f.get(j);
-                            if (v == null) continue;
-
-                            try {
-                                var tf = UpdateJobDtoRequest.class.getDeclaredField(f.getName());
-                                tf.setAccessible(true);
-                                tf.set(up, v);
-                            } catch (NoSuchFieldException ignore) {
-                            }
-                        }
-                    } catch (IllegalAccessException iae) {
-                        throw new PersistenceException("No se pudo mapear los campos del job " + j.getJobName(), iae);
-                    }
+                    copyNonNullProperties(j, up);
 
                     int rows = m.updateJobByPackAndName(up);
-                    if (rows == 0) {
-                        throw new PersistenceException("No se encontró el job en ese pack", null);
-                    }
+                    if (rows == 0) throw new PersistenceException(ERR_JOB_NOT_FOUND_IN_PACK, null);
                 }
             }
+
             s.commit();
         } catch (PersistenceException pe) {
             throw pe;
         } catch (Exception e) {
             throw new PersistenceException("Error actualizando detalle del pack " + pack, e);
+        }
+    }
+
+    private void validateJobForUpdate(TransferDetailUpdateRequest.Job j) {
+        if (j == null || j.getJobName() == null || j.getJobName().isBlank()) {
+            throw new PersistenceException("jobName es obligatorio para actualizar un job", null);
+        }
+    }
+
+    private static void copyNonNullProperties(Object src, Object dest) {
+        try {
+            var srcInfo  = java.beans.Introspector.getBeanInfo(src.getClass(), Object.class);
+            var destInfo = java.beans.Introspector.getBeanInfo(dest.getClass(), Object.class);
+
+            java.util.Map<String, java.beans.PropertyDescriptor> destProps = new java.util.HashMap<>();
+            for (var pd : destInfo.getPropertyDescriptors()) {
+                if (pd.getWriteMethod() != null) destProps.put(pd.getName(), pd);
+            }
+
+            for (var spd : srcInfo.getPropertyDescriptors()) {
+                var read = spd.getReadMethod();
+                if (read == null) continue;
+                Object value = read.invoke(src);
+                if (value == null) continue;
+                var dpd = destProps.get(spd.getName());
+                if (dpd == null) continue;
+                var write = dpd.getWriteMethod();
+                if (write == null) continue;
+                if (!dpd.getPropertyType().isAssignableFrom(value.getClass())) continue;
+                write.invoke(dest, value);
+            }
+        } catch (Exception e) {
+            throw new PersistenceException("Error copiando propiedades no nulas", e);
         }
     }
 }

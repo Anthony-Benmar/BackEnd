@@ -21,6 +21,7 @@ import java.util.Map;
 public class ReliabilityResource {
     private final ReliabilityService reliabilityService = new ReliabilityService();
     private static final String CONTENTDISPOSITION = "Content-Disposition";
+    private static final String ACTOR_ROLE_KEY = "actorRole";
 
     @POST
     @Path("/info/filter")
@@ -191,9 +192,11 @@ public class ReliabilityResource {
             Map<String, String> body,
             @HeaderParam("X-USER-ROLE") String roleFromHeader
     ) {
-        String actor = (body != null && body.get("actorRole") != null && !body.get("actorRole").isBlank())
-                ? body.get("actorRole")
-                : (roleFromHeader == null ? "" : roleFromHeader);
+        String fallbackRole = (roleFromHeader == null) ? "" : roleFromHeader;
+        String roleInBody = (body != null) ? body.get(ACTOR_ROLE_KEY) : null;
+        String actor = (roleInBody != null && !roleInBody.isBlank())
+                ? roleInBody
+                : fallbackRole;
         String comments = (body != null) ? body.get("comments") : null;
         return reliabilityService.updateCommentsForPack(pack, actor, comments);
     }

@@ -691,4 +691,52 @@ class ReliabilityServiceTest {
         assertErr(err, "500");
         assertTrue(err.message.contains("DB down"));
     }
+
+    @Test
+    void packsAdvanced_tabAprobados_dejaReadonlyEnCero() {
+        var dto = new ReliabilityPackInputFilterRequest();
+        dto.setRole("KM"); dto.setTab("APROBADOS");
+        var row = new ReliabilityPacksDtoResponse(); row.setStatusId(1);
+
+        when(reliabilityDaoMock.listTransfersByStatus("", "", "CSV"))
+                .thenReturn(List.of(row));
+
+        try (MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
+            mocked.when(() -> TransferStatusPolicy.toCsv("KM", "APROBADOS"))
+                    .thenReturn("CSV");
+
+            var res = reliabilityService.getReliabilityPacksAdvanced(dto);
+
+            assertTrue(res.success);
+            assertEquals(0, res.data.getData().get(0).getCambiedit());
+        }
+    }
+
+    @Test
+    void packsAdvanced_paginacion_y_sinPaginacion() {
+        var dto = new ReliabilityPackInputFilterRequest();
+        dto.setRole("KM"); dto.setTab("X");
+        dto.setRecordsAmount(2); dto.setPage(1);
+
+        var r1 = new ReliabilityPacksDtoResponse(); r1.setStatusId(1);
+        var r2 = new ReliabilityPacksDtoResponse(); r2.setStatusId(1);
+        var r3 = new ReliabilityPacksDtoResponse(); r3.setStatusId(1);
+
+        when(reliabilityDaoMock.listTransfersByStatus("", "", "CSV"))
+                .thenReturn(List.of(r1, r2, r3));
+
+        try (MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
+            mocked.when(() -> TransferStatusPolicy.toCsv("KM", "X"))
+                    .thenReturn("CSV");
+
+            var pag = reliabilityService.getReliabilityPacksAdvanced(dto);
+            assertTrue(pag.success);
+            assertEquals(2, pag.data.getData().size());
+
+            dto.setRecordsAmount(0);
+            var nopag = reliabilityService.getReliabilityPacksAdvanced(dto);
+            assertTrue(nopag.success);
+            assertEquals(3, nopag.data.getData().size());
+        }
+    }
 }

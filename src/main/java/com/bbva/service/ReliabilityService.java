@@ -26,6 +26,7 @@ public class ReliabilityService {
     private final ReliabilityDao reliabilityDao = new ReliabilityDao();
     private static final Logger log = Logger.getLogger(ReliabilityService.class.getName());
     private static final String ERROR = "ERROR DOCUMENTOSSERVICE: ";
+    private static final String PACK_NOT_FOUND = "ERROR PACK";
 
     public IDataResult<InventoryInputsFilterDtoResponse> inventoryInputsFilter(InventoryInputsFilterDtoRequest dto) {
         var result = reliabilityDao.inventoryInputsFilter(dto);
@@ -271,22 +272,17 @@ public class ReliabilityService {
         try {
             Integer oldSt = reliabilityDao.getPackCurrentStatus(pack);
             if (oldSt == null) {
-                return new ErrorDataResult<>(null, "404", "Pack no encontrado");
+                return new ErrorDataResult<>(null, "404", PACK_NOT_FOUND);
             }
 
-            Action action = null;
-            try {
-                String actStr = (req == null || req.getAction() == null)
-                        ? ""
-                        : req.getAction().trim().toUpperCase(Locale.ROOT);
-                action = Action.valueOf(actStr);
-            } catch (Exception ignore) {
-            }
+            Action action = parseAction(req);
             if (action == null) {
                 return new ErrorDataResult<>(null, "400", "Acción inválida");
             }
 
-            int newSt = TransferStatusPolicy.computeNextStatusOrThrow(req.getActorRole(), oldSt, action);
+            String actorRole = (req == null || req.getActorRole() == null) ? "" : req.getActorRole();
+
+            int newSt = TransferStatusPolicy.computeNextStatusOrThrow(actorRole, oldSt, action);
             reliabilityDao.changeTransferStatus(pack, newSt);
 
             var resp = TransferStatusChangeResponse.builder()
@@ -301,10 +297,23 @@ public class ReliabilityService {
         }
     }
 
+    private Action parseAction(TransferStatusChangeRequest req) {
+        if (req == null) return null;
+        String raw = req.getAction();
+        if (raw == null) return null;
+        String norm = raw.trim().toUpperCase(Locale.ROOT);
+        try {
+            return Action.valueOf(norm);
+        } catch (IllegalArgumentException ex) {
+            return null;
+        }
+    }
+
+
     public IDataResult<Void> updateJobBySm(UpdateJobDtoRequest dto) {
         try {
             Integer st = reliabilityDao.getPackCurrentStatus(dto.getPack());
-            if (st == null) return new ErrorDataResult<>(null, "404", "Pack no encontrado");
+            if (st == null) return new ErrorDataResult<>(null, "404", PACK_NOT_FOUND);
 
             boolean hasNonCommentChanges =
                     dto.getComponentName() != null ||
@@ -346,7 +355,7 @@ public class ReliabilityService {
         try {
             Integer st = reliabilityDao.getPackCurrentStatus(pack);
             if (st == null) {
-                return new ErrorDataResult<>(null, "404", "Pack no encontrado");
+                return new ErrorDataResult<>(null, "404", PACK_NOT_FOUND);
             }
 
             if (TransferStatusPolicy.canWriteGeneralComment(role, st) != 1) {
@@ -368,7 +377,7 @@ public class ReliabilityService {
         try {
             var detail = reliabilityDao.getTransferDetail(pack);
             if (detail == null) {
-                return new ErrorDataResult<>(null, "404", "Pack no encontrado");
+                return new ErrorDataResult<>(null, "404", PACK_NOT_FOUND);
             }
             return new SuccessDataResult<>(detail);
         } catch (Exception e) {
@@ -380,7 +389,7 @@ public class ReliabilityService {
             String pack, String role, TransferDetailUpdateRequest dto) {
         try {
             Integer st = reliabilityDao.getPackCurrentStatus(pack);
-            if (st == null) return new ErrorDataResult<>(null, "404", "Pack no encontrado");
+            if (st == null) return new ErrorDataResult<>(null, "404", PACK_NOT_FOUND);
 
             String r = (role == null) ? "" : role.trim().toUpperCase(Locale.ROOT);
 
