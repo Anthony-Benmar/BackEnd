@@ -91,6 +91,17 @@ public class ReliabilityDao {
         }
     }
 
+    public List<JobExecutionHistoryDtoResponse> getJobExecutionHistory(String jobName) {
+        try (SqlSession session = MyBatisConnectionFactory.getInstance().openSession()) {
+            return session
+                    .getMapper(ReliabilityMapper.class)
+                    .getJobExecutionHistory(jobName);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Error fetching job history", e);
+            return Collections.emptyList();
+        }
+    }
+
     public void updateInventoryJobStock(InventoryJobUpdateDtoRequest dto) {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         try (SqlSession session = sqlSessionFactory.openSession()) {
@@ -185,6 +196,17 @@ public class ReliabilityDao {
         try (SqlSession session = sqlSessionFactory.openSession()) {
             ReliabilityMapper mapper = session.getMapper(ReliabilityMapper.class);
             return mapper.getOriginTypes();
+        }
+    }
+
+    public List<RawSn2DtoResponse> fetchRawSn2BySn1(Integer sn1) {
+        try (SqlSession session = MyBatisConnectionFactory.getInstance().openSession()) {
+            return session
+                    .getMapper(ReliabilityMapper.class)
+                    .fetchRawSn2BySn1(sn1);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Error fetching raw SN2 by SN1", e);
+            return Collections.emptyList();
         }
     }
 

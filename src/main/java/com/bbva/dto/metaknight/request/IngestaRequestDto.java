@@ -27,6 +27,10 @@ public class IngestaRequestDto {
     private String token;
     private String ticketJira;
 
+    public void setUuaaMaster(String uuaaMaster) {
+        this.uuaaMaster = uuaaMaster != null ? uuaaMaster.toLowerCase() : null;
+    }
+
     private boolean generarMallas; //para generación de mallas generarMallas
 
     private String teamEmail;

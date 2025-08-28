@@ -40,6 +40,16 @@ public class ReliabilityResource {
     {
         return reliabilityService.getPendingCustodyJobs(sdatoolId);
     }
+
+    @GET
+    @Path("/execution_history/{jobName}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<List<JobExecutionHistoryDtoResponse>> getExecutionHistory(
+            @PathParam("jobName") String jobName
+    ) {
+        return reliabilityService.getJobExecutionHistory(jobName);
+    }
+
     @GET
     @Path("/project_custody_info/{sdatoolId}")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -83,6 +93,13 @@ public class ReliabilityResource {
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<Void> insertTransfer(TransferInputDtoRequest dto) {
         return reliabilityService.insertTransfer(dto);
+    }
+
+    @GET
+    @Path("/sn2-options/{sn1}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<List<DropDownDto>> sn2Options(@PathParam("sn1") Integer sn1) {
+        return reliabilityService.getSn2Options(sn1);
     }
 
     @POST

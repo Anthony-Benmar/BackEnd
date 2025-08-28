@@ -418,4 +418,71 @@ class ReliabilityDaoTest {
         assertNotNull(result);
         assertTrue(result.isEmpty());
     }
+
+    @Test
+    void testGetJobExecutionHistorySuccess() {
+        String jobName = "JOB_OK";
+        JobExecutionHistoryDtoResponse dto = new JobExecutionHistoryDtoResponse();
+        when(reliabilityMapperMock.getJobExecutionHistory(jobName))
+                .thenReturn(List.of(dto));
+
+        List<JobExecutionHistoryDtoResponse> result =
+                reliabilityDao.getJobExecutionHistory(jobName);
+
+        assertNotNull(result, "La lista no debe ser null");
+        assertEquals(1, result.size(), "Debe devolver exactamente un elemento");
+        assertSame(dto, result.get(0), "Debe ser el mismo objeto retornado por el mapper");
+
+        verify(sqlSessionFactoryMock).openSession();
+        verify(sqlSessionMock).getMapper(ReliabilityMapper.class);
+        verify(reliabilityMapperMock).getJobExecutionHistory(jobName);
+    }
+
+    @Test
+    void testGetJobExecutionHistoryException() {
+        String jobName = "JOB_FAIL";
+        when(reliabilityMapperMock.getJobExecutionHistory(jobName))
+                .thenThrow(new RuntimeException("DB down"));
+
+        List<JobExecutionHistoryDtoResponse> result =
+                reliabilityDao.getJobExecutionHistory(jobName);
+
+        assertNotNull(result, "No debe retornar null aunque haya fallo");
+        assertTrue(result.isEmpty(), "Debe retornar lista vacía al capturar excepción");
+
+        verify(sqlSessionFactoryMock).openSession();
+    }
+
+    @Test
+    void testFetchRawSn2BySn1Success() {
+        RawSn2DtoResponse r1 = new RawSn2DtoResponse();
+        r1.setValue(100);
+        r1.setRawDesc("ABC-DEF-GHI");
+        RawSn2DtoResponse r2 = new RawSn2DtoResponse();
+        r2.setValue(200);
+        r2.setRawDesc("JKL-MNO-PQR");
+
+        when(reliabilityMapperMock.fetchRawSn2BySn1(42))
+                .thenReturn(List.of(r1, r2));
+
+        List<RawSn2DtoResponse> resultados = reliabilityDao.fetchRawSn2BySn1(42);
+
+        assertEquals(2, resultados.size());
+        assertSame(r1, resultados.get(0));
+        assertSame(r2, resultados.get(1));
+
+        verify(sqlSessionFactoryMock).openSession();
+        verify(sqlSessionMock).getMapper(ReliabilityMapper.class);
+    }
+
+    @Test
+    void testFetchRawSn2BySn1Exception() {
+        when(sqlSessionFactoryMock.openSession())
+                .thenThrow(new RuntimeException("fail session"));
+
+        List<RawSn2DtoResponse> resultados = reliabilityDao.fetchRawSn2BySn1(99);
+
+        assertNotNull(resultados);
+        assertTrue(resultados.isEmpty());
+    }
 }
