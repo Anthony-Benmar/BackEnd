@@ -4,7 +4,6 @@ import com.bbva.dto.metaknight.request.IngestaRequestDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
 import java.lang.reflect.Method;
 import java.util.*;
 
@@ -36,7 +35,7 @@ class SchemaProcessorTest {
         assertEquals("prefix_uuaa_table123", schemaProcessor.getDfRawName());
         assertEquals("prefix_uuaa_table123", schemaProcessor.getDfMasterName());
         assertEquals("original_staging", schemaProcessor.getOriginalStagingName());
-        assertEquals("\"original_staging", schemaProcessor.getDfStagingName());
+        assertEquals("original_staging", schemaProcessor.getDfStagingName());
         assertEquals("table123", schemaProcessor.getTag());
         assertEquals("uuaa", schemaProcessor.getDfUuaa());
     }
@@ -70,9 +69,9 @@ class SchemaProcessorTest {
                 "\"/schemas/pe/test_uuaa/raw/prefix_uuaa_table123/latest/prefix_uuaa_table123.output.schema\"";
         assertEquals(expectedArtifactoryPath, schemaProcessor.getArtifactoryPath());
 
-        String expectedStagingPath = File.separator + "in" + File.separator + "staging" + File.separator + "datax" + File.separator + "uuaa" + File.separator + "\"original_staging";
-        String expectedRawPath = File.separator + "data" + File.separator + "raw" + File.separator + "uuaa" + File.separator + "data" + File.separator + "prefix_uuaa_table123";
-        String expectedMasterPath = File.separator + "data" + File.separator + "master" + File.separator + "test_uuaa" + File.separator + "data" + File.separator + "prefix_uuaa_table123";
+        String expectedStagingPath = "/in/staging/datax/uuaa/original_staging";
+        String expectedRawPath = "/data/raw/uuaa/data/prefix_uuaa_table123";
+        String expectedMasterPath = "/data/master/test_uuaa/data/prefix_uuaa_table123";
 
         assertEquals(expectedStagingPath, schemaProcessor.getDfStagingPath());
         assertEquals(expectedRawPath, schemaProcessor.getDfRawPath());
@@ -184,7 +183,7 @@ class SchemaProcessorTest {
         schemaProcessor.initialize(rawData, masterData, request);
 
         assertEquals("staging$table", schemaProcessor.getOriginalStagingName());
-        assertEquals("\"staging\"$table", schemaProcessor.getDfStagingName());
+        assertEquals("staging$table", schemaProcessor.getDfStagingName());
     }
 
     @Test
