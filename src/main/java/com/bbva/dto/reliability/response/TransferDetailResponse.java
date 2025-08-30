@@ -19,6 +19,11 @@ public class TransferDetailResponse {
         private Integer statusId;
         private String  statusName;
         private String  comments;
+        private String  creatorEmail;
+        private String  pdfLink;
+        private Integer sn2Id;
+        private String  sn2Desc;
+        private String  productOwnerEmail;
     }
 
     @Getter @Setter @AllArgsConstructor @NoArgsConstructor @Builder

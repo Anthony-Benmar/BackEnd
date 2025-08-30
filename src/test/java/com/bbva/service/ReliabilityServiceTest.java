@@ -200,7 +200,7 @@ class ReliabilityServiceTest {
         TransferInputDtoRequest validDto = new TransferInputDtoRequest();
         validDto.setPack("com.example.package");
         validDto.setDomainId(1);
-        validDto.setProductOwnerUserId(100);
+        validDto.setProductOwnerEmail("po@bbva.com"); // <-- cambio
         validDto.setUseCaseId(200);
 
         IDataResult<Void> result = reliabilityService.insertTransfer(validDto);
@@ -215,7 +215,7 @@ class ReliabilityServiceTest {
         TransferInputDtoRequest invalidDto = new TransferInputDtoRequest();
         invalidDto.setPack(null);
         invalidDto.setDomainId(1);
-        invalidDto.setProductOwnerUserId(100);
+        invalidDto.setProductOwnerEmail("po@bbva.com"); // <-- cambio
         invalidDto.setUseCaseId(200);
 
         IDataResult<Void> result = reliabilityService.insertTransfer(invalidDto);
@@ -231,7 +231,7 @@ class ReliabilityServiceTest {
         TransferInputDtoRequest invalidDto = new TransferInputDtoRequest();
         invalidDto.setPack("   ");
         invalidDto.setDomainId(1);
-        invalidDto.setProductOwnerUserId(100);
+        invalidDto.setProductOwnerEmail("po@bbva.com"); // <-- cambio
         invalidDto.setUseCaseId(200);
 
         IDataResult<Void> result = reliabilityService.insertTransfer(invalidDto);
@@ -246,7 +246,7 @@ class ReliabilityServiceTest {
         TransferInputDtoRequest invalidDto = new TransferInputDtoRequest();
         invalidDto.setPack("com.example.package");
         invalidDto.setDomainId(null);
-        invalidDto.setProductOwnerUserId(100);
+        invalidDto.setProductOwnerEmail("po@bbva.com"); // <-- cambio
         invalidDto.setUseCaseId(200);
 
         IDataResult<Void> result = reliabilityService.insertTransfer(invalidDto);
@@ -257,17 +257,17 @@ class ReliabilityServiceTest {
     }
 
     @Test
-    void insertTransferWhenProductOwnerUserIdIsNull() {
+    void insertTransferWhenProductOwnerUserIdIsNull() { // nombre se queda igual
         TransferInputDtoRequest invalidDto = new TransferInputDtoRequest();
         invalidDto.setPack("com.example.package");
         invalidDto.setDomainId(1);
-        invalidDto.setProductOwnerUserId(null);
+        invalidDto.setProductOwnerEmail(null); // <-- cambio
         invalidDto.setUseCaseId(200);
 
         IDataResult<Void> result = reliabilityService.insertTransfer(invalidDto);
 
         assertFalse(result.success);
-        assertEquals("ProductOwnerUserId must not be null", result.message);
+        assertEquals("ProductOwnerEmail must not be null or empty", result.message); // <-- cambio
         verify(reliabilityDaoMock, never()).insertTransfer(any());
     }
 
@@ -276,7 +276,7 @@ class ReliabilityServiceTest {
         TransferInputDtoRequest invalidDto = new TransferInputDtoRequest();
         invalidDto.setPack("com.example.package");
         invalidDto.setDomainId(1);
-        invalidDto.setProductOwnerUserId(100);
+        invalidDto.setProductOwnerEmail("po@bbva.com"); // <-- cambio
         invalidDto.setUseCaseId(null);
 
         IDataResult<Void> result = reliabilityService.insertTransfer(invalidDto);
@@ -291,7 +291,7 @@ class ReliabilityServiceTest {
         TransferInputDtoRequest validDto = new TransferInputDtoRequest();
         validDto.setPack("com.example.package");
         validDto.setDomainId(1);
-        validDto.setProductOwnerUserId(100);
+        validDto.setProductOwnerEmail("po@bbva.com"); // <-- cambio
         validDto.setUseCaseId(200);
 
         doThrow(new RuntimeException("Database error")).when(reliabilityDaoMock).insertTransfer(validDto);

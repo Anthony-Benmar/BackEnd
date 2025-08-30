@@ -10,7 +10,7 @@ import java.util.List;
 public class TransferInputDtoRequest {
     private String pack;
     private Integer domainId;
-    private Integer productOwnerUserId;
+    private String  productOwnerEmail;
     private Integer useCaseId;
     private Integer projectId;
     private Integer creatorUserId;

@@ -101,8 +101,8 @@ public class ReliabilityService {
             if (dto.getDomainId() == null) {
                 return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "DomainId must not be null");
             }
-            if (dto.getProductOwnerUserId() == null) {
-                return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "ProductOwnerUserId must not be null");
+            if (dto.getProductOwnerEmail() == null) {
+                return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "ProductOwnerEmail must not be null or empty");
             }
             if (dto.getUseCaseId() == null) {
                 return new ErrorDataResult<>(null, HttpStatusCodes.HTTP_INTERNAL_SERVER_ERROR, "UseCaseId must not be null");

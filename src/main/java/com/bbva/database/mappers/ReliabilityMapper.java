@@ -133,7 +133,7 @@ public interface ReliabilityMapper {
     @Update("CALL SP_INSERT_RELIABILITY_PACK(" +
             "#{pack}," +
             "#{domainId}," +
-            "#{productOwnerUserId}," +
+            "#{productOwnerEmail}," +
             "#{useCaseId}," +
             "#{projectId}," +
             "#{creatorUserId}," +
@@ -239,12 +239,31 @@ public interface ReliabilityMapper {
             uc.use_case_name                     AS use_case,
             rp.status_id                         AS statusId,
             st.element_name                      AS status_name,
-            rp.comments                          AS comments
+            rp.comments                          AS comments,
+            su.email                             AS creator_email,
+            rp.pdf_link                          AS pdf_link,
+            rp.sn2                               AS sn2_id,
+            TRIM(
+                CASE
+                    WHEN sn2c.element_desc LIKE '%-%-%' THEN
+                        SUBSTRING(
+                                sn2c.element_desc,
+                                LOCATE('-', sn2c.element_desc) + 1,
+                                LENGTH(sn2c.element_desc)
+                                  - LOCATE('-', REVERSE(sn2c.element_desc))
+                                  - LOCATE('-', sn2c.element_desc)
+                              )
+                            ELSE sn2c.element_desc
+                          END
+                        )                        AS sn2_desc,
+            rp.product_owner_email               AS product_owner_email
         FROM reliability_packs rp
         LEFT JOIN project_info pi2    ON rp.project_id = pi2.project_id
         LEFT JOIN catalog domain      ON COALESCE(rp.domain_id,9)=domain.element_id AND domain.catalog_id=1027
         LEFT JOIN use_case uc         ON rp.use_case_id = uc.use_case_id
         LEFT JOIN catalog st          ON st.catalog_id = 3003 AND st.element_id = rp.status_id
+        LEFT JOIN secu_user su     ON su.user_id = rp.creator_user_id
+        LEFT JOIN catalog sn2c     ON sn2c.catalog_id = 9006 AND sn2c.element_id = rp.sn2
         WHERE rp.pack = #{pack}
         LIMIT 1
         """)
@@ -257,6 +276,11 @@ public interface ReliabilityMapper {
     @Result(property = "statusId",   column = "statusId")
     @Result(property = "statusName", column = "status_name")
     @Result(property = "comments",   column = "comments")
+    @Result(property = "creatorEmail",       column = "creator_email")
+    @Result(property = "pdfLink",            column = "pdf_link")
+    @Result(property = "sn2Id",              column = "sn2_id")
+    @Result(property = "sn2Desc",            column = "sn2_desc")
+    @Result(property = "productOwnerEmail",  column = "product_owner_email")
     TransferDetailResponse.Header getTransferHeader(@Param("pack") String pack);
 
     @Update("""
