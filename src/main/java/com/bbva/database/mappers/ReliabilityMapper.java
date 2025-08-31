@@ -213,7 +213,7 @@ public interface ReliabilityMapper {
     @Result(property = "pack", column = "pack")
     @Result(property = "domainId", column = "domainId")
     @Result(property = "domainName", column = "domain_name")
-    @Result(property = "productOwnerUserId", column = "productOwnerUserId")
+    @Result(property = "productOwnerEmail",  column = "product_owner_email")
     @Result(property = "useCaseId", column = "useCaseId")
     @Result(property = "useCase", column = "use_case")
     @Result(property = "projectId", column = "projectId")
@@ -289,6 +289,11 @@ public interface ReliabilityMapper {
     int updateJobComment(@Param("pack") String pack,
                          @Param("jobName") String jobName,
                          @Param("comments") String comments);
+
+    @Select("""
+    SELECT c.element_name FROM reliability_km_access a JOIN catalog c ON c.catalog_id=1027 AND c.element_id=a.domain_id WHERE a.status_type=1 AND LOWER(a.email)=LOWER(#{email}) ORDER BY c.element_name
+    """)
+    List<String> getKmAllowedDomainNames(@Param("email") String email);
 
     @Select("""
         SELECT

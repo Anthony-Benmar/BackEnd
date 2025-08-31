@@ -146,12 +146,11 @@ public class ReliabilityResource {
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<PaginationReliabilityPackResponse> getReliabilityPacksV2(
             ReliabilityPackInputFilterRequest dto,
-            @HeaderParam("X-USER-ROLE") String roleFromHeader
+            @HeaderParam("X-USER-ROLE")  String roleFromHeader,
+            @HeaderParam("X-USER-EMAIL") String emailFromHeader
     ) {
-        if (dto.getRole() == null || dto.getRole().isBlank()) {
-            dto.setRole(roleFromHeader);
-        }
-        return reliabilityService.getReliabilityPacksAdvanced(dto);
+        if (dto.getRole()==null || dto.getRole().isBlank()) dto.setRole(roleFromHeader);
+        return reliabilityService.getReliabilityPacksAdvanced(dto, emailFromHeader);
     }
 
     @PUT

@@ -11,7 +11,7 @@ public class ReliabilityPacksDtoResponse {
     private String pack;
     private Integer domainId;
     private String domainName;
-    private Integer productOwnerUserId;
+    private String  productOwnerEmail;
     private Integer useCaseId;
     private String useCase;
     private Integer projectId;

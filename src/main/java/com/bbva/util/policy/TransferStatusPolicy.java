@@ -13,20 +13,17 @@ public class TransferStatusPolicy {
 
     private static final String ROLE_KM = "KM";
     private static final String ROLE_SM = "SM";
+    private static final String ROLE_PO = "PO";   // <<--- NUEVO
 
     private static final String TAB_EN_PROGRESO = "EN_PROGRESO";
     private static final String TAB_APROBADOS   = "APROBADOS";
-
-    private TransferStatusPolicy() {}
 
     private static String norm(String role){
         return role == null ? "" : role.trim().toUpperCase(Locale.ROOT);
     }
     private static boolean isKM(String role){ return ROLE_KM.equals(norm(role)); }
-
-    private static boolean isSM(String role){
-        return ROLE_SM.equals(norm(role));
-    }
+    private static boolean isSM(String role){ return ROLE_SM.equals(norm(role)); }
+    private static boolean isPO(String role){ return ROLE_PO.equals(norm(role)); }
 
     public static int canEdit(String role, Integer statusId){
         int st = statusId == null ? 0 : statusId;
@@ -49,6 +46,11 @@ public class TransferStatusPolicy {
         sm.put(TAB_EN_PROGRESO, "3,2,4,5");
         sm.put(TAB_APROBADOS,   "1");
         MATRIX.put(ROLE_SM, sm);
+
+        var po = new HashMap<String, String>();
+        po.put(TAB_EN_PROGRESO, "3,2,4");
+        po.put(TAB_APROBADOS,   "1");
+        MATRIX.put(ROLE_PO, po);
     }
 
     public static String toCsv(String role, String tab) {

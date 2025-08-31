@@ -8,12 +8,10 @@ import static com.bbva.util.policy.TransferStatusPolicy.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class TransferStatusPolicyTest {
-
-
     @Test
     void canEdit_SM_enDevueltos_es1() {
         assertEquals(1, canEdit("SM", DEVUELTO_PO));
-        assertEquals(1, canEdit("sm", DEVUELTO_RLB)); // case-insensitive
+        assertEquals(1, canEdit("sm", DEVUELTO_RLB));
     }
 
     @Test
@@ -36,7 +34,6 @@ class TransferStatusPolicyTest {
         assertEquals(0, canEdit("SM", null));
         assertEquals(0, canEdit("KM", null));
     }
-
 
     @Test
     void canEditComments_KM_enAprobadoPO_es1() {
@@ -64,22 +61,27 @@ class TransferStatusPolicyTest {
         assertEquals(0, canEditComments("KM", null));
     }
 
-
     @Test
     void toCsv_defaults_rolYTabNull_fallback_KM_EN_PROGRESO() {
-        assertEquals("2,5", toCsv(null, null)); // KM + EN_PROGRESO => 2,5
+        // Por compatibilidad: null/null mantiene fallback a KM + EN_PROGRESO
+        assertEquals("2,5", toCsv(null, null));
     }
 
     @Test
     void toCsv_rolKM_tabs() {
         assertEquals("2,5", toCsv("KM", "EN_PROGRESO"));
-        assertEquals("1",   toCsv("KM", "APROBADOS"));
+        assertEquals("1", toCsv("KM", "APROBADOS"));
     }
 
     @Test
-    void toCsv_rolSM_tabs() {
+    void toCsv_rolSM_tabs_y_PO_tabs() {
+        // SM (sin cambios)
         assertEquals("3,2,4,5", toCsv("SM", "EN_PROGRESO"));
-        assertEquals("1",       toCsv("SM", "APROBADOS"));
+        assertEquals("1", toCsv("SM", "APROBADOS"));
+
+        // PO (nuevo en MATRIX)
+        assertEquals("3,2,4", toCsv("PO", "EN_PROGRESO"));
+        assertEquals("1", toCsv("PO", "APROBADOS"));
     }
 
     @Test
@@ -90,13 +92,16 @@ class TransferStatusPolicyTest {
     @Test
     void toCsv_tabDesconocida_fallback_EN_PROGRESO() {
         assertEquals("2,5", toCsv("KM", "NO_EXISTE"));
-        assertEquals("3,2,4,5", toCsv("SM", "   ")); // blank -> EN_PROGRESO
+        assertEquals("3,2,4,5", toCsv("SM", "   "));
+        assertEquals("3,2,4", toCsv("PO", "   "));
     }
 
     @Test
     void toCsv_caseInsensitive_y_trim() {
         assertEquals("1", toCsv("  km ", " aprobados "));
         assertEquals("3,2,4,5", toCsv(" sm ", " en_progreso "));
+        assertEquals("3,2,4", toCsv("  Po ", "  En_Progreso "));
+        assertEquals("1", toCsv(" po ", " aprobados "));
     }
 
     @Test
@@ -123,10 +128,9 @@ class TransferStatusPolicyTest {
 
     @Test
     void allowed_roleNull_tratadoComoSM() {
-        // Por implementación: !KM => SM/PO
+        // Por implementación histórica: !KM => SM/PO
         assertTrue(allowedActions(null, EN_PROGRESO).contains(Action.APPROVE));
     }
-
 
     @Test
     void compute_KM_APROBADO_PO_APPROVE_va_A_APROBADO_RLB() {

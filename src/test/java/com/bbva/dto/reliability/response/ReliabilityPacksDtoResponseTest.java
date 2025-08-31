@@ -12,7 +12,7 @@ class ReliabilityPacksDtoResponseTest {
                 .pack("PACK123")
                 .domainId(1001)
                 .domainName("GRM")
-                .productOwnerUserId(201)
+                .productOwnerEmail("po@bbva.com")
                 .useCaseId(301)
                 .useCase("Use Case X")
                 .projectId(401)
@@ -28,7 +28,7 @@ class ReliabilityPacksDtoResponseTest {
         assertEquals("PACK123", dto.getPack());
         assertEquals(1001, dto.getDomainId());
         assertEquals("GRM", dto.getDomainName());
-        assertEquals(201, dto.getProductOwnerUserId());
+        assertEquals("po@bbva.com", dto.getProductOwnerEmail());
         assertEquals(301, dto.getUseCaseId());
         assertEquals("Use Case X", dto.getUseCase());
         assertEquals(401, dto.getProjectId());
@@ -47,7 +47,7 @@ class ReliabilityPacksDtoResponseTest {
                 "PACK999",                 // pack
                 2001,                      // domainId
                 "DOMX",                    // domainName
-                202,                       // productOwnerUserId
+                "po2@bbva.com",            // productOwnerEmail
                 302,                       // useCaseId
                 "Use Case Y",              // useCase
                 402,                       // projectId
@@ -63,7 +63,7 @@ class ReliabilityPacksDtoResponseTest {
         assertEquals("PACK999", dto.getPack());
         assertEquals(2001, dto.getDomainId());
         assertEquals("DOMX", dto.getDomainName());
-        assertEquals(202, dto.getProductOwnerUserId());
+        assertEquals("po2@bbva.com", dto.getProductOwnerEmail());
         assertEquals(302, dto.getUseCaseId());
         assertEquals("Use Case Y", dto.getUseCase());
         assertEquals(402, dto.getProjectId());
@@ -83,6 +83,7 @@ class ReliabilityPacksDtoResponseTest {
         dto.setPack("PACK000");
         dto.setDomainId(1111);
         dto.setDomainName("TestDomain");
+        dto.setProductOwnerEmail("po_test@bbva.com");
         dto.setCreatorUser("USR_TEST");
         dto.setJobCount(3);
         dto.setStatusId(5);
@@ -92,6 +93,7 @@ class ReliabilityPacksDtoResponseTest {
         assertEquals("PACK000", dto.getPack());
         assertEquals(1111, dto.getDomainId());
         assertEquals("TestDomain", dto.getDomainName());
+        assertEquals("po_test@bbva.com", dto.getProductOwnerEmail());
         assertEquals("USR_TEST", dto.getCreatorUser());
         assertEquals(3, dto.getJobCount());
         assertEquals(5, dto.getStatusId());

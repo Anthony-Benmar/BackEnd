@@ -226,35 +226,52 @@ public class ReliabilityService {
     }
 
     public IDataResult<PaginationReliabilityPackResponse> getReliabilityPacksAdvanced(
-            ReliabilityPackInputFilterRequest dto) {
+            ReliabilityPackInputFilterRequest dto, String requesterEmail) {
         try {
             String statusCsv = TransferStatusPolicy.toCsv(dto.getRole(), dto.getTab());
-            String domainCsv = (dto.getDomainName() == null) ? "" : dto.getDomainName();
-            String useCaseCsv = (dto.getUseCase() == null) ? "" : dto.getUseCase();
-
+            String domainCsv = dto.getDomainName() == null ? "" : dto.getDomainName();
+            String useCaseCsv = dto.getUseCase() == null ? "" : dto.getUseCase();
             var lista = reliabilityDao.listTransfersByStatus(domainCsv, useCaseCsv, statusCsv);
+            String role  = dto.getRole() == null ? "" : dto.getRole().trim().toUpperCase(Locale.ROOT);
+            String email = requesterEmail == null ? "" : requesterEmail.trim().toLowerCase(Locale.ROOT);
 
-            String role = (dto.getRole() == null) ? "" : dto.getRole().trim().toUpperCase(Locale.ROOT);
-            String tab  = (dto.getTab()  == null) ? "" : dto.getTab().trim().toUpperCase(Locale.ROOT);
+            if ("KM".equals(role)) {
+                var allowed = reliabilityDao.getKmAllowedDomainNames(email);
+                lista = allowed.isEmpty()
+                        ? Collections.emptyList()
+                        : lista.stream().filter(r -> allowed.contains(r.getDomainName())).toList();
 
-            boolean readOnly = "APROBADOS".equals(tab);
+            } else if ("PO".equals(role)) {
+                lista = lista.stream()
+                        .filter(r -> {
+                            String poe = r.getProductOwnerEmail() == null ? "" : r.getProductOwnerEmail().trim().toLowerCase();
+                            return !email.isEmpty() && poe.equals(email);
+                        })
+                        .toList();
+
+            } else if ("SM".equals(role)) {
+                lista = lista.stream()
+                        .filter(r -> {
+                            String creator = r.getCreatorUser() == null ? "" : r.getCreatorUser().trim().toLowerCase();
+                            return !email.isEmpty() && creator.equals(email);
+                        })
+                        .toList();
+            }
+
+            boolean readOnly = "APROBADOS".equalsIgnoreCase(dto.getTab());
             for (var row : lista) {
                 int can = readOnly ? 0 : TransferStatusPolicy.canEdit(role, row.getStatusId());
                 row.setCambiedit(can);
             }
 
-            int size = (dto.getRecordsAmount() == null) ? 10 : dto.getRecordsAmount();
-            int page = (dto.getPage() == null) ? 1 : dto.getPage();
+            int size = dto.getRecordsAmount() == null ? 10 : dto.getRecordsAmount();
+            int page = dto.getPage() == null ? 1 : dto.getPage();
             int safePage = Math.max(page, 1);
             int recordsCount = lista.size();
-            boolean paginate = size > 0;
-            int pages = paginate ? (int) Math.ceil(recordsCount / (double) size) : 1;
+            int pages = size > 0 ? (int) Math.ceil(recordsCount / (double) size) : 1;
 
-            List<ReliabilityPacksDtoResponse> pageData = paginate
-                    ? lista.stream()
-                    .skip((long) size * (safePage - 1))
-                    .limit(size)
-                    .toList()
+            List<ReliabilityPacksDtoResponse> pageData = size > 0
+                    ? lista.stream().skip((long) size * (safePage - 1)).limit(size).toList()
                     : lista;
 
             var res = new PaginationReliabilityPackResponse();

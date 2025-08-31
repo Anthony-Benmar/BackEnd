@@ -411,4 +411,17 @@ class ReliabilityDaoTest {
 
         assertThrows(RuntimeException.class, () -> reliabilityDao.updateTransferDetail("P", dto));
     }
+
+    @Test
+    void getKmAllowedDomainNames_ok_retornaLista_y_cierraSesion() {
+        when(reliabilityMapperMock.getKmAllowedDomainNames(eq("km@bbva.com")))
+                .thenReturn(List.of("CS", "DBM"));
+
+        List<String> res = reliabilityDao.getKmAllowedDomainNames("km@bbva.com");
+
+        assertEquals(List.of("CS", "DBM"), res);
+        verify(sqlSessionMock).getMapper(ReliabilityMapper.class);
+        verify(reliabilityMapperMock).getKmAllowedDomainNames("km@bbva.com");
+        verify(sqlSessionMock).close();
+    }
 }

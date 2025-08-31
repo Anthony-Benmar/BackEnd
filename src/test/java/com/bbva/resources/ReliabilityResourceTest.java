@@ -261,9 +261,9 @@ class ReliabilityResourceTest {
 
     @Test
     void packsV2_role_resolucion_ok() {
-        record Caso(String bodyRole, String headerRole, String expectedRole) {
-        }
-        var casos = List.of(
+        record Caso(String bodyRole, String headerRole, String expectedRole) {}
+
+        var casos = java.util.List.of(
                 new Caso("SM", "KM", "SM"),
                 new Caso("", "KM", "KM"),
                 new Caso(null, null, null)
@@ -274,15 +274,21 @@ class ReliabilityResourceTest {
             dto.setRole(c.bodyRole());
             dto.setTab("EN_PROGRESO");
 
-            when(reliabilityServiceMock.getReliabilityPacksAdvanced(any()))
-                    .thenReturn(new SuccessDataResult<>(new PaginationReliabilityPackResponse()));
+            when(reliabilityServiceMock.getReliabilityPacksAdvanced(
+                    any(ReliabilityPackInputFilterRequest.class),
+                    anyString()
+            )).thenReturn(new SuccessDataResult<>(new PaginationReliabilityPackResponse()));
 
-            var res = reliabilityResource.getReliabilityPacksV2(dto, c.headerRole());
+            var res = reliabilityResource.getReliabilityPacksV2(dto, c.headerRole(), "po@bbva.com");
             assertTrue(res.success);
 
-            ArgumentCaptor<ReliabilityPackInputFilterRequest> captor = ArgumentCaptor.forClass(ReliabilityPackInputFilterRequest.class);
-            verify(reliabilityServiceMock).getReliabilityPacksAdvanced(captor.capture());
-            assertEquals(c.expectedRole(), captor.getValue().getRole());
+            var dtoCap    = org.mockito.ArgumentCaptor.forClass(ReliabilityPackInputFilterRequest.class);
+            var emailCap  = org.mockito.ArgumentCaptor.forClass(String.class);
+
+            verify(reliabilityServiceMock).getReliabilityPacksAdvanced(dtoCap.capture(), emailCap.capture());
+
+            assertEquals(c.expectedRole(), dtoCap.getValue().getRole());
+            assertEquals("po@bbva.com", emailCap.getValue());
 
             reset(reliabilityServiceMock);
         }
@@ -293,13 +299,15 @@ class ReliabilityResourceTest {
         var dto = new ReliabilityPackInputFilterRequest();
         dto.setRole("KM");
         dto.setTab("APROBADOS");
-        when(reliabilityServiceMock.getReliabilityPacksAdvanced(any()))
-                .thenReturn(new ErrorDataResult<>(null, "500", "Fallo"));
-        var res = reliabilityResource.getReliabilityPacksV2(dto, null);
+        when(reliabilityServiceMock.getReliabilityPacksAdvanced(
+                any(ReliabilityPackInputFilterRequest.class),
+                anyString()
+        )).thenReturn(new ErrorDataResult<>(null, "500", "Fallo"));
+        var res = reliabilityResource.getReliabilityPacksV2(dto, null, "po@bbva.com");
         assertFalse(res.success);
         assertEquals("500", res.status);
         assertNull(res.data);
-        verify(reliabilityServiceMock).getReliabilityPacksAdvanced(any());
+        verify(reliabilityServiceMock).getReliabilityPacksAdvanced(same(dto), eq("po@bbva.com"));
     }
 
     @Test

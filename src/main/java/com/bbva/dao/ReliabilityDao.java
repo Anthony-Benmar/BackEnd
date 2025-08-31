@@ -396,4 +396,13 @@ public class ReliabilityDao {
             throw new PersistenceException("Error copiando propiedades no nulas", e);
         }
     }
+
+    public List<String> getKmAllowedDomainNames(String email) {
+        try (SqlSession s = MyBatisConnectionFactory.getInstance().openSession()) {
+            return s.getMapper(ReliabilityMapper.class).getKmAllowedDomainNames(email);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Error getKmAllowedDomainNames", e);
+            return Collections.emptyList();
+        }
+    }
 }
