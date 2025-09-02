@@ -242,32 +242,29 @@ public class ReliabilityService {
             final String role  = upperOp.apply(dto.getRole());
             final String email = lowerOp.apply(requesterEmail);
 
-            if (("PO".equals(role) || "SM".equals(role)) && email.isEmpty()) {
-                lista = java.util.Collections.emptyList();
-            } else {
-                java.util.Set<String> allowedDomains =
-                        "KM".equals(role)
-                                ? new java.util.HashSet<>(reliabilityDao.getKmAllowedDomainNames(email))
-                                : java.util.Set.of();
+            java.util.Set<String> kmAllowed =
+                    "KM".equals(role)
+                            ? new java.util.HashSet<>(reliabilityDao.getKmAllowedDomainNames(email))
+                            : java.util.Set.of();
 
-                java.util.function.Predicate<ReliabilityPacksDtoResponse> filter =
-                        buildRoleFilter(role, email, allowedDomains, lowerOp);
+            java.util.function.Predicate<ReliabilityPacksDtoResponse> filter =
+                    TransferStatusPolicy.buildPacksFilter(role, email, kmAllowed);
 
-                lista = lista.stream().filter(filter).toList();
-            }
+            lista = lista.stream().filter(filter).toList();
 
             final boolean readOnly = "APROBADOS".equalsIgnoreCase(dto.getTab());
             for (var row : lista) {
-                row.setCambiedit(readOnly ? 0 : TransferStatusPolicy.canEdit(role, row.getStatusId()));
+                row.setCambiedit(TransferStatusPolicy.computeCambieditFlag(readOnly, role, row.getStatusId()));
             }
 
-            int size = dto.getRecordsAmount() == null ? 10 : dto.getRecordsAmount();
-            int page = dto.getPage() == null ? 1 : dto.getPage();
-            int safePage = Math.max(page, 1);
+            int size = (dto.getRecordsAmount() == null) ? 10 : dto.getRecordsAmount();
             int records = lista.size();
-            if (size <= 0) size = records == 0 ? 1 : records;
+            if (size <= 0) size = (records == 0) ? 1 : records;
 
+            int page = (dto.getPage() == null) ? 1 : dto.getPage();
+            int safePage = Math.max(page, 1);
             int pages = Math.max(1, (int) Math.ceil(records / (double) size));
+
             List<ReliabilityPacksDtoResponse> pageData =
                     lista.stream().skip((long) size * (safePage - 1)).limit(size).toList();
 
@@ -278,20 +275,6 @@ public class ReliabilityService {
             return new SuccessDataResult<>(res);
         } catch (Exception e) {
             return new ErrorDataResult<>(null, "500", e.getMessage());
-        }
-    }
-
-    private java.util.function.Predicate<ReliabilityPacksDtoResponse> buildRoleFilter(
-            String role,
-            String emailLower,
-            java.util.Set<String> allowedDomains,
-            java.util.function.UnaryOperator<String> lowerOp) {
-        switch (role) {
-            case "KM": return r -> allowedDomains.contains(r.getDomainName());
-            case "PO": return r -> emailLower.equals(lowerOp.apply(r.getProductOwnerEmail()));
-            case "SM": return r -> emailLower.equals(lowerOp.apply(r.getCreatorUser()));
-            default:
-                return r -> true;
         }
     }
 

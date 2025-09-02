@@ -1,6 +1,9 @@
 package com.bbva.util.policy;
 
+import com.bbva.dto.reliability.response.ReliabilityPacksDtoResponse;
+
 import java.util.*;
+import java.util.function.Predicate;
 
 public class TransferStatusPolicy {
 
@@ -13,7 +16,7 @@ public class TransferStatusPolicy {
 
     private static final String ROLE_KM = "KM";
     private static final String ROLE_SM = "SM";
-    private static final String ROLE_PO = "PO";   // <<--- NUEVO
+    private static final String ROLE_PO = "PO";
 
     private static final String TAB_EN_PROGRESO = "EN_PROGRESO";
     private static final String TAB_APROBADOS   = "APROBADOS";
@@ -104,7 +107,6 @@ public class TransferStatusPolicy {
     }
 
     private static int nextForKm(int status, Action action) {
-
         if (status == APROBADO_PO) {
             if (action == Action.APPROVE) return APROBADO_RLB;
             if (action == Action.RETURN)  return DEVUELTO_RLB;
@@ -113,7 +115,6 @@ public class TransferStatusPolicy {
     }
 
     private static int nextForSm(int status, Action action) {
-
         if (status == EN_PROGRESO) {
             if (action == Action.APPROVE) return APROBADO_PO;
             if (action == Action.RETURN)  return DEVUELTO_PO;
@@ -129,5 +130,35 @@ public class TransferStatusPolicy {
         if (isKM(role) && st == APROBADO_PO) return 1;
         if (isSM(role) && st == EN_PROGRESO) return 1;
         return 0;
+    }
+
+    private static String lower(String s) { return (s == null) ? "" : s.trim().toLowerCase(Locale.ROOT); }
+    private static String upper(String s) { return (s == null) ? "" : s.trim().toUpperCase(Locale.ROOT); }
+
+    public static Predicate<ReliabilityPacksDtoResponse> buildPacksFilter(
+            String role,
+            String emailLower,
+            Set<String> kmAllowed) {
+
+        final String r = upper(role);
+        final String e = lower(emailLower);
+        final Set<String> allowed = (kmAllowed == null) ? Collections.emptySet() : kmAllowed;
+
+        switch (r) {
+            case ROLE_KM:
+                return row -> allowed.contains(row.getDomainName());
+            case ROLE_PO:
+                if (e.isEmpty()) return row -> false;
+                return row -> e.equals(lower(row.getProductOwnerEmail()));
+            case ROLE_SM:
+                if (e.isEmpty()) return row -> false;
+                return row -> e.equals(lower(row.getCreatorUser()));
+            default:
+                return row -> true;
+        }
+    }
+
+    public static int computeCambieditFlag(boolean readOnly, String role, Integer statusId) {
+        return readOnly ? 0 : canEdit(role, statusId);
     }
 }

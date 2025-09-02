@@ -15,11 +15,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import com.bbva.dao.ReliabilityDao.PersistenceException;
+import org.mockito.Mockito;
 
 import java.io.ByteArrayInputStream;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -477,13 +479,46 @@ class ReliabilityServiceTest {
             var dto = new ReliabilityPackInputFilterRequest();
             dto.setRole(role);
             dto.setTab(tab);
+
             try (MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
                 mocked.when(() -> TransferStatusPolicy.toCsv(role, tab)).thenReturn(csv);
+
+                // Stub explícito del filtro para evitar NPE por helpers privados
+                mocked.when(() -> TransferStatusPolicy.buildPacksFilter(
+                                org.mockito.Mockito.anyString(),
+                                org.mockito.Mockito.anyString(),
+                                org.mockito.Mockito.<java.util.Set<String>>any()))
+                        .thenAnswer(inv -> {
+                            String roleArg = inv.getArgument(0);
+                            String emailArg = inv.getArgument(1);
+                            java.util.Set<String> allowed = inv.getArgument(2);
+                            return (java.util.function.Predicate<ReliabilityPacksDtoResponse>) row -> {
+                                if ("KM".equalsIgnoreCase(roleArg)) {
+                                    return allowed != null && allowed.contains(row.getDomainName());
+                                } else if ("PO".equalsIgnoreCase(roleArg)) {
+                                    String poe = row.getProductOwnerEmail();
+                                    return emailArg != null && poe != null && emailArg.equalsIgnoreCase(poe);
+                                } else if ("SM".equalsIgnoreCase(roleArg)) {
+                                    String cu = row.getCreatorUser();
+                                    return emailArg != null && cu != null && emailArg.equalsIgnoreCase(cu);
+                                } else {
+                                    return true; // NA/???
+                                }
+                            };
+                        });
+
+                mocked.when(() -> TransferStatusPolicy.computeCambieditFlag(
+                                org.mockito.Mockito.anyBoolean(),
+                                org.mockito.Mockito.anyString(),
+                                org.mockito.Mockito.<Integer>any()))
+                        .thenCallRealMethod();
+
                 when(reliabilityDaoMock.listTransfersByStatus("", "", csv))
                         .thenReturn(Collections.emptyList());
                 if ("KM".equals(role)) {
                     when(reliabilityDaoMock.getKmAllowedDomainNames("")).thenReturn(Collections.emptyList());
                 }
+
                 var res = reliabilityService.getReliabilityPacksAdvanced(dto, "");
                 assertTrue(res.success);
                 verify(reliabilityDaoMock).listTransfersByStatus("", "", csv);
@@ -690,16 +725,39 @@ class ReliabilityServiceTest {
         row.setStatusId(1);
         row.setDomainName("CS");
 
-        when(reliabilityDaoMock.listTransfersByStatus("", "", "CSV"))
-                .thenReturn(List.of(row));
+        when(reliabilityDaoMock.listTransfersByStatus("", "", "CSV")).thenReturn(List.of(row));
         when(reliabilityDaoMock.getKmAllowedDomainNames("")).thenReturn(List.of("CS"));
 
         try (MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
-            mocked.when(() -> TransferStatusPolicy.toCsv("KM", "APROBADOS"))
-                    .thenReturn("CSV");
+            mocked.when(() -> TransferStatusPolicy.toCsv("KM", "APROBADOS")).thenReturn("CSV");
+
+            // Stub del filtro
+            mocked.when(() -> TransferStatusPolicy.buildPacksFilter(
+                            Mockito.anyString(), Mockito.anyString(), Mockito.<Set<String>>any()))
+                    .thenAnswer(inv -> {
+                        String roleArg = inv.getArgument(0);
+                        String emailArg = inv.getArgument(1);
+                        Set<String> allowed = inv.getArgument(2);
+                        return (java.util.function.Predicate<ReliabilityPacksDtoResponse>) r -> {
+                            if ("KM".equalsIgnoreCase(roleArg)) {
+                                return allowed != null && allowed.contains(r.getDomainName());
+                            } else if ("PO".equalsIgnoreCase(roleArg)) {
+                                String poe = r.getProductOwnerEmail();
+                                return emailArg != null && poe != null && emailArg.equalsIgnoreCase(poe);
+                            } else if ("SM".equalsIgnoreCase(roleArg)) {
+                                String cu = r.getCreatorUser();
+                                return emailArg != null && cu != null && emailArg.equalsIgnoreCase(cu);
+                            } else {
+                                return true;
+                            }
+                        };
+                    });
+
+            mocked.when(() -> TransferStatusPolicy.computeCambieditFlag(
+                            Mockito.anyBoolean(), Mockito.anyString(), Mockito.<Integer>any()))
+                    .thenCallRealMethod();
 
             var res = reliabilityService.getReliabilityPacksAdvanced(dto, "");
-
             assertTrue(res.success);
             assertEquals(0, res.data.getData().get(0).getCambiedit());
         }
@@ -711,16 +769,51 @@ class ReliabilityServiceTest {
         dto.setRole("NA");
         dto.setTab("X");
         dto.setRecordsAmount(2); dto.setPage(1);
+
         var r1 = new ReliabilityPacksDtoResponse(); r1.setStatusId(1);
         var r2 = new ReliabilityPacksDtoResponse(); r2.setStatusId(1);
         var r3 = new ReliabilityPacksDtoResponse(); r3.setStatusId(1);
+
         when(reliabilityDaoMock.listTransfersByStatus("", "", "CSV"))
                 .thenReturn(List.of(r1, r2, r3));
+
         try (MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
             mocked.when(() -> TransferStatusPolicy.toCsv("NA", "X")).thenReturn("CSV");
+
+            // Stub del filtro (role "NA" → permite todos)
+            mocked.when(() -> TransferStatusPolicy.buildPacksFilter(
+                            org.mockito.Mockito.anyString(),
+                            org.mockito.Mockito.anyString(),
+                            org.mockito.Mockito.<java.util.Set<String>>any()))
+                    .thenAnswer(inv -> {
+                        String roleArg = inv.getArgument(0);
+                        String emailArg = inv.getArgument(1);
+                        java.util.Set<String> allowed = inv.getArgument(2);
+                        return (java.util.function.Predicate<ReliabilityPacksDtoResponse>) row -> {
+                            if ("KM".equalsIgnoreCase(roleArg)) {
+                                return allowed != null && allowed.contains(row.getDomainName());
+                            } else if ("PO".equalsIgnoreCase(roleArg)) {
+                                String poe = row.getProductOwnerEmail();
+                                return emailArg != null && poe != null && emailArg.equalsIgnoreCase(poe);
+                            } else if ("SM".equalsIgnoreCase(roleArg)) {
+                                String cu = row.getCreatorUser();
+                                return emailArg != null && cu != null && emailArg.equalsIgnoreCase(cu);
+                            } else {
+                                return true; // NA
+                            }
+                        };
+                    });
+
+            mocked.when(() -> TransferStatusPolicy.computeCambieditFlag(
+                            org.mockito.Mockito.anyBoolean(),
+                            org.mockito.Mockito.anyString(),
+                            org.mockito.Mockito.<Integer>any()))
+                    .thenCallRealMethod();
+
             var pag = reliabilityService.getReliabilityPacksAdvanced(dto, "");
             assertTrue(pag.success);
             assertEquals(2, pag.data.getData().size());
+
             dto.setRecordsAmount(0);
             var nopag = reliabilityService.getReliabilityPacksAdvanced(dto, "");
             assertTrue(nopag.success);
@@ -741,6 +834,18 @@ class ReliabilityServiceTest {
         dto.setRole("NA"); dto.setTab("X");
         try (MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
             mocked.when(() -> TransferStatusPolicy.toCsv("NA","X")).thenReturn("CSV");
+
+            mocked.when(() -> TransferStatusPolicy.buildPacksFilter(
+                            org.mockito.Mockito.anyString(),
+                            org.mockito.Mockito.anyString(),
+                            org.mockito.Mockito.<java.util.Set<String>>any()))
+                    .thenCallRealMethod();
+            mocked.when(() -> TransferStatusPolicy.computeCambieditFlag(
+                            org.mockito.Mockito.anyBoolean(),
+                            org.mockito.Mockito.anyString(),
+                            org.mockito.Mockito.<Integer>any()))
+                    .thenCallRealMethod();
+
             when(reliabilityDaoMock.listTransfersByStatus("", "", "CSV"))
                     .thenThrow(new RuntimeException("DB down"));
 
@@ -754,11 +859,44 @@ class ReliabilityServiceTest {
     void packsAdvanced_defaults_paginaPorDefecto() {
         var dto = new ReliabilityPackInputFilterRequest();
         dto.setRole("NA"); dto.setTab("X");
+
         var r1 = new ReliabilityPacksDtoResponse(); r1.setStatusId(1);
         when(reliabilityDaoMock.listTransfersByStatus("", "", "CSV"))
                 .thenReturn(List.of(r1));
+
         try (MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
             mocked.when(() -> TransferStatusPolicy.toCsv("NA", "X")).thenReturn("CSV");
+
+            // Stub del filtro
+            mocked.when(() -> TransferStatusPolicy.buildPacksFilter(
+                            org.mockito.Mockito.anyString(),
+                            org.mockito.Mockito.anyString(),
+                            org.mockito.Mockito.<java.util.Set<String>>any()))
+                    .thenAnswer(inv -> {
+                        String roleArg = inv.getArgument(0);
+                        String emailArg = inv.getArgument(1);
+                        java.util.Set<String> allowed = inv.getArgument(2);
+                        return (java.util.function.Predicate<ReliabilityPacksDtoResponse>) row -> {
+                            if ("KM".equalsIgnoreCase(roleArg)) {
+                                return allowed != null && allowed.contains(row.getDomainName());
+                            } else if ("PO".equalsIgnoreCase(roleArg)) {
+                                String poe = row.getProductOwnerEmail();
+                                return emailArg != null && poe != null && emailArg.equalsIgnoreCase(poe);
+                            } else if ("SM".equalsIgnoreCase(roleArg)) {
+                                String cu = row.getCreatorUser();
+                                return emailArg != null && cu != null && emailArg.equalsIgnoreCase(cu);
+                            } else {
+                                return true;
+                            }
+                        };
+                    });
+
+            mocked.when(() -> TransferStatusPolicy.computeCambieditFlag(
+                            org.mockito.Mockito.anyBoolean(),
+                            org.mockito.Mockito.anyString(),
+                            org.mockito.Mockito.<Integer>any()))
+                    .thenCallRealMethod();
+
             var res = reliabilityService.getReliabilityPacksAdvanced(dto, "");
             assertTrue(res.success);
             assertEquals(1, res.data.getData().size());
@@ -798,9 +936,43 @@ class ReliabilityServiceTest {
         when(reliabilityDaoMock.listTransfersByStatus("", "", "CSV"))
                 .thenReturn(List.of(row));
         when(reliabilityDaoMock.getKmAllowedDomainNames("")).thenReturn(List.of("CS"));
+
         try (MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
             mocked.when(() -> TransferStatusPolicy.toCsv("KM", "EN_PROGRESO")).thenReturn("CSV");
+
+            // Stub del filtro
+            mocked.when(() -> TransferStatusPolicy.buildPacksFilter(
+                            org.mockito.Mockito.anyString(),
+                            org.mockito.Mockito.anyString(),
+                            org.mockito.Mockito.<java.util.Set<String>>any()))
+                    .thenAnswer(inv -> {
+                        String roleArg = inv.getArgument(0);
+                        String emailArg = inv.getArgument(1);
+                        java.util.Set<String> allowed = inv.getArgument(2);
+                        return (java.util.function.Predicate<ReliabilityPacksDtoResponse>) r -> {
+                            if ("KM".equalsIgnoreCase(roleArg)) {
+                                return allowed != null && allowed.contains(r.getDomainName());
+                            } else if ("PO".equalsIgnoreCase(roleArg)) {
+                                String poe = r.getProductOwnerEmail();
+                                return emailArg != null && poe != null && emailArg.equalsIgnoreCase(poe);
+                            } else if ("SM".equalsIgnoreCase(roleArg)) {
+                                String cu = r.getCreatorUser();
+                                return emailArg != null && cu != null && emailArg.equalsIgnoreCase(cu);
+                            } else {
+                                return true;
+                            }
+                        };
+                    });
+
+            mocked.when(() -> TransferStatusPolicy.computeCambieditFlag(
+                            org.mockito.Mockito.anyBoolean(),
+                            org.mockito.Mockito.anyString(),
+                            org.mockito.Mockito.<Integer>any()))
+                    .thenCallRealMethod();
+
+            // canEdit mockeado para este caso concreto
             mocked.when(() -> TransferStatusPolicy.canEdit("KM", 2)).thenReturn(1);
+
             var res = reliabilityService.getReliabilityPacksAdvanced(dto, "");
             assertTrue(res.success);
             assertEquals(1, res.data.getData().get(0).getCambiedit());
