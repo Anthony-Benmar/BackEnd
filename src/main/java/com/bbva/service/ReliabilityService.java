@@ -228,19 +228,19 @@ public class ReliabilityService {
     public IDataResult<PaginationReliabilityPackResponse> getReliabilityPacksAdvanced(
             ReliabilityPackInputFilterRequest dto, String requesterEmail) {
         try {
-            java.util.function.UnaryOperator<String> LOWER = s -> s == null ? "" : s.trim().toLowerCase(java.util.Locale.ROOT);
-            java.util.function.UnaryOperator<String> UPPER = s -> s == null ? "" : s.trim().toUpperCase(java.util.Locale.ROOT);
-            java.util.function.UnaryOperator<String> NZ    = s -> s == null ? "" : s;
+            java.util.function.UnaryOperator<String> lowerOp = s -> s == null ? "" : s.trim().toLowerCase(java.util.Locale.ROOT);
+            java.util.function.UnaryOperator<String> upperOp = s -> s == null ? "" : s.trim().toUpperCase(java.util.Locale.ROOT);
+            java.util.function.UnaryOperator<String> nzOp    = s -> s == null ? "" : s;
 
             final String statusCsv  = TransferStatusPolicy.toCsv(dto.getRole(), dto.getTab());
-            final String domainCsv  = NZ.apply(dto.getDomainName());
-            final String useCaseCsv = NZ.apply(dto.getUseCase());
+            final String domainCsv  = nzOp.apply(dto.getDomainName());
+            final String useCaseCsv = nzOp.apply(dto.getUseCase());
 
             List<ReliabilityPacksDtoResponse> lista =
                     reliabilityDao.listTransfersByStatus(domainCsv, useCaseCsv, statusCsv);
 
-            final String role  = UPPER.apply(dto.getRole());
-            final String email = LOWER.apply(requesterEmail);
+            final String role  = upperOp.apply(dto.getRole());
+            final String email = lowerOp.apply(requesterEmail);
 
             if (("PO".equals(role) || "SM".equals(role)) && email.isEmpty()) {
                 lista = java.util.Collections.emptyList();
@@ -251,10 +251,7 @@ public class ReliabilityService {
                                 : java.util.Set.of();
 
                 java.util.function.Predicate<ReliabilityPacksDtoResponse> filter =
-                        "KM".equals(role) ? r -> allowedDomains.contains(r.getDomainName()) :
-                                "PO".equals(role) ? r -> email.equals(LOWER.apply(r.getProductOwnerEmail())) :
-                                        "SM".equals(role) ? r -> email.equals(LOWER.apply(r.getCreatorUser())) :
-                                                r -> true;
+                        buildRoleFilter(role, email, allowedDomains, lowerOp);
 
                 lista = lista.stream().filter(filter).toList();
             }
@@ -284,6 +281,19 @@ public class ReliabilityService {
         }
     }
 
+    private java.util.function.Predicate<ReliabilityPacksDtoResponse> buildRoleFilter(
+            String role,
+            String emailLower,
+            java.util.Set<String> allowedDomains,
+            java.util.function.UnaryOperator<String> lowerOp) {
+        switch (role) {
+            case "KM": return r -> allowedDomains.contains(r.getDomainName());
+            case "PO": return r -> emailLower.equals(lowerOp.apply(r.getProductOwnerEmail()));
+            case "SM": return r -> emailLower.equals(lowerOp.apply(r.getCreatorUser()));
+            default:
+                return r -> true;
+        }
+    }
 
     public IDataResult<TransferStatusChangeResponse> changeTransferStatus(String pack, TransferStatusChangeRequest req) {
         try {
