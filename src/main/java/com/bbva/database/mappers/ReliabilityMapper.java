@@ -173,9 +173,6 @@ public interface ReliabilityMapper {
             ")")
     void insertJobStock(JobTransferInputDtoRequest dto);
 
-    @Select("SELECT status_id FROM reliability_packs WHERE pack = #{pack} LIMIT 1")
-    Integer getPackStatus(@Param("pack") String pack);
-
     @Update("""
         UPDATE job_stock SET
         component_name = COALESCE(#{componentName}, component_name),
@@ -198,6 +195,18 @@ public interface ReliabilityMapper {
 
     @Update("UPDATE reliability_packs SET comments = #{comments} WHERE pack = #{pack}")
     int updatePackComments(@Param("pack") String pack, @Param("comments") String comments);
+
+    @Select("SELECT status_id FROM reliability_packs WHERE pack = #{pack} LIMIT 1")
+    Integer getPackStatus(@Param("pack") String pack);
+
+    @Update("UPDATE reliability_packs SET domain_id   = COALESCE(#{domainId},  domain_id), use_case_id = COALESCE(#{useCaseId}, use_case_id), comments    = COALESCE(#{comments},  comments) WHERE pack = #{pack}")
+    int patchPackHeader(@Param("pack") String pack, @Param("domainId") Integer domainId, @Param("useCaseId") Integer useCaseId, @Param("comments") String comments);
+
+    @Update("UPDATE job_stock SET comments = #{comments} WHERE pack = #{pack} AND job_name = #{jobName}")
+    int updateJobComment(@Param("pack") String pack, @Param("jobName") String jobName, @Param("comments") String comments);
+
+    @Select("SELECT c.element_name FROM reliability_km_access a JOIN catalog c ON c.catalog_id=1027 AND c.element_id=a.domain_id WHERE a.status_type=1 AND LOWER(a.email)=LOWER(#{email}) ORDER BY c.element_name")
+    List<String> getKmAllowedDomainNames(@Param("email") String email);
 
     @Update("UPDATE reliability_packs SET status_id = #{estado} WHERE pack = #{pack}")
     void updateReliabilityStatus(@Param("pack") String pack, @Param("estado") int estado);
@@ -229,71 +238,24 @@ public interface ReliabilityMapper {
             @Param("statusList") String statusListCsv
     );
 
-    @Select("""
-        SELECT
-            rp.pack,
-            pi2.sdatool_id                       AS sdaToolId,
-            rp.domain_id                         AS domainId,
-            domain.element_name                  AS domain_name,
-            rp.use_case_id                       AS useCaseId,
-            uc.use_case_name                     AS use_case,
-            rp.status_id                         AS statusId,
-            st.element_name                      AS status_name,
-            rp.comments                          AS comments,
-            su.email                             AS creator_email,
-            rp.pdf_link                          AS pdf_link,
-            rp.sn2                               AS sn2_id,
-            TRIM(
-                CASE
-                    WHEN sn2c.element_desc LIKE '%-%-%' THEN
-                        SUBSTRING(
-                                sn2c.element_desc,
-                                LOCATE('-', sn2c.element_desc) + 1,
-                                LENGTH(sn2c.element_desc)
-                                  - LOCATE('-', REVERSE(sn2c.element_desc))
-                                  - LOCATE('-', sn2c.element_desc)
-                              )
-                            ELSE sn2c.element_desc
-                          END
-                        )                        AS sn2_desc,
-            rp.product_owner_email               AS product_owner_email
-        FROM reliability_packs rp
-        LEFT JOIN project_info pi2    ON rp.project_id = pi2.project_id
-        LEFT JOIN catalog domain      ON COALESCE(rp.domain_id,9)=domain.element_id AND domain.catalog_id=1027
-        LEFT JOIN use_case uc         ON rp.use_case_id = uc.use_case_id
-        LEFT JOIN catalog st          ON st.catalog_id = 3003 AND st.element_id = rp.status_id
-        LEFT JOIN secu_user su     ON su.user_id = rp.creator_user_id
-        LEFT JOIN catalog sn2c     ON sn2c.catalog_id = 9006 AND sn2c.element_id = rp.sn2
-        WHERE rp.pack = #{pack}
-        LIMIT 1
-        """)
-    @Result(property = "pack",       column = "pack")
-    @Result(property = "sdaToolId",  column = "sdaToolId")
-    @Result(property = "domainId",   column = "domainId")
-    @Result(property = "domainName", column = "domain_name")
-    @Result(property = "useCaseId",  column = "useCaseId")
-    @Result(property = "useCase",    column = "use_case")
-    @Result(property = "statusId",   column = "statusId")
-    @Result(property = "statusName", column = "status_name")
-    @Result(property = "comments",   column = "comments")
-    @Result(property = "creatorEmail",       column = "creator_email")
-    @Result(property = "pdfLink",            column = "pdf_link")
-    @Result(property = "sn2Id",              column = "sn2_id")
-    @Result(property = "sn2Desc",            column = "sn2_desc")
-    @Result(property = "productOwnerEmail",  column = "product_owner_email")
-    TransferDetailResponse.Header getTransferHeader(@Param("pack") String pack);
-
-    @Update("""
-    UPDATE job_stock SET comments = #{comments} WHERE pack = #{pack} AND job_name = #{jobName}
-    """)
-    int updateJobComment(@Param("pack") String pack,
-                         @Param("jobName") String jobName,
-                         @Param("comments") String comments);
-
-    @Select("""
-    SELECT c.element_name FROM reliability_km_access a JOIN catalog c ON c.catalog_id=1027 AND c.element_id=a.domain_id WHERE a.status_type=1 AND LOWER(a.email)=LOWER(#{email}) ORDER BY c.element_name
-    """)
-    List<String> getKmAllowedDomainNames(@Param("email") String email);
+    @Select("CALL SP_GET_TRANSFER_HEADER(#{pack})")
+        @Results({
+                @Result(property = "pack",              column = "pack"),
+                @Result(property = "sdaToolId",         column = "sdaToolId"),
+                @Result(property = "domainId",          column = "domainId"),
+                @Result(property = "domainName",        column = "domain_name"),
+                @Result(property = "useCaseId",         column = "useCaseId"),
+                @Result(property = "useCase",           column = "use_case"),
+                @Result(property = "statusId",          column = "statusId"),
+                @Result(property = "statusName",        column = "status_name"),
+                @Result(property = "comments",          column = "comments"),
+                @Result(property = "creatorEmail",      column = "creator_email"),
+                @Result(property = "pdfLink",           column = "pdf_link"),
+                @Result(property = "sn2Id",             column = "sn2_id"),
+                @Result(property = "sn2Desc",           column = "sn2_desc"),
+                @Result(property = "productOwnerEmail", column = "product_owner_email")
+        })
+        TransferDetailResponse.Header getTransferHeader(@Param("pack") String pack);
 
     @Select("""
         SELECT
@@ -305,18 +267,7 @@ public interface ReliabilityMapper {
             use_case_id    AS useCaseId, domain_id      AS domainId,
             is_critical    AS isCritical, status_id      AS statusId,
             comments       AS comments
-        FROM job_stock
-        WHERE pack = #{pack}
-        ORDER BY job_name
+        FROM job_stock WHERE pack = #{pack} ORDER BY job_name
         """)
     List<TransferDetailResponse.JobRow> getTransferJobs(@Param("pack") String pack);
-
-    @Update("""
-        UPDATE reliability_packs SET domain_id   = COALESCE(#{domainId},  domain_id), use_case_id = COALESCE(#{useCaseId}, use_case_id), comments    = COALESCE(#{comments},  comments)
-        WHERE pack = #{pack}
-        """)
-    int patchPackHeader(@Param("pack") String pack,
-                        @Param("domainId") Integer domainId,
-                        @Param("useCaseId") Integer useCaseId,
-                        @Param("comments") String comments);
 }

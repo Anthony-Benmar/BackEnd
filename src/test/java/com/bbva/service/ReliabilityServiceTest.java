@@ -472,33 +472,24 @@ class ReliabilityServiceTest {
                 {"SM",  "APROBADOS",   "1"},
                 {"???", "EN_PROGRESO", "2,5"}
         };
-
         for (String[] c : casos) {
             String role = c[0], tab = c[1], csv = c[2];
-
             var dto = new ReliabilityPackInputFilterRequest();
             dto.setRole(role);
             dto.setTab(tab);
-
             try (MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
                 mocked.when(() -> TransferStatusPolicy.toCsv(role, tab)).thenReturn(csv);
-
                 when(reliabilityDaoMock.listTransfersByStatus("", "", csv))
                         .thenReturn(Collections.emptyList());
-
-                // Solo si es KM, el service consultará dominios permitidos para el email
                 if ("KM".equals(role)) {
                     when(reliabilityDaoMock.getKmAllowedDomainNames("")).thenReturn(Collections.emptyList());
                 }
-
-                var res = reliabilityService.getReliabilityPacksAdvanced(dto, ""); // <- nuevo 2do arg
+                var res = reliabilityService.getReliabilityPacksAdvanced(dto, "");
                 assertTrue(res.success);
                 verify(reliabilityDaoMock).listTransfersByStatus("", "", csv);
-
                 if ("KM".equals(role)) {
                     verify(reliabilityDaoMock).getKmAllowedDomainNames("");
                 }
-
                 reset(reliabilityDaoMock);
             }
         }
@@ -717,24 +708,19 @@ class ReliabilityServiceTest {
     @Test
     void packsAdvanced_paginacion_y_sinPaginacion() {
         var dto = new ReliabilityPackInputFilterRequest();
-        dto.setRole("NA"); // rol neutro para no filtrar
+        dto.setRole("NA");
         dto.setTab("X");
         dto.setRecordsAmount(2); dto.setPage(1);
-
         var r1 = new ReliabilityPacksDtoResponse(); r1.setStatusId(1);
         var r2 = new ReliabilityPacksDtoResponse(); r2.setStatusId(1);
         var r3 = new ReliabilityPacksDtoResponse(); r3.setStatusId(1);
-
         when(reliabilityDaoMock.listTransfersByStatus("", "", "CSV"))
                 .thenReturn(List.of(r1, r2, r3));
-
         try (MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
             mocked.when(() -> TransferStatusPolicy.toCsv("NA", "X")).thenReturn("CSV");
-
-            var pag = reliabilityService.getReliabilityPacksAdvanced(dto, ""); // <- 2do arg
+            var pag = reliabilityService.getReliabilityPacksAdvanced(dto, "");
             assertTrue(pag.success);
             assertEquals(2, pag.data.getData().size());
-
             dto.setRecordsAmount(0);
             var nopag = reliabilityService.getReliabilityPacksAdvanced(dto, "");
             assertTrue(nopag.success);
@@ -767,12 +753,10 @@ class ReliabilityServiceTest {
     @Test
     void packsAdvanced_defaults_paginaPorDefecto() {
         var dto = new ReliabilityPackInputFilterRequest();
-        dto.setRole("NA"); dto.setTab("X"); // sin page/recordsAmount
+        dto.setRole("NA"); dto.setTab("X");
         var r1 = new ReliabilityPacksDtoResponse(); r1.setStatusId(1);
-
         when(reliabilityDaoMock.listTransfersByStatus("", "", "CSV"))
                 .thenReturn(List.of(r1));
-
         try (MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
             mocked.when(() -> TransferStatusPolicy.toCsv("NA", "X")).thenReturn("CSV");
             var res = reliabilityService.getReliabilityPacksAdvanced(dto, "");
@@ -813,15 +797,11 @@ class ReliabilityServiceTest {
 
         when(reliabilityDaoMock.listTransfersByStatus("", "", "CSV"))
                 .thenReturn(List.of(row));
-        // KM: permitir dominio para que la fila pase el filtro
         when(reliabilityDaoMock.getKmAllowedDomainNames("")).thenReturn(List.of("CS"));
-
         try (MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
             mocked.when(() -> TransferStatusPolicy.toCsv("KM", "EN_PROGRESO")).thenReturn("CSV");
             mocked.when(() -> TransferStatusPolicy.canEdit("KM", 2)).thenReturn(1);
-
-            var res = reliabilityService.getReliabilityPacksAdvanced(dto, ""); // <- 2do arg
-
+            var res = reliabilityService.getReliabilityPacksAdvanced(dto, "");
             assertTrue(res.success);
             assertEquals(1, res.data.getData().get(0).getCambiedit());
         }

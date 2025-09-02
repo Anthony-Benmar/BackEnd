@@ -414,7 +414,7 @@ class ReliabilityDaoTest {
 
     @Test
     void getKmAllowedDomainNames_ok_retornaLista_y_cierraSesion() {
-        when(reliabilityMapperMock.getKmAllowedDomainNames(eq("km@bbva.com")))
+        when(reliabilityMapperMock.getKmAllowedDomainNames("km@bbva.com"))
                 .thenReturn(List.of("CS", "DBM"));
 
         List<String> res = reliabilityDao.getKmAllowedDomainNames("km@bbva.com");

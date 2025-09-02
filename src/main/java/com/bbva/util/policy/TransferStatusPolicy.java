@@ -23,7 +23,6 @@ public class TransferStatusPolicy {
     }
     private static boolean isKM(String role){ return ROLE_KM.equals(norm(role)); }
     private static boolean isSM(String role){ return ROLE_SM.equals(norm(role)); }
-    private static boolean isPO(String role){ return ROLE_PO.equals(norm(role)); }
 
     public static int canEdit(String role, Integer statusId){
         int st = statusId == null ? 0 : statusId;

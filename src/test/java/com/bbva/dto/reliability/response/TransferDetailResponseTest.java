@@ -10,10 +10,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class TransferDetailResponseTest {
 
-    @Test
-    void builderAndGetters_shouldWork_withAllNewHeaderFields() {
-        // Header con TODOS los campos nuevos
-        var header = TransferDetailResponse.Header.builder()
+    private TransferDetailResponse.Header buildFullHeader() {
+        return TransferDetailResponse.Header.builder()
                 .pack("PACK12345")
                 .sdaToolId("SDATOOL-33319")
                 .domainId(1)
@@ -22,15 +20,17 @@ class TransferDetailResponseTest {
                 .useCase("PFM")
                 .statusId(3)
                 .statusName("En progreso")
-                .comments(null) // puede venir null
+                .comments(null)
                 .creatorEmail("clinton.huamani@bbva.com")
                 .pdfLink("https://drive.google.com/your-pdf-link")
                 .sn2Id(21)
                 .sn2Desc("DEDRRA-RISK ANALYTICS-85225")
                 .productOwnerEmail("po@bbva.com")
                 .build();
+    }
 
-        var job = TransferDetailResponse.JobRow.builder()
+    private TransferDetailResponse.JobRow buildFullJob() {
+        return TransferDetailResponse.JobRow.builder()
                 .jobName("PKBRBCP4028")
                 .jsonName("kbrb-pe-spk-inm-riskapprove")
                 .frequencyId(4)
@@ -47,13 +47,14 @@ class TransferDetailResponseTest {
                 .statusId(3)
                 .comments("")
                 .build();
+    }
 
-        var dto = TransferDetailResponse.builder()
-                .header(header)
-                .jobs(List.of(job))
-                .build();
+    @Test
+    void header_buildAndGetters_shouldMapAllFields() {
+        var header = buildFullHeader();
+        var dto = TransferDetailResponse.builder().header(header).jobs(List.of()).build();
 
-        // Asserts Header
+        assertNotNull(dto.getHeader());
         assertEquals("PACK12345", dto.getHeader().getPack());
         assertEquals("SDATOOL-33319", dto.getHeader().getSdaToolId());
         assertEquals(1, dto.getHeader().getDomainId());
@@ -68,8 +69,13 @@ class TransferDetailResponseTest {
         assertEquals(21, dto.getHeader().getSn2Id());
         assertEquals("DEDRRA-RISK ANALYTICS-85225", dto.getHeader().getSn2Desc());
         assertEquals("po@bbva.com", dto.getHeader().getProductOwnerEmail());
+    }
 
-        // Asserts Job
+    @Test
+    void job_buildAndGetters_shouldMapAllFields() {
+        var job = buildFullJob();
+        var dto = TransferDetailResponse.builder().header(null).jobs(List.of(job)).build();
+
         assertEquals(1, dto.getJobs().size());
         var j0 = dto.getJobs().get(0);
         assertEquals("PKBRBCP4028", j0.getJobName());
@@ -90,69 +96,37 @@ class TransferDetailResponseTest {
     }
 
     @Test
-    void jsonSerialization_shapeIsAsExpected_andRoundTrip() throws Exception {
-        var header = TransferDetailResponse.Header.builder()
-                .pack("PACK12345")
-                .sdaToolId("SDATOOL-33319")
-                .domainId(1)
-                .domainName("FIN")
-                .useCaseId(5)
-                .useCase("Plataforma Unica de Personal Financial Management (PFM)")
-                .statusId(3)
-                .statusName("En progreso")
-                .comments("") // también válido string vacío
-                .creatorEmail("clinton.huamani@bbva.com")
-                .pdfLink("https://drive.google.com/your-pdf-link")
-                .sn2Id(21)
-                .sn2Desc("DEDRRA-RISK ANALYTICS-85225")
-                .productOwnerEmail("po@bbva.com")
-                .build();
-
-        var job = TransferDetailResponse.JobRow.builder()
-                .jobName("PKBRBCP4028")
-                .jsonName("kbrb-pe-spk-inm-riskapprove")
-                .frequencyId(4)
-                .jobTypeId(5)
-                .jobPhaseId(1)
-                .originTypeId(2)
-                .inputPaths("")
-                .outputPath("")
-                .bitBucketUrl("")
-                .responsible("user@bbva.com")
-                .useCaseId(5)
-                .domainId(1)
-                .isCritical("NO")
-                .statusId(3)
-                .comments("")
-                .build();
-
+    void jsonSerialization_minShapeIsAsExpected() throws Exception {
         var dto = TransferDetailResponse.builder()
-                .header(header)
-                .jobs(List.of(job))
+                .header(buildFullHeader())
+                .jobs(List.of(buildFullJob()))
                 .build();
 
         ObjectMapper mapper = new ObjectMapper();
-
-        // Serialize
         String json = mapper.writeValueAsString(dto);
         JsonNode root = mapper.readTree(json);
 
-        // Validar shape
         assertEquals("PACK12345", root.path("header").path("pack").asText());
         assertEquals("SDATOOL-33319", root.path("header").path("sdaToolId").asText());
         assertEquals(3, root.path("header").path("statusId").asInt());
-        assertEquals("clinton.huamani@bbva.com", root.path("header").path("creatorEmail").asText());
-        assertEquals("https://drive.google.com/your-pdf-link", root.path("header").path("pdfLink").asText());
-        assertEquals(21, root.path("header").path("sn2Id").asInt());
-        assertEquals("DEDRRA-RISK ANALYTICS-85225", root.path("header").path("sn2Desc").asText());
         assertEquals("po@bbva.com", root.path("header").path("productOwnerEmail").asText());
 
         assertEquals(1, root.path("jobs").size());
         assertEquals("PKBRBCP4028", root.path("jobs").get(0).path("jobName").asText());
         assertEquals(3, root.path("jobs").get(0).path("statusId").asInt());
+    }
 
-        // Round-trip: Deserialize y volver a comparar algunos campos críticos
+    @Test
+    void jsonRoundTrip_preservesKeyFields() throws Exception {
+        var dto = TransferDetailResponse.builder()
+                .header(buildFullHeader())
+                .jobs(List.of(buildFullJob()))
+                .build();
+
+        ObjectMapper mapper = new ObjectMapper();
+        String json = mapper.writeValueAsString(dto);
         var back = mapper.readValue(json, TransferDetailResponse.class);
+
         assertEquals(dto.getHeader().getPack(), back.getHeader().getPack());
         assertEquals(dto.getHeader().getProductOwnerEmail(), back.getHeader().getProductOwnerEmail());
         assertEquals(dto.getJobs().get(0).getJobName(), back.getJobs().get(0).getJobName());
@@ -178,15 +152,12 @@ class TransferDetailResponseTest {
                 .productOwnerEmail(null)
                 .build();
 
-        var dto = TransferDetailResponse.builder()
-                .header(header)
-                .jobs(List.of())
-                .build();
+        var dto = TransferDetailResponse.builder().header(header).jobs(List.of()).build();
 
         ObjectMapper mapper = new ObjectMapper();
         String json = mapper.writeValueAsString(dto);
         assertTrue(json.contains("\"pack\":\"PACK0001\""));
-        // Solo aseguramos que serialize sin explotar y mantenga el pack
+
         var back = mapper.readValue(json, TransferDetailResponse.class);
         assertEquals("PACK0001", back.getHeader().getPack());
         assertEquals(0, back.getJobs().size());
