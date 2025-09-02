@@ -239,23 +239,21 @@ public interface ReliabilityMapper {
     );
 
     @Select("CALL SP_GET_TRANSFER_HEADER(#{pack})")
-        @Results({
-                @Result(property = "pack",              column = "pack"),
-                @Result(property = "sdaToolId",         column = "sdaToolId"),
-                @Result(property = "domainId",          column = "domainId"),
-                @Result(property = "domainName",        column = "domain_name"),
-                @Result(property = "useCaseId",         column = "useCaseId"),
-                @Result(property = "useCase",           column = "use_case"),
-                @Result(property = "statusId",          column = "statusId"),
-                @Result(property = "statusName",        column = "status_name"),
-                @Result(property = "comments",          column = "comments"),
-                @Result(property = "creatorEmail",      column = "creator_email"),
-                @Result(property = "pdfLink",           column = "pdf_link"),
-                @Result(property = "sn2Id",             column = "sn2_id"),
-                @Result(property = "sn2Desc",           column = "sn2_desc"),
-                @Result(property = "productOwnerEmail", column = "product_owner_email")
-        })
-        TransferDetailResponse.Header getTransferHeader(@Param("pack") String pack);
+    @Result(property = "pack",              column = "pack")
+    @Result(property = "sdaToolId",         column = "sdaToolId")
+    @Result(property = "domainId",          column = "domainId")
+    @Result(property = "domainName",        column = "domain_name")
+    @Result(property = "useCaseId",         column = "useCaseId")
+    @Result(property = "useCase",           column = "use_case")
+    @Result(property = "statusId",          column = "statusId")
+    @Result(property = "statusName",        column = "status_name")
+    @Result(property = "comments",          column = "comments")
+    @Result(property = "creatorEmail",      column = "creator_email")
+    @Result(property = "pdfLink",           column = "pdf_link")
+    @Result(property = "sn2Id",             column = "sn2_id")
+    @Result(property = "sn2Desc",           column = "sn2_desc")
+    @Result(property = "productOwnerEmail", column = "product_owner_email")
+    TransferDetailResponse.Header getTransferHeader(@Param("pack") String pack);
 
     @Select("""
         SELECT
