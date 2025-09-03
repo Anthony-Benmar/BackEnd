@@ -10,13 +10,10 @@ import org.w3c.dom.NodeList;
 
 import java.io.File;
 import java.util.*;
-import java.util.logging.Logger;
-import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class XmlJobnameExtractor {
-    private static final Logger LOGGER = Logger.getLogger(XmlJobnameExtractor.class.getName());
     private static final Pattern NAMESPACE_PATTERN = Pattern.compile("pe\\.[^.]+\\.app-id-[^.]+\\.pro");
     public List<String> extractJobnames(String xmlFilePath) throws MallaGenerationException {
         try {
@@ -65,8 +62,7 @@ public class XmlJobnameExtractor {
                     if (value != null && !value.isEmpty()) {
                         Matcher matcher = NAMESPACE_PATTERN.matcher(value);
                         if (matcher.find()) {
-                            String namespace = matcher.group();
-                            return namespace;
+                            return matcher.group();
                         }
                     }
                 }
@@ -110,9 +106,8 @@ public class XmlJobnameExtractor {
 
             String nextNumberFormatted = String.format("%04d", nextNumber);
             String prefix = previousJobname.substring(0, previousJobname.length() - 4);
-            String nextJobname = prefix + nextNumberFormatted;
 
-            return nextJobname;
+            return prefix + nextNumberFormatted;
 
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("No se pudo extraer número de jobname: " + previousJobname);
@@ -133,7 +128,6 @@ public class XmlJobnameExtractor {
             return jobElements.getLength() > 0;
 
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "XML inválido: " + xmlFilePath + " - " + e.getMessage(), e);
             return false;
         }
     }

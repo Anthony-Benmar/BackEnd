@@ -57,9 +57,10 @@ public class MallaGeneratorService {
         }finally {
             try {
                 gitRepositoryService.cleanupCache();
-                LOGGER.info("✅ Archivos temporales limpiados para UUAA: " + request.getUuaaMaster());
             } catch (Exception cleanupError) {
-                LOGGER.log(Level.WARNING, "Error limpiando archivos temporales: " + cleanupError.getMessage(), cleanupError);
+                if (LOGGER.isLoggable(Level.WARNING)) {
+                    LOGGER.log(Level.WARNING, "Error limpiando archivos temporales: " + cleanupError.getMessage(), cleanupError);
+                }
             }
         }
     }

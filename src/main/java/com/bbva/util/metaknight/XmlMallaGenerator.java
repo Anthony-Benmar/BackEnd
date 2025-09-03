@@ -254,7 +254,8 @@ public class XmlMallaGenerator {
     }
 
     private String generarJobHammurabiMaster(MallaRequestDto datos) {
-        String nextJob1, nextJob2;
+        String nextJob1;
+        String nextJob2;
 
         if (datos.getKrbL1tJobname() != null && datos.getHmmL1tJobname() != null) {
             nextJob1 = datos.getKrbL1tJobname();

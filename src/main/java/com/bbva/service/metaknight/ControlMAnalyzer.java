@@ -68,7 +68,6 @@ public class ControlMAnalyzer {
         initializeAnalysis();
     }
     private void initializeAnalysis() throws MallaGenerationException {
-        LOGGER.info("Iniciando análisis Control-M para UUAA: " + uuaaUpper);
 
         analyzeJobnames();
 
@@ -93,7 +92,6 @@ public class ControlMAnalyzer {
                 File uuaaDir = new File(uuaaPath);
 
                 if (!uuaaDir.exists() || !uuaaDir.isDirectory()) {
-                    LOGGER.warning("Directorio no encontrado: " + uuaaPath);
                     continue;
                 }
                 File[] xmlFiles = uuaaDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".xml"));
@@ -124,7 +122,6 @@ public class ControlMAnalyzer {
                 }
 
             } catch (Exception e) {
-                //FALTA EXCEPCIÓN
                 LOGGER.warning("Error procesando directorio " + countryType + ": " + e.getMessage());
             }
         }
@@ -145,7 +142,6 @@ public class ControlMAnalyzer {
             this.jobXml = xmlWithLeastJobs.replace(".xml", "");
             this.parentFolder = this.jobXml;
 
-            LOGGER.info("XML con menos jobnames: " + xmlWithLeastJobs + " (" + xmlArray.get(xmlWithLeastJobs) + " jobs)");
         } else {
             throw MallaGenerationException.configurationError(
                     "No se pudo determinar XML óptimo para UUAA: " + uuaaUpper);
@@ -195,21 +191,5 @@ public class ControlMAnalyzer {
             this.d1 = xmlExtractor.getNextJob(copy);
              this.d2 = xmlExtractor.getNextJob(d1);
         }
-
-        LOGGER.info("Siguientes jobnames calculados:");
-        LOGGER.info("  Transfer: " + transfer);
-        LOGGER.info("  Copy: " + copy);
-        LOGGER.info("  FileWatcher: " + fw);
-        LOGGER.info("  Hammurabi Staging: " + hs);
-        LOGGER.info("  Kirby Raw: " + kbr);
-        LOGGER.info("  Hammurabi Raw: " + hr);
-        LOGGER.info("  Kirby Master: " + kbm);
-        LOGGER.info("  Hammurabi Master: " + hm);
-        if (this.tieneL1TMallas){
-            LOGGER.info("  Kirby L1T: " + krbL1t);
-            LOGGER.info("  Hammurabi L1T: " + hmmL1t);
-        }
-        LOGGER.info("  Delete1: " + d1);
-        LOGGER.info("  Delete2: " + d2);
     }
 }

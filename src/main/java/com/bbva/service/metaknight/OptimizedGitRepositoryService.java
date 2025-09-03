@@ -46,7 +46,6 @@ public class OptimizedGitRepositoryService{
             // Crear directorio temporal si no existe
             if (!Files.exists(tempPath)) {
                 Files.createDirectories(tempPath);
-                LOGGER.info("Directorio temporal creado: " + TEMP_REPO_PATH);
             }
 
             return TEMP_REPO_PATH;
@@ -62,7 +61,6 @@ public class OptimizedGitRepositoryService{
             String repoPath = getRepositoryPath();
             String uuaaPath = repoPath + "/" + countryType + "/" + uuaa.toUpperCase();
 
-            // Verificar que la UUAA existe usando APIs REST -- Se puede mejorar ---############
             if (!directoryExistsInRepo(countryType + "/" + uuaa.toUpperCase())) {
                 throw MallaGenerationException.configurationError(
                         "Directorio UUAA no encontrado: " + uuaaPath);
@@ -93,7 +91,6 @@ public class OptimizedGitRepositoryService{
             return responseCode == 200;
 
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Error verificando directorio: " + directoryPath, e);
             return false;
         }
     }
@@ -101,14 +98,9 @@ public class OptimizedGitRepositoryService{
     private void downloadUuaaXmlFiles(String uuaa, String countryType, String localPath) throws Exception {
         String directoryPath = countryType + "/" + uuaa.toUpperCase();
         List<String> xmlFiles = getXmlFilesFromRepo(directoryPath);
-
-        LOGGER.info("Descargando " + xmlFiles.size() + " archivos XML para UUAA: " + uuaa);
-
         for (String xmlFile : xmlFiles) {
             downloadXmlFile(directoryPath + "/" + xmlFile, localPath + "/" + xmlFile);
         }
-
-        LOGGER.info("Archivos XML descargados exitosamente para UUAA: " + uuaa);
     }
 
     private List<String> getXmlFilesFromRepo(String directoryPath) throws Exception {
@@ -143,8 +135,6 @@ public class OptimizedGitRepositoryService{
         String xmlContent = documentToString(xmlDocument);
 
         writeStringToFile(xmlContent, localFilePath);
-
-        LOGGER.info("Archivo XML FRESCO descargado: " + remoteFilePath + " -> " + localFilePath);
     }
 
     private String documentToString(Document doc) throws Exception {
@@ -207,8 +197,6 @@ public class OptimizedGitRepositoryService{
             if (Files.exists(tempPath)) {
                 deleteDirectoryRecursively(tempPath.toFile());
             }
-            LOGGER.info("Archivos temporales limpiados");
-
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Error limpiando archivos temporales: " + e.getMessage(), e);
         }

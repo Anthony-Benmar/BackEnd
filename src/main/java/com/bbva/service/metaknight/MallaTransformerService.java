@@ -1,212 +1,18 @@
-//package com.bbva.service.metaknight;
-//
-//import com.bbva.core.HandledException;
-//import com.bbva.dto.metaknight.request.MallaRequestDto;
-//
-//import java.util.regex.Matcher;
-//import java.util.regex.Pattern;
-//
-//public class MallaTransformerService {
-//
-//    /**
-//     * Transforma el XML de DATIO a ADA aplicando todas las modificaciones necesarias
-//     */
-//    public String transformarDatioToAda(String xmlDatio, MallaRequestDto mallaData) throws HandledException {
-//        try {
-//            String xmlModificado = xmlDatio;
-//
-//            // 1. Reemplazar DATIO por ADA en APPLICATION
-//            xmlModificado = replaceDatioInApplication(xmlModificado);
-//
-//            // 2. Modificar CMDLINE en jobs de sentry
-//            xmlModificado = replaceCmdlineValueWhenSentryJob(xmlModificado);
-//
-//            // 3. Agregar ._cloud al transferId
-//            xmlModificado = addDotCloudInTransfer(xmlModificado);
-//
-//            // 4. Reemplazar ctmfw con filewatcher.sh
-//            xmlModificado = replaceCtmfwWithDefaultBbvaCountry(xmlModificado);
-//
-//            // 5. Cambiar NODEID y RUN_AS del FileWatcher
-//            xmlModificado = replaceNodeidAndRunasForFilewatcher(xmlModificado);
-//
-//            // 6. Agregar wildcard al path del filewatcher
-//            xmlModificado = addWildcardToFilewatcherPath(xmlModificado);
-//
-//            // 7. Cambiar host de artifactory
-//            xmlModificado = replaceArtifactoryHost(xmlModificado);
-//
-//            // 8. Eliminar jobs de COPY (HDFS)
-//            xmlModificado = removeCopyHdfsJobs(xmlModificado);
-//
-//            // 9. Eliminar job erase2
-//            xmlModificado = removeJobByName(xmlModificado, mallaData.getErase2Jobname());
-//
-//            // 10. Actualizar condiciones de transferencia
-//            xmlModificado = updateTransferJobOutconds(xmlModificado, mallaData);
-//
-//            // 11. Actualizar condiciones de filewatcher
-//            xmlModificado = updateFilewatcherInconds(xmlModificado, mallaData);
-//
-//            // 12. Limpiar job hmm_master
-//            xmlModificado = cleanupHmmMasterJob(xmlModificado, mallaData);
-//
-//            // 13. Actualizar path del filewatcher
-//            xmlModificado = updateFilewatcherCmdlinePath(xmlModificado, mallaData);
-//
-//            return xmlModificado;
-//
-//        } catch (Exception e) {
-//            throw new HandledException("MALLA_TRANSFORM_ERROR",
-//                    "Error transformando XML de DATIO a ADA: " + e.getMessage(), e);
-//        }
-//    }
-//
-//    private String replaceDatioInApplication(String xmlContent) {
-//        Pattern pattern = Pattern.compile("APPLICATION=\"([^\"]*)-DATIO\"");
-//        return pattern.matcher(xmlContent).replaceAll("APPLICATION=\"$1-ADA\"");
-//    }
-//
-//    private String replaceCmdlineValueWhenSentryJob(String xmlContent) {
-//        Pattern jobPattern = Pattern.compile("<JOB.*?>", Pattern.DOTALL);
-//        return jobPattern.matcher(xmlContent).replaceAll(match -> {
-//            String jobTag = match.group();
-//            if (jobTag.contains("RUN_AS=\"sentry\"")) {
-//                return jobTag.replace(
-//                        "CMDLINE=\"/opt/datio/sentry-pe/dataproc_sentry.py",
-//                        "CMDLINE=\"/opt/datio/sentry-pe-aws/dataproc_sentry.py"
-//                );
-//            }
-//            return jobTag;
-//        });
-//    }
-//
-//    private String addDotCloudInTransfer(String xmlContent) {
-//        return xmlContent.replace(
-//                "CMDLINE=\"datax-agent --transferId %%PARM1",
-//                "CMDLINE=\"datax-agent --transferId %%PARM1._cloud"
-//        );
-//    }
-//
-//    private String replaceCtmfwWithDefaultBbvaCountry(String xmlContent) {
-//        return xmlContent.replace(
-//                "CMDLINE=\"ctmfw",
-//                "CMDLINE=\"DEFAULT_BBVA_COUNTRY=pe;/opt/datio/filewatcher-s3/filewatcher.sh"
-//        );
-//    }
-//
-//    private String replaceNodeidAndRunasForFilewatcher(String xmlContent) {
-//        Pattern jobPattern = Pattern.compile("<JOB.*?>", Pattern.DOTALL);
-//        return jobPattern.matcher(xmlContent).replaceAll(match -> {
-//            String jobTag = match.group();
-//            if (jobTag.contains("SUB_APPLICATION=\"CTD-FWATCHER-CCR\"")) {
-//                jobTag = jobTag.replaceAll("NODEID=\"[^\"]*\"", "NODEID=\"PE-SENTRY-00\"");
-//                jobTag = jobTag.replaceAll("RUN_AS=\"[^\"]*\"", "RUN_AS=\"sentry\"");
-//            }
-//            return jobTag;
-//        });
-//    }
-//
-//    private String addWildcardToFilewatcherPath(String xmlContent) {
-//        Pattern jobPattern = Pattern.compile("<JOB.*?</JOB>", Pattern.DOTALL);
-//        return jobPattern.matcher(xmlContent).replaceAll(match -> {
-//            String jobBlock = match.group();
-//            if (jobBlock.contains("SUB_APPLICATION=\"CTD-FWATCHER-CCR\"")) {
-//                Pattern cmdlinePattern = Pattern.compile("(CMDLINE=\"[^\"]*?)(\\.csv|\\.dat)([^\"]*\")");
-//                return cmdlinePattern.matcher(jobBlock).replaceAll("$1$2/*.csv$3");
-//            }
-//            return jobBlock;
-//        });
-//    }
-//
-//    private String replaceArtifactoryHost(String xmlContent) {
-//        return xmlContent.replace(
-//                "artifactory-gdt.central-02.nextgen.igrupobbva",
-//                "artifactory-gdt.central-04.nextgen.igrupobbva"
-//        );
-//    }
-//
-//    private String removeCopyHdfsJobs(String xmlContent) {
-//        Pattern pattern = Pattern.compile("<JOB[^>]*?DESCRIPTION=\"COPY \\(HDFS\\)[^>]*?>.*?</JOB>\\s*",
-//                Pattern.DOTALL);
-//        return pattern.matcher(xmlContent).replaceAll("");
-//    }
-//
-//    private String removeJobByName(String xmlContent, String jobnamePorEliminar) {
-//        String safeJobname = Pattern.quote(jobnamePorEliminar);
-//        Pattern pattern = Pattern.compile("<JOB[^>]*?JOBNAME=\"" + safeJobname + "\"[^>]*?>.*?</JOB>\\s*",
-//                Pattern.DOTALL);
-//        return pattern.matcher(xmlContent).replaceAll("");
-//    }
-//
-//    private String updateTransferJobOutconds(String xmlContent, MallaRequestDto datos) {
-//        Pattern jobPattern = Pattern.compile("<JOB.*?</JOB>", Pattern.DOTALL);
-//        return jobPattern.matcher(xmlContent).replaceAll(match -> {
-//            String jobBlock = match.group();
-//            if (jobBlock.contains("JOBNAME=\"" + datos.getTransferJobname() + "\"")) {
-//                return jobBlock.replace(datos.getCopyJobname(), datos.getFwJobname());
-//            }
-//            return jobBlock;
-//        });
-//    }
-//
-//    private String updateFilewatcherInconds(String xmlContent, MallaRequestDto datos) {
-//        Pattern jobPattern = Pattern.compile("<JOB.*?</JOB>", Pattern.DOTALL);
-//        return jobPattern.matcher(xmlContent).replaceAll(match -> {
-//            String jobBlock = match.group();
-//            if (jobBlock.contains("JOBNAME=\"" + datos.getFwJobname() + "\"")) {
-//                return jobBlock.replace(datos.getCopyJobname(), datos.getTransferJobname());
-//            }
-//            return jobBlock;
-//        });
-//    }
-//
-//    private String cleanupHmmMasterJob(String xmlContent, MallaRequestDto datos) {
-//        String safeJobname = Pattern.quote(datos.getHmmMasterJobname());
-//        Pattern jobPattern = Pattern.compile("(<JOB[^>]*?JOBNAME=\"" + safeJobname + "\"[^>]*?>.*?</JOB>)",
-//                Pattern.DOTALL);
-//
-//        return jobPattern.matcher(xmlContent).replaceAll(match -> {
-//            String jobBlock = match.group(1);
-//
-//            // Eliminar referencias a erase2_jobname
-//            String safeErase2 = Pattern.quote(datos.getErase2Jobname());
-//            Pattern erasePattern = Pattern.compile("^\\s*<(?:OUTCOND|DOFORCEJOB)[^>]*?" + safeErase2 +
-//                    "[^>]*?/>\\s*[\\r\\n]*", Pattern.MULTILINE);
-//            jobBlock = erasePattern.matcher(jobBlock).replaceAll("");
-//
-//            // Eliminar OUTCOND con CF@OK
-//            Pattern cfokPattern = Pattern.compile("^\\s*<OUTCOND[^>]*?NAME=\"[^\"]*CF@OK[^\"]*\"[^>]*?/>\\s*[\\r\\n]*",
-//                    Pattern.MULTILINE);
-//            jobBlock = cfokPattern.matcher(jobBlock).replaceAll("");
-//
-//            return jobBlock;
-//        });
-//    }
-//
-//    private String updateFilewatcherCmdlinePath(String xmlContent, MallaRequestDto datos) {
-//        Pattern jobPattern = Pattern.compile("<JOB.*?</JOB>", Pattern.DOTALL);
-//        return jobPattern.matcher(xmlContent).replaceAll(match -> {
-//            String jobBlock = match.group();
-//            if (jobBlock.contains("SUB_APPLICATION=\"CTD-FWATCHER-CCR\"")) {
-//                String pathToFind = "external/" + datos.getCopyUuaaRaw();
-//                String pathToReplace = "datax/" + datos.getTransferUuaaRaw();
-//                return jobBlock.replace(pathToFind, pathToReplace);
-//            }
-//            return jobBlock;
-//        });
-//    }
-//}
 package com.bbva.service.metaknight;
 
 import com.bbva.core.HandledException;
 import com.bbva.dto.metaknight.request.MallaRequestDto;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.logging.Logger;
 
 public class MallaTransformerService {
+
+    private static final String REGEX_PREFIX_OUTCOND_DOFORCEJOB = "^\\s*<(?:OUTCOND|DOFORCEJOB)[^>]*?";
+    private static final String REGEX_SUFFIX_CLOSE_TAG = "[^>]*?/>\\s*[\\r\\n]*";
+    private static final String REGEX_PREFIX_OUTCOND = "^\\s*<OUTCOND[^>]*?";
+    private static final String REGEX_PREFIX_DOFORCEJOB = "^\\s*<DOFORCEJOB[^>]*?";
+    private static final String REGEX_CFOK_PATTERN = "^\\s*<OUTCOND[^>]*?NAME=\"[^\"]*CF@OK[^\"]*\"[^>]*?/>\\s*[\\r\\n]*";
+
     public String transformarDatioToAda(String xmlDatio, MallaRequestDto mallaData) throws HandledException {
         try {
             String xmlModificado = xmlDatio;
@@ -327,9 +133,7 @@ public class MallaTransformerService {
             String jobTag = matcher.group();
 
             if (jobTag.contains("SUB_APPLICATION=\"CTD-FWATCHER-CCR\"")) {
-                // Reemplazar NODEID
                 jobTag = jobTag.replaceAll("NODEID=\"[^\"]*\"", "NODEID=\"PE-SENTRY-00\"");
-                // Reemplazar RUN_AS
                 jobTag = jobTag.replaceAll("RUN_AS=\"[^\"]*\"", "RUN_AS=\"sentry\"");
             }
 
@@ -454,26 +258,26 @@ public class MallaTransformerService {
             if (datos.getHmmL1tJobname() != null) {
                 if (datos.getErase1Jobname() != null) {
                     String escapedErase1 = escapeRegexCharacters(datos.getErase1Jobname());
-                    Pattern erase1Pattern = Pattern.compile("^\\s*<(?:OUTCOND|DOFORCEJOB)[^>]*?" + escapedErase1 +
-                            "[^>]*?/>\\s*[\\r\\n]*", Pattern.MULTILINE);
+                    Pattern erase1Pattern = Pattern.compile(REGEX_PREFIX_OUTCOND_DOFORCEJOB + escapedErase1 +
+                            REGEX_SUFFIX_CLOSE_TAG, Pattern.MULTILINE);
                     jobBlock = erase1Pattern.matcher(jobBlock).replaceAll("");
                 }
                 if (datos.getErase2Jobname() != null) {
                     String escapedErase2 = escapeRegexCharacters(datos.getErase2Jobname());
-                    Pattern erase2Pattern = Pattern.compile("^\\s*<(?:OUTCOND|DOFORCEJOB)[^>]*?" + escapedErase2 +
-                            "[^>]*?/>\\s*[\\r\\n]*", Pattern.MULTILINE);
+                    Pattern erase2Pattern = Pattern.compile(REGEX_PREFIX_OUTCOND_DOFORCEJOB + escapedErase2 +
+                            REGEX_SUFFIX_CLOSE_TAG, Pattern.MULTILINE);
                     jobBlock = erase2Pattern.matcher(jobBlock).replaceAll("");
                 }
             } else {
                 if (datos.getErase2Jobname() != null) {
                     String escapedErase2 = escapeRegexCharacters(datos.getErase2Jobname());
-                    Pattern erasePattern = Pattern.compile("^\\s*<(?:OUTCOND|DOFORCEJOB)[^>]*?" + escapedErase2 +
-                            "[^>]*?/>\\s*[\\r\\n]*", Pattern.MULTILINE);
+                    Pattern erasePattern = Pattern.compile(REGEX_PREFIX_OUTCOND_DOFORCEJOB + escapedErase2 +
+                            REGEX_SUFFIX_CLOSE_TAG, Pattern.MULTILINE);
                     jobBlock = erasePattern.matcher(jobBlock).replaceAll("");
                 }
             }
 
-            Pattern cfokPattern = Pattern.compile("^\\s*<OUTCOND[^>]*?NAME=\"[^\"]*CF@OK[^\"]*\"[^>]*?/>\\s*[\\r\\n]*",
+            Pattern cfokPattern = Pattern.compile(REGEX_CFOK_PATTERN,
                     Pattern.MULTILINE);
             jobBlock = cfokPattern.matcher(jobBlock).replaceAll("");
 
@@ -499,11 +303,11 @@ public class MallaTransformerService {
             String jobBlock = jobMatcher.group(1);
 
             String escapedErase2 = escapeRegexCharacters(datos.getErase2Jobname());
-            Pattern outcondPattern = Pattern.compile("^\\s*<OUTCOND[^>]*?" + escapedErase2 + "[^>]*?/>\\s*[\\r\\n]*",
+            Pattern outcondPattern = Pattern.compile(REGEX_PREFIX_OUTCOND + escapedErase2 + REGEX_SUFFIX_CLOSE_TAG,
                     Pattern.MULTILINE);
             jobBlock = outcondPattern.matcher(jobBlock).replaceAll("");
 
-            Pattern doforcePattern = Pattern.compile("^\\s*<DOFORCEJOB[^>]*?" + escapedErase2 + "[^>]*?/>\\s*[\\r\\n]*",
+            Pattern doforcePattern = Pattern.compile(REGEX_PREFIX_DOFORCEJOB  + escapedErase2 + REGEX_SUFFIX_CLOSE_TAG,
                     Pattern.MULTILINE);
             jobBlock = doforcePattern.matcher(jobBlock).replaceAll("");
 
