@@ -11,6 +11,7 @@ public class BaseFunctions {
     private static final String NO_RE_DEFINITION_MESSAGE = "No se pudo definir RE para el formato lógico.";
     private static final String NO_RULE_DESCRIPTION_MESSAGE = "No se pudo describir la regla para el formato lógico";
     private static final Set<String> KEYS_REQUIRING_QUOTES = Set.of("columns", "column", "format");
+    private static final String SPACE = "                ";
 
     public String convertToCustomFormat(Map<String, Object> data) {
         StringBuilder result = new StringBuilder("        {\n");
@@ -30,9 +31,9 @@ public class BaseFunctions {
         for (Map.Entry<String, Object> entry : config.entrySet()) {
             String key = entry.getKey();
             Object value = entry.getValue();
-            result.append("                ").append(key).append(" ");
+            result.append(SPACE).append(key).append(" ");
 
-            appendConfigValue(result, key, value, "                ");
+            appendConfigValue(result, key, value, SPACE);
         }
     }
 
@@ -55,7 +56,7 @@ public class BaseFunctions {
         @SuppressWarnings("unchecked")
         Map<String, Object> nestedMap = (Map<String, Object>) value;
 
-        if ("                ".equals(indentation)) {
+        if (SPACE.equals(indentation)) {
             appendNestedConfigEntries(result, nestedMap);
         } else {
             appendDeeplyNestedConfigEntries(result, nestedMap);
@@ -74,7 +75,7 @@ public class BaseFunctions {
         result.append("\n");
     }
 
-    private void appendBooleanValue(StringBuilder result, Boolean boolValue) {
+    private void appendBooleanValue(StringBuilder result, boolean boolValue) {
         result.append("= ").append(boolValue ? BOOLEAN_TRUE : BOOLEAN_FALSE).append("\n");
     }
 
