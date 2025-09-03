@@ -39,7 +39,7 @@ class RulesTest {
         assertEquals(100, config.get("minThreshold"));
         assertEquals(100, config.get("targetThreshold"));
         assertEquals(100, config.get("acceptanceMin"));
-        assertEquals(functionalId, config.get("id"));
+        assertEquals("\"" + functionalId + "\"", config.get("id"));
     }
 
     @Test
@@ -68,7 +68,7 @@ class RulesTest {
 
         @SuppressWarnings("unchecked")
         Map<String, Object> config = (Map<String, Object>) result.get("config");
-        assertNull(config.get("id"));
+        assertEquals("\"null\"", config.get("id"));
     }
 
     @Test
@@ -94,7 +94,7 @@ class RulesTest {
         assertEquals(100, config.get("acceptanceMin"));
         assertEquals(100, config.get("minThreshold"));
         assertEquals(100, config.get("targetThreshold"));
-        assertEquals(functionalId, config.get("id"));
+        assertEquals("\"" + functionalId + "\"", config.get("id"));
     }
 
     @Test
@@ -143,14 +143,14 @@ class RulesTest {
         assertNotNull(config);
         assertEquals(8, config.size());
 
-        assertEquals(Arrays.asList(column), config.get("columns"));
+        assertEquals(column, config.get("column"));
         assertEquals(regularExpression, config.get("format"));
         assertEquals(true, config.get("isCritical"));
         assertEquals(true, config.get("withRefusals"));
         assertEquals(100, config.get("acceptanceMin"));
         assertEquals(100, config.get("minThreshold"));
         assertEquals(100, config.get("targetThreshold"));
-        assertEquals(functionalId, config.get("id"));
+        assertEquals("\"" + functionalId + "\"", config.get("id"));
     }
 
     @Test
@@ -204,7 +204,7 @@ class RulesTest {
         assertEquals(false, config.get("withRefusals"));
         assertEquals(100.0, config.get("minThreshold"));
         assertEquals(100.0, config.get("targetThreshold"));
-        assertEquals("2819d9f1b1", config.get("id"));
+        assertEquals("\"2819d9f1b1\"", config.get("id"));
     }
 
     @Test
@@ -302,7 +302,7 @@ class RulesTest {
 
         @SuppressWarnings("unchecked")
         Map<String, Object> config = (Map<String, Object>) result.get("config");
-        assertEquals(specialId, config.get("id"));
+        assertEquals("\"" + specialId + "\"", config.get("id"));
     }
 
     @Test
@@ -355,14 +355,14 @@ class RulesTest {
         assertEquals(100, config.get("targetThreshold"));
         assertEquals(true, config.get("isCritical"));
         assertEquals(false, config.get("withRefusals"));
-        assertEquals(functionalId, config.get("id"));
+        assertEquals("\"" + functionalId + "\"", config.get("id"));
 
         @SuppressWarnings("unchecked")
         Map<String, Object> dataValues = (Map<String, Object>) config.get("dataValues");
         assertNotNull(dataValues);
         assertEquals(4, dataValues.size());
 
-        assertEquals("fixed", dataValues.get("type"));
+        assertEquals("\"fixed\"", dataValues.get("type"));
         assertEquals(Arrays.asList("\"" + stagingPath + "\""), dataValues.get("paths"));
 
         @SuppressWarnings("unchecked")
@@ -388,7 +388,7 @@ class RulesTest {
 
         @SuppressWarnings("unchecked")
         Map<String, Object> config = (Map<String, Object>) result.get("config");
-        assertNull(config.get("id"));
+        assertEquals("\"null\"", config.get("id"));
 
         @SuppressWarnings("unchecked")
         Map<String, Object> dataValues = (Map<String, Object>) config.get("dataValues");
@@ -418,13 +418,13 @@ class RulesTest {
         assertNotNull(config);
         assertEquals(8, config.size());
 
-        assertEquals(functionalId, config.get("id"));
+        assertEquals("\"" + functionalId + "\"", config.get("id"));
         assertEquals(true, config.get("isCritical"));
         assertEquals(false, config.get("withRefusals"));
         assertEquals(100.0, config.get("minThreshold"));
         assertEquals(100.0, config.get("targetThreshold"));
         assertEquals(100.0, config.get("acceptanceMin"));
-        assertEquals(subset, config.get("dataValuesSubset"));
+        assertEquals("\"" + subset + "\"", config.get("dataValuesSubset"));
 
         // Validar dataValues
         @SuppressWarnings("unchecked")
@@ -434,7 +434,7 @@ class RulesTest {
 
         assertEquals(false, dataValues.get("applyConversions"));
         assertEquals("notPermissive", dataValues.get("castMode"));
-        assertEquals("avro", dataValues.get("type"));
+        assertEquals("\"avro\"", dataValues.get("type"));
         assertEquals(Arrays.asList("\"" + rawPath + "\""), dataValues.get("paths"));
 
         @SuppressWarnings("unchecked")
@@ -459,7 +459,7 @@ class RulesTest {
 
         @SuppressWarnings("unchecked")
         Map<String, Object> config = (Map<String, Object>) result.get("config");
-        assertEquals("", config.get("dataValuesSubset"));
+        assertEquals("\"\"", config.get("dataValuesSubset"));
     }
 
     @Test
@@ -482,13 +482,13 @@ class RulesTest {
         assertNotNull(config);
         assertEquals(8, config.size());
 
-        assertEquals(functionalId, config.get("id"));
+        assertEquals("\"" + functionalId + "\"", config.get("id"));
         assertEquals(true, config.get("isCritical"));
         assertEquals(false, config.get("withRefusals"));
         assertEquals(100.0, config.get("minThreshold"));
         assertEquals(100.0, config.get("targetThreshold"));
         assertEquals(100.0, config.get("acceptanceMin"));
-        assertEquals(subset, config.get("dataValuesSubset"));
+        assertEquals("\"" + subset + "\"", config.get("dataValuesSubset"));
 
         // Validar dataValues
         @SuppressWarnings("unchecked")
@@ -496,7 +496,7 @@ class RulesTest {
         assertNotNull(dataValues);
         assertEquals(4, dataValues.size());
 
-        assertEquals("parquet", dataValues.get("type"));
+        assertEquals("\"parquet\"", dataValues.get("type"));
         assertEquals(Arrays.asList("\"" + masterPath + "\""), dataValues.get("paths"));
 
         @SuppressWarnings("unchecked")
@@ -507,8 +507,8 @@ class RulesTest {
 
         @SuppressWarnings("unchecked")
         Map<String, Object> options = (Map<String, Object>) dataValues.get("options");
-        assertEquals(true, options.get("includeMetadataAndDeleted"));
-        assertEquals(true, options.get("overrideSchema"));
+        assertEquals("\"true\"", options.get("includeMetadataAndDeleted"));
+        assertEquals("\"true\"", options.get("overrideSchema"));
     }
 
     @Test
@@ -525,8 +525,8 @@ class RulesTest {
 
         @SuppressWarnings("unchecked")
         Map<String, Object> config = (Map<String, Object>) result.get("config");
-        assertNull(config.get("id"));
-        assertNull(config.get("dataValuesSubset"));
+        assertEquals("\"null\"", config.get("id"));
+        assertEquals("\"null\"", config.get("dataValuesSubset"));
 
         @SuppressWarnings("unchecked")
         Map<String, Object> dataValues = (Map<String, Object>) config.get("dataValues");

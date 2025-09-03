@@ -24,14 +24,14 @@ class BaseFunctionsTest {
 
         assertNotNull(result);
         assertTrue(result.contains("class = \"com.datio.hammurabi.rules.validity.NotNullValidationRule\""));
-        assertTrue(result.contains("config = {"));
+        assertTrue(result.contains("config {"));
         assertTrue(result.contains("column = \"test_column\""));
         assertTrue(result.contains("isCritical = true"));
         assertTrue(result.contains("minThreshold = 100"));
         assertTrue(result.contains("targetThreshold = 100"));
         assertTrue(result.contains("acceptanceMin = 100"));
-        assertTrue(result.contains("id = \"test123\""));
-        assertTrue(result.startsWith("{"));
+        assertTrue(result.contains("id = test123"));
+        assertTrue(result.startsWith("        {"));
         assertTrue(result.endsWith("}"));
     }
 
@@ -88,8 +88,8 @@ class BaseFunctionsTest {
 
         assertNotNull(result);
         assertTrue(result.contains("format = \"^[A-Z]{3}$\""));
-        assertTrue(result.contains("description = \"Test description\""));
-        assertTrue(result.contains("id = \"test_id_123\""));
+        assertTrue(result.contains("description = Test description"));
+        assertTrue(result.contains("id = test_id_123"));
     }
 
     @Test
@@ -311,8 +311,8 @@ class BaseFunctionsTest {
 
         assertNotNull(result);
         assertTrue(result.contains("class = \"test.class\""));
-        assertTrue(result.contains("config = {"));
-        assertTrue(result.endsWith("}\n}"));
+        assertTrue(result.contains("config {"));
+        assertTrue(result.endsWith("        }"));
     }
 
     @Test
@@ -344,7 +344,7 @@ class BaseFunctionsTest {
 
         assertNotNull(result);
         assertTrue(result.contains("format = \"^[A-Z]{3}\\$[0-9]+$\""));
-        assertTrue(result.contains("description = \"Test with \"quotes\" and $pecial chars\""));
+        assertTrue(result.contains("description = Test with \"quotes\" and $pecial chars"));
     }
 
     @Test
