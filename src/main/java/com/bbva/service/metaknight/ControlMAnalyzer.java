@@ -2,6 +2,8 @@ package com.bbva.service.metaknight;
 
 import com.bbva.core.exception.MallaGenerationException;
 import com.bbva.util.metaknight.XmlJobnameExtractor;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.io.File;
 import java.util.*;
@@ -9,21 +11,21 @@ import java.util.logging.Logger;
 
 // Analiza XMLs existentes para calcular siguiente jobnames disponibles - clase controlM en el cod que pasaron
 
+@Getter
+@Setter
 public class ControlMAnalyzer {
 
     private static final Logger LOGGER = Logger.getLogger(ControlMAnalyzer.class.getName());
 
     // Mapeo de frecuencias como en Python
     private static final Map<String, String> FREQUENCY_MAP = Map.of(
-            "daily", "DIA",
-            "monthly", "MEN",
-            "weekly", "SEM"
+            "Daily", "DIA",
+            "Monthly", "MEN",
+            "Weekly", "SEM"
     );
 
     // Tipos de jobs que buscamos
     private static final String[] JOB_TYPES = {"CP", "VP", "TP", "DP", "WP"};
-
-    //private final GitRepositoryService gitService;
     private final OptimizedGitRepositoryService gitService;
     private final XmlJobnameExtractor xmlExtractor;
 
@@ -57,7 +59,12 @@ public class ControlMAnalyzer {
     private String d1;
     private String d2;
 
-    public ControlMAnalyzer(String uuaa, String frequency, OptimizedGitRepositoryService gitService)
+    //Para L1T
+    private boolean tieneL1TMallas;
+    private String krbL1t; //se queda, solo para l1t
+    private String hmmL1t; //se queda, solo para l1t
+
+    public ControlMAnalyzer(String uuaa, String frequency, OptimizedGitRepositoryService gitService, boolean tieneL1TMallas)
             throws MallaGenerationException {
 
         this.gitService = gitService;
@@ -65,6 +72,7 @@ public class ControlMAnalyzer {
         this.uuaa = uuaa.toLowerCase();
         this.uuaaUpper = uuaa.toUpperCase();
         this.frequency = frequency;
+        this.tieneL1TMallas = tieneL1TMallas;
 
         // Ejecutar análisis inicial
         initializeAnalysis();
@@ -217,8 +225,18 @@ public class ControlMAnalyzer {
         this.hr = xmlExtractor.getNextJob(hs);
         this.kbm = xmlExtractor.getNextJob(kbr);
         this.hm = xmlExtractor.getNextJob(hr);
-        this.d1 = xmlExtractor.getNextJob(copy);
-        this.d2 = xmlExtractor.getNextJob(d1);
+
+        //CONDICIONAL PARA L1T
+        if (this.tieneL1TMallas){
+            //L1T
+            this.krbL1t = xmlExtractor.getNextJob(kbm);
+            this.hmmL1t = xmlExtractor.getNextJob(krbL1t);
+            this.d1 = xmlExtractor.getNextJob(hmmL1t);
+            this.d2 = xmlExtractor.getNextJob(d1);
+        }else{
+            this.d1 = xmlExtractor.getNextJob(copy);
+             this.d2 = xmlExtractor.getNextJob(d1);
+        }
 
         LOGGER.info("Siguientes jobnames calculados:");
         LOGGER.info("  Transfer: " + transfer);
@@ -229,41 +247,14 @@ public class ControlMAnalyzer {
         LOGGER.info("  Hammurabi Raw: " + hr);
         LOGGER.info("  Kirby Master: " + kbm);
         LOGGER.info("  Hammurabi Master: " + hm);
+        // L1t
+        if (this.tieneL1TMallas){
+            LOGGER.info("  Kirby L1T: " + krbL1t);
+            LOGGER.info("  Hammurabi L1T: " + hmmL1t);
+        }
         LOGGER.info("  Delete1: " + d1);
         LOGGER.info("  Delete2: " + d2);
     }
-
-    // Getters para todos los datos calculados
-
-    public String getUuaa() { return uuaa; }
-    public String getUuaaUpper() { return uuaaUpper; }
-    public String getFrequency() { return frequency; }
-    public List<String> getTotalJobnames() { return totalJobnames; }
-    public Map<String, Integer> getXmlArray() { return xmlArray; }
-    public List<String> getTotalFolderJobnames() { return totalFolderJobnames; }
-    public String getNamespace() { return namespace; }
-    public String getJobXml() { return jobXml; }
-    public String getParentFolder() { return parentFolder; }
-
-    // Últimos jobnames
-    public String getLastCp() { return lastCp; }
-    public String getLastVp() { return lastVp; }
-    public String getLastTp() { return lastTp; }
-    public String getLastDp() { return lastDp; }
-    public String getLastWp() { return lastWp; }
-
-    // Siguientes jobnames disponibles
-    public String getTransfer() { return transfer; }
-    public String getCopy() { return copy; }
-    public String getFw() { return fw; }
-    public String getHs() { return hs; }
-    public String getKbr() { return kbr; }
-    public String getHr() { return hr; }
-    public String getKbm() { return kbm; }
-    public String getHm() { return hm; }
-    public String getD1() { return d1; }
-    public String getD2() { return d2; }
-
 
     // Obtiene un resumen del análisis realizado
 
@@ -287,6 +278,12 @@ public class ControlMAnalyzer {
         nextJobnames.put("hammurabiRaw", hr);
         nextJobnames.put("kirbyMaster", kbm);
         nextJobnames.put("hammurabiMaster", hm);
+
+        // L1T
+        if (this.tieneL1TMallas){
+            nextJobnames.put("kirbyL1t", krbL1t);
+            nextJobnames.put("hammurabiL1t", hmmL1t);
+        }
         nextJobnames.put("delete1", d1);
         nextJobnames.put("delete2", d2);
         summary.put("nextJobnames", nextJobnames);

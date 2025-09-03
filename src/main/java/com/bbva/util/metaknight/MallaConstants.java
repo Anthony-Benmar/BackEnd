@@ -28,6 +28,11 @@ public final class MallaConstants {
     public static final String KRB_MASTER_ID_PATTERN = "%s-pe-krb-inm-%sp-01";
     public static final String HMM_MASTER_ID_PATTERN = "%s-pe-hmm-qlt-%sm-01";
 
+    // Patrones de IDs de jobs L1T ################
+    public static final String KRB_L1T_ID_PATTERN = "%s-pe-krb-inm-%sl1tp-01";  //SE QUEDA
+    public static final String HMM_L1T_ID_PATTERN = "%s-pe-hmm-qlt-%sl1tm-01";  // SE QUEDA
+
+
     // Validaciones
     public static final class Validation {
         public static final int MIN_JOBNAME_LENGTH = 8;

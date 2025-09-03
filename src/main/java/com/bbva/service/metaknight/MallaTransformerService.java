@@ -253,6 +253,17 @@ public class MallaTransformerService {
             xmlModificado = removeJobByName(xmlModificado, mallaData.getErase2Jobname());
             LOGGER.fine("✅ Paso 9 completado: erase2 job eliminado");
 
+            // ✅ NUEVO: 9.1 Actualizar dependencias de ERASE1 para L1T
+            xmlModificado = updateErase1DependenciesForL1T(xmlModificado, mallaData);
+            LOGGER.fine("✅ Paso 9.1 completado: dependencias ERASE1 actualizadas para L1T");
+
+            if (mallaData.getHmmL1tJobname() != null) {
+                // 9.2. Limpiar referencias de Hammurabi L1T a ERASE2
+                xmlModificado = cleanupHmmL1tJobReferences(xmlModificado, mallaData);
+                LOGGER.fine("✅ Paso 9.2 completado: referencias L1T a ERASE2 eliminadas");
+            }
+
+
             // 10. Actualizar condiciones de transferencia
             xmlModificado = updateTransferJobOutconds(xmlModificado, mallaData);
             LOGGER.fine("✅ Paso 10 completado: condiciones transferencia actualizadas");
@@ -269,6 +280,10 @@ public class MallaTransformerService {
             xmlModificado = updateFilewatcherCmdlinePath(xmlModificado, mallaData);
             LOGGER.fine("✅ Paso 13 completado: path filewatcher actualizado");
 
+            //14. Actualizar correo ADA
+            xmlModificado = addAdaEmailToAllJobs(xmlModificado);
+            LOGGER.fine("✅ Paso 14 completado: email ADA agregado");
+
             LOGGER.info("Transformación DATIO -> ADA completada exitosamente");
             return xmlModificado;
 
@@ -278,6 +293,29 @@ public class MallaTransformerService {
                     "Error transformando XML de DATIO a ADA: " + e.getMessage(), e);
         }
     }
+
+    private String addAdaEmailToAllJobs(String xmlContent) {
+        Pattern pattern = Pattern.compile("(<DOMAIL[^>]*DEST=\")([^\"]*)(\"[^>]*>)");
+        Matcher matcher = pattern.matcher(xmlContent);
+        StringBuilder result = new StringBuilder();
+
+        while (matcher.find()) {
+            String prefix = matcher.group(1);
+            String currentEmail = matcher.group(2);
+            String suffix = matcher.group(3);
+
+            if (!currentEmail.contains("ada_dhm_pe.group@bbva.com")) {
+                String newEmail = currentEmail + ";ada_dhm_pe.group@bbva.com";
+                matcher.appendReplacement(result, Matcher.quoteReplacement(prefix + newEmail + suffix));
+            } else {
+                matcher.appendReplacement(result, Matcher.quoteReplacement(matcher.group(0)));
+            }
+        }
+
+        matcher.appendTail(result);
+        return result.toString();
+    }
+
     // replace_datio_in_application()
     private String replaceDatioInApplication(String xmlContent) {
         Pattern pattern = Pattern.compile("APPLICATION=\"([^\"]*)-DATIO\"");
@@ -461,8 +499,8 @@ public class MallaTransformerService {
         return result.toString();
     }
 
-    //cleanup_hmm_master_job()
-    private String cleanupHmmMasterJob(String xmlContent, MallaRequestDto datos) {
+    //cleanup_hmm_master_job() -- //ORIGINAL
+    private String cleanupHmmMasterJobOriginal(String xmlContent, MallaRequestDto datos) {
         if (datos.getHmmMasterJobname() == null || datos.getErase2Jobname() == null) {
             return xmlContent;
         }
@@ -487,6 +525,100 @@ public class MallaTransformerService {
             Pattern cfokPattern = Pattern.compile("^\\s*<OUTCOND[^>]*?NAME=\"[^\"]*CF@OK[^\"]*\"[^>]*?/>\\s*[\\r\\n]*",
                     Pattern.MULTILINE);
             jobBlock = cfokPattern.matcher(jobBlock).replaceAll("");
+
+            jobMatcher.appendReplacement(result, Matcher.quoteReplacement(jobBlock));
+        }
+        jobMatcher.appendTail(result);
+        return result.toString();
+    }
+
+//    private String cleanupHmmMasterJob(String xmlContent, MallaRequestDto datos) {
+//        if (datos.getHmmMasterJobname() == null) {
+//            return xmlContent;
+//        }
+//
+//        String escapedJobname = escapeRegexCharacters(datos.getHmmMasterJobname());
+//        Pattern jobPattern = Pattern.compile("(<JOB[^>]*?JOBNAME=\"" + escapedJobname + "\"[^>]*?>.*?</JOB>)",
+//                Pattern.DOTALL);
+//
+//        Matcher jobMatcher = jobPattern.matcher(xmlContent);
+//        StringBuilder result = new StringBuilder();
+//
+//        while (jobMatcher.find()) {
+//            String jobBlock = jobMatcher.group(1);
+//
+//            // 1. Eliminar referencias a erase2_jobname (si existen)
+//            if (datos.getErase2Jobname() != null) {
+//                String escapedErase2 = escapeRegexCharacters(datos.getErase2Jobname());
+//                Pattern erasePattern = Pattern.compile("^\\s*<(?:OUTCOND|DOFORCEJOB)[^>]*?" + escapedErase2 +
+//                        "[^>]*?/>\\s*[\\r\\n]*", Pattern.MULTILINE);
+//                jobBlock = erasePattern.matcher(jobBlock).replaceAll("");
+//            }
+//
+//            // 2. Eliminar OUTCOND con CF@OK
+//            Pattern cfokPattern = Pattern.compile("^\\s*<OUTCOND[^>]*?NAME=\"[^\"]*CF@OK[^\"]*\"[^>]*?/>\\s*[\\r\\n]*",
+//                    Pattern.MULTILINE);
+//            jobBlock = cfokPattern.matcher(jobBlock).replaceAll("");
+//
+//            jobMatcher.appendReplacement(result, Matcher.quoteReplacement(jobBlock));
+//        }
+//        jobMatcher.appendTail(result);
+//        return result.toString();
+//    }
+
+    private String cleanupHmmMasterJob(String xmlContent, MallaRequestDto datos) {
+        if (datos.getHmmMasterJobname() == null) {
+            return xmlContent;
+        }
+
+        String escapedJobname = escapeRegexCharacters(datos.getHmmMasterJobname());
+        Pattern jobPattern = Pattern.compile("(<JOB[^>]*?JOBNAME=\"" + escapedJobname + "\"[^>]*?>.*?</JOB>)",
+                Pattern.DOTALL);
+
+        Matcher jobMatcher = jobPattern.matcher(xmlContent);
+        StringBuilder result = new StringBuilder();
+
+        while (jobMatcher.find()) {
+            String jobBlock = jobMatcher.group(1);
+
+            // Solo eliminar OUTCOND con CF@OK (mantener dependencias ERASE intactas)
+            Pattern cfokPattern = Pattern.compile("^\\s*<OUTCOND[^>]*?NAME=\"[^\"]*CF@OK[^\"]*\"[^>]*?/>\\s*[\\r\\n]*",
+                    Pattern.MULTILINE);
+            jobBlock = cfokPattern.matcher(jobBlock).replaceAll("");
+
+            jobMatcher.appendReplacement(result, Matcher.quoteReplacement(jobBlock));
+        }
+        jobMatcher.appendTail(result);
+        return result.toString();
+    }
+
+    private String cleanupHmmL1tJobReferences(String xmlContent, MallaRequestDto datos) {
+        //private String cleanupL1TJobReferences(String xmlContent, MallaRequestDto datos) {
+        // Solo ejecutar si hay L1T y ERASE2 definido
+        if (datos.getHmmL1tJobname() == null || datos.getErase2Jobname() == null) {
+            return xmlContent;
+        }
+
+        String escapedL1TJobname = escapeRegexCharacters(datos.getHmmL1tJobname());
+        Pattern jobPattern = Pattern.compile("(<JOB[^>]*?JOBNAME=\"" + escapedL1TJobname + "\"[^>]*?>.*?</JOB>)",
+                Pattern.DOTALL);
+
+        Matcher jobMatcher = jobPattern.matcher(xmlContent);
+        StringBuilder result = new StringBuilder();
+
+        while (jobMatcher.find()) {
+            String jobBlock = jobMatcher.group(1);
+
+            // Eliminar OUTCOND que referencian ERASE2
+            String escapedErase2 = escapeRegexCharacters(datos.getErase2Jobname());
+            Pattern outcondPattern = Pattern.compile("^\\s*<OUTCOND[^>]*?" + escapedErase2 + "[^>]*?/>\\s*[\\r\\n]*",
+                    Pattern.MULTILINE);
+            jobBlock = outcondPattern.matcher(jobBlock).replaceAll("");
+
+            // Eliminar DOFORCEJOB que referencian ERASE2
+            Pattern doforcePattern = Pattern.compile("^\\s*<DOFORCEJOB[^>]*?" + escapedErase2 + "[^>]*?/>\\s*[\\r\\n]*",
+                    Pattern.MULTILINE);
+            jobBlock = doforcePattern.matcher(jobBlock).replaceAll("");
 
             jobMatcher.appendReplacement(result, Matcher.quoteReplacement(jobBlock));
         }
@@ -537,5 +669,51 @@ public class MallaTransformerService {
                 .replace("(", "\\(")
                 .replace(")", "\\)")
                 .replace("|", "\\|");
+    }
+
+    //Relacionado al L1T
+    private String updateErase1DependenciesForL1TV1(String xmlContent, MallaRequestDto datos) {
+        if (datos.getErase1Jobname() == null || datos.getErase2Jobname() == null ||
+                datos.getHmmMasterJobname() == null || datos.getHmmL1tJobname() == null) {
+            return xmlContent;
+        }
+
+        // Actualizar AMBOS jobs ERASE para que dependan de HMM L1T en lugar de HMM Master
+        String xmlModificado = xmlContent;
+
+        // 1. Actualizar ERASE1
+        String oldErase1Pattern = datos.getHmmMasterJobname() + "-TO-" + datos.getErase1Jobname();
+        String newErase1Pattern = datos.getHmmL1tJobname() + "-TO-" + datos.getErase1Jobname();
+        xmlModificado = xmlModificado.replace(oldErase1Pattern, newErase1Pattern);
+
+        // 2. Actualizar ERASE2
+        String oldErase2Pattern = datos.getHmmMasterJobname() + "-TO-" + datos.getErase2Jobname();
+        String newErase2Pattern = datos.getHmmL1tJobname() + "-TO-" + datos.getErase2Jobname();
+        xmlModificado = xmlModificado.replace(oldErase2Pattern, newErase2Pattern);
+
+        return xmlModificado;
+    }
+    private String updateErase1DependenciesForL1T(String xmlContent, MallaRequestDto datos) {
+        // ✅ Solo actualizar si HAY L1T
+        if (datos.getHmmL1tJobname() == null || datos.getKrbL1tJobname() == null) {
+            return xmlContent; // Sin L1T, no hay nada que actualizar
+        }
+
+        if (datos.getErase1Jobname() == null || datos.getHmmMasterJobname() == null) {
+            return xmlContent;
+        }
+
+        String xmlModificado = xmlContent;
+
+        // Solo actualizar ERASE1 (ERASE2 se elimina automáticamente en ADA)
+        String oldErase1Pattern = datos.getHmmMasterJobname() + "-TO-" + datos.getErase1Jobname();
+        String newErase1Pattern = datos.getHmmL1tJobname() + "-TO-" + datos.getErase1Jobname();
+        xmlModificado = xmlModificado.replace(oldErase1Pattern, newErase1Pattern);
+
+        // ✅ NO actualizar ERASE2 porque:
+        // - En DATIO: queda con dependencia de HMM Master (se ejecutará en paralelo con ERASE1)
+        // - En ADA: se elimina automáticamente por removeJobByName()
+
+        return xmlModificado;
     }
 }

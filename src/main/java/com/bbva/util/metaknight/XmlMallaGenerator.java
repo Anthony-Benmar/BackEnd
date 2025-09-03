@@ -336,6 +336,13 @@ public class XmlMallaGenerator {
             String jobHammurabiRaw = generarJobHammurabiRaw(datos);
             String jobKirbyMaster = generarJobKirbyMaster(datos);
             String jobHammurabiMaster = generarJobHammurabiMaster(datos);
+
+            //Agregar Condicional
+
+            // NUEVOS: Jobs L1T
+//            String jobKirbyL1t = generarJobKirbyL1T(datos);
+//            String jobHammurabiL1t = generarJobHammurabiL1T(datos);
+
             String jobErase1 = generarJobErase1(datos);
             String jobErase2 = generarJobErase2(datos);
 
@@ -349,6 +356,16 @@ public class XmlMallaGenerator {
             xmlOutput.append(jobHammurabiRaw).append("\n");
             xmlOutput.append(jobKirbyMaster).append("\n");
             xmlOutput.append(jobHammurabiMaster).append("\n");
+
+            // INSERTAR L1T después del Hammurabi Master
+            if (datos.getKrbL1tJobname() != null && datos.getHmmL1tJobname() != null) {
+                String jobKirbyL1t = generarJobKirbyL1T(datos);
+                String jobHammurabiL1t = generarJobHammurabiL1T(datos);
+
+                xmlOutput.append(jobKirbyL1t).append("\n");
+                xmlOutput.append(jobHammurabiL1t).append("\n");
+            }
+
             xmlOutput.append(jobErase1).append("\n");
             xmlOutput.append(jobErase2);
 
@@ -371,7 +388,7 @@ public class XmlMallaGenerator {
                         <DOFORCEJOB TABLE_NAME="%s" NAME="%s" ODATE="ODAT" REMOTE="N" />
                     </ON>
                     <ON STMT="*" CODE="NOTOK">
-                        <DOMAIL URGENCY="R" DEST="%s;ada_dhm_pe.group@bbva.com" SUBJECT="Cancelado %s -  - %%$ODATE" MESSAGE="0038Job execution error, process canceled." ATTACH_SYSOUT="Y" />
+                        <DOMAIL URGENCY="R" DEST="%s" SUBJECT="Cancelado %s -  - %%$ODATE" MESSAGE="0038Job execution error, process canceled." ATTACH_SYSOUT="Y" />
                     </ON>
             </JOB>""",
                 datos.getTransferJobname(), datos.getTransferSourceName(), datos.getCreationUser(),
@@ -403,7 +420,7 @@ public class XmlMallaGenerator {
                         <DOFORCEJOB TABLE_NAME="%s" NAME="%s" ODATE="ODAT" REMOTE="N" />
                     </ON>
                     <ON STMT="*" CODE="NOTOK">
-                        <DOMAIL URGENCY="R" DEST="%s;ada_dhm_pe.group@bbva.com" SUBJECT="Cancelado %s - %s-pe-dfs-rmv-hdfs-01 - %%$ODATE" MESSAGE="0038Job execution error, process canceled." ATTACH_SYSOUT="Y" />
+                        <DOMAIL URGENCY="R" DEST="%s" SUBJECT="Cancelado %s - %s-pe-dfs-rmv-hdfs-01 - %%$ODATE" MESSAGE="0038Job execution error, process canceled." ATTACH_SYSOUT="Y" />
                     </ON>
             </JOB>""",
                 datos.getCopyJobname(), datos.getTransferSourceName(), datos.getCreationUser(),
@@ -425,14 +442,14 @@ public class XmlMallaGenerator {
                     <OUTCOND NAME="%s-TO-%s" ODATE="ODAT" SIGN="-" />
                     <OUTCOND NAME="%s-TO-%s" ODATE="ODAT" SIGN="+" />
                     <ON STMT="*" CODE="COMPSTAT EQ 7">
-                        <DOMAIL URGENCY="R"  DEST="%s;ada_dhm_pe.group@bbva.com" SUBJECT="Sin insumo FileWatcher %%JOBNAME - %%$ODATE" MESSAGE="0116No se encontro el archivo /in/staging/datax/%s/%s_%%PARM1..csv o no supera el peso minimo &gt;0b." ATTACH_SYSOUT="D" />
+                        <DOMAIL URGENCY="R"  DEST="%s" SUBJECT="Sin insumo FileWatcher %%JOBNAME - %%$ODATE" MESSAGE="0116No se encontro el archivo /in/staging/datax/%s/%s_%%PARM1..csv o no supera el peso minimo &gt;0b." ATTACH_SYSOUT="D" />
                         <DOACTION ACTION="OK" />
                     </ON>
                     <ON STMT="*" CODE="COMPSTAT EQ 0">
                         <DOFORCEJOB TABLE_NAME="%s" NAME="%s" ODATE="ODAT" REMOTE="N" />
                     </ON>
                     <ON STMT="*" CODE="NOTOK">
-                        <DOMAIL URGENCY="R"  DEST="%s;ada_dhm_pe.group@bbva.com" SUBJECT="Cancelado %%JOBNAME - %%PARM1" ATTACH_SYSOUT="D" />
+                        <DOMAIL URGENCY="R"  DEST="%s" SUBJECT="Cancelado %%JOBNAME - %%PARM1" ATTACH_SYSOUT="D" />
                     </ON>
             </JOB>""",
                 datos.getCopyUuaaRaw(), datos.getTransferSourceName(), datos.getCreateNums(),
@@ -463,7 +480,7 @@ public class XmlMallaGenerator {
                         <DOFORCEJOB TABLE_NAME="%s" NAME="%s" ODATE="ODAT" REMOTE="N" />
                     </ON>
                     <ON STMT="*" CODE="NOTOK">
-                        <DOMAIL URGENCY="R" DEST="%s;ada_dhm_pe.group@bbva.com" SUBJECT="Cancelado %s - %s - %%$ODATE" MESSAGE="0038Job execution error, process canceled." ATTACH_SYSOUT="Y" />
+                        <DOMAIL URGENCY="R" DEST="%s" SUBJECT="Cancelado %s - %s - %%$ODATE" MESSAGE="0038Job execution error, process canceled." ATTACH_SYSOUT="Y" />
                     </ON>
             </JOB>""",
                 datos.getHmmStgJobname(), datos.getTransferSourceName(), datos.getCreationUser(),
@@ -492,7 +509,7 @@ public class XmlMallaGenerator {
                         <DOFORCEJOB TABLE_NAME="%s" NAME="%s" ODATE="ODAT" REMOTE="N" />
                     </ON>
                     <ON STMT="*" CODE="NOTOK">
-                        <DOMAIL URGENCY="R" DEST="%s;ada_dhm_pe.group@bbva.com" SUBJECT="Cancelado %s - %s - %%$ODATE" MESSAGE="0038Job execution error, process canceled." ATTACH_SYSOUT="Y" />
+                        <DOMAIL URGENCY="R" DEST="%s" SUBJECT="Cancelado %s - %s - %%$ODATE" MESSAGE="0038Job execution error, process canceled." ATTACH_SYSOUT="Y" />
                     </ON>
             </JOB>""",
                 datos.getKrbRawJobname(), datos.getRawSourceName(), datos.getCreationUser(),
@@ -522,7 +539,7 @@ public class XmlMallaGenerator {
                         <DOFORCEJOB TABLE_NAME="%s" NAME="%s" ODATE="ODAT" REMOTE="N" />
                     </ON>
                     <ON STMT="*" CODE="NOTOK">
-                        <DOMAIL URGENCY="R" DEST="%s;ada_dhm_pe.group@bbva.com" SUBJECT="Cancelado %s - %s - %%$ODATE" MESSAGE="0038Job execution error, process canceled." ATTACH_SYSOUT="Y" />
+                        <DOMAIL URGENCY="R" DEST="%s" SUBJECT="Cancelado %s - %s - %%$ODATE" MESSAGE="0038Job execution error, process canceled." ATTACH_SYSOUT="Y" />
                     </ON>
             </JOB>""",
                 datos.getHmmRawJobname(), datos.getRawSourceName(), datos.getCreationUser(),
@@ -551,7 +568,7 @@ public class XmlMallaGenerator {
                         <DOFORCEJOB TABLE_NAME="%s" NAME="%s" ODATE="ODAT" REMOTE="N" />
                     </ON>
                     <ON STMT="*" CODE="NOTOK">
-                        <DOMAIL URGENCY="R" DEST="%s;ada_dhm_pe.group@bbva.com" SUBJECT="Cancelado %s - %s - %%$ODATE" MESSAGE="0038Job execution error, process canceled." ATTACH_SYSOUT="Y" />
+                        <DOMAIL URGENCY="R" DEST="%s" SUBJECT="Cancelado %s - %s - %%$ODATE" MESSAGE="0038Job execution error, process canceled." ATTACH_SYSOUT="Y" />
                     </ON>
             </JOB>""",
                 datos.getKrbMasterJobname(), datos.getMasterSourceName(), datos.getCreationUser(),
@@ -564,8 +581,92 @@ public class XmlMallaGenerator {
         );
     }
 
-    private String generarJobHammurabiMaster(MallaRequestDto datos) {
+    private String generarJobHammurabiMasterORIGINAL(MallaRequestDto datos) { //Restabelcer si es necesario
         return String.format("""
+            <JOB JOBISN="0" APPLICATION="CTD-PE-DATIO" SUB_APPLICATION="CTD-HAMMURABI-CCR" CMDLINE="/opt/datio/sentry-pe/dataproc_sentry.py %%SENTRY_JOB %%SENTRY_OPT &apos;%%SENTRY_PARM&apos;" JOBNAME="%s" DESCRIPTION="HAMMURABI - MASTER - %s" CREATED_BY="%s" RUN_AS="sentry" CRITICAL="0" TASKTYPE="Command" CYCLIC="0" NODEID="PE-SENTRY-00" INTERVAL="00001M" CONFIRM="0" RETRO="0" DAYSCAL="" DAYS="" MAXWAIT="0" MAXRERUN="0" AUTOARCH="1" MAXDAYS="0" MAXRUNS="0" JAN="1" FEB="1" MAR="1" APR="1" MAY="1" JUN="1" JUL="1" AUG="1" SEP="1" OCT="1" NOV="1" DEC="1" DAYS_AND_OR="O" SHIFT="Ignore Job" SHIFTNUM="+00" SYSDB="1" IND_CYCLIC="S" CREATION_USER="%s" CREATION_DATE="%s" CREATION_TIME="%s" RULE_BASED_CALENDAR_RELATIONSHIP="O" APPL_TYPE="OS" CM_VER="N/A" MULTY_AGENT="N" USE_INSTREAM_JCL="N" VERSION_OPCODE="N" IS_CURRENT_VERSION="Y" VERSION_SERIAL="1" VERSION_HOST="WVMCCRXA06" CYCLIC_TOLERANCE="0" CYCLIC_TYPE="C" PARENT_FOLDER="%s">
+                    <VARIABLE NAME="%%PARM1" VALUE="%%$OYEAR-%%OMONTH-%%ODAY" />
+                    <VARIABLE NAME="%%PARM2" VALUE="%%$ODATE" />
+                    <VARIABLE NAME="%%SENTRY_JOB" VALUE="-ns %s -jn %s -o %%ORDERID" />
+                    <VARIABLE NAME="%%SENTRY_OPT" VALUE="-b" />
+                    <VARIABLE NAME="%%SENTRY_PARM" VALUE="{&quot;env&quot;:{&quot;CUTOFF_DATE&quot;:&quot;%%PARM1&quot;,&quot;DATE&quot;:&quot;%%PARM2&quot;,&quot;CONTROLM_JOB_ID&quot;:&quot;%%JOBNAME&quot;,&quot;CONTROLM_JOB_FLOW&quot;:&quot;%%SCHEDTAB&quot;}}" />
+                    <SHOUT WHEN="EXECTIME" TIME="&gt;060" URGENCY="R" DEST="EM" MESSAGE="Excedio el tiempo de ejecucion favor de alertar al aplicativo" DAYSOFFSET="0" />
+                    <QUANTITATIVE NAME="DATIO_SENTRY_PE" QUANT="1" ONFAIL="R" ONOK="R" />
+                    <INCOND NAME="%s-TO-%s" ODATE="ODAT" AND_OR="A" />
+                    <OUTCOND NAME="%s-TO-%s" ODATE="ODAT" SIGN="-" />
+                    <OUTCOND NAME="%s-TO-%s" ODATE="ODAT" SIGN="+" />
+                    <OUTCOND NAME="%s-TO-%s" ODATE="ODAT" SIGN="+" />
+                    <OUTCOND NAME="%s-CF@OK" ODATE="ODAT" SIGN="+" />
+                    <ON STMT="*" CODE="OK">
+                        <DOFORCEJOB TABLE_NAME="%s" NAME="%s" ODATE="ODAT" REMOTE="N" />
+                        <DOFORCEJOB TABLE_NAME="%s" NAME="%s" ODATE="ODAT" REMOTE="N" />
+                    </ON>
+                    <ON STMT="*" CODE="NOTOK">
+                        <DOMAIL URGENCY="R" DEST="%s" SUBJECT="Cancelado %s - %s - %%$ODATE" MESSAGE="0038Job execution error, process canceled." ATTACH_SYSOUT="Y" />
+                    </ON>
+             </JOB>""",
+                datos.getHmmMasterJobname(), datos.getMasterSourceName(), datos.getCreationUser(),
+                datos.getCreationUser(), datos.getCreationDate(), datos.getCreationTime(),
+                datos.getParentFolder(), datos.getNamespace(), datos.getHmmMasterJobid(),
+                datos.getKrbMasterJobname(), datos.getHmmMasterJobname(), datos.getKrbMasterJobname(),
+                datos.getHmmMasterJobname(), datos.getHmmMasterJobname(), datos.getErase1Jobname(),
+                datos.getHmmMasterJobname(), datos.getErase2Jobname(), datos.getHmmMasterJobname(),
+                datos.getParentFolder(), datos.getErase1Jobname(), datos.getParentFolder(),
+                datos.getErase2Jobname(), datos.getTeamEmail(), datos.getHmmMasterJobname(),
+                datos.getHmmMasterJobid()
+        );
+    }
+
+    private String generarJobHammurabiMasterV2(MallaRequestDto datos) {
+        //Agregar condicional
+        return String.format("""
+            <JOB JOBISN="0" APPLICATION="CTD-PE-DATIO" SUB_APPLICATION="CTD-HAMMURABI-CCR" CMDLINE="/opt/datio/sentry-pe/dataproc_sentry.py %%SENTRY_JOB %%SENTRY_OPT &apos;%%SENTRY_PARM&apos;" JOBNAME="%s" DESCRIPTION="HAMMURABI - MASTER - %s" CREATED_BY="%s" RUN_AS="sentry" CRITICAL="0" TASKTYPE="Command" CYCLIC="0" NODEID="PE-SENTRY-00" INTERVAL="00001M" CONFIRM="0" RETRO="0" DAYSCAL="" DAYS="" MAXWAIT="0" MAXRERUN="0" AUTOARCH="1" MAXDAYS="0" MAXRUNS="0" JAN="1" FEB="1" MAR="1" APR="1" MAY="1" JUN="1" JUL="1" AUG="1" SEP="1" OCT="1" NOV="1" DEC="1" DAYS_AND_OR="O" SHIFT="Ignore Job" SHIFTNUM="+00" SYSDB="1" IND_CYCLIC="S" CREATION_USER="%s" CREATION_DATE="%s" CREATION_TIME="%s" RULE_BASED_CALENDAR_RELATIONSHIP="O" APPL_TYPE="OS" CM_VER="N/A" MULTY_AGENT="N" USE_INSTREAM_JCL="N" VERSION_OPCODE="N" IS_CURRENT_VERSION="Y" VERSION_SERIAL="1" VERSION_HOST="WVMCCRXA06" CYCLIC_TOLERANCE="0" CYCLIC_TYPE="C" PARENT_FOLDER="%s">
+                    <VARIABLE NAME="%%PARM1" VALUE="%%$OYEAR-%%OMONTH-%%ODAY" />
+                    <VARIABLE NAME="%%PARM2" VALUE="%%$ODATE" />
+                    <VARIABLE NAME="%%SENTRY_JOB" VALUE="-ns %s -jn %s -o %%ORDERID" />
+                    <VARIABLE NAME="%%SENTRY_OPT" VALUE="-b" />
+                    <VARIABLE NAME="%%SENTRY_PARM" VALUE="{&quot;env&quot;:{&quot;CUTOFF_DATE&quot;:&quot;%%PARM1&quot;,&quot;DATE&quot;:&quot;%%PARM2&quot;,&quot;CONTROLM_JOB_ID&quot;:&quot;%%JOBNAME&quot;,&quot;CONTROLM_JOB_FLOW&quot;:&quot;%%SCHEDTAB&quot;}}" />
+                    <SHOUT WHEN="EXECTIME" TIME="&gt;060" URGENCY="R" DEST="EM" MESSAGE="Excedio el tiempo de ejecucion favor de alertar al aplicativo" DAYSOFFSET="0" />
+                    <QUANTITATIVE NAME="DATIO_SENTRY_PE" QUANT="1" ONFAIL="R" ONOK="R" />
+                    <INCOND NAME="%s-TO-%s" ODATE="ODAT" AND_OR="A" />
+                    <OUTCOND NAME="%s-TO-%s" ODATE="ODAT" SIGN="-" />
+                    <OUTCOND NAME="%s-TO-%s" ODATE="ODAT" SIGN="+" />
+                    <OUTCOND NAME="%s-CF@OK" ODATE="ODAT" SIGN="+" />
+                    <ON STMT="*" CODE="OK">
+                        <DOFORCEJOB TABLE_NAME="%s" NAME="%s" ODATE="ODAT" REMOTE="N" />
+                    </ON>
+                    <ON STMT="*" CODE="NOTOK">
+                        <DOMAIL URGENCY="R" DEST="%s" SUBJECT="Cancelado %s - %s - %%$ODATE" MESSAGE="0038Job execution error, process canceled." ATTACH_SYSOUT="Y" />
+                    </ON>
+             </JOB>""",
+                datos.getHmmMasterJobname(), datos.getMasterSourceName(), datos.getCreationUser(),
+                datos.getCreationUser(), datos.getCreationDate(), datos.getCreationTime(),
+                datos.getParentFolder(), datos.getNamespace(), datos.getHmmMasterJobid(),
+                datos.getKrbMasterJobname(), datos.getHmmMasterJobname(), datos.getKrbMasterJobname(),
+                datos.getHmmMasterJobname(), datos.getHmmMasterJobname(), datos.getKrbL1tJobname(),
+                datos.getHmmMasterJobname(),
+                datos.getParentFolder(), datos.getKrbL1tJobname(),
+                datos.getTeamEmail(), datos.getHmmMasterJobname(),
+                datos.getHmmMasterJobid()
+        );
+    }
+
+    private String generarJobHammurabiMaster(MallaRequestDto datos) {
+        String nextJob1, nextJob2;
+
+        if (datos.getKrbL1tJobname() != null && datos.getHmmL1tJobname() != null) {
+            // CON L1T: Hammurabi Master → Kirby L1T (solo uno)
+            nextJob1 = datos.getKrbL1tJobname();
+            nextJob2 = null; // No hay segundo job
+        } else {
+            // SIN L1T: Hammurabi Master → ERASE1 + ERASE2 (paralelo, como antes)
+            nextJob1 = datos.getErase1Jobname();
+            nextJob2 = datos.getErase2Jobname();
+        }
+
+        // Generar template condicionalmente
+        if (nextJob2 != null) {
+            // Template con 2 jobs (SIN L1T - patrón original)
+            return String.format("""
             <JOB JOBISN="0" APPLICATION="CTD-PE-DATIO" SUB_APPLICATION="CTD-HAMMURABI-CCR" CMDLINE="/opt/datio/sentry-pe/dataproc_sentry.py %%SENTRY_JOB %%SENTRY_OPT &apos;%%SENTRY_PARM&apos;" JOBNAME="%s" DESCRIPTION="HAMMURABI - MASTER - %s" CREATED_BY="%s" RUN_AS="sentry" CRITICAL="0" TASKTYPE="Command" CYCLIC="0" NODEID="PE-SENTRY-00" INTERVAL="00001M" CONFIRM="0" RETRO="0" DAYSCAL="" DAYS="" MAXWAIT="0" MAXRERUN="0" AUTOARCH="1" MAXDAYS="0" MAXRUNS="0" JAN="1" FEB="1" MAR="1" APR="1" MAY="1" JUN="1" JUL="1" AUG="1" SEP="1" OCT="1" NOV="1" DEC="1" DAYS_AND_OR="O" SHIFT="Ignore Job" SHIFTNUM="+00" SYSDB="1" IND_CYCLIC="S" CREATION_USER="%s" CREATION_DATE="%s" CREATION_TIME="%s" RULE_BASED_CALENDAR_RELATIONSHIP="O" APPL_TYPE="OS" CM_VER="N/A" MULTY_AGENT="N" USE_INSTREAM_JCL="N" VERSION_OPCODE="N" IS_CURRENT_VERSION="Y" VERSION_SERIAL="1" VERSION_HOST="WVMCCRXA06" CYCLIC_TOLERANCE="0" CYCLIC_TYPE="C" PARENT_FOLDER="%s">
                     <VARIABLE NAME="%%PARM1" VALUE="%%$OYEAR-%%OMONTH-%%ODAY" />
                     <VARIABLE NAME="%%PARM2" VALUE="%%$ODATE" />
@@ -587,16 +688,48 @@ public class XmlMallaGenerator {
                         <DOMAIL URGENCY="R" DEST="%s;ada_dhm_pe.group@bbva.com" SUBJECT="Cancelado %s - %s - %%$ODATE" MESSAGE="0038Job execution error, process canceled." ATTACH_SYSOUT="Y" />
                     </ON>
              </JOB>""",
-                datos.getHmmMasterJobname(), datos.getMasterSourceName(), datos.getCreationUser(),
-                datos.getCreationUser(), datos.getCreationDate(), datos.getCreationTime(),
-                datos.getParentFolder(), datos.getNamespace(), datos.getHmmMasterJobid(),
-                datos.getKrbMasterJobname(), datos.getHmmMasterJobname(), datos.getKrbMasterJobname(),
-                datos.getHmmMasterJobname(), datos.getHmmMasterJobname(), datos.getErase1Jobname(),
-                datos.getHmmMasterJobname(), datos.getErase2Jobname(), datos.getHmmMasterJobname(),
-                datos.getParentFolder(), datos.getErase1Jobname(), datos.getParentFolder(),
-                datos.getErase2Jobname(), datos.getTeamEmail(), datos.getHmmMasterJobname(),
-                datos.getHmmMasterJobid()
-        );
+                    datos.getHmmMasterJobname(), datos.getMasterSourceName(), datos.getCreationUser(),
+                    datos.getCreationUser(), datos.getCreationDate(), datos.getCreationTime(),
+                    datos.getParentFolder(), datos.getNamespace(), datos.getHmmMasterJobid(),
+                    datos.getKrbMasterJobname(), datos.getHmmMasterJobname(), datos.getKrbMasterJobname(),
+                    datos.getHmmMasterJobname(), datos.getHmmMasterJobname(), nextJob1,  // ERASE1
+                    datos.getHmmMasterJobname(), nextJob2,                              // ERASE2
+                    datos.getHmmMasterJobname(),
+                    datos.getParentFolder(), nextJob1, datos.getParentFolder(), nextJob2,
+                    datos.getTeamEmail(), datos.getHmmMasterJobname(), datos.getHmmMasterJobid()
+            );
+        } else {
+            // Template con 1 job (CON L1T - patrón nuevo)
+            return String.format("""
+            <JOB JOBISN="0" APPLICATION="CTD-PE-DATIO" SUB_APPLICATION="CTD-HAMMURABI-CCR" CMDLINE="/opt/datio/sentry-pe/dataproc_sentry.py %%SENTRY_JOB %%SENTRY_OPT &apos;%%SENTRY_PARM&apos;" JOBNAME="%s" DESCRIPTION="HAMMURABI - MASTER - %s" CREATED_BY="%s" RUN_AS="sentry" CRITICAL="0" TASKTYPE="Command" CYCLIC="0" NODEID="PE-SENTRY-00" INTERVAL="00001M" CONFIRM="0" RETRO="0" DAYSCAL="" DAYS="" MAXWAIT="0" MAXRERUN="0" AUTOARCH="1" MAXDAYS="0" MAXRUNS="0" JAN="1" FEB="1" MAR="1" APR="1" MAY="1" JUN="1" JUL="1" AUG="1" SEP="1" OCT="1" NOV="1" DEC="1" DAYS_AND_OR="O" SHIFT="Ignore Job" SHIFTNUM="+00" SYSDB="1" IND_CYCLIC="S" CREATION_USER="%s" CREATION_DATE="%s" CREATION_TIME="%s" RULE_BASED_CALENDAR_RELATIONSHIP="O" APPL_TYPE="OS" CM_VER="N/A" MULTY_AGENT="N" USE_INSTREAM_JCL="N" VERSION_OPCODE="N" IS_CURRENT_VERSION="Y" VERSION_SERIAL="1" VERSION_HOST="WVMCCRXA06" CYCLIC_TOLERANCE="0" CYCLIC_TYPE="C" PARENT_FOLDER="%s">
+                    <VARIABLE NAME="%%PARM1" VALUE="%%$OYEAR-%%OMONTH-%%ODAY" />
+                    <VARIABLE NAME="%%PARM2" VALUE="%%$ODATE" />
+                    <VARIABLE NAME="%%SENTRY_JOB" VALUE="-ns %s -jn %s -o %%ORDERID" />
+                    <VARIABLE NAME="%%SENTRY_OPT" VALUE="-b" />
+                    <VARIABLE NAME="%%SENTRY_PARM" VALUE="{&quot;env&quot;:{&quot;CUTOFF_DATE&quot;:&quot;%%PARM1&quot;,&quot;DATE&quot;:&quot;%%PARM2&quot;,&quot;CONTROLM_JOB_ID&quot;:&quot;%%JOBNAME&quot;,&quot;CONTROLM_JOB_FLOW&quot;:&quot;%%SCHEDTAB&quot;}}" />
+                    <SHOUT WHEN="EXECTIME" TIME="&gt;060" URGENCY="R" DEST="EM" MESSAGE="Excedio el tiempo de ejecucion favor de alertar al aplicativo" DAYSOFFSET="0" />
+                    <QUANTITATIVE NAME="DATIO_SENTRY_PE" QUANT="1" ONFAIL="R" ONOK="R" />
+                    <INCOND NAME="%s-TO-%s" ODATE="ODAT" AND_OR="A" />
+                    <OUTCOND NAME="%s-TO-%s" ODATE="ODAT" SIGN="-" />
+                    <OUTCOND NAME="%s-TO-%s" ODATE="ODAT" SIGN="+" />
+                    <OUTCOND NAME="%s-CF@OK" ODATE="ODAT" SIGN="+" />
+                    <ON STMT="*" CODE="OK">
+                        <DOFORCEJOB TABLE_NAME="%s" NAME="%s" ODATE="ODAT" REMOTE="N" />
+                    </ON>
+                    <ON STMT="*" CODE="NOTOK">
+                        <DOMAIL URGENCY="R" DEST="%s;ada_dhm_pe.group@bbva.com" SUBJECT="Cancelado %s - %s - %%$ODATE" MESSAGE="0038Job execution error, process canceled." ATTACH_SYSOUT="Y" />
+                    </ON>
+             </JOB>""",
+                    datos.getHmmMasterJobname(), datos.getMasterSourceName(), datos.getCreationUser(),
+                    datos.getCreationUser(), datos.getCreationDate(), datos.getCreationTime(),
+                    datos.getParentFolder(), datos.getNamespace(), datos.getHmmMasterJobid(),
+                    datos.getKrbMasterJobname(), datos.getHmmMasterJobname(), datos.getKrbMasterJobname(),
+                    datos.getHmmMasterJobname(), datos.getHmmMasterJobname(), nextJob1, // Kirby L1T
+                    datos.getHmmMasterJobname(),
+                    datos.getParentFolder(), nextJob1, // Kirby L1T
+                    datos.getTeamEmail(), datos.getHmmMasterJobname(), datos.getHmmMasterJobid()
+            );
+        }
     }
 
     private String generarJobErase1(MallaRequestDto datos) {
@@ -613,7 +746,7 @@ public class XmlMallaGenerator {
                     <INCOND NAME="%s-TO-%s" ODATE="ODAT" AND_OR="A" />
                     <OUTCOND NAME="%s-TO-%s" ODATE="ODAT" SIGN="-" />
                     <ON STMT="*" CODE="NOTOK">
-                        <DOMAIL URGENCY="R" DEST="%s;ada_dhm_pe.group@bbva.com" SUBJECT="Cancelado %s - %s-pe-dfs-rmv-hdfs-01 - %%$ODATE" MESSAGE="0038Job execution error, process canceled." ATTACH_SYSOUT="Y" />
+                        <DOMAIL URGENCY="R" DEST="%s" SUBJECT="Cancelado %s - %s-pe-dfs-rmv-hdfs-01 - %%$ODATE" MESSAGE="0038Job execution error, process canceled." ATTACH_SYSOUT="Y" />
                     </ON>
             </JOB>""",
                 datos.getErase1Jobname(), datos.getTransferSourceName(), datos.getCreationUser(),
@@ -639,7 +772,7 @@ public class XmlMallaGenerator {
                     <INCOND NAME="%s-TO-%s" ODATE="ODAT" AND_OR="A" />
                     <OUTCOND NAME="%s-TO-%s" ODATE="ODAT" SIGN="-" />
                     <ON STMT="*" CODE="NOTOK">
-                        <DOMAIL URGENCY="R" DEST="%s;ada_dhm_pe.group@bbva.com" SUBJECT="Cancelado %s - %s-pe-dfs-rmv-hdfs-01 - %%$ODATE" MESSAGE="0038Job execution error, process canceled." ATTACH_SYSOUT="Y" />
+                        <DOMAIL URGENCY="R" DEST="%s" SUBJECT="Cancelado %s - %s-pe-dfs-rmv-hdfs-01 - %%$ODATE" MESSAGE="0038Job execution error, process canceled." ATTACH_SYSOUT="Y" />
                     </ON>
             </JOB>""",
                 datos.getErase2Jobname(), datos.getTransferSourceName(), datos.getCreationUser(),
@@ -648,6 +781,73 @@ public class XmlMallaGenerator {
                 datos.getNamespace(), datos.getUuaaLowercase(), datos.getHmmMasterJobname(),
                 datos.getErase2Jobname(), datos.getHmmMasterJobname(), datos.getErase2Jobname(),
                 datos.getTeamEmail(), datos.getErase2Jobname(), datos.getUuaaLowercase()
+        );
+    }
+
+    //JOBS L1T
+    // NUEVO: Método para generar job Kirby L1T
+    private String generarJobKirbyL1T(MallaRequestDto datos) {
+        return String.format("""
+        <JOB JOBISN="0" APPLICATION="CTD-PE-DATIO" SUB_APPLICATION="CTD-MASTER-CCR" CMDLINE="/opt/datio/sentry-pe/dataproc_sentry.py %%SENTRY_JOB %%SENTRY_OPT &apos;%%SENTRY_PARM&apos;" JOBNAME="%s" DESCRIPTION="KIRBY - L1T - %s" CREATED_BY="%s" RUN_AS="sentry" CRITICAL="0" TASKTYPE="Command" CYCLIC="0" NODEID="PE-SENTRY-00" INTERVAL="00001M" CONFIRM="0" RETRO="0" DAYSCAL="" DAYS="" MAXWAIT="0" MAXRERUN="0" AUTOARCH="1" MAXDAYS="0" MAXRUNS="0" JAN="1" FEB="1" MAR="1" APR="1" MAY="1" JUN="1" JUL="1" AUG="1" SEP="1" OCT="1" NOV="1" DEC="1" DAYS_AND_OR="O" SHIFT="Ignore Job" SHIFTNUM="+00" SYSDB="1" IND_CYCLIC="S" CREATION_USER="%s" CREATION_DATE="%s" CREATION_TIME="%s" RULE_BASED_CALENDAR_RELATIONSHIP="O" APPL_TYPE="OS" CM_VER="N/A" MULTY_AGENT="N" USE_INSTREAM_JCL="N" VERSION_OPCODE="N" IS_CURRENT_VERSION="Y" VERSION_SERIAL="1" VERSION_HOST="WVMCCRXA06" CYCLIC_TOLERANCE="0" CYCLIC_TYPE="C" PARENT_FOLDER="%s">
+                <VARIABLE NAME="%%PARM1" VALUE="%%$ODATE" />
+                <VARIABLE NAME="%%SENTRY_JOB" VALUE="-ns %s -jn %s -o %%ORDERID" />
+                <VARIABLE NAME="%%SENTRY_OPT" VALUE="-b" />
+                <VARIABLE NAME="%%SENTRY_PARM" VALUE="{&quot;env&quot;:{&quot;DATE&quot;:&quot;%%PARM1&quot;,&quot;CONTROLM_JOB_ID&quot;:&quot;%%JOBNAME&quot;,&quot;CONTROLM_JOB_FLOW&quot;:&quot;%%SCHEDTAB&quot;}}" />
+                <SHOUT WHEN="EXECTIME" TIME="&gt;060" URGENCY="R" DEST="EM" MESSAGE="Excedio el tiempo de ejecucion favor de alertar al aplicativo" DAYSOFFSET="0" />
+                <QUANTITATIVE NAME="DATIO_SENTRY_PE" QUANT="1" ONFAIL="R" ONOK="R" />
+                <INCOND NAME="%s-TO-%s" ODATE="ODAT" AND_OR="A" />
+                <OUTCOND NAME="%s-TO-%s" ODATE="ODAT" SIGN="-" />
+                <OUTCOND NAME="%s-TO-%s" ODATE="ODAT" SIGN="+" />
+                <ON STMT="*" CODE="OK">
+                    <DOFORCEJOB TABLE_NAME="%s" NAME="%s" ODATE="ODAT" REMOTE="N" />
+                </ON>
+                <ON STMT="*" CODE="NOTOK">
+                    <DOMAIL URGENCY="R" DEST="%s" SUBJECT="Cancelado %s - %s - %%$ODATE" MESSAGE="0038Job execution error, process canceled." ATTACH_SYSOUT="Y" />
+                </ON>
+        </JOB>""",
+                datos.getKrbL1tJobname(), datos.getL1tSourceName(), datos.getCreationUser(),
+                datos.getCreationUser(), datos.getCreationDate(), datos.getCreationTime(),
+                datos.getParentFolder(), datos.getNamespace(), datos.getKrbL1tJobid(),
+                datos.getHmmMasterJobname(), datos.getKrbL1tJobname(), datos.getHmmMasterJobname(),
+                datos.getKrbL1tJobname(), datos.getKrbL1tJobname(), datos.getHmmL1tJobname(),
+                datos.getParentFolder(), datos.getHmmL1tJobname(), datos.getTeamEmail(),
+                datos.getKrbL1tJobname(), datos.getKrbL1tJobid()
+        );
+    }
+
+    // NUEVO: Método para generar job Hammurabi L1T
+    private String generarJobHammurabiL1T(MallaRequestDto datos) {
+        return String.format("""
+        <JOB JOBISN="0" APPLICATION="CTD-PE-DATIO" SUB_APPLICATION="CTD-HAMMURABI-CCR" CMDLINE="/opt/datio/sentry-pe/dataproc_sentry.py %%SENTRY_JOB %%SENTRY_OPT &apos;%%SENTRY_PARM&apos;" JOBNAME="%s" DESCRIPTION="HAMMURABI - L1T - %s" CREATED_BY="%s" RUN_AS="sentry" CRITICAL="0" TASKTYPE="Command" CYCLIC="0" NODEID="PE-SENTRY-00" INTERVAL="00001M" CONFIRM="0" RETRO="0" DAYSCAL="" DAYS="" MAXWAIT="0" MAXRERUN="0" AUTOARCH="1" MAXDAYS="0" MAXRUNS="0" JAN="1" FEB="1" MAR="1" APR="1" MAY="1" JUN="1" JUL="1" AUG="1" SEP="1" OCT="1" NOV="1" DEC="1" DAYS_AND_OR="O" SHIFT="Ignore Job" SHIFTNUM="+00" SYSDB="1" IND_CYCLIC="S" CREATION_USER="%s" CREATION_DATE="%s" CREATION_TIME="%s" RULE_BASED_CALENDAR_RELATIONSHIP="O" APPL_TYPE="OS" CM_VER="N/A" MULTY_AGENT="N" USE_INSTREAM_JCL="N" VERSION_OPCODE="N" IS_CURRENT_VERSION="Y" VERSION_SERIAL="1" VERSION_HOST="WVMCCRXA06" CYCLIC_TOLERANCE="0" CYCLIC_TYPE="C" PARENT_FOLDER="%s">
+                <VARIABLE NAME="%%PARM1" VALUE="%%$OYEAR-%%OMONTH-%%ODAY" />
+                <VARIABLE NAME="%%PARM2" VALUE="%%$ODATE" />
+                <VARIABLE NAME="%%SENTRY_JOB" VALUE="-ns %s -jn %s -o %%ORDERID" />
+                <VARIABLE NAME="%%SENTRY_OPT" VALUE="-b" />
+                <VARIABLE NAME="%%SENTRY_PARM" VALUE="{&quot;env&quot;:{&quot;DATE&quot;:&quot;%%PARM1&quot;,&quot;ODATE&quot;:&quot;%%PARM2&quot;,&quot;CONTROLM_JOB_ID&quot;:&quot;%%JOBNAME&quot;,&quot;CONTROLM_JOB_FLOW&quot;:&quot;%%SCHEDTAB&quot;}}" />
+                <SHOUT WHEN="EXECTIME" TIME="&gt;060" URGENCY="R" DEST="EM" MESSAGE="Excedio el tiempo de ejecucion favor de alertar al aplicativo" DAYSOFFSET="0" />
+                <QUANTITATIVE NAME="DATIO_SENTRY_PE" QUANT="1" ONFAIL="R" ONOK="R" />
+                <INCOND NAME="%s-TO-%s" ODATE="ODAT" AND_OR="A" />
+                <OUTCOND NAME="%s-TO-%s" ODATE="ODAT" SIGN="-" />
+                <OUTCOND NAME="%s-TO-%s" ODATE="ODAT" SIGN="+" />
+                <OUTCOND NAME="%s-TO-%s" ODATE="ODAT" SIGN="+" />
+                <ON STMT="*" CODE="OK">
+                    <DOFORCEJOB TABLE_NAME="%s" NAME="%s" ODATE="ODAT" REMOTE="N" />
+                    <DOFORCEJOB TABLE_NAME="%s" NAME="%s" ODATE="ODAT" REMOTE="N" />
+                </ON>
+                <ON STMT="*" CODE="NOTOK">
+                    <DOMAIL URGENCY="R" DEST="%s" SUBJECT="Cancelado %s - %s - %%$ODATE" MESSAGE="0038Job execution error, process canceled." ATTACH_SYSOUT="Y" />
+                </ON>
+        </JOB>""",
+                datos.getHmmL1tJobname(), datos.getL1tSourceName(), datos.getCreationUser(),
+                datos.getCreationUser(), datos.getCreationDate(), datos.getCreationTime(),
+                datos.getParentFolder(), datos.getNamespace(), datos.getHmmL1tJobid(),
+                datos.getKrbL1tJobname(), datos.getHmmL1tJobname(),                        // INCOND
+                datos.getKrbL1tJobname(), datos.getHmmL1tJobname(),                        // OUTCOND 1 (cerrar)
+                datos.getHmmL1tJobname(), datos.getErase1Jobname(),                        // OUTCOND 2 (a ERASE1)
+                datos.getHmmL1tJobname(), datos.getErase2Jobname(),                        // OUTCOND 3 (a ERASE2)
+                datos.getParentFolder(), datos.getErase1Jobname(),                         // DOFORCEJOB 1 (ERASE1)
+                datos.getParentFolder(), datos.getErase2Jobname(),                         // DOFORCEJOB 2 (ERASE2)
+                datos.getTeamEmail(), datos.getHmmL1tJobname(), datos.getHmmL1tJobid()
         );
     }
 }

@@ -76,14 +76,13 @@ public class IngestaService {
             archivosGenerados.putAll(l1tFiles);
         }
 
-        request.setGenerarMallas(true);
-
         if (request.isGenerarMallas()) {
             try {
                 Map<String, String> mallasXml = mallaGeneratorService.generarMallasXml(request, schemaProcessor);
                 archivosGenerados.putAll(mallasXml);
             } catch (HandledException e) {
-                System.err.println("Error generando mallas XML: " + e.getMessage());
+                throw new HandledException("MALLA_GENERATION_FAILED",
+                        "Error generando mallas XML: " + e.getMessage(), e);
             }
         }
 
@@ -418,8 +417,8 @@ public class IngestaService {
 
         Map<String, Object> params = new HashMap<>();
         params.put(CONFIG_URL, REPO_URL_BASE +
-                request.getUuaaMaster() + "/masterdata/" + schemaProcessor.getDfMasterName() + DQ_CONF_VERSION +
-                schemaProcessor.getDfMasterName() + CONF_SUFFIX);
+                request.getUuaaMaster() + "/masterdata/" + schemaProcessor.getDfRawName() + DQ_CONF_VERSION +
+                schemaProcessor.getDfRawName() + CONF_SUFFIX);
         params.put(SPARK_HISTORY_ENABLED, "true");
         json.put(PARAMS, params);
 
@@ -585,8 +584,8 @@ public class IngestaService {
             input {
                 applyConversions = false
                 options {
-                    includeMetadataAndDeleted = "true"
-                    overrideSchema = "true"
+                    includeMetadataAndDeleted = true
+                    overrideSchema = true
                 }
                 paths=[
                     "%s"
@@ -941,8 +940,8 @@ public class IngestaService {
     private String generarHammurabiL1TJson(IngestaRequestDto request) {
         return String.format("""
         {
-            "_id" : "%s-pe-hmm-qlt-%sl1tm-01",
-            "description" : "Job %s-pe-hmm-qlt-%sl1tm-01 created with Metaknight.",
+            "_id" : "%s-pe-spk-qlt-%sl1tm-01",
+            "description" : "Job %s-pe-hmm-spk-%sl1tm-01 created with Metaknight.",
             "kind" : "processing",
             "params" : {
                 "configUrl" : "${repository.endpoint.vdc}/${repository.repo.schemas.dq}/data-quality-configs/${repository.env.dq}/per/%s/masterdata/%s_l1t/${dq.conf.version}/%s_l1t.conf",

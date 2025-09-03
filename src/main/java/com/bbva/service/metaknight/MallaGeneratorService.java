@@ -4,7 +4,6 @@ import com.bbva.core.HandledException;
 import com.bbva.core.exception.MallaGenerationException;
 import com.bbva.dto.metaknight.request.IngestaRequestDto;
 import com.bbva.dto.metaknight.request.MallaRequestDto;
-import com.bbva.util.metaknight.MallaUtils;
 import com.bbva.util.metaknight.SchemaProcessor;
 import com.bbva.util.metaknight.XmlMallaGenerator;
 import com.bbva.util.metaknight.MallaConstants;
@@ -23,9 +22,7 @@ public class MallaGeneratorService {
 
     private final XmlMallaGenerator xmlGenerator = new XmlMallaGenerator();
     private final MallaTransformerService transformerService = new MallaTransformerService();
-    private final MallaUtils mallaUtils = new MallaUtils();
     private final MallaValidator mallaValidator = new MallaValidator();
-    //private final GitRepositoryService gitRepositoryService = new GitRepositoryService();
     private final OptimizedGitRepositoryService gitRepositoryService = new OptimizedGitRepositoryService();
 
     public Map<String, String> generarMallasXml(IngestaRequestDto request, SchemaProcessor schemaProcessor)
@@ -74,7 +71,6 @@ public class MallaGeneratorService {
             throw new HandledException("MALLA_GENERATION_ERROR",
                     "Error inesperado generando archivos XML de malla: " + e.getMessage(), e);
         }finally {
-            //LIMPIA ARCHIVOS TEMPORALES, VALIDAR ELIMINACIÓN EN VARIAS PETICIONES
             try {
                 gitRepositoryService.cleanupCache();
                 LOGGER.info("✅ Archivos temporales limpiados para UUAA: " + request.getUuaaMaster());
@@ -127,7 +123,7 @@ public class MallaGeneratorService {
 
             // 1. ANALIZAR REPOSITORIO CONTROL-M - REVISAR
             LOGGER.info("Conectando a repositorio Control-M para UUAA: " + uuaa);
-            ControlMAnalyzer controlM = new ControlMAnalyzer(uuaa, "daily", gitRepositoryService); //INSTANCIA DE GITRP
+            ControlMAnalyzer controlM = new ControlMAnalyzer(uuaa, request.getFrecuencia(), gitRepositoryService, request.isTieneL1T());
 
             // 2. DATOS REALES EXTRAÍDOS DEL REPOSITORIO
             // VALIDAR DESPUÉS #
@@ -146,18 +142,34 @@ public class MallaGeneratorService {
             String realErase1Jobname = controlM.getD1();
             String realErase2Jobname = controlM.getD2();
 
+            //JobNames L1T calculados
+//            String realKrbL1tJobname = controlM.getKrbL1t();
+//            String realHmmL1tJobname = controlM.getHmmL1t();
+
+            //L1T
+            if (request.isTieneL1T()) {
+                // 8. JOBNAMES L1T REALES CALCULADOS
+                String realKrbL1tJobname = controlM.getKrbL1t();
+                String realHmmL1tJobname = controlM.getHmmL1t();
+
+                mallaData.setKrbL1tJobname(realKrbL1tJobname);
+                mallaData.setHmmL1tJobname(realHmmL1tJobname);
+
+                // L1T source name
+                mallaData.setL1tSourceName(schemaProcessor.getDfMasterName().toLowerCase() + "_l1t");
+
+                LOGGER.info("Jobs L1T configurados: " + realKrbL1tJobname + ", " + realHmmL1tJobname);
+            } else {
+                // SIN L1T: dejar campos null para mantener flujo original
+                mallaData.setKrbL1tJobname(null);
+                mallaData.setHmmL1tJobname(null);
+                mallaData.setL1tSourceName(null);
+                LOGGER.info("L1T no requerido, manteniendo flujo original");
+            }
+
             // 4. CONFIGURAR DATOS REALES EN MALLA
             mallaData.setNamespace(realNamespace);
             mallaData.setParentFolder(realParentFolder);
-
-//            mallaData.setNamespace(realNamespace != null ? realNamespace :
-//                    mallaUtils.construirNamespace(uuaaLower, MallaConstants.DEFAULT_APP_ID));
-//            mallaData.setParentFolder(realParentFolder != null ? realParentFolder :
-//                    mallaUtils.construirParentFolder(uuaa, MallaConstants.DEFAULT_PARENT_FOLDER_SUFFIX));
-
-            // Email del equipo
-//            mallaData.setTeamEmail(mallaUtils.construirTeamEmail(
-//                    MallaConstants.DEFAULT_TEAM_NAME, MallaConstants.DEFAULT_TEAM_EMAIL_SUFFIX));
 
             mallaData.setTeamEmail(request.getTeamEmail());
 
@@ -172,6 +184,11 @@ public class MallaGeneratorService {
             mallaData.setHmmMasterJobname(realHmmMasterJobname);
             mallaData.setErase1Jobname(realErase1Jobname);
             mallaData.setErase2Jobname(realErase2Jobname);
+
+            //JOBS L1T
+//            mallaData.setKrbL1tJobname(realKrbL1tJobname);
+//            mallaData.setHmmL1tJobname(realHmmL1tJobname);
+
 
             // 6. DATOS DEL SCHEMA (si está disponible) o valores por defecto
             if (schemaProcessor != null) {
@@ -193,24 +210,13 @@ public class MallaGeneratorService {
 
                 mallaData.setTransferName(request.getTransferName());
                 mallaData.setTransferUuaaRaw(schemaProcessor.getDfUuaa());
+                mallaData.setTransferTimeFrom(request.getTransferTimeFrom());
 
+                //L1T sourceName
+                mallaData.setL1tSourceName(dfMasterName.toLowerCase() + "_l1t");
             }
-//            else {
-//                // Usar valores por defecto si no hay SchemaProcessor
-//                mallaData.setTransferSourceName("T_" + uuaa + "_DEFAULT_SOURCE");
-//                mallaData.setRawSourceName("t_" + uuaaLower + "_default_raw");
-//                mallaData.setMasterSourceName("t_" + uuaaLower + "_default_master");
-//
-//                // Generar job IDs con tag por defecto
-//                String defaultTag = uuaaLower + "defaulttag";
-//                generarJobIdsConTagReal(mallaData, uuaaLower, defaultTag);
-//
-//                mallaData.setTransferName(uuaaLower + "_default_transfer_0");
-//                mallaData.setTransferUuaaRaw(uuaaLower);
-//            }
-
             // 7. CONFIGURACIONES ADICIONALES
-            mallaData.setTransferTimeFrom(MallaConstants.DEFAULT_TRANSFER_TIME);
+//            mallaData.setTransferTimeFrom(MallaConstants.DEFAULT_TRANSFER_TIME);
             mallaData.setCopyUuaaRaw(MallaConstants.DEFAULT_COPY_UUAA_RAW);
             mallaData.setCreateNums(MallaConstants.DEFAULT_CREATE_NUMS);
 
@@ -240,6 +246,10 @@ public class MallaGeneratorService {
         mallaData.setHmmRawJobid(String.format(MallaConstants.HMM_RAW_ID_PATTERN, uuaaLower, tag));
         mallaData.setKrbMasterJobid(String.format(MallaConstants.KRB_MASTER_ID_PATTERN, uuaaLower, tag));
         mallaData.setHmmMasterJobid(String.format(MallaConstants.HMM_MASTER_ID_PATTERN, uuaaLower, tag));
+
+        // NUEVOS: Jobs L1T
+        mallaData.setKrbL1tJobid(String.format(MallaConstants.KRB_L1T_ID_PATTERN, uuaaLower, tag));
+        mallaData.setHmmL1tJobid(String.format(MallaConstants.HMM_L1T_ID_PATTERN, uuaaLower, tag));
 
         LOGGER.info("Job IDs generados con tag: " + tag);
     }

@@ -31,14 +31,14 @@ public class IngestaRequestDto {
         this.uuaaMaster = uuaaMaster != null ? uuaaMaster.toLowerCase() : null;
     }
 
-    private boolean generarMallas; //para generación de mallas generarMallas
+    private boolean generarMallas;
 
     private String teamEmail;
-    private String transferTimeFrom; // "2330"
-    private String transferName; // nombre del transfer
-    private String transferUuaaRaw; // UUAA origen
-    private String copyUuaaRaw; // UUAA para copia
-    private String fileWatcherConfig; // "1 30 10 3 5" por default - Preguntar a Patrick
-    private String frequency; // reutilizada - REVISAR LUEGO
+    private String transferTimeFrom;
+    private String transferName;
+    private String transferUuaaRaw;
+    private String copyUuaaRaw;
+    private String fileWatcherConfig;
+    private String frequency;
 
 }

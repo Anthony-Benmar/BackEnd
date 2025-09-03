@@ -61,4 +61,11 @@ public class MallaRequestDto {
 
     // Campos calculados
     private String uuaaLowercase;       // UUAA en minúsculas
+
+    //Campos para jobs L1T
+    private String krbL1tJobname;        // Nombre del job Kirby L1T
+    private String krbL1tJobid;          // ID del job Kirby L1T
+    private String hmmL1tJobname;        // Nombre del job Hammurabi L1T
+    private String hmmL1tJobid;          // ID del job Hammurabi L1T
+    private String l1tSourceName;        // Nombre de la fuente L1T
 }

@@ -10,40 +10,123 @@ public class BaseFunctions {
     private static final String NO_RULE_DESCRIPTION_MESSAGE = "No se pudo describir la regla para el formato lógico";
 
     public String convertToCustomFormat(Map<String, Object> data) {
-        StringBuilder result = new StringBuilder("{\n");
-        result.append("   class = \"").append(data.get("class")).append("\"\n");
-        result.append("   config = {\n");
+        StringBuilder result = new StringBuilder("        {\n");
+        result.append("            class = \"").append(data.get("class")).append("\"\n");
+        result.append("            config {\n");
 
         @SuppressWarnings("unchecked")
         Map<String, Object> config = (Map<String, Object>) data.get("config");
 
         appendConfigEntries(result, config);
 
-        result.append("   }\n}");
+        result.append("            }\n");
+        result.append("        }");
         return result.toString();
     }
+
     private void appendConfigEntries(StringBuilder result, Map<String, Object> config) {
         for (Map.Entry<String, Object> entry : config.entrySet()) {
             String key = entry.getKey();
             Object value = entry.getValue();
-            result.append("      ").append(key).append(" = ");
+            result.append("                ").append(key).append(" ");
+
+            if (value instanceof Map<?, ?>) {
+                result.append("{\n");
+                @SuppressWarnings("unchecked")
+                Map<String, Object> nestedMap = (Map<String, Object>) value;
+                appendNestedConfigEntries(result, nestedMap);
+                result.append("                }\n");
+            } else if (value instanceof List<?> list) {
+                result.append("= ");
+                if (key.equalsIgnoreCase("columns") || key.equalsIgnoreCase("column")) {
+                    appendListValueWithQuotes(result, list);
+                } else {
+                    appendListValue(result, list);
+                }
+//                appendListValue(result, list);
+                result.append("\n");
+            } else if (value instanceof Boolean boolValue) {
+                result.append("= ").append(boolValue ? "true" : "false").append("\n");
+            } else if (value instanceof String string) {
+//                result.append("= ").append(value).append("\n");
+                if (key.equalsIgnoreCase("columns")
+                        || key.equalsIgnoreCase("column")
+                        || key.equalsIgnoreCase("format")) {
+                    result.append("= \"").append(string).append("\"\n");
+                } else {
+                    result.append("= ").append(string).append("\n");
+                }
+            } else {
+                result.append("= ").append(value).append("\n");
+            }
+        }
+    }
+
+    private void appendNestedConfigEntries(StringBuilder result, Map<String, Object> config) {
+        for (Map.Entry<String, Object> entry : config.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            result.append("                    ").append(key).append(" ");
+
+            if (value instanceof Map<?, ?>) {
+                result.append("{\n");
+                @SuppressWarnings("unchecked")
+                Map<String, Object> nestedMap = (Map<String, Object>) value;
+                appendDeeplyNestedConfigEntries(result, nestedMap);
+                result.append("                    }\n");
+            } else if (value instanceof List<?> list) {
+                result.append("= ");
+                appendListValue(result, list);
+                result.append("\n");
+            } else if (value instanceof Boolean boolValue) {
+                result.append("= ").append(boolValue ? "true" : "false").append("\n");
+            } else if (value instanceof String) {
+                result.append("= ").append(value).append("\n");
+            } else {
+                result.append("= ").append(value).append("\n");
+            }
+        }
+    }
+
+    private void appendDeeplyNestedConfigEntries(StringBuilder result, Map<String, Object> config) {
+        for (Map.Entry<String, Object> entry : config.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            result.append("                        ").append(key).append(" ");
 
             if (value instanceof List<?> list) {
+                result.append("= ");
                 appendListValue(result, list);
+                result.append("\n");
             } else if (value instanceof Boolean boolValue) {
-                result.append(boolValue.booleanValue() ? "true" : "false");
+                result.append("= ").append(boolValue ? "true" : "false").append("\n");
             } else if (value instanceof String) {
-                result.append("\"").append(value).append("\"");
+                result.append("= ").append(value).append("\n");
             } else {
-                result.append(value);
+                result.append("= ").append(value).append("\n");
             }
-            result.append("\n");
         }
     }
     private void appendListValue(StringBuilder result, List<?> list) {
         result.append("[");
         for (int i = 0; i < list.size(); i++) {
-            result.append("\"").append(list.get(i)).append("\"");
+            result.append(list.get(i)); // No agregar comillas, ya vienen formateadas
+            if (i < list.size() - 1) {
+                result.append(", ");
+            }
+        }
+        result.append("]");
+    }
+
+    private void appendListValueWithQuotes(StringBuilder result, List<?> list) {
+        result.append("[");
+        for (int i = 0; i < list.size(); i++) {
+            Object elem = list.get(i);
+            if (elem instanceof String str) {
+                result.append("\"").append(str).append("\"");
+            } else {
+                result.append(elem);
+            }
             if (i < list.size() - 1) {
                 result.append(", ");
             }
