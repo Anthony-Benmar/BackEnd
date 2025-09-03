@@ -43,12 +43,10 @@ public class BaseFunctions {
                 } else {
                     appendListValue(result, list);
                 }
-//                appendListValue(result, list);
                 result.append("\n");
             } else if (value instanceof Boolean boolValue) {
                 result.append("= ").append(boolValue ? "true" : "false").append("\n");
             } else if (value instanceof String string) {
-//                result.append("= ").append(value).append("\n");
                 if (key.equalsIgnoreCase("columns")
                         || key.equalsIgnoreCase("column")
                         || key.equalsIgnoreCase("format")) {
@@ -110,7 +108,7 @@ public class BaseFunctions {
     private void appendListValue(StringBuilder result, List<?> list) {
         result.append("[");
         for (int i = 0; i < list.size(); i++) {
-            result.append(list.get(i)); // No agregar comillas, ya vienen formateadas
+            result.append(list.get(i));
             if (i < list.size() - 1) {
                 result.append(", ");
             }

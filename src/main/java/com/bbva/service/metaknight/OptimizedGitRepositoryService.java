@@ -15,7 +15,6 @@ import java.nio.file.Paths;
 import java.util.Base64;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 import javax.xml.parsers.DocumentBuilder;
@@ -28,10 +27,7 @@ import java.io.InputStream;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class OptimizedGitRepositoryService{
-
     private static final Logger LOGGER = Logger.getLogger(OptimizedGitRepositoryService.class.getName());
-
-    //URL original ------
     private static final String PROJECT_KEY = "pe_pdit_app-id-31856_dsg";
     private static final String REPOSITORY_SLUG = "pe-dh-datio-xml-dimensions-controlm";
     private static final String BASE_BITBUCKET_URL = "https://bitbucket.globaldevtools.bbva.com/bitbucket";
@@ -40,15 +36,8 @@ public class OptimizedGitRepositoryService{
     private static final String USERNAME = "patrick.andonayre";
     private static final String TOKEN = "BBDC-NTI1OTcxMTI4NDQyOnP5X4fegftIyIfXzQAECnloBO2p"; //poner en varables de entorno
 
-    //patrick.andonayre:BBDC-NTI1OTcxMTI4NDQyOnP5X4fegftIyIfXzQAECnloBO2p
-
-    // Directorio temporal para archivos XML - verificar en la ruta
     private final String sessionId = java.util.UUID.randomUUID().toString().substring(0, 8);
     private final String TEMP_REPO_PATH = System.getProperty("java.io.tmpdir") + "/optimized-controlm-cache-" + sessionId;
-
-//    private final ConcurrentHashMap<String, String> fileCache = new ConcurrentHashMap<>();
-//    private final ConcurrentHashMap<String, Long> cacheTimestamps = new ConcurrentHashMap<>();
-    // private static final long CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutos
 
     public String getRepositoryPath() throws MallaGenerationException {
         try {
@@ -85,7 +74,6 @@ public class OptimizedGitRepositoryService{
             }
             Files.createDirectories(localPath);
 
-            // Descargar archivos XML actualaizados de la UUAA
             downloadUuaaXmlFiles(uuaa, countryType, localPath.toString());
 
             return uuaaPath;
@@ -94,50 +82,7 @@ public class OptimizedGitRepositoryService{
             throw MallaGenerationException.configurationError(
                     "Error obteniendo directorio UUAA: " + e.getMessage());
         }
-//        try {
-//            String repoPath = getRepositoryPath();
-//            String uuaaPath = repoPath + "/" + countryType + "/" + uuaa.toUpperCase();
-//
-//            // Verificar que la UUAA existe usando APIs REST
-//            if (!directoryExistsInRepo(countryType + "/" + uuaa.toUpperCase())) {
-//                throw MallaGenerationException.configurationError(
-//                        "Directorio UUAA no encontrado: " + uuaaPath);
-//            }
-//
-//            Path localPath = Paths.get(uuaaPath);
-//            if (!Files.exists(localPath)) {
-//                Files.createDirectories(localPath);
-//
-//                // Descargar archivos XML de la UUAA
-//                downloadUuaaXmlFiles(uuaa, countryType, localPath.toString());
-//            }
-//
-//            return uuaaPath;
-//
-//        } catch (Exception e) {
-//            throw MallaGenerationException.configurationError(
-//                    "Error obteniendo directorio UUAA: " + e.getMessage());
-//        }
     }
-
-    public boolean uuaaExists(String uuaa) {
-        try {
-            String[] countryTypes = {"Local", "Global"};
-            for (String countryType : countryTypes) {
-                String directoryPath = countryType + "/" + uuaa.toUpperCase();
-                if (directoryExistsInRepo(directoryPath)) {
-                    return true;
-                }
-            }
-            return false;
-
-        } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Error verificando existencia de UUAA: " + e.getMessage(), e);
-            return false;
-        }
-    }
-
-    // ===================== MÉTODOS INTERNOS (APIs REST) =====================
 
     private boolean directoryExistsInRepo(String directoryPath) {
         try {
@@ -164,16 +109,6 @@ public class OptimizedGitRepositoryService{
         }
 
         LOGGER.info("Archivos XML descargados exitosamente para UUAA: " + uuaa);
-//        String directoryPath = countryType + "/" + uuaa.toUpperCase();
-//        List<String> xmlFiles = getXmlFilesFromRepo(directoryPath);
-//
-//        LOGGER.info("Descargando " + xmlFiles.size() + " archivos XML para UUAA: " + uuaa);
-//
-//        for (String xmlFile : xmlFiles) {
-//            downloadXmlFile(directoryPath + "/" + xmlFile, localPath + "/" + xmlFile);
-//        }
-//
-//        LOGGER.info("Archivos XML descargados exitosamente para UUAA: " + uuaa);
     }
 
     private List<String> getXmlFilesFromRepo(String directoryPath) throws Exception {
@@ -183,16 +118,6 @@ public class OptimizedGitRepositoryService{
         JsonNode response = getJsonResponse(connection);
         List<String> xmlFiles = new ArrayList<>();
 
-//        if (response != null && response.has("children")) {
-//            for (JsonNode child : response.get("children")) {
-//                if (child.get("type").asText().equals("FILE")) {
-//                    String fileName = child.get("path").get("name").asText();
-//                    if (fileName.toLowerCase().endsWith(".xml")) {
-//                        xmlFiles.add(fileName);
-//                    }
-//                }
-//            }
-//        }
         if (response != null && response.has("children")) {
             JsonNode children = response.get("children");
             if (children.has("values")) {
@@ -211,44 +136,15 @@ public class OptimizedGitRepositoryService{
     }
 
     private void downloadXmlFile(String remoteFilePath, String localFilePath) throws Exception {
-        LOGGER.info("Descargando archivo FRESCO desde repositorio: " + remoteFilePath);
-
-        // Descargar SIEMPRE del repositorio
         String apiUrl = buildRawApiUrl(remoteFilePath);
         HttpURLConnection connection = createAuthenticatedConnection(apiUrl);
 
         Document xmlDocument = getXmlResponse(connection);
         String xmlContent = documentToString(xmlDocument);
 
-        // Escribir archivo local directamente
         writeStringToFile(xmlContent, localFilePath);
 
         LOGGER.info("Archivo XML FRESCO descargado: " + remoteFilePath + " -> " + localFilePath);
-//        // Verificar cache primero
-//        String cacheKey = remoteFilePath;
-//        if (isCacheValid(cacheKey)) {
-//            String cachedContent = fileCache.get(cacheKey);
-//            if (cachedContent != null) {
-//                writeStringToFile(cachedContent, localFilePath);
-//                return;
-//            }
-//        }
-//
-//        // Descargar del repositorio
-//        String apiUrl = buildRawApiUrl(remoteFilePath);
-//        HttpURLConnection connection = createAuthenticatedConnection(apiUrl);
-//
-//        Document xmlDocument = getXmlResponse(connection);
-//        String xmlContent = documentToString(xmlDocument);
-//
-//        // Guardar en cache
-//        fileCache.put(cacheKey, xmlContent);
-//        cacheTimestamps.put(cacheKey, System.currentTimeMillis());
-//
-//        // Escribir archivo local
-//        writeStringToFile(xmlContent, localFilePath);
-//
-//        LOGGER.info("Archivo XML descargado: " + remoteFilePath + " -> " + localFilePath);
     }
 
     private String documentToString(Document doc) throws Exception {
@@ -265,13 +161,6 @@ public class OptimizedGitRepositoryService{
         }
     }
 
-//    private boolean isCacheValid(String cacheKey) {
-//        Long timestamp = cacheTimestamps.get(cacheKey);
-//        if (timestamp == null) {
-//            return false;
-//        }
-//        return (System.currentTimeMillis() - timestamp) < CACHE_TTL_MS;
-//    }
     private String buildBrowseApiUrl(String path) {
         return String.format("%s/rest/api/1.0/projects/%s/repos/%s/browse/%s",
                 BASE_BITBUCKET_URL, PROJECT_KEY, REPOSITORY_SLUG, path);
@@ -312,37 +201,17 @@ public class OptimizedGitRepositoryService{
         }
     }
 
-    // ===================== MÉTODOS DE UTILIDAD =====================
-
     public void cleanupCache() {
         try {
-            // Solo limpiar archivos temporales -- validar eliminación
             Path tempPath = Paths.get(TEMP_REPO_PATH);
             if (Files.exists(tempPath)) {
                 deleteDirectoryRecursively(tempPath.toFile());
             }
-
             LOGGER.info("Archivos temporales limpiados");
 
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Error limpiando archivos temporales: " + e.getMessage(), e);
         }
-//        try {
-//            // Limpiar cache en memoria
-//            fileCache.clear();
-//            cacheTimestamps.clear();
-//
-//            // Limpiar archivos temporales
-//            Path tempPath = Paths.get(TEMP_REPO_PATH);
-//            if (Files.exists(tempPath)) {
-//                deleteDirectoryRecursively(tempPath.toFile());
-//            }
-//
-//            LOGGER.info("Cache y archivos temporales limpiados");
-//
-//        } catch (Exception e) {
-//            LOGGER.log(Level.WARNING, "Error limpiando cache: " + e.getMessage(), e);
-//        }
     }
 
     private void deleteDirectoryRecursively(File directory) throws IOException {
@@ -363,10 +232,5 @@ public class OptimizedGitRepositoryService{
                 LOGGER.warning("No se pudo eliminar directorio: " + directory.getAbsolutePath());
             }
         }
-    }
-    public String getServiceStats() {
-        return "OptimizedGitRepositoryService - Modo FRESH (sin caché), usando APIs REST";
-//        return String.format("OptimizedGitRepositoryService - Cache: %d archivos, usando APIs REST",
-//                fileCache.size());
     }
 }

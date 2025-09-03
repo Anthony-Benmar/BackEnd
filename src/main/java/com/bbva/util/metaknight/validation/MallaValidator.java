@@ -34,7 +34,6 @@ public class MallaValidator {
         }
     }
 
-    // Valida el objeto MallaRequestDto
     public void validarDatosMalla(MallaRequestDto mallaData) throws MallaGenerationException {
         List<String> errores = new ArrayList<>();
 
@@ -76,38 +75,30 @@ public class MallaValidator {
         if (request.getUuaaMaster() != null && !UUAA_PATTERN.matcher(request.getUuaaMaster()).matches()) {
             errores.add("UUAA Master debe tener exactamente 4 caracteres alfabéticos");
         }
-
         if (request.getRegistroDev() != null && request.getRegistroDev().length() < 6) {
             errores.add("Registro de desarrollador debe tener al menos 6 caracteres");
         }
     }
-
     private void validarCamposRequeridos(MallaRequestDto mallaData, List<String> errores) {
         if (esNuloOVacio(mallaData.getCreationUser())) {
             errores.add("Usuario de creación es requerido");
         }
-
         if (esNuloOVacio(mallaData.getUuaa())) {
             errores.add("UUAA es requerida");
         }
-
         if (esNuloOVacio(mallaData.getNamespace())) {
             errores.add("Namespace es requerido");
         }
-
         if (esNuloOVacio(mallaData.getParentFolder())) {
             errores.add("Parent folder es requerido");
         }
-
         if (esNuloOVacio(mallaData.getCreationDate())) {
             errores.add("Fecha de creación es requerida");
         }
-
         if (esNuloOVacio(mallaData.getCreationTime())) {
             errores.add("Hora de creación es requerida");
         }
     }
-
     private void validarFormatos(MallaRequestDto mallaData, List<String> errores) {
         if (mallaData.getUuaa() != null && !UUAA_PATTERN.matcher(mallaData.getUuaa()).matches()) {
             errores.add("UUAA debe tener exactamente 4 caracteres alfabéticos");
@@ -116,27 +107,22 @@ public class MallaValidator {
         if (mallaData.getTeamEmail() != null && !EMAIL_PATTERN.matcher(mallaData.getTeamEmail()).matches()) {
             errores.add("Email del equipo tiene formato inválido");
         }
-
         if (mallaData.getCreationDate() != null) {
             if (!mallaData.getCreationDate().matches("^\\d{8}$")) {
                 errores.add("Fecha de creación debe tener formato YYYYMMDD");
             }
         }
-
         if (mallaData.getCreationTime() != null) {
             if (!mallaData.getCreationTime().matches("^\\d{6}$")) {
                 errores.add("Hora de creación debe tener formato HHMMSS");
             }
         }
-
         if (mallaData.getTransferTimeFrom() != null) {
             if (!mallaData.getTransferTimeFrom().matches("^\\d{4}$")) {
                 errores.add("Hora de transferencia debe tener formato HHMM");
             }
         }
     }
-
-    // Valida jobnames
     private void validarJobnames(MallaRequestDto mallaData, List<String> errores) {
         validarJobname(mallaData.getTransferJobname(), "Transfer", errores);
         validarJobname(mallaData.getCopyJobname(), "Copy", errores);
@@ -149,14 +135,12 @@ public class MallaValidator {
         validarJobname(mallaData.getErase1Jobname(), "Erase1", errores);
         validarJobname(mallaData.getErase2Jobname(), "Erase2", errores);
     }
-
-    // Valida un jobname individual
     private void validarJobname(String jobname, String tipo, List<String> errores) {
+
         if (esNuloOVacio(jobname)) {
             errores.add(String.format("Jobname de %s es requerido", tipo));
             return;
         }
-
         if (jobname.length() < MallaConstants.Validation.MIN_JOBNAME_LENGTH ||
                 jobname.length() > MallaConstants.Validation.MAX_JOBNAME_LENGTH) {
             errores.add(String.format("Jobname de %s debe tener entre %d y %d caracteres",
@@ -169,14 +153,11 @@ public class MallaValidator {
     }
 
     private void validarConsistenciaDatos(MallaRequestDto mallaData, List<String> errores) {
-        // Validar que UUAA y uuaaLowercase sean consistentes
         if (mallaData.getUuaa() != null && mallaData.getUuaaLowercase() != null) {
             if (!mallaData.getUuaa().toLowerCase().equals(mallaData.getUuaaLowercase())) {
                 errores.add("UUAA y uuaaLowercase no son consistentes");
             }
         }
-
-        // Validar que los jobnames sigan los patrones esperados
         if (mallaData.getUuaa() != null) {
             String expectedPrefix = mallaData.getUuaa().toUpperCase();
 
@@ -184,42 +165,31 @@ public class MallaValidator {
                 errores.add("Transfer jobname no tiene el prefijo esperado de UUAA");
             }
         }
-
-        // Validar que el namespace tenga el formato correcto
         if (mallaData.getNamespace() != null && mallaData.getUuaaLowercase() != null) {
             if (!mallaData.getNamespace().contains(mallaData.getUuaaLowercase())) {
                 errores.add("Namespace no contiene la UUAA en minúsculas");
             }
         }
     }
-
-
     private boolean esNuloOVacio(String valor) {
         return valor == null || valor.trim().isEmpty();
     }
-
     public void validarXmlGenerado(String xmlContent, String tipo) throws MallaGenerationException {
         if (esNuloOVacio(xmlContent)) {
             throw MallaGenerationException.xmlGenerationError(
                     String.format("XML de tipo %s está vacío", tipo), null
             );
         }
-
-        // Validaciones básicas de XML
         if (!xmlContent.trim().startsWith("<")) {
             throw MallaGenerationException.xmlGenerationError(
                     String.format("XML de tipo %s no tiene formato válido", tipo), null
             );
         }
-
-        // Validar que contenga al menos un JOB
         if (!xmlContent.contains("<JOB")) {
             throw MallaGenerationException.xmlGenerationError(
                     String.format("XML de tipo %s no contiene jobs válidos", tipo), null
             );
         }
-
-        // Validar que tenga elementos requeridos - REVISAR ESTA PARTEEEEE
         String[] elementosRequeridos = {"JOBNAME=", "APPLICATION=", "CMDLINE="};
         for (String elemento : elementosRequeridos) {
             if (!xmlContent.contains(elemento)) {

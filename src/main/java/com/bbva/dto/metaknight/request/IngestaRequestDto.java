@@ -21,18 +21,10 @@ public class IngestaRequestDto {
     private String registroDev;
     private String schemaRawBase64;
     private String schemaMasterBase64;
-
-    // Para trabajar con Jira
     private String username;
     private String token;
     private String ticketJira;
-
-    public void setUuaaMaster(String uuaaMaster) {
-        this.uuaaMaster = uuaaMaster != null ? uuaaMaster.toLowerCase() : null;
-    }
-
     private boolean generarMallas;
-
     private String teamEmail;
     private String transferTimeFrom;
     private String transferName;
@@ -40,5 +32,8 @@ public class IngestaRequestDto {
     private String copyUuaaRaw;
     private String fileWatcherConfig;
     private String frequency;
+    public void setUuaaMaster(String uuaaMaster) {
+        this.uuaaMaster = uuaaMaster != null ? uuaaMaster.toLowerCase() : null;
+    }
 
 }

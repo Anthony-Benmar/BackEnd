@@ -7,65 +7,52 @@ import lombok.Setter;
 @Setter
 public class MallaRequestDto {
 
-    // Datos del usuario y proyecto - YA SE TIENEN
-    private String creationUser;        // XP del usuario
-    private String parentFolder;        // Folder padre en Control-M
-    private String uuaa;                // UUAA master
-    private String namespace;           // Namespace del proyecto
-    private String teamEmail;           // Email del equipo
+    private String creationUser;
+    private String parentFolder;
+    private String uuaa;
+    private String namespace;
+    private String teamEmail;
 
-    // Configuración de transferencia - Se traen del schema
-    private String transferJobname;     // Nombre del job de transferencia
-    private String transferSourceName;  // Nombre de la fuente de datos
-    private String transferTimeFrom;    // Hora de inicio de transferencia
-    private String transferName;        // Nombre de la transferencia
-    private String transferUuaaRaw;     // UUAA raw para transferencia
+    private String transferJobname;
+    private String transferSourceName;
+    private String transferTimeFrom;
+    private String transferName;
+    private String transferUuaaRaw;
 
-    // Configuración de copia -- REVISAR
-    private String copyJobname;         // Nombre del job de copia
-    private String copyUuaaRaw;         // UUAA raw para copia
+    private String copyJobname;
+    private String copyUuaaRaw;
 
-    // Configuración de FileWatcher
-    private String fwJobname;           // Nombre del job de FileWatcher
-    private String createNums;          // Números de configuración (por defecto: "1 30 10 3 5")
+    private String fwJobname;
+    private String createNums;
 
-    // Jobs de Hammurabi Staging
-    private String hmmStgJobname;       // Nombre del job Hammurabi Staging
-    private String hmmStgJobid;         // ID del job Hammurabi Staging
+    private String hmmStgJobname;
+    private String hmmStgJobid;
 
-    // Jobs de Kirby Raw
-    private String krbRawJobname;       // Nombre del job Kirby Raw
-    private String krbRawJobid;         // ID del job Kirby Raw
-    private String rawSourceName;       // Nombre de la fuente raw
+    private String krbRawJobname;
+    private String krbRawJobid;
+    private String rawSourceName;
 
-    // Jobs de Hammurabi Raw
-    private String hmmRawJobname;       // Nombre del job Hammurabi Raw
-    private String hmmRawJobid;         // ID del job Hammurabi Raw
+    private String hmmRawJobname;
+    private String hmmRawJobid;
 
-    // Jobs de Kirby Master
-    private String krbMasterJobname;    // Nombre del job Kirby Master
-    private String masterSourceName;    // Nombre de la fuente master
-    private String krbMasterJobid;      // ID del job Kirby Master
+    private String krbMasterJobname;
+    private String masterSourceName;
+    private String krbMasterJobid;
 
-    // Jobs de Hammurabi Master
-    private String hmmMasterJobname;    // Nombre del job Hammurabi Master
-    private String hmmMasterJobid;      // ID del job Hammurabi Master
+    private String hmmMasterJobname;
+    private String hmmMasterJobid;
 
-    // Jobs de limpieza
-    private String erase1Jobname;       // Nombre del job de borrado 1
-    private String erase2Jobname;       // Nombre del job de borrado 2
+    private String erase1Jobname;
+    private String erase2Jobname;
 
-    // Metadatos de creación
-    private String creationDate;        // Fecha de creación (YYYYMMDD)
-    private String creationTime;        // Hora de creación (HHMMSS)
+    private String creationDate;
+    private String creationTime;
 
-    // Campos calculados
-    private String uuaaLowercase;       // UUAA en minúsculas
+    private String uuaaLowercase;
 
-    //Campos para jobs L1T
-    private String krbL1tJobname;        // Nombre del job Kirby L1T
-    private String krbL1tJobid;          // ID del job Kirby L1T
-    private String hmmL1tJobname;        // Nombre del job Hammurabi L1T
-    private String hmmL1tJobid;          // ID del job Hammurabi L1T
-    private String l1tSourceName;        // Nombre de la fuente L1T
+    private String krbL1tJobname;
+    private String krbL1tJobid;
+    private String hmmL1tJobname;
+    private String hmmL1tJobid;
+    private String l1tSourceName;
 }
