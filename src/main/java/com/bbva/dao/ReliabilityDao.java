@@ -3,10 +3,7 @@ package com.bbva.dao;
 import com.bbva.database.MyBatisConnectionFactory;
 import com.bbva.database.mappers.ReliabilityMapper;
 import com.bbva.dto.catalog.response.DropDownDto;
-import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
-import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
-import com.bbva.dto.reliability.request.ReliabilityPackInputFilterRequest;
-import com.bbva.dto.reliability.request.TransferInputDtoRequest;
+import com.bbva.dto.reliability.request.*;
 import com.bbva.dto.reliability.response.*;
 import com.bbva.util.JSONUtils;
 import org.apache.ibatis.session.SqlSession;
@@ -24,6 +21,7 @@ public class ReliabilityDao {
     private static final Logger LOGGER = Logger.getLogger(ReliabilityDao.class.getName());
     private static final org.slf4j.Logger log = LoggerFactory.getLogger(ReliabilityDao.class);
     private static ReliabilityDao instance = null;
+    private static final String ERR_JOB_NOT_FOUND_IN_PACK = "No se encontró el job en ese pack";
 
     public static synchronized ReliabilityDao getInstance() {
         if (Objects.isNull(instance)) {
@@ -160,9 +158,8 @@ public class ReliabilityDao {
     }
 
     public static class PersistenceException extends RuntimeException {
-        public PersistenceException(String message, Throwable cause) {
-            super(message, cause);
-        }
+        private static final long serialVersionUID = 1L;
+        public PersistenceException(String message, Throwable cause) { super(message, cause); }
     }
 
     public void insertTransfer(TransferInputDtoRequest dto) {
@@ -250,6 +247,162 @@ public class ReliabilityDao {
             session.commit();
         }catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
+        }
+    }
+
+    public List<ReliabilityPacksDtoResponse> listTransfersByStatus(
+            String domainCsv, String useCaseCsv, String statusCsv) {
+
+        LOGGER.info(() -> String.format(
+                "CALL sidedb.SP_LIST_TRANSFERS_BY_STATUS('%s','%s','%s')",
+                domainCsv, useCaseCsv, statusCsv
+        ));
+
+        try (SqlSession session = MyBatisConnectionFactory.getInstance().openSession()) {
+            return session.getMapper(ReliabilityMapper.class)
+                    .listTransfersByStatus(domainCsv, useCaseCsv, statusCsv);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            return Collections.emptyList();
+        }
+    }
+
+    public Integer getPackCurrentStatus(String pack) {
+        try (SqlSession session = MyBatisConnectionFactory.getInstance().openSession()) {
+            return session.getMapper(ReliabilityMapper.class).getPackStatus(pack);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            return null;
+        }
+    }
+
+    public void changeTransferStatus(String pack, int newStatus) {
+        try (SqlSession session = MyBatisConnectionFactory.getInstance().openSession()) {
+            ReliabilityMapper m = session.getMapper(ReliabilityMapper.class);
+            m.updateReliabilityStatus(pack, newStatus);
+            m.updateProjectInfoStatus(pack, newStatus);
+            session.commit();
+        } catch (Exception e) {
+            throw new PersistenceException("No se pudo actualizar el estado del pack " + pack, e);
+        }
+    }
+
+    public void updateJobByPackAndName(UpdateJobDtoRequest dto) {
+        try (SqlSession s = MyBatisConnectionFactory.getInstance().openSession()) {
+            int rows = s.getMapper(ReliabilityMapper.class).updateJobByPackAndName(dto);
+            if (rows == 0) {
+                throw new PersistenceException(ERR_JOB_NOT_FOUND_IN_PACK, null);
+            }
+            s.commit();
+        }
+    }
+
+    public void updatePackComments(String pack, String comments) {
+        try (SqlSession s = MyBatisConnectionFactory.getInstance().openSession()) {
+            int rows = s.getMapper(ReliabilityMapper.class).updatePackComments(pack, comments);
+            if (rows == 0) throw new PersistenceException("Pack no encontrado para comentar: " + pack, null);
+            s.commit();
+        }
+    }
+
+    public TransferDetailResponse getTransferDetail(String pack) {
+        try (SqlSession s = MyBatisConnectionFactory.getInstance().openSession()) {
+            var m = s.getMapper(ReliabilityMapper.class);
+            var header = m.getTransferHeader(pack);
+            if (header == null) return null;
+            var jobs = m.getTransferJobs(pack);
+            return TransferDetailResponse.builder().header(header).jobs(jobs).build();
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Error getTransferDetail", e);
+            return null;
+        }
+    }
+
+    public void updateJobComment(String pack, String jobName, String comments){
+        try (SqlSession s = MyBatisConnectionFactory.getInstance().openSession()) {
+            int rows = s.getMapper(ReliabilityMapper.class).updateJobComment(pack, jobName, comments);
+            if (rows == 0) throw new PersistenceException(ERR_JOB_NOT_FOUND_IN_PACK, null);
+            s.commit();
+        }
+    }
+
+    public void updateTransferDetail(String pack, TransferDetailUpdateRequest dto) {
+        try (SqlSession s = MyBatisConnectionFactory.getInstance().openSession()) {
+            var m = s.getMapper(ReliabilityMapper.class);
+
+            if (dto.getHeader() != null) {
+                var h = dto.getHeader();
+                m.patchPackHeader(pack, h.getDomainId(), h.getUseCaseId(), h.getComments());
+            }
+
+            if (dto.getJobs() != null) {
+                for (var j : dto.getJobs()) {
+                    validateJobForUpdate(j);
+
+                    UpdateJobDtoRequest up = new UpdateJobDtoRequest();
+                    up.setPack(pack);
+                    up.setJobName(j.getJobName());
+
+                    copyNonNullProperties(j, up);
+
+                    int rows = m.updateJobByPackAndName(up);
+                    if (rows == 0) throw new PersistenceException(ERR_JOB_NOT_FOUND_IN_PACK, null);
+                }
+            }
+
+            s.commit();
+        } catch (PersistenceException pe) {
+            throw pe;
+        } catch (Exception e) {
+            throw new PersistenceException("Error actualizando detalle del pack " + pack, e);
+        }
+    }
+
+    private void validateJobForUpdate(TransferDetailUpdateRequest.Job j) {
+        if (j == null || j.getJobName() == null || j.getJobName().isBlank()) {
+            throw new PersistenceException("jobName es obligatorio para actualizar un job", null);
+        }
+    }
+
+    private static void copyNonNullProperties(Object src, Object dest) {
+        try {
+            var srcInfo  = java.beans.Introspector.getBeanInfo(src.getClass(), Object.class);
+            var destInfo = java.beans.Introspector.getBeanInfo(dest.getClass(), Object.class);
+
+            java.util.Map<String, java.beans.PropertyDescriptor> destProps = new java.util.HashMap<>();
+            for (var pd : destInfo.getPropertyDescriptors()) {
+                if (pd.getWriteMethod() != null) {
+                    destProps.put(pd.getName(), pd);
+                }
+            }
+
+            for (var spd : srcInfo.getPropertyDescriptors()) {
+                var read = spd.getReadMethod();
+                Object value = (read != null) ? read.invoke(src) : null;
+                var dpd   = destProps.get(spd.getName());
+                var write = (dpd != null) ? dpd.getWriteMethod() : null;
+
+                boolean canCopy =
+                        read != null &&
+                                value != null &&
+                                dpd != null &&
+                                write != null &&
+                                dpd.getPropertyType().isAssignableFrom(value.getClass());
+                if (canCopy) {
+                    write.invoke(dest, value);
+                }
+            }
+        } catch (Exception e) {
+            throw new PersistenceException("Error copiando propiedades no nulas", e);
+        }
+    }
+
+    public List<String> getKmAllowedDomainNames(String email) {
+        try (SqlSession s = MyBatisConnectionFactory.getInstance().openSession()) {
+            return s.getMapper(ReliabilityMapper.class).getKmAllowedDomainNames(email);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Error getKmAllowedDomainNames", e);
+            return Collections.emptyList();
         }
     }
 }

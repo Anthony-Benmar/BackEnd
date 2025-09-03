@@ -11,12 +11,15 @@ public class ReliabilityPacksDtoResponse {
     private String pack;
     private Integer domainId;
     private String domainName;
-    private Integer productOwnerUserId;
+    private String  productOwnerEmail;
     private Integer useCaseId;
     private String useCase;
     private Integer projectId;
     private String sdaToolId;
-    private Integer creatorUserId;
+    private String creatorUser;
     private String pdfLink;
     private Integer jobCount;
+    private Integer statusId;
+    private String  statusName;
+    private Integer cambiedit;
 }

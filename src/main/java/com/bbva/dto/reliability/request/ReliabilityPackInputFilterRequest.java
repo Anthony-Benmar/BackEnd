@@ -8,6 +8,8 @@ import lombok.Setter;
 public class ReliabilityPackInputFilterRequest {
     private String domainName;
     private String useCase;
+    private String role;
+    private String tab;
     private Integer page;
     private Integer recordsAmount;
 }

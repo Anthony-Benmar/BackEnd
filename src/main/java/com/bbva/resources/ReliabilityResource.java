@@ -4,10 +4,7 @@ package com.bbva.resources;
 import com.bbva.common.HttpStatusCodes;
 import com.bbva.core.abstracts.IDataResult;
 import com.bbva.dto.catalog.response.DropDownDto;
-import com.bbva.dto.reliability.request.InventoryInputsFilterDtoRequest;
-import com.bbva.dto.reliability.request.InventoryJobUpdateDtoRequest;
-import com.bbva.dto.reliability.request.ReliabilityPackInputFilterRequest;
-import com.bbva.dto.reliability.request.TransferInputDtoRequest;
+import com.bbva.dto.reliability.request.*;
 import com.bbva.dto.reliability.response.*;
 import com.bbva.service.ReliabilityService;
 
@@ -17,12 +14,14 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
+import java.util.Map;
 
 @Path("/reliability")
 @Produces(MediaType.APPLICATION_JSON)
 public class ReliabilityResource {
     private final ReliabilityService reliabilityService = new ReliabilityService();
     private static final String CONTENTDISPOSITION = "Content-Disposition";
+    private static final String ACTOR_ROLE_KEY = "actorRole";
 
     @POST
     @Path("/info/filter")
@@ -139,5 +138,83 @@ public class ReliabilityResource {
     @Produces(MediaType.APPLICATION_JSON)
     public IDataResult<List<DropDownDto>> getOriginTypes() {
         return reliabilityService.getOriginTypes();
+    }
+
+    @POST
+    @Path("/info/reliability_packs_v2")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<PaginationReliabilityPackResponse> getReliabilityPacksV2(
+            ReliabilityPackInputFilterRequest dto,
+            @HeaderParam("X-USER-ROLE")  String roleFromHeader,
+            @HeaderParam("X-USER-EMAIL") String emailFromHeader
+    ) {
+        if (dto.getRole()==null || dto.getRole().isBlank()) dto.setRole(roleFromHeader);
+        return reliabilityService.getReliabilityPacksAdvanced(dto, emailFromHeader);
+    }
+
+    @PUT
+    @Path("/transfers/{pack}/status")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<TransferStatusChangeResponse> changeTransferStatus(
+            @PathParam("pack") String pack,
+            TransferStatusChangeRequest request
+    ) {
+        return reliabilityService.changeTransferStatus(pack, request);
+    }
+
+    @PUT
+    @Path("/transfers/{pack}/jobs/{jobName}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<Void> updateJobBySm(
+            @PathParam("pack") String pack,
+            @PathParam("jobName") String jobName,
+            UpdateJobDtoRequest body,
+            @HeaderParam("X-USER-ROLE") String roleFromHeader
+    ) {
+        body.setPack(pack);
+        body.setJobName(jobName);
+        if (body.getActorRole()==null || body.getActorRole().isBlank()) {
+            body.setActorRole(roleFromHeader);
+        }
+        return reliabilityService.updateJobBySm(body);
+    }
+
+    @PUT
+    @Path("/transfers/{pack}/comments")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<Void> updateCommentsForPack(
+            @PathParam("pack") String pack,
+            Map<String, String> body,
+            @HeaderParam("X-USER-ROLE") String roleFromHeader
+    ) {
+        String fallbackRole = (roleFromHeader == null) ? "" : roleFromHeader;
+        String roleInBody = (body != null) ? body.get(ACTOR_ROLE_KEY) : null;
+        String actor = (roleInBody != null && !roleInBody.isBlank())
+                ? roleInBody
+                : fallbackRole;
+        String comments = (body != null) ? body.get("comments") : null;
+        return reliabilityService.updateCommentsForPack(pack, actor, comments);
+    }
+
+    @GET
+    @Path("/transfers/{pack}/detail")
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<TransferDetailResponse> getTransferDetail(@PathParam("pack") String pack) {
+        return reliabilityService.getTransferDetail(pack);
+    }
+
+    @PUT
+    @Path("/transfers/{pack}/detail")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<TransferDetailResponse> updateTransferDetail(
+            @PathParam("pack") String pack,
+            TransferDetailUpdateRequest body,
+            @HeaderParam("X-USER-ROLE") String roleFromHeader) {
+        return reliabilityService.updateTransferDetail(pack, roleFromHeader, body);
     }
 }
