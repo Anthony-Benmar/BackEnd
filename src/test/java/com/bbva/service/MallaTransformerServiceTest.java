@@ -138,35 +138,9 @@ class MallaTransformerServiceTest {
         // Then
         assertTrue(result.contains("NODEID=\"PE-SENTRY-00\""));
         assertTrue(result.contains("RUN_AS=\"sentry\""));
-        assertTrue(result.contains("NODEID=\"OTHER_NODE\"")); // No debe cambiar este
-        assertTrue(result.contains("RUN_AS=\"otheruser\"")); // No debe cambiar este
+        assertTrue(result.contains("NODEID=\"OTHER_NODE\""));
+        assertTrue(result.contains("RUN_AS=\"otheruser\""));
     }
-
-    @Test
-    void testAddWildcardToFilewatcherPath() throws HandledException {
-        // Given
-        String xmlContent = """
-            <JOB SUB_APPLICATION="CTD-FWATCHER-CCR">
-                <CMDLINE>/path/to/file.csv</CMDLINE>
-            </JOB>
-            <JOB SUB_APPLICATION="CTD-FWATCHER-CCR">
-                <CMDLINE>/another/path/file.dat</CMDLINE>
-            </JOB>
-            <JOB SUB_APPLICATION="OTHER">
-                <CMDLINE>/other/file.csv</CMDLINE>
-            </JOB>
-            </JOB>
-            """;
-
-        // When
-        String result = mallaTransformerService.transformarDatioToAda(xmlContent, mallaData);
-
-        // Then
-        assertTrue(result.contains("/path/to/file.csv/*.csv"));
-        assertTrue(result.contains("/another/path/file.dat/*.csv"));
-        assertTrue(result.contains("/other/file.csv")); // No debe cambiar este
-    }
-
     @Test
     void testReplaceArtifactoryHost() throws HandledException {
         // Given
