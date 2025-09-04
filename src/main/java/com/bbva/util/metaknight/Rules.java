@@ -23,7 +23,7 @@ public class Rules {
         config.put(MIN_THRESHOLD, 100);
         config.put(TARGET_THRESHOLD, 100);
         config.put(ACCEPTANCE_MIN, 100);
-        config.put("id", functionalId);
+        config.put("id", "\"" + functionalId + "\"");
         return config;
     }
     private Map<String, Object> createCompletenessBaseConfig(String functionalId, boolean withRefusals) {
@@ -33,7 +33,7 @@ public class Rules {
         config.put(TARGET_THRESHOLD, 100.0);
         config.put(IS_CRITICAL, true);
         config.put(WITH_REFUSALS, withRefusals);
-        config.put("id", functionalId);
+        config.put("id", "\"" + functionalId + "\"");
         return config;
     }
 
@@ -44,7 +44,7 @@ public class Rules {
         config.put(TARGET_THRESHOLD, 100);
         config.put(IS_CRITICAL, true);
         config.put(WITH_REFUSALS, withRefusals);
-        config.put("id", functionalId);
+        config.put("id", "\"" + functionalId + "\"");
         return config;
     }
 
@@ -62,7 +62,7 @@ public class Rules {
         Map<String, Object> dataValues = new HashMap<>();
         dataValues.put(PATHS, paths);
         dataValues.put(SCHEMA, dataValuesSchema);
-        dataValues.put("type", type);
+        dataValues.put("type", "\"" + type + "\"");
 
         if (options != null) {
             dataValues.put(OPTIONS, options);
@@ -87,7 +87,7 @@ public class Rules {
 
     public Map<String, Object> applyFormatRule(String column, String regularExpression, String functionalId) {
         Map<String, Object> config = createBaseConfig(functionalId, true);
-        config.put("columns", Arrays.asList(column));
+        config.put("column", column);
         config.put("format", regularExpression);
 
         return createRule("com.datio.hammurabi.rules.validity.FormatValidationRule", config);
@@ -122,7 +122,7 @@ public class Rules {
         dataValues.put("castMode", "notPermissive");
 
         Map<String, Object> config = createCompletenessBaseConfig(functionalId, false);
-        config.put("dataValuesSubset", subset);
+        config.put("dataValuesSubset", "\"" + subset + "\"");
         config.put(DATA_VALUES, dataValues);
 
         return createRule("com.datio.hammurabi.rules.completeness.ConditionalPerimeterCompletenessRule", config);
@@ -130,8 +130,8 @@ public class Rules {
 
     public Map<String, Object> hammurabiL1TRule(String masterPath, String uuaa, String dfMasterName, String subset, String functionalId) {
         Map<String, Object> dataValuesOptions = new HashMap<>();
-        dataValuesOptions.put("includeMetadataAndDeleted", true);
-        dataValuesOptions.put("overrideSchema", true);
+        dataValuesOptions.put("includeMetadataAndDeleted", "\"" + true + "\"");
+        dataValuesOptions.put("overrideSchema", "\"" + true + "\"");
 
         String schemaPath = "${ARTIFACTORY_UNIQUE_CACHE}\"/artifactory/\"${SCHEMAS_REPOSITORY}\"/schemas/pe/"
                 + uuaa + "/master/" + dfMasterName + "/latest/" + dfMasterName + ".input.schema\"";
@@ -142,7 +142,7 @@ public class Rules {
                 dataValuesOptions);
 
         Map<String, Object> config = createCompletenessBaseConfig(functionalId, false);
-        config.put("dataValuesSubset", subset);
+        config.put("dataValuesSubset", "\"" + subset + "\"");
         config.put(DATA_VALUES, dataValues);
 
         return createRule("com.datio.hammurabi.rules.completeness.ConditionalPerimeterCompletenessRule", config);
