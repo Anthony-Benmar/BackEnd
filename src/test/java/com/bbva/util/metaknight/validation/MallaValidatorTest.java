@@ -20,7 +20,7 @@ class MallaValidatorTest {
 
     @Test
     @DisplayName("validarDatosIngesta - Request válido con generarMallas true")
-    void testValidarDatosIngesta_ValidRequest_Success() throws MallaGenerationException {
+    void testValidarDatosIngesta_ValidRequest_Success() {
         IngestaRequestDto request = createValidIngestaRequest();
         request.setGenerarMallas(true);
 
@@ -29,7 +29,7 @@ class MallaValidatorTest {
 
     @Test
     @DisplayName("validarDatosIngesta - GenerarMallas false no valida campos")
-    void testValidarDatosIngesta_GenerarMallasFalse_NoValidation() throws MallaGenerationException {
+    void testValidarDatosIngesta_GenerarMallasFalse_NoValidation() {
         IngestaRequestDto request = new IngestaRequestDto();
         request.setGenerarMallas(false);
 
@@ -37,75 +37,33 @@ class MallaValidatorTest {
     }
 
     @Test
-    @DisplayName("validarDatosIngesta - UUAA Master nulo con generarMallas true")
-    void testValidarDatosIngesta_NullUuaaMaster_ThrowsException() {
-        IngestaRequestDto request = createValidIngestaRequest();
-        request.setGenerarMallas(true);
-        request.setUuaaMaster(null);
+    @DisplayName("validarDatosIngesta - UUAA Master inválidos")
+    void testValidarDatosIngesta_InvalidUuaaMaster_ThrowsException() {
+        Object[][] casos = {
+                {null, "UUAA Master es requerida"},
+                {"", "UUAA Master es requerida"},
+                {"A", "exactamente 4 caracteres"},
+                {"ABCDE", "exactamente 4 caracteres"},
+                {"123A", "exactamente 4 caracteres"}
+        };
 
-        MallaGenerationException exception = assertThrows(MallaGenerationException.class,
-                () -> mallaValidator.validarDatosIngesta(request));
+        for (Object[] caso : casos) {
+            String uuaaMaster = (String) caso[0];
+            String expectedDetail = (String) caso[1];
 
-        assertEquals("MALLA_VALIDATION_ERROR", exception.getErrorCode());
-        assertTrue(exception.getDetails().contains("UUAA Master es requerida"));
+            IngestaRequestDto request = createValidIngestaRequest();
+            request.setGenerarMallas(true);
+            request.setUuaaMaster(uuaaMaster);
+
+            MallaGenerationException exception = assertThrows(
+                    MallaGenerationException.class,
+                    () -> mallaValidator.validarDatosIngesta(request)
+            );
+
+            assertEquals("MALLA_VALIDATION_ERROR", exception.getErrorCode());
+            assertTrue(exception.getDetails().contains(expectedDetail));
+        }
     }
-
-    @Test
-    @DisplayName("validarDatosIngesta - UUAA Master vacío")
-    void testValidarDatosIngesta_EmptyUuaaMaster_ThrowsException() {
-        IngestaRequestDto request = createValidIngestaRequest();
-        request.setGenerarMallas(true);
-        request.setUuaaMaster("");
-
-        MallaGenerationException exception = assertThrows(MallaGenerationException.class,
-                () -> mallaValidator.validarDatosIngesta(request));
-
-        assertEquals("MALLA_VALIDATION_ERROR", exception.getErrorCode());
-        assertTrue(exception.getDetails().contains("UUAA Master es requerida"));
-    }
-
-    @Test
-    @DisplayName("validarDatosIngesta - UUAA Master formato inválido - 1 caracter")
-    void testValidarDatosIngesta_InvalidUuaaFormat_OneChar_ThrowsException() {
-        IngestaRequestDto request = createValidIngestaRequest();
-        request.setGenerarMallas(true);
-        request.setUuaaMaster("A");
-
-        MallaGenerationException exception = assertThrows(MallaGenerationException.class,
-                () -> mallaValidator.validarDatosIngesta(request));
-
-        assertEquals("MALLA_VALIDATION_ERROR", exception.getErrorCode());
-        assertTrue(exception.getDetails().contains("exactamente 4 caracteres"));
-    }
-
-    @Test
-    @DisplayName("validarDatosIngesta - UUAA Master formato inválido - 5 caracteres")
-    void testValidarDatosIngesta_InvalidUuaaFormat_FiveChars_ThrowsException() {
-        IngestaRequestDto request = createValidIngestaRequest();
-        request.setGenerarMallas(true);
-        request.setUuaaMaster("ABCDE");
-
-        MallaGenerationException exception = assertThrows(MallaGenerationException.class,
-                () -> mallaValidator.validarDatosIngesta(request));
-
-        assertEquals("MALLA_VALIDATION_ERROR", exception.getErrorCode());
-        assertTrue(exception.getDetails().contains("exactamente 4 caracteres"));
-    }
-
-    @Test
-    @DisplayName("validarDatosIngesta - UUAA Master formato inválido - con números")
-    void testValidarDatosIngesta_InvalidUuaaFormat_WithNumbers_ThrowsException() {
-        IngestaRequestDto request = createValidIngestaRequest();
-        request.setGenerarMallas(true);
-        request.setUuaaMaster("123A");
-
-        MallaGenerationException exception = assertThrows(MallaGenerationException.class,
-                () -> mallaValidator.validarDatosIngesta(request));
-
-        assertEquals("MALLA_VALIDATION_ERROR", exception.getErrorCode());
-        assertTrue(exception.getDetails().contains("exactamente 4 caracteres"));
-    }
-
     @Test
     @DisplayName("validarDatosIngesta - Registro desarrollador corto")
     void testValidarDatosIngesta_ShortRegistroDev_ThrowsException() {
@@ -122,7 +80,7 @@ class MallaValidatorTest {
 
     @Test
     @DisplayName("validarDatosMalla - Datos válidos")
-    void testValidarDatosMalla_ValidData_Success() throws MallaGenerationException {
+    void testValidarDatosMalla_ValidData_Success() {
         MallaRequestDto mallaData = createValidMallaRequest();
 
         assertDoesNotThrow(() -> mallaValidator.validarDatosMalla(mallaData));
@@ -193,19 +151,6 @@ class MallaValidatorTest {
     }
 
     @Test
-    @DisplayName("validarDatosMalla - Jobname muy corto")
-    void testValidarDatosMalla_ShortJobname_ThrowsException() {
-        MallaRequestDto mallaData = createValidMallaRequest();
-        mallaData.setTransferJobname("AB");
-
-        MallaGenerationException exception = assertThrows(MallaGenerationException.class,
-                () -> mallaValidator.validarDatosMalla(mallaData));
-
-        assertEquals("MALLA_VALIDATION_ERROR", exception.getErrorCode());
-        assertTrue(exception.getDetails().contains("debe tener entre"));
-    }
-
-    @Test
     @DisplayName("validarDatosMalla - UUAA inconsistente")
     void testValidarDatosMalla_InconsistentUuaa_ThrowsException() {
         MallaRequestDto mallaData = createValidMallaRequest();
@@ -221,7 +166,7 @@ class MallaValidatorTest {
 
     @Test
     @DisplayName("validarXmlGenerado - XML válido")
-    void testValidarXmlGenerado_ValidXml_Success() throws MallaGenerationException {
+    void testValidarXmlGenerado_ValidXml_Success() {
         String validXml = "<JOB JOBNAME=\"TEST_JOB\" APPLICATION=\"TEST\" CMDLINE=\"echo test\"></JOB>";
 
         assertDoesNotThrow(() -> mallaValidator.validarXmlGenerado(validXml, "DATIO"));
@@ -276,29 +221,29 @@ class MallaValidatorTest {
     }
 
     @Test
-    @DisplayName("validarDatosMalla - Jobname con caracteres especiales")
-    void testValidarDatosMalla_JobnameWithSpecialChars_ThrowsException() {
-        MallaRequestDto mallaData = createValidMallaRequest();
-        mallaData.setTransferJobname("TEST_JOB!@#");
+    @DisplayName("validarDatosMalla - Jobname inválidos")
+    void testValidarDatosMalla_InvalidJobname_ThrowsException() {
+        Object[][] casos = {
+                {"AB", "debe tener entre"},
+                {"TEST_JOB!@#", "alfanum"},
+                {"VERYLONGJOBNAMETHATEXCEEDS20CHARS", "debe tener entre"}
+        };
 
-        MallaGenerationException exception = assertThrows(MallaGenerationException.class,
-                () -> mallaValidator.validarDatosMalla(mallaData));
+        for (Object[] caso : casos) {
+            String jobname = (String) caso[0];
+            String expectedDetail = (String) caso[1];
 
-        assertEquals("MALLA_VALIDATION_ERROR", exception.getErrorCode());
-        assertTrue(exception.getDetails().contains("alfanum"));
-    }
+            MallaRequestDto mallaData = createValidMallaRequest();
+            mallaData.setTransferJobname(jobname);
 
-    @Test
-    @DisplayName("validarDatosMalla - Jobname muy largo")
-    void testValidarDatosMalla_LongJobname_ThrowsException() {
-        MallaRequestDto mallaData = createValidMallaRequest();
-        mallaData.setTransferJobname("VERYLONGJOBNAMETHATEXCEEDS20CHARS");
+            MallaGenerationException exception = assertThrows(
+                    MallaGenerationException.class,
+                    () -> mallaValidator.validarDatosMalla(mallaData)
+            );
 
-        MallaGenerationException exception = assertThrows(MallaGenerationException.class,
-                () -> mallaValidator.validarDatosMalla(mallaData));
-
-        assertEquals("MALLA_VALIDATION_ERROR", exception.getErrorCode());
-        assertTrue(exception.getDetails().contains("debe tener entre"));
+            assertEquals("MALLA_VALIDATION_ERROR", exception.getErrorCode());
+            assertTrue(exception.getDetails().contains(expectedDetail));
+        }
     }
 
     @Test

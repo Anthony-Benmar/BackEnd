@@ -30,7 +30,6 @@ class MallaTransformerServiceTest {
 
     @Test
     void testTransformarDatioToAda_Success() throws HandledException {
-        // Given
         String xmlDatio = """
             <FOLDER>
                 <JOB APPLICATION="TEST-DATIO" JOBNAME="TRANSFER_JOB">
@@ -40,10 +39,8 @@ class MallaTransformerServiceTest {
             </FOLDER>
             """;
 
-        // When
         String result = mallaTransformerService.transformarDatioToAda(xmlDatio, mallaData);
 
-        // Then
         assertNotNull(result);
         assertTrue(result.contains("TEST-ADA"));
         assertFalse(result.contains("TEST-DATIO"));
@@ -52,7 +49,6 @@ class MallaTransformerServiceTest {
 
     @Test
     void testReplaceDatioInApplication() throws HandledException {
-        // Given
         String xmlContent = """
             <JOB APPLICATION="TEST-DATIO" JOBNAME="JOB1">
             </JOB>
@@ -60,10 +56,8 @@ class MallaTransformerServiceTest {
             </JOB>
             """;
 
-        // When
         String result = mallaTransformerService.transformarDatioToAda(xmlContent, mallaData);
 
-        // Then
         assertTrue(result.contains("APPLICATION=\"TEST-ADA\""));
         assertTrue(result.contains("APPLICATION=\"ANOTHER-ADA\""));
         assertFalse(result.contains("DATIO"));
@@ -71,7 +65,6 @@ class MallaTransformerServiceTest {
 
     @Test
     void testReplaceCmdlineValueWhenSentryJob() throws HandledException {
-        // Given
         String xmlContent = """
             <JOB RUN_AS="sentry" CMDLINE="/opt/datio/sentry-pe/dataproc_sentry.py">
             </JOB>
@@ -79,12 +72,9 @@ class MallaTransformerServiceTest {
             </JOB>
             """;
 
-        // When
         String result = mallaTransformerService.transformarDatioToAda(xmlContent, mallaData);
 
-        // Then
         assertTrue(result.contains("/opt/datio/sentry-pe-aws/dataproc_sentry.py"));
-        // Solo debe cambiar para jobs con RUN_AS="sentry"
         int awsCount = result.split("/opt/datio/sentry-pe-aws/dataproc_sentry.py").length - 1;
         int originalCount = result.split("/opt/datio/sentry-pe/dataproc_sentry.py").length - 1;
         assertEquals(1, awsCount);
@@ -93,16 +83,13 @@ class MallaTransformerServiceTest {
 
     @Test
     void testAddDotCloudInTransfer() throws HandledException {
-        // Given
         String xmlContent = """
             <JOB CMDLINE="datax-agent --transferId %%PARM1 --config">
             </JOB>
             """;
 
-        // When
         String result = mallaTransformerService.transformarDatioToAda(xmlContent, mallaData);
 
-        // Then
         assertTrue(result.contains("datax-agent --transferId %%PARM1._cloud"));
     }
 
@@ -178,7 +165,6 @@ class MallaTransformerServiceTest {
 
     @Test
     void testRemoveJobByName_NullJobname() throws HandledException {
-        // Given
         mallaData.setErase2Jobname(null);
         String xmlContent = """
             <JOB JOBNAME="SOME_JOB">
@@ -186,11 +172,9 @@ class MallaTransformerServiceTest {
             </JOB>
             """;
 
-        // When
         String result = mallaTransformerService.transformarDatioToAda(xmlContent, mallaData);
 
-        // Then
-        assertTrue(result.contains("SOME_JOB")); // No debe eliminar nada
+        assertTrue(result.contains("SOME_JOB"));
     }
 
     @Test
@@ -209,7 +193,6 @@ class MallaTransformerServiceTest {
 
     @Test
     void testUpdateFilewatcherInconds() throws HandledException {
-        // Given
         String xmlContent = """
             <JOB JOBNAME="FW_JOB">
                 <INCOND NAME="COPY_JOB-TO-FW_JOB" />
@@ -217,18 +200,15 @@ class MallaTransformerServiceTest {
             </JOB>
             """;
 
-        // When
         String result = mallaTransformerService.transformarDatioToAda(xmlContent, mallaData);
 
-        // Then
         assertTrue(result.contains("TRANSFER_JOB"));
         int copyJobCount = result.split("COPY_JOB").length - 1;
-        assertTrue(copyJobCount < 2); // Debe haber menos referencias a COPY_JOB
+        assertTrue(copyJobCount < 2);
     }
 
     @Test
     void testCleanupHmmMasterJob_WithL1T() throws HandledException {
-        // Given
         String xmlContent = """
             <JOB JOBNAME="HMM_MASTER_JOB">
                 <OUTCOND NAME="HMM_MASTER_JOB-TO-ERASE1_JOB" />
@@ -237,10 +217,8 @@ class MallaTransformerServiceTest {
             </JOB>
             """;
 
-        // When
         String result = mallaTransformerService.transformarDatioToAda(xmlContent, mallaData);
 
-        // Then
         assertFalse(result.contains("ERASE1_JOB"));
         assertFalse(result.contains("ERASE2_JOB"));
         assertFalse(result.contains("CF@OK"));
@@ -248,7 +226,6 @@ class MallaTransformerServiceTest {
 
     @Test
     void testCleanupHmmMasterJob_WithoutL1T() throws HandledException {
-        // Given
         mallaData.setHmmL1tJobname(null);
         String xmlContent = """
             <JOB JOBNAME="HMM_MASTER_JOB">
@@ -258,11 +235,9 @@ class MallaTransformerServiceTest {
             </JOB>
             """;
 
-        // When
         String result = mallaTransformerService.transformarDatioToAda(xmlContent, mallaData);
 
-        // Then
-        assertTrue(result.contains("ERASE1_JOB")); // No debe eliminar cuando no hay L1T
+        assertTrue(result.contains("ERASE1_JOB"));
         assertFalse(result.contains("ERASE2_JOB"));
         assertFalse(result.contains("CF@OK"));
     }
@@ -284,7 +259,6 @@ class MallaTransformerServiceTest {
 
     @Test
     void testCleanupHmmL1tJobReferences_NullL1tJobname() throws HandledException {
-        // Given
         mallaData.setHmmL1tJobname(null);
         String xmlContent = """
             <JOB JOBNAME="SOME_JOB">
@@ -292,16 +266,13 @@ class MallaTransformerServiceTest {
             </JOB>
             """;
 
-        // When
         String result = mallaTransformerService.transformarDatioToAda(xmlContent, mallaData);
 
-        // Then
-        assertTrue(result.contains("ERASE2_JOB")); // No debe cambiar nada
+        assertTrue(result.contains("ERASE2_JOB"));
     }
 
     @Test
     void testUpdateFilewatcherCmdlinePath() throws HandledException {
-        // Given
         String xmlContent = """
             <JOB SUB_APPLICATION="CTD-FWATCHER-CCR">
                 <CMDLINE>/path/external/copyUuaa/file.csv</CMDLINE>
@@ -311,85 +282,68 @@ class MallaTransformerServiceTest {
             </JOB>
             """;
 
-        // When
         String result = mallaTransformerService.transformarDatioToAda(xmlContent, mallaData);
 
-        // Then
         assertTrue(result.contains("datax/transferUuaa"));
-        assertTrue(result.contains("external/copyUuaa")); // Solo uno debe cambiar
+        assertTrue(result.contains("external/copyUuaa"));
     }
 
     @Test
     void testUpdateErase1DependenciesForL1T() throws HandledException {
-        // Given
         String xmlContent = """
             <INCOND NAME="HMM_MASTER_JOB-TO-ERASE1_JOB" />
             <OUTCOND NAME="HMM_MASTER_JOB-TO-ERASE1_JOB" />
             """;
 
-        // When
         String result = mallaTransformerService.transformarDatioToAda(xmlContent, mallaData);
 
-        // Then
         assertTrue(result.contains("HMM_L1T_JOB-TO-ERASE1_JOB"));
         assertFalse(result.contains("HMM_MASTER_JOB-TO-ERASE1_JOB"));
     }
 
     @Test
     void testUpdateErase1DependenciesForL1T_NoL1T() throws HandledException {
-        // Given
         mallaData.setHmmL1tJobname(null);
         mallaData.setKrbL1tJobname(null);
         String xmlContent = """
             <INCOND NAME="HMM_MASTER_JOB-TO-ERASE1_JOB" />
             """;
 
-        // When
         String result = mallaTransformerService.transformarDatioToAda(xmlContent, mallaData);
 
-        // Then
-        assertTrue(result.contains("HMM_MASTER_JOB-TO-ERASE1_JOB")); // No debe cambiar
+        assertTrue(result.contains("HMM_MASTER_JOB-TO-ERASE1_JOB"));
     }
 
     @Test
     void testAddAdaEmailToAllJobs_EmailNotPresent() throws HandledException {
-        // Given
         String xmlContent = """
             <DOMAIL DEST="test@example.com" />
             <DOMAIL DEST="another@test.com;third@test.com" />
             """;
 
-        // When
         String result = mallaTransformerService.transformarDatioToAda(xmlContent, mallaData);
 
-        // Then
         assertTrue(result.contains("test@example.com;ada_dhm_pe.group@bbva.com"));
         assertTrue(result.contains("another@test.com;third@test.com;ada_dhm_pe.group@bbva.com"));
     }
 
     @Test
     void testAddAdaEmailToAllJobs_EmailAlreadyPresent() throws HandledException {
-        // Given
         String xmlContent = """
             <DOMAIL DEST="test@example.com;ada_dhm_pe.group@bbva.com" />
             """;
 
-        // When
         String result = mallaTransformerService.transformarDatioToAda(xmlContent, mallaData);
 
-        // Then
         assertTrue(result.contains("test@example.com;ada_dhm_pe.group@bbva.com"));
-        // No debe duplicar el email
         int adaEmailCount = result.split("ada_dhm_pe\\.group@bbva\\.com").length - 1;
         assertEquals(1, adaEmailCount);
     }
 
     @Test
     void testTransformarDatioToAda_Exception() {
-        // Given
-        String xmlDatio = null; // Esto causará una excepción
+        String xmlDatio = null;
 
-        // When & Then
         HandledException exception = assertThrows(HandledException.class, () -> {
             mallaTransformerService.transformarDatioToAda(xmlDatio, mallaData);
         });
@@ -400,7 +354,6 @@ class MallaTransformerServiceTest {
 
     @Test
     void testEscapeRegexCharacters() throws HandledException {
-        // Given
         mallaData.setErase2Jobname("JOB.WITH[SPECIAL]CHARS(AND)MORE");
         String xmlContent = """
             <JOB JOBNAME="JOB.WITH[SPECIAL]CHARS(AND)MORE">
@@ -408,16 +361,13 @@ class MallaTransformerServiceTest {
             </JOB>
             """;
 
-        // When
         String result = mallaTransformerService.transformarDatioToAda(xmlContent, mallaData);
 
-        // Then
         assertFalse(result.contains("JOB.WITH[SPECIAL]CHARS(AND)MORE"));
     }
 
     @Test
     void testUpdateFilewatcherCmdlinePath_NullValues() throws HandledException {
-        // Given
         mallaData.setCopyUuaaRaw(null);
         mallaData.setTransferUuaaRaw(null);
         String xmlContent = """
@@ -426,11 +376,9 @@ class MallaTransformerServiceTest {
             </JOB>
             """;
 
-        // When
         String result = mallaTransformerService.transformarDatioToAda(xmlContent, mallaData);
 
-        // Then
-        assertTrue(result.contains("/path/external/test/file.csv")); // No debe cambiar
+        assertTrue(result.contains("/path/external/test/file.csv"));
     }
 
     private void assertTransformation(String xmlContent, String[] expectedContains, String[] expectedNotContains) throws HandledException {

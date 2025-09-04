@@ -103,7 +103,7 @@ public class OptimizedGitRepositoryService{
         }
     }
 
-    private void downloadUuaaXmlFiles(String uuaa, String countryType, String localPath) throws Exception {
+    private void downloadUuaaXmlFiles(String uuaa, String countryType, String localPath) throws MallaGenerationException {
         String directoryPath = countryType + PATH_DELIMITER+ uuaa.toUpperCase();
         List<String> xmlFiles = getXmlFilesFromRepo(directoryPath);
         for (String xmlFile : xmlFiles) {

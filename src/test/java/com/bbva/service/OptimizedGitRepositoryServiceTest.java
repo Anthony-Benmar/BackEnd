@@ -95,7 +95,7 @@ class OptimizedGitRepositoryServiceTest {
     void testCleanupCache_DirectoryNotExists() {
         OptimizedGitRepositoryService service = new OptimizedGitRepositoryService();
 
-        assertDoesNotThrow(() -> service.cleanupCache());
+        assertDoesNotThrow(service::cleanupCache);
     }
 
     @Test

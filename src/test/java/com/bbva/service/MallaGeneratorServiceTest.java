@@ -50,7 +50,6 @@ class MallaGeneratorServiceTest {
         MockitoAnnotations.openMocks(this);
         mallaGeneratorService = new MallaGeneratorService();
 
-        // Inject mocked dependencies using reflection
         injectMockDependency("xmlGenerator", xmlGenerator);
         injectMockDependency("transformerService", transformerService);
         injectMockDependency("mallaValidator", mallaValidator);
@@ -60,7 +59,6 @@ class MallaGeneratorServiceTest {
     @Test
     @DisplayName("generarMallasXml - Con L1T habilitado")
     void testGenerarMallasXml_WithL1TEnabled() throws Exception {
-        // Given
         IngestaRequestDto request = createValidRequest();
         request.setTieneL1T(true);
 
@@ -71,17 +69,14 @@ class MallaGeneratorServiceTest {
         when(transformerService.transformarDatioToAda(anyString(), any(MallaRequestDto.class)))
                 .thenReturn("<ADA>test ada content</ADA>");
 
-        // Mock ControlMAnalyzer using MockedConstruction
         try (MockedConstruction<ControlMAnalyzer> mockedControlM = mockConstruction(
                 ControlMAnalyzer.class,
                 (mock, context) -> {
                     setupControlMAnalyzerMock(mock);
                 })) {
 
-            // When
             Map<String, String> result = mallaGeneratorService.generarMallasXml(request, schemaProcessor);
 
-            // Then
             assertNotNull(result);
             assertEquals(2, result.size());
             verify(mallaValidator).validarDatosIngesta(request);
@@ -94,14 +89,12 @@ class MallaGeneratorServiceTest {
     @Test
     @DisplayName("generarMallasXml - Error en validación inicial")
     void testGenerarMallasXml_ValidationError() throws Exception {
-        // Given
         IngestaRequestDto request = createValidRequest();
         MallaGenerationException validationException =
                 MallaGenerationException.validationError("Validation failed");
 
         doThrow(validationException).when(mallaValidator).validarDatosIngesta(request);
 
-        // When & Then
         HandledException exception = assertThrows(HandledException.class,
                 () -> mallaGeneratorService.generarMallasXml(request, schemaProcessor));
 
@@ -113,16 +106,13 @@ class MallaGeneratorServiceTest {
     @Test
     @DisplayName("construirDatosMallaConDatosReales - Error en construcción")
     void testConstruirDatosMallaConDatosReales_Error() throws Exception {
-        // Given
         IngestaRequestDto request = createValidRequest();
-        request.setUuaaMaster(null); // This will cause error
+        request.setUuaaMaster(null);
 
-        // Use reflection to access private method
         Method method = MallaGeneratorService.class.getDeclaredMethod(
                 "construirDatosMallaConDatosReales", IngestaRequestDto.class, SchemaProcessor.class);
         method.setAccessible(true);
 
-        // When & Then
         Exception exception = assertThrows(Exception.class,
                 () -> method.invoke(mallaGeneratorService, request, schemaProcessor));
 
@@ -134,20 +124,16 @@ class MallaGeneratorServiceTest {
     @Test
     @DisplayName("generarJobIdsConTagReal - Genera IDs correctamente")
     void testGenerarJobIdsConTagReal() throws Exception {
-        // Given
         MallaRequestDto mallaData = new MallaRequestDto();
         String uuaaLower = "test";
         String tag = "testtag";
 
-        // Use reflection to access private method
         Method method = MallaGeneratorService.class.getDeclaredMethod(
                 "generarJobIdsConTagReal", MallaRequestDto.class, String.class, String.class);
         method.setAccessible(true);
 
-        // When
         method.invoke(mallaGeneratorService, mallaData, uuaaLower, tag);
 
-        // Then
         assertNotNull(mallaData.getHmmStgJobid());
         assertNotNull(mallaData.getKrbRawJobid());
         assertNotNull(mallaData.getHmmRawJobid());
@@ -163,7 +149,6 @@ class MallaGeneratorServiceTest {
     @Test
     @DisplayName("generarDatosConControlMAnalyzer - Sin L1T")
     void testGenerarDatosConControlMAnalyzer_WithoutL1T() throws Exception {
-        // Given
         MallaRequestDto mallaData = new MallaRequestDto();
         mallaData.setUuaa("TEST");
         mallaData.setUuaaLowercase("test");
@@ -176,20 +161,15 @@ class MallaGeneratorServiceTest {
                 ControlMAnalyzer.class,
                 (mock, context) -> setupControlMAnalyzerMock(mock))) {
 
-            // Use reflection to access private method
             Method method = MallaGeneratorService.class.getDeclaredMethod(
                     "generarDatosConControlMAnalyzer", MallaRequestDto.class, IngestaRequestDto.class, SchemaProcessor.class);
             method.setAccessible(true);
 
-            // When
             method.invoke(mallaGeneratorService, mallaData, request, schemaProcessor);
 
-            // Then
             assertEquals("test@example.com", mallaData.getTeamEmail());
             assertNull(mallaData.getKrbL1tJobname());
             assertNull(mallaData.getHmmL1tJobname());
-            // Nota: L1tSourceName se asigna siempre si schemaProcessor no es null,
-            // independientemente del valor de tieneL1T (comportamiento del código actual)
             assertNotNull(mallaData.getL1tSourceName());
             assertEquals("test_master_l1t", mallaData.getL1tSourceName());
         }
@@ -198,7 +178,6 @@ class MallaGeneratorServiceTest {
     @Test
     @DisplayName("generarDatosConControlMAnalyzer - Con L1T")
     void testGenerarDatosConControlMAnalyzer_WithL1T() throws Exception {
-        // Given
         MallaRequestDto mallaData = new MallaRequestDto();
         mallaData.setUuaa("TEST");
         mallaData.setUuaaLowercase("test");
@@ -211,15 +190,12 @@ class MallaGeneratorServiceTest {
                 ControlMAnalyzer.class,
                 (mock, context) -> setupControlMAnalyzerMock(mock))) {
 
-            // Use reflection to access private method
             Method method = MallaGeneratorService.class.getDeclaredMethod(
                     "generarDatosConControlMAnalyzer", MallaRequestDto.class, IngestaRequestDto.class, SchemaProcessor.class);
             method.setAccessible(true);
 
-            // When
             method.invoke(mallaGeneratorService, mallaData, request, schemaProcessor);
 
-            // Then
             assertEquals("test@example.com", mallaData.getTeamEmail());
             assertNotNull(mallaData.getKrbL1tJobname());
             assertNotNull(mallaData.getHmmL1tJobname());
@@ -231,7 +207,6 @@ class MallaGeneratorServiceTest {
     @Test
     @DisplayName("generarDatosConControlMAnalyzer - SchemaProcessor nulo")
     void testGenerarDatosConControlMAnalyzer_NullSchemaProcessor() throws Exception {
-        // Given
         MallaRequestDto mallaData = new MallaRequestDto();
         mallaData.setUuaa("TEST");
         mallaData.setUuaaLowercase("test");
@@ -242,15 +217,12 @@ class MallaGeneratorServiceTest {
                 ControlMAnalyzer.class,
                 (mock, context) -> setupControlMAnalyzerMock(mock))) {
 
-            // Use reflection to access private method
             Method method = MallaGeneratorService.class.getDeclaredMethod(
                     "generarDatosConControlMAnalyzer", MallaRequestDto.class, IngestaRequestDto.class, SchemaProcessor.class);
             method.setAccessible(true);
 
-            // When
             method.invoke(mallaGeneratorService, mallaData, request, null);
 
-            // Then
             assertEquals("test@example.com", mallaData.getTeamEmail());
         }
     }
@@ -258,7 +230,6 @@ class MallaGeneratorServiceTest {
     @Test
     @DisplayName("Cleanup ejecutado en caso de excepción durante cleanup")
     void testCleanupCacheException() throws Exception {
-        // Given
         IngestaRequestDto request = createValidRequest();
         setupSchemaProcessorMocks();
 
@@ -267,14 +238,12 @@ class MallaGeneratorServiceTest {
         when(transformerService.transformarDatioToAda(anyString(), any(MallaRequestDto.class)))
                 .thenReturn("<ADA>content</ADA>");
 
-        // Simulate cleanup exception
         doThrow(new RuntimeException("Cleanup failed")).when(gitRepositoryService).cleanupCache();
 
         try (MockedConstruction<ControlMAnalyzer> mockedControlM = mockConstruction(
                 ControlMAnalyzer.class,
                 (mock, context) -> setupControlMAnalyzerMock(mock))) {
 
-            // When & Then - Should not propagate cleanup exception
             Map<String, String> result = assertDoesNotThrow(() ->
                     mallaGeneratorService.generarMallasXml(request, schemaProcessor));
 
@@ -287,7 +256,6 @@ class MallaGeneratorServiceTest {
     @Test
     @DisplayName("Validación de XML - DATIO y ADA")
     void testXmlValidation() throws Exception {
-        // Given
         IngestaRequestDto request = createValidRequest();
         setupSchemaProcessorMocks();
 
@@ -301,16 +269,13 @@ class MallaGeneratorServiceTest {
                 ControlMAnalyzer.class,
                 (mock, context) -> setupControlMAnalyzerMock(mock))) {
 
-            // When
             mallaGeneratorService.generarMallasXml(request, schemaProcessor);
 
-            // Then
             verify(mallaValidator).validarXmlGenerado(datioXml, "DATIO");
             verify(mallaValidator).validarXmlGenerado(adaXml, "ADA");
         }
     }
 
-    // Helper methods
     private IngestaRequestDto createValidRequest() {
         IngestaRequestDto request = new IngestaRequestDto();
         request.setUuaaMaster("test");
@@ -334,7 +299,6 @@ class MallaGeneratorServiceTest {
     }
 
     private void setupControlMAnalyzerMock(ControlMAnalyzer mock) {
-        // Mock all getters with realistic values
         when(mock.getNamespace()).thenReturn("test-namespace");
         when(mock.getParentFolder()).thenReturn("test-folder");
         when(mock.getTransfer()).thenReturn("TESTTP0001");
