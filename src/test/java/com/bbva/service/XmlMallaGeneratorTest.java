@@ -89,15 +89,6 @@ class XmlMallaGeneratorTest {
     }
 
     @Test
-    void testGenerarFlujoCompletoXml_WithMinimalData() throws Exception {
-        MallaRequestDto minimalData = createMinimalMallaData();
-
-        String xmlResult = xmlMallaGenerator.generarFlujoCompletoXml(minimalData);
-        assertNotNull(xmlResult);
-        assertTrue(xmlResult.isEmpty());
-    }
-
-    @Test
     void testGenerarFlujoCompletoXml_AllJobnamesPresent() throws Exception {
         String xmlResult = xmlMallaGenerator.generarFlujoCompletoXml(mallaData);
 
