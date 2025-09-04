@@ -54,54 +54,20 @@ class XmlJobnameExtractorTest {
         assertTrue(jobnames.isEmpty());
     }
 
-//    @Test
-//    void testExtractJobnames_NonExistentFile() {
-//        // When & Then
-//        MallaGenerationException exception = assertThrows(MallaGenerationException.class, () -> {
-//            xmlJobnameExtractor.extractJobnames("non_existent_file.xml");
-//        });
-//
-//        assertTrue(exception.getMessage().contains("Error extrayendo jobnames de XML"));
-//    }
-
-//    @Test
-//    void testExtractJobnames_InvalidXmlFile() {
-//        // When & Then
-//        MallaGenerationException exception = assertThrows(MallaGenerationException.class, () -> {
-//            xmlJobnameExtractor.extractJobnames(invalidXmlFile.getAbsolutePath());
-//        });
-//
-//        assertTrue(exception.getMessage().contains("Error extrayendo jobnames de XML"));
-//    }
-
     @Test
     void testExtractNamespaceFromXml_Success() throws MallaGenerationException {
-        // When
         String namespace = xmlJobnameExtractor.extractNamespaceFromXml(validXmlFile.getAbsolutePath());
 
-        // Then
         assertNotNull(namespace);
         assertEquals("pe.bbva.app-id-test.pro", namespace);
     }
 
     @Test
     void testExtractNamespaceFromXml_NoNamespace() throws MallaGenerationException {
-        // When
         String namespace = xmlJobnameExtractor.extractNamespaceFromXml(emptyXmlFile.getAbsolutePath());
 
-        // Then
         assertNull(namespace);
     }
-
-//    @Test
-//    void testExtractNamespaceFromXml_NonExistentFile() {
-//        // When & Then
-//        MallaGenerationException exception = assertThrows(MallaGenerationException.class, () -> {
-//            xmlJobnameExtractor.extractNamespaceFromXml("non_existent_file.xml");
-//        });
-//
-//        assertTrue(exception.getMessage().contains("Error extrayendo namespace de XML"));
-//    }
 
     @Test
     void testFilterJobnamesByPattern_Success() {
@@ -134,52 +100,40 @@ class XmlJobnameExtractorTest {
 
     @Test
     void testFilterJobnamesByPattern_EmptyList() {
-        // Given
         List<String> emptyList = Arrays.asList();
 
-        // When
         List<String> filtered = xmlJobnameExtractor.filterJobnamesByPattern(emptyList, "TEST", "CP");
 
-        // Then
         assertNotNull(filtered);
         assertTrue(filtered.isEmpty());
     }
 
     @Test
     void testFilterJobnamesByPattern_NoMatches() {
-        // Given
         List<String> jobnames = Arrays.asList("OTHERCP0001", "DIFFERENTVP0001");
 
-        // When
         List<String> filtered = xmlJobnameExtractor.filterJobnamesByPattern(jobnames, "TEST", "CP");
 
-        // Then
         assertNotNull(filtered);
         assertTrue(filtered.isEmpty());
     }
 
     @Test
     void testFilterJobnamesByPattern_CaseInsensitive() {
-        // Given
         List<String> jobnames = Arrays.asList("TESTCP0001", "testcp0002");
 
-        // When
         List<String> filtered = xmlJobnameExtractor.filterJobnamesByPattern(jobnames, "test", "CP");
 
-        // Then
         assertEquals(1, filtered.size());
         assertTrue(filtered.contains("TESTCP0001"));
     }
 
     @Test
     void testFilterJobnamesByPattern_Sorted() {
-        // Given
         List<String> jobnames = Arrays.asList("TESTCP0003", "TESTCP0001", "TESTCP0002");
 
-        // When
         List<String> filtered = xmlJobnameExtractor.filterJobnamesByPattern(jobnames, "TEST", "CP");
 
-        // Then
         assertEquals(3, filtered.size());
         assertEquals("TESTCP0001", filtered.get(0));
         assertEquals("TESTCP0002", filtered.get(1));
@@ -188,57 +142,44 @@ class XmlJobnameExtractorTest {
 
     @Test
     void testGetLastJobname_Success() {
-        // Given
         List<String> sortedJobnames = Arrays.asList("TESTCP0001", "TESTCP0002", "TESTCP0003");
 
-        // When
         String lastJobname = xmlJobnameExtractor.getLastJobname(sortedJobnames);
 
-        // Then
         assertEquals("TESTCP0003", lastJobname);
     }
 
     @Test
     void testGetLastJobname_EmptyList() {
-        // Given
         List<String> emptyList = Arrays.asList();
 
-        // When
         String lastJobname = xmlJobnameExtractor.getLastJobname(emptyList);
 
-        // Then
         assertNull(lastJobname);
     }
 
     @Test
     void testGetLastJobname_NullList() {
-        // When
         String lastJobname = xmlJobnameExtractor.getLastJobname(null);
 
-        // Then
         assertNull(lastJobname);
     }
 
     @Test
     void testGetLastJobname_SingleElement() {
-        // Given
         List<String> singleElement = Arrays.asList("TESTCP0001");
 
-        // When
         String lastJobname = xmlJobnameExtractor.getLastJobname(singleElement);
 
-        // Then
         assertEquals("TESTCP0001", lastJobname);
     }
 
     @Test
     void testGetNextJob_Success() {
-        // When
         String nextJob1 = xmlJobnameExtractor.getNextJob("TESTCP0001");
         String nextJob2 = xmlJobnameExtractor.getNextJob("TESTVP0009");
         String nextJob3 = xmlJobnameExtractor.getNextJob("TESTTP0099");
 
-        // Then
         assertEquals("TESTCP0002", nextJob1);
         assertEquals("TESTVP0010", nextJob2);
         assertEquals("TESTTP0100", nextJob3);
@@ -246,7 +187,6 @@ class XmlJobnameExtractorTest {
 
     @Test
     void testGetNextJob_NullInput() {
-        // When & Then
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
             xmlJobnameExtractor.getNextJob(null);
         });
@@ -256,7 +196,6 @@ class XmlJobnameExtractorTest {
 
     @Test
     void testGetNextJob_ShortInput() {
-        // When & Then
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
             xmlJobnameExtractor.getNextJob("ABC");
         });
@@ -266,7 +205,6 @@ class XmlJobnameExtractorTest {
 
     @Test
     void testGetNextJob_InvalidNumberFormat() {
-        // When & Then
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
             xmlJobnameExtractor.getNextJob("TESTCPABCD");
         });
@@ -276,88 +214,69 @@ class XmlJobnameExtractorTest {
 
     @Test
     void testGetNextJob_LeadingZeros() {
-        // When
         String nextJob = xmlJobnameExtractor.getNextJob("TESTCP0001");
 
-        // Then
         assertEquals("TESTCP0002", nextJob);
     }
 
     @Test
     void testGetNextJob_MaxNumber() {
-        // When
         String nextJob = xmlJobnameExtractor.getNextJob("TESTCP9999");
 
-        // Then
         assertEquals("TESTCP10000", nextJob);
     }
 
     @Test
     void testIsValidControlMXml_ValidFile() {
-        // When
         boolean isValid = xmlJobnameExtractor.isValidControlMXml(validXmlFile.getAbsolutePath());
 
-        // Then
         assertTrue(isValid);
     }
 
     @Test
     void testIsValidControlMXml_EmptyFile() {
-        // When
         boolean isValid = xmlJobnameExtractor.isValidControlMXml(emptyXmlFile.getAbsolutePath());
 
-        // Then
         assertFalse(isValid);
     }
 
     @Test
     void testIsValidControlMXml_InvalidFile() {
-        // When
         boolean isValid = xmlJobnameExtractor.isValidControlMXml(invalidXmlFile.getAbsolutePath());
 
-        // Then
         assertFalse(isValid);
     }
 
     @Test
     void testIsValidControlMXml_NonExistentFile() {
-        // When
         boolean isValid = xmlJobnameExtractor.isValidControlMXml("non_existent_file.xml");
 
-        // Then
         assertFalse(isValid);
     }
 
     @Test
     void testIsValidControlMXml_NonXmlFile() throws IOException {
-        // Given
         File textFile = tempDir.resolve("test.txt").toFile();
         try (FileWriter writer = new FileWriter(textFile)) {
             writer.write("This is not an XML file");
         }
 
-        // When
         boolean isValid = xmlJobnameExtractor.isValidControlMXml(textFile.getAbsolutePath());
 
-        // Then
         assertFalse(isValid);
     }
 
-    // Helper methods
     private void createTestXmlFiles() throws IOException {
-        // Create valid XML file
         validXmlFile = tempDir.resolve("valid.xml").toFile();
         try (FileWriter writer = new FileWriter(validXmlFile)) {
             writer.write(createValidXmlContent());
         }
 
-        // Create invalid XML file
         invalidXmlFile = tempDir.resolve("invalid.xml").toFile();
         try (FileWriter writer = new FileWriter(invalidXmlFile)) {
             writer.write("Invalid XML content <unclosed tag");
         }
 
-        // Create empty XML file
         emptyXmlFile = tempDir.resolve("empty.xml").toFile();
         try (FileWriter writer = new FileWriter(emptyXmlFile)) {
             writer.write("<FOLDER></FOLDER>");

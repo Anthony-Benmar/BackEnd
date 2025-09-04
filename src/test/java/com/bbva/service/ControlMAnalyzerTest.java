@@ -23,13 +23,11 @@ class ControlMAnalyzerTest {
     Path tempDir;
 
     private OptimizedGitRepositoryService mockGitService;
-    private XmlJobnameExtractor mockXmlExtractor;
     private ControlMAnalyzer controlMAnalyzer;
 
     @BeforeEach
     void setUp() {
         mockGitService = new TestOptimizedGitRepositoryService(tempDir);
-        mockXmlExtractor = new TestXmlJobnameExtractor();
     }
 
     @Test
@@ -62,52 +60,31 @@ class ControlMAnalyzerTest {
         assertNotNull(controlMAnalyzer.getHmmL1t());
     }
 
-//    @Test
-//    void testConstructor_NoValidXmlFiles_ThrowsException() {
-//        // Given - no valid XML files setup
-//
-//        // When & Then
-//        MallaGenerationException exception = assertThrows(MallaGenerationException.class, () -> {
-//            new ControlMAnalyzer("TEST", "Daily", mockGitService, false);
-//        });
-//
-//        assertTrue(exception.getMessage().contains("No se encontraron XMLs válidos"));
-//    }
-
     @Test
     void testConstructor_MonthlyFrequency() throws MallaGenerationException {
-        // Given
         setupValidXmlFiles("Monthly");
 
-        // When
         controlMAnalyzer = new ControlMAnalyzer("TEST", "Monthly", mockGitService, false);
 
-        // Then
         assertEquals("Monthly", controlMAnalyzer.getFrequency());
         assertNotNull(controlMAnalyzer.getNamespace());
     }
 
     @Test
     void testConstructor_WeeklyFrequency() throws MallaGenerationException {
-        // Given
         setupValidXmlFiles("Weekly");
 
-        // When
         controlMAnalyzer = new ControlMAnalyzer("TEST", "Weekly", mockGitService, false);
 
-        // Then
         assertEquals("Weekly", controlMAnalyzer.getFrequency());
     }
 
     @Test
     void testJobnameGeneration() throws MallaGenerationException {
-        // Given
         setupValidXmlFiles();
 
-        // When
         controlMAnalyzer = new ControlMAnalyzer("TEST", "Daily", mockGitService, false);
 
-        // Then
         assertNotNull(controlMAnalyzer.getTransfer());
         assertNotNull(controlMAnalyzer.getCopy());
         assertNotNull(controlMAnalyzer.getFw());
@@ -119,37 +96,29 @@ class ControlMAnalyzerTest {
         assertNotNull(controlMAnalyzer.getD1());
         assertNotNull(controlMAnalyzer.getD2());
 
-        // Verify job naming pattern
         assertTrue(controlMAnalyzer.getTransfer().startsWith("TEST"));
         assertTrue(controlMAnalyzer.getCopy().startsWith("TEST"));
     }
 
     @Test
     void testJobnameGeneration_WithL1T() throws MallaGenerationException {
-        // Given
         setupValidXmlFiles();
 
-        // When
         controlMAnalyzer = new ControlMAnalyzer("TEST", "Daily", mockGitService, true);
 
-        // Then
         assertNotNull(controlMAnalyzer.getKrbL1t());
         assertNotNull(controlMAnalyzer.getHmmL1t());
 
-        // Verify L1T jobs are properly set
         assertTrue(controlMAnalyzer.getKrbL1t().startsWith("TEST"));
         assertTrue(controlMAnalyzer.getHmmL1t().startsWith("TEST"));
     }
 
     @Test
     void testParentFolderAndNamespace() throws MallaGenerationException {
-        // Given
         setupValidXmlFiles();
 
-        // When
         controlMAnalyzer = new ControlMAnalyzer("TEST", "Daily", mockGitService, false);
 
-        // Then
         assertNotNull(controlMAnalyzer.getParentFolder());
         assertNotNull(controlMAnalyzer.getNamespace());
         assertEquals("pe.bbva.app-id-test.pro", controlMAnalyzer.getNamespace());
@@ -157,13 +126,10 @@ class ControlMAnalyzerTest {
 
     @Test
     void testLastJobnames() throws MallaGenerationException {
-        // Given
         setupValidXmlFiles();
 
-        // When
         controlMAnalyzer = new ControlMAnalyzer("TEST", "Daily", mockGitService, false);
 
-        // Then
         assertNotNull(controlMAnalyzer.getLastCp());
         assertNotNull(controlMAnalyzer.getLastVp());
         assertNotNull(controlMAnalyzer.getLastTp());
@@ -173,26 +139,11 @@ class ControlMAnalyzerTest {
         assertEquals("TESTTP0001", controlMAnalyzer.getLastTp());
     }
 
-//    @Test
-//    void testMissingRequiredJobnames_ThrowsException() {
-//        // Given
-//        setupInvalidXmlFiles(); // Setup files without required job types
-//
-//        // When & Then
-//        MallaGenerationException exception = assertThrows(MallaGenerationException.class, () -> {
-//            new ControlMAnalyzer("TEST", "Daily", mockGitService, false);
-//        });
-//
-//        assertTrue(exception.getMessage().contains("No se encontraron jobnames base necesarios"));
-//    }
-
     @Test
     void testGettersAndSetters() throws MallaGenerationException {
-        // Given
         setupValidXmlFiles();
         controlMAnalyzer = new ControlMAnalyzer("TEST", "Daily", mockGitService, false);
 
-        // Test all getters return non-null values
         assertNotNull(controlMAnalyzer.getUuaa());
         assertNotNull(controlMAnalyzer.getUuaaUpper());
         assertNotNull(controlMAnalyzer.getFrequency());
@@ -204,14 +155,12 @@ class ControlMAnalyzerTest {
         assertNotNull(controlMAnalyzer.getParentFolder());
     }
 
-    // Helper methods
     private void setupValidXmlFiles() {
         setupValidXmlFiles("Daily");
     }
 
     private void setupValidXmlFiles(String frequency) {
         try {
-            // Create Global directory structure
             File globalDir = tempDir.resolve("Global").resolve("TEST").toFile();
             globalDir.mkdirs();
 
@@ -219,23 +168,6 @@ class ControlMAnalyzerTest {
             String xmlContent = createValidXmlContent();
 
             File xmlFile = new File(globalDir, "test_" + frequencyCode + ".xml");
-            try (FileWriter writer = new FileWriter(xmlFile)) {
-                writer.write(xmlContent);
-            }
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void setupInvalidXmlFiles() {
-        try {
-            File globalDir = tempDir.resolve("Global").resolve("TEST").toFile();
-            globalDir.mkdirs();
-
-            String xmlContent = "<FOLDER><JOB JOBNAME=\"INVALID001\"></JOB></FOLDER>";
-
-            File xmlFile = new File(globalDir, "test_DIA.xml");
             try (FileWriter writer = new FileWriter(xmlFile)) {
                 writer.write(xmlContent);
             }
@@ -267,7 +199,6 @@ class ControlMAnalyzerTest {
             """;
     }
 
-    // Test doubles
     private static class TestOptimizedGitRepositoryService extends OptimizedGitRepositoryService {
         private final Path tempDir;
 
@@ -297,24 +228,6 @@ class ControlMAnalyzerTest {
         public String getUuaaDirectoryPath(String uuaa, String countryType) {
             // Return empty directory path
             return tempDir.resolve("empty").resolve(countryType).resolve(uuaa).toString();
-        }
-
-        @Override
-        public void cleanupCache() {
-            // No-op for tests
-        }
-    }
-
-    private static class InvalidJobnamesGitRepositoryService extends OptimizedGitRepositoryService {
-        private final Path tempDir;
-
-        public InvalidJobnamesGitRepositoryService(Path tempDir) {
-            this.tempDir = tempDir;
-        }
-
-        @Override
-        public String getUuaaDirectoryPath(String uuaa, String countryType) {
-            return tempDir.resolve("invalid").resolve(countryType).resolve(uuaa).toString();
         }
 
         @Override

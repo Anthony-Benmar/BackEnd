@@ -28,10 +28,8 @@ class MallaGeneratorServiceTest {
 
     @Test
     void testGenerarMallasXml_Success() throws HandledException {
-        // When
         Map<String, String> result = mallaGeneratorService.generarMallasXml(ingestaRequest, mockSchemaProcessor);
 
-        // Then
         assertNotNull(result);
         assertEquals(2, result.size());
 
@@ -48,23 +46,6 @@ class MallaGeneratorServiceTest {
         assertTrue(adaXml.contains("ADA"));
     }
 
-//    @Test
-//    void testGenerarMallasXml_WithL1T() throws HandledException {
-//        // Given
-//        ingestaRequest.setTieneL1T(true);
-//
-//        // When
-//        Map<String, String> result = mallaGeneratorService.generarMallasXml(ingestaRequest, mockSchemaProcessor);
-//
-//        // Then
-//        assertNotNull(result);
-//        assertEquals(2, result.size());
-//
-//        // Verify L1T processing was considered
-//        String datioXml = result.get("mallas/malla_diaria_test_datio.xml");
-//        assertTrue(datioXml.contains("L1T"));
-//    }
-
     @Test
     void testGenerarMallasXml_NullRequest_ThrowsException() {
         // When & Then
@@ -75,16 +56,6 @@ class MallaGeneratorServiceTest {
         assertEquals("MALLA_GENERATION_ERROR", exception.getCode());
         assertTrue(exception.getMessage().contains("Error inesperado generando archivos XML de malla"));
     }
-
-//    @Test
-//    void testGenerarMallasXml_NullSchemaProcessor_ThrowsException() {
-//        // When & Then
-//        HandledException exception = assertThrows(HandledException.class, () -> {
-//            mallaGeneratorService.generarMallasXml(ingestaRequest, null);
-//        });
-//
-//        assertEquals("MALLA_GENERATION_ERROR", exception.getCode());
-//    }
 
     @Test
     void testGenerarMallasXml_InvalidUuaa_ThrowsException() {
@@ -99,25 +70,10 @@ class MallaGeneratorServiceTest {
         assertEquals("MALLA_GENERATION_ERROR", exception.getCode());
     }
 
-//    @Test
-//    void testGenerarMallasXml_InvalidFrequency_ThrowsException() {
-//        // Given
-//        ingestaRequest.setFrecuencia("InvalidFrequency");
-//
-//        // When & Then
-//        HandledException exception = assertThrows(HandledException.class, () -> {
-//            mallaGeneratorService.generarMallasXml(ingestaRequest, mockSchemaProcessor);
-//        });
-//
-//        assertEquals("MALLA_GENERATION_ERROR", exception.getCode());
-//    }
-
     @Test
     void testGenerarMallasXml_EmptyRegistroDev_ThrowsException() {
-        // Given
         ingestaRequest.setRegistroDev("");
 
-        // When & Then
         HandledException exception = assertThrows(HandledException.class, () -> {
             mallaGeneratorService.generarMallasXml(ingestaRequest, mockSchemaProcessor);
         });
@@ -127,10 +83,8 @@ class MallaGeneratorServiceTest {
 
     @Test
     void testGenerarMallasXml_MallaValidationError() {
-        // Given
         MallaGeneratorService serviceWithInvalidValidator = new TestMallaGeneratorServiceWithInvalidValidator();
 
-        // When & Then
         HandledException exception = assertThrows(HandledException.class, () -> {
             serviceWithInvalidValidator.generarMallasXml(ingestaRequest, mockSchemaProcessor);
         });
@@ -141,10 +95,8 @@ class MallaGeneratorServiceTest {
 
     @Test
     void testGenerarMallasXml_XmlGenerationError() {
-        // Given
         MallaGeneratorService serviceWithFailingXmlGenerator = new TestMallaGeneratorServiceWithFailingXmlGenerator();
 
-        // When & Then
         HandledException exception = assertThrows(HandledException.class, () -> {
             serviceWithFailingXmlGenerator.generarMallasXml(ingestaRequest, mockSchemaProcessor);
         });
@@ -154,10 +106,8 @@ class MallaGeneratorServiceTest {
 
     @Test
     void testGenerarMallasXml_TransformationError() {
-        // Given
         MallaGeneratorService serviceWithFailingTransformer = new TestMallaGeneratorServiceWithFailingTransformer();
 
-        // When & Then
         HandledException exception = assertThrows(HandledException.class, () -> {
             serviceWithFailingTransformer.generarMallasXml(ingestaRequest, mockSchemaProcessor);
         });
@@ -167,57 +117,44 @@ class MallaGeneratorServiceTest {
 
     @Test
     void testGenerarMallasXml_MonthlyFrequency() throws HandledException {
-        // Given
         ingestaRequest.setFrecuencia("Monthly");
 
-        // When
         Map<String, String> result = mallaGeneratorService.generarMallasXml(ingestaRequest, mockSchemaProcessor);
 
-        // Then
         assertNotNull(result);
         assertEquals(2, result.size());
     }
 
     @Test
     void testGenerarMallasXml_WeeklyFrequency() throws HandledException {
-        // Given
         ingestaRequest.setFrecuencia("Weekly");
 
-        // When
         Map<String, String> result = mallaGeneratorService.generarMallasXml(ingestaRequest, mockSchemaProcessor);
 
-        // Then
         assertNotNull(result);
         assertEquals(2, result.size());
     }
 
     @Test
     void testGenerarMallasXml_CaseInsensitiveUuaa() throws HandledException {
-        // Given
         ingestaRequest.setUuaaMaster("TEST");
 
-        // When
         Map<String, String> result = mallaGeneratorService.generarMallasXml(ingestaRequest, mockSchemaProcessor);
 
-        // Then
         assertNotNull(result);
-        String baseFileName = "malla_diaria_test"; // Should be lowercase
+        String baseFileName = "malla_diaria_test";
         assertTrue(result.containsKey(MallaConstants.MALLA_FOLDER + baseFileName + MallaConstants.DATIO_SUFFIX));
     }
 
     @Test
     void testGenerarMallasXml_CleanupExecuted() throws HandledException {
-        // Given
         TestMallaGeneratorService testService = new TestMallaGeneratorService();
 
-        // When
         testService.generarMallasXml(ingestaRequest, mockSchemaProcessor);
 
-        // Then
         assertTrue(testService.isCleanupCalled());
     }
 
-    // Helper methods
     private IngestaRequestDto createValidIngestaRequest() {
         IngestaRequestDto request = new IngestaRequestDto();
         request.setUuaaMaster("test");
@@ -246,7 +183,6 @@ class MallaGeneratorServiceTest {
         };
     }
 
-    // Test doubles
     private static class TestMallaGeneratorService extends MallaGeneratorService {
         private boolean cleanupCalled = false;
 
@@ -254,11 +190,9 @@ class MallaGeneratorServiceTest {
             return cleanupCalled;
         }
 
-        // Override dependencies with test doubles
         @Override
         public Map<String, String> generarMallasXml(IngestaRequestDto request, SchemaProcessor schemaProcessor) throws HandledException {
             try {
-                // Simulate validation
                 if (request == null) {
                     throw new RuntimeException("Request is null");
                 }
@@ -269,7 +203,6 @@ class MallaGeneratorServiceTest {
                     throw new RuntimeException("RegistroDev is required");
                 }
 
-                // Simulate XML generation
                 String baseFileName = "malla_diaria_" + request.getUuaaMaster().toLowerCase();
                 String datioXml = createMockDatioXml(request);
                 String adaXml = createMockAdaXml(request);
