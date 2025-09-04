@@ -78,56 +78,6 @@ public class ControlMAnalyzer {
         calculateNextJobnames();
     }
 
-//    private void analyzeJobnames() throws MallaGenerationException {
-//        this.totalJobnames = new ArrayList<>();
-//        this.totalFolderJobnames = new ArrayList<>();
-//        this.xmlArray = new HashMap<>();
-//        String foundNamespace = null;
-//
-//        String[] countryTypes = {"Global", "Local"};
-//
-//        for (String countryType : countryTypes) {
-//            try {
-//                String uuaaPath = gitService.getUuaaDirectoryPath(uuaaUpper, countryType);
-//                File uuaaDir = new File(uuaaPath);
-//
-//                if (!uuaaDir.exists() || !uuaaDir.isDirectory()) {
-//                    continue;
-//                }
-//                File[] xmlFiles = uuaaDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".xml"));
-//                if (xmlFiles == null) {
-//                    continue;
-//                }
-//
-//                for (File xmlFile : xmlFiles) {
-//                    if (!xmlExtractor.isValidControlMXml(xmlFile.getAbsolutePath())) {
-//                        continue;
-//                    }
-//
-//                    List<String> jobnames = xmlExtractor.extractJobnames(xmlFile.getAbsolutePath());
-//
-//                    if (!jobnames.isEmpty()) {
-//                        totalFolderJobnames.addAll(jobnames);
-//
-//                        String frequencyCode = FREQUENCY_MAP.get(frequency);
-//                        if (frequencyCode != null && xmlFile.getName().contains(frequencyCode)) {
-//                            totalJobnames.addAll(jobnames);
-//                            xmlArray.put(xmlFile.getName(), jobnames.size());
-//
-//                            if (foundNamespace == null) {
-//                                foundNamespace = xmlExtractor.extractNamespaceFromXml(xmlFile.getAbsolutePath());
-//                            }
-//                        }
-//                    }
-//                }
-//
-//            } catch (Exception e) {
-//                LOGGER.warning("Error procesando directorio " + countryType + ": " + e.getMessage());
-//            }
-//        }
-//        this.namespace = foundNamespace;
-//    }
-
     private void analyzeJobnames() throws MallaGenerationException {
         this.totalJobnames = new ArrayList<>();
         this.totalFolderJobnames = new ArrayList<>();
@@ -141,14 +91,12 @@ public class ControlMAnalyzer {
                 String uuaaPath = gitService.getUuaaDirectoryPath(uuaaUpper, countryType);
                 File uuaaDir = new File(uuaaPath);
 
-                // COMBINÉ LAS CONDICIONES - Solo un continue
                 if (!uuaaDir.exists() || !uuaaDir.isDirectory()) {
                     continue;
                 }
 
                 File[] xmlFiles = uuaaDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".xml"));
                 if (xmlFiles != null) {
-                    // EXTRAJE SOLO EL PROCESAMIENTO DE XML - Reduce complejidad
                     foundNamespace = processXmlFiles(xmlFiles, foundNamespace);
                 }
 
@@ -159,7 +107,6 @@ public class ControlMAnalyzer {
         this.namespace = foundNamespace;
     }
 
-    // ÚNICO MÉTODO EXTRAÍDO - Procesamiento de archivos XML
     private String processXmlFiles(File[] xmlFiles, String foundNamespace) throws MallaGenerationException {
         for (File xmlFile : xmlFiles) {
             if (!xmlExtractor.isValidControlMXml(xmlFile.getAbsolutePath())) {

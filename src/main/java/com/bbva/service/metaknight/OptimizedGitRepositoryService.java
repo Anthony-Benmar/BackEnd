@@ -1,6 +1,7 @@
 package com.bbva.service.metaknight;
 
 import com.bbva.core.exception.MallaGenerationException;
+import com.bbva.fga.core.AppProperties;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.w3c.dom.Document;
 
@@ -25,6 +26,7 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.InputStream;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Properties;
 
 public class OptimizedGitRepositoryService{
     private static final Logger LOGGER = Logger.getLogger(OptimizedGitRepositoryService.class.getName());
@@ -33,12 +35,18 @@ public class OptimizedGitRepositoryService{
     private static final String BASE_BITBUCKET_URL = "https://bitbucket.globaldevtools.bbva.com/bitbucket";
 
     // Credencialesssss
-    private static final String USERNAME = "patrick.andonayre";
-    private static final String TOKEN = "BBDC-NTI1OTcxMTI4NDQyOnP5X4fegftIyIfXzQAECnloBO2p"; //poner en varables de entorno
+    private static final String USERNAME;
+    private static final String TOKEN;
 
     private final String sessionId = java.util.UUID.randomUUID().toString().substring(0, 8);
     private final String tempRepoPath = System.getProperty("java.io.tmpdir") + "/optimized-controlm-cache-" + sessionId;
     private static final String PATH_DELIMITER = "/";
+
+    static {
+        Properties properties = AppProperties.getInstance();
+        USERNAME = properties.getProperty("metaknight.user");
+        TOKEN = properties.getProperty("metaknight.token");
+    }
 
     public String getRepositoryPath() throws MallaGenerationException {
         try {
@@ -103,7 +111,7 @@ public class OptimizedGitRepositoryService{
         }
     }
 
-    private List<String> getXmlFilesFromRepo(String directoryPath) throws Exception {
+    private List<String> getXmlFilesFromRepo(String directoryPath) throws MallaGenerationException  {
         try {
             String apiUrl = buildBrowseApiUrl(directoryPath);
             HttpURLConnection connection = createAuthenticatedConnection(apiUrl);
@@ -111,7 +119,7 @@ public class OptimizedGitRepositoryService{
 
             return extractXmlFileNames(response);
         } catch (Exception e) {
-            throw new Exception("Error obteniendo archivos XML del repositorio", e);
+            throw MallaGenerationException.configurationError("Error obteniendo archivos XML del repositorio: " + directoryPath);
         }
     }
 
@@ -121,17 +129,21 @@ public class OptimizedGitRepositoryService{
         if (response != null && response.has("children")) {
             JsonNode children = response.get("children");
             if (children.has("values")) {
-                for (JsonNode child : children.get("values")) {
-                    if (child.get("type").asText().equals("FILE")) {
-                        String fileName = child.get("path").get("name").asText();
-                        if (fileName.toLowerCase().endsWith(".xml")) {
-                            xmlFiles.add(fileName);
-                        }
-                    }
-                }
+                processChildNodes(children, xmlFiles);
             }
         }
         return xmlFiles;
+    }
+
+    private void processChildNodes(JsonNode children, List<String> xmlFiles) {
+        for (JsonNode child : children.get("values")) {
+            if (child.get("type").asText().equals("FILE")) {
+                String fileName = child.get("path").get("name").asText();
+                if (fileName.toLowerCase().endsWith(".xml")) {
+                    xmlFiles.add(fileName);
+                }
+            }
+        }
     }
 
     private void downloadXmlFile(String remoteFilePath, String localFilePath) throws Exception {
