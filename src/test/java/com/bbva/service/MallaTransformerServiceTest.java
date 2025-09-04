@@ -4,10 +4,10 @@ import com.bbva.dto.metaknight.request.MallaRequestDto;
 import com.bbva.service.metaknight.MallaTransformerService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 class MallaTransformerServiceTest {
+
 
     private MallaTransformerService mallaTransformerService;
     private MallaRequestDto mallaData;
@@ -108,94 +108,72 @@ class MallaTransformerServiceTest {
 
     @Test
     void testReplaceCtmfwWithDefaultBbvaCountry() throws HandledException {
-        // Given
         String xmlContent = """
-            <JOB CMDLINE="ctmfw --watch /path/to/file">
-            </JOB>
-            """;
+        <JOB CMDLINE="ctmfw --watch /path/to/file">
+        </JOB>
+        """;
 
-        // When
-        String result = mallaTransformerService.transformarDatioToAda(xmlContent, mallaData);
-
-        // Then
-        assertTrue(result.contains("DEFAULT_BBVA_COUNTRY=pe;/opt/datio/filewatcher-s3/filewatcher.sh"));
-        assertFalse(result.contains("ctmfw"));
+        assertTransformation(xmlContent,
+                new String[]{"DEFAULT_BBVA_COUNTRY=pe;/opt/datio/filewatcher-s3/filewatcher.sh"},
+                new String[]{"ctmfw"});
     }
 
     @Test
     void testReplaceNodeidAndRunasForFilewatcher() throws HandledException {
-        // Given
         String xmlContent = """
-            <JOB SUB_APPLICATION="CTD-FWATCHER-CCR" NODEID="OLD_NODE" RUN_AS="olduser">
-            </JOB>
-            <JOB SUB_APPLICATION="OTHER" NODEID="OTHER_NODE" RUN_AS="otheruser">
-            </JOB>
-            """;
+        <JOB SUB_APPLICATION="CTD-FWATCHER-CCR" NODEID="OLD_NODE" RUN_AS="olduser">
+        </JOB>
+        <JOB SUB_APPLICATION="OTHER" NODEID="OTHER_NODE" RUN_AS="otheruser">
+        </JOB>
+        """;
 
-        // When
-        String result = mallaTransformerService.transformarDatioToAda(xmlContent, mallaData);
-
-        // Then
-        assertTrue(result.contains("NODEID=\"PE-SENTRY-00\""));
-        assertTrue(result.contains("RUN_AS=\"sentry\""));
-        assertTrue(result.contains("NODEID=\"OTHER_NODE\""));
-        assertTrue(result.contains("RUN_AS=\"otheruser\""));
+        assertTransformation(xmlContent,
+                new String[]{"NODEID=\"PE-SENTRY-00\"", "RUN_AS=\"sentry\"", "NODEID=\"OTHER_NODE\"", "RUN_AS=\"otheruser\""},
+                new String[]{});
     }
     @Test
     void testReplaceArtifactoryHost() throws HandledException {
-        // Given
         String xmlContent = """
-            <CONFIG>
-                <URL>https://artifactory-gdt.central-02.nextgen.igrupobbva/repo</URL>
-            </CONFIG>
-            """;
+        <CONFIG>
+            <URL>https://artifactory-gdt.central-02.nextgen.igrupobbva/repo</URL>
+        </CONFIG>
+        """;
 
-        // When
-        String result = mallaTransformerService.transformarDatioToAda(xmlContent, mallaData);
-
-        // Then
-        assertTrue(result.contains("artifactory-gdt.central-04.nextgen.igrupobbva"));
-        assertFalse(result.contains("artifactory-gdt.central-02.nextgen.igrupobbva"));
+        assertTransformation(xmlContent,
+                new String[]{"artifactory-gdt.central-04.nextgen.igrupobbva"},
+                new String[]{"artifactory-gdt.central-02.nextgen.igrupobbva"});
     }
 
     @Test
     void testRemoveCopyHdfsJobs() throws HandledException {
-        // Given
         String xmlContent = """
-            <JOB DESCRIPTION="COPY (HDFS) job to remove">
-                <CONFIG>test</CONFIG>
-            </JOB>
-            <JOB DESCRIPTION="OTHER job to keep">
-                <CONFIG>test</CONFIG>
-            </JOB>
-            """;
+        <JOB DESCRIPTION="COPY (HDFS) job to remove">
+            <CONFIG>test</CONFIG>
+        </JOB>
+        <JOB DESCRIPTION="OTHER job to keep">
+            <CONFIG>test</CONFIG>
+        </JOB>
+        """;
 
-        // When
-        String result = mallaTransformerService.transformarDatioToAda(xmlContent, mallaData);
-
-        // Then
-        assertFalse(result.contains("COPY (HDFS)"));
-        assertTrue(result.contains("OTHER job to keep"));
+        assertTransformation(xmlContent,
+                new String[]{"OTHER job to keep"},
+                new String[]{"COPY (HDFS)"});
     }
 
     @Test
     void testRemoveJobByName() throws HandledException {
-        // Given
         String xmlContent = """
-            <JOB JOBNAME="ERASE2_JOB">
-                <CONFIG>erase2 job</CONFIG>
-            </JOB>
-            <JOB JOBNAME="OTHER_JOB">
-                <CONFIG>other job</CONFIG>
-            </JOB>
-            """;
+        <JOB JOBNAME="ERASE2_JOB">
+            <CONFIG>erase2 job</CONFIG>
+        </JOB>
+        <JOB JOBNAME="OTHER_JOB">
+            <CONFIG>other job</CONFIG>
+        </JOB>
+        """;
 
-        // When
-        String result = mallaTransformerService.transformarDatioToAda(xmlContent, mallaData);
-
-        // Then
-        assertFalse(result.contains("ERASE2_JOB"));
-        assertTrue(result.contains("OTHER_JOB"));
+        assertTransformation(xmlContent,
+                new String[]{"OTHER_JOB"},
+                new String[]{"ERASE2_JOB"});
     }
 
     @Test
@@ -217,20 +195,16 @@ class MallaTransformerServiceTest {
 
     @Test
     void testUpdateTransferJobOutconds() throws HandledException {
-        // Given
         String xmlContent = """
-            <JOB JOBNAME="TRANSFER_JOB">
-                <OUTCOND NAME="TRANSFER_JOB-TO-COPY_JOB" />
-                <DOFORCEJOB JOBNAME="COPY_JOB" />
-            </JOB>
-            """;
+        <JOB JOBNAME="TRANSFER_JOB">
+            <OUTCOND NAME="TRANSFER_JOB-TO-COPY_JOB" />
+            <DOFORCEJOB JOBNAME="COPY_JOB" />
+        </JOB>
+        """;
 
-        // When
-        String result = mallaTransformerService.transformarDatioToAda(xmlContent, mallaData);
-
-        // Then
-        assertTrue(result.contains("FW_JOB"));
-        assertFalse(result.contains("COPY_JOB"));
+        assertTransformation(xmlContent,
+                new String[]{"FW_JOB"},
+                new String[]{"COPY_JOB"});
     }
 
     @Test
@@ -295,21 +269,17 @@ class MallaTransformerServiceTest {
 
     @Test
     void testCleanupHmmL1tJobReferences() throws HandledException {
-        // Given
         String xmlContent = """
-            <JOB JOBNAME="HMM_L1T_JOB">
-                <OUTCOND NAME="HMM_L1T_JOB-TO-ERASE2_JOB" />
-                <DOFORCEJOB JOBNAME="ERASE2_JOB" />
-                <OTHER_TAG NAME="KEEP_THIS" />
-            </JOB>
-            """;
+        <JOB JOBNAME="HMM_L1T_JOB">
+            <OUTCOND NAME="HMM_L1T_JOB-TO-ERASE2_JOB" />
+            <DOFORCEJOB JOBNAME="ERASE2_JOB" />
+            <OTHER_TAG NAME="KEEP_THIS" />
+        </JOB>
+        """;
 
-        // When
-        String result = mallaTransformerService.transformarDatioToAda(xmlContent, mallaData);
-
-        // Then
-        assertFalse(result.contains("ERASE2_JOB"));
-        assertTrue(result.contains("KEEP_THIS"));
+        assertTransformation(xmlContent,
+                new String[]{"KEEP_THIS"},
+                new String[]{"ERASE2_JOB"});
     }
 
     @Test
@@ -461,5 +431,17 @@ class MallaTransformerServiceTest {
 
         // Then
         assertTrue(result.contains("/path/external/test/file.csv")); // No debe cambiar
+    }
+
+    private void assertTransformation(String xmlContent, String[] expectedContains, String[] expectedNotContains) throws HandledException {
+        String result = mallaTransformerService.transformarDatioToAda(xmlContent, mallaData);
+
+        for (String expected : expectedContains) {
+            assertTrue(result.contains(expected), "Should contain: " + expected);
+        }
+
+        for (String notExpected : expectedNotContains) {
+            assertFalse(result.contains(notExpected), "Should not contain: " + notExpected);
+        }
     }
 }
