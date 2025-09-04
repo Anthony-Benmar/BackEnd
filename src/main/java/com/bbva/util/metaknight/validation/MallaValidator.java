@@ -107,20 +107,14 @@ public class MallaValidator {
         if (mallaData.getTeamEmail() != null && !EMAIL_PATTERN.matcher(mallaData.getTeamEmail()).matches()) {
             errores.add("Email del equipo tiene formato inválido");
         }
-        if (mallaData.getCreationDate() != null) {
-            if (!mallaData.getCreationDate().matches("^\\d{8}$")) {
-                errores.add("Fecha de creación debe tener formato YYYYMMDD");
-            }
+        if (mallaData.getCreationDate() != null && !mallaData.getCreationDate().matches("^\\d{8}$")) {
+            errores.add("Fecha de creación debe tener formato YYYYMMDD");
         }
-        if (mallaData.getCreationTime() != null) {
-            if (!mallaData.getCreationTime().matches("^\\d{6}$")) {
-                errores.add("Hora de creación debe tener formato HHMMSS");
-            }
+        if (mallaData.getCreationTime() != null && !mallaData.getCreationTime().matches("^\\d{6}$")) {
+            errores.add("Hora de creación debe tener formato HHMMSS");
         }
-        if (mallaData.getTransferTimeFrom() != null) {
-            if (!mallaData.getTransferTimeFrom().matches("^\\d{4}$")) {
-                errores.add("Hora de transferencia debe tener formato HHMM");
-            }
+        if (mallaData.getTransferTimeFrom() != null && !mallaData.getTransferTimeFrom().matches("^\\d{4}$")) {
+            errores.add("Hora de transferencia debe tener formato HHMM");
         }
     }
     private void validarJobnames(MallaRequestDto mallaData, List<String> errores) {
@@ -136,7 +130,6 @@ public class MallaValidator {
         validarJobname(mallaData.getErase2Jobname(), "Erase2", errores);
     }
     private void validarJobname(String jobname, String tipo, List<String> errores) {
-
         if (esNuloOVacio(jobname)) {
             errores.add(String.format("Jobname de %s es requerido", tipo));
             return;
@@ -146,17 +139,15 @@ public class MallaValidator {
             errores.add(String.format("Jobname de %s debe tener entre %d y %d caracteres",
                     tipo, MallaConstants.Validation.MIN_JOBNAME_LENGTH, MallaConstants.Validation.MAX_JOBNAME_LENGTH));
         }
-
         if (!JOBNAME_PATTERN.matcher(jobname).matches()) {
             errores.add(String.format("Jobname de %s debe ser alfanumérico", tipo));
         }
     }
 
     private void validarConsistenciaDatos(MallaRequestDto mallaData, List<String> errores) {
-        if (mallaData.getUuaa() != null && mallaData.getUuaaLowercase() != null) {
-            if (!mallaData.getUuaa().toLowerCase().equals(mallaData.getUuaaLowercase())) {
-                errores.add("UUAA y uuaaLowercase no son consistentes");
-            }
+        if (mallaData.getUuaa() != null && mallaData.getUuaaLowercase() != null
+                && !mallaData.getUuaa().toLowerCase().equals(mallaData.getUuaaLowercase())) {
+            errores.add("UUAA y uuaaLowercase no son consistentes");
         }
         if (mallaData.getUuaa() != null) {
             String expectedPrefix = mallaData.getUuaa().toUpperCase();
@@ -165,10 +156,9 @@ public class MallaValidator {
                 errores.add("Transfer jobname no tiene el prefijo esperado de UUAA");
             }
         }
-        if (mallaData.getNamespace() != null && mallaData.getUuaaLowercase() != null) {
-            if (!mallaData.getNamespace().contains(mallaData.getUuaaLowercase())) {
-                errores.add("Namespace no contiene la UUAA en minúsculas");
-            }
+        if (mallaData.getNamespace() != null && mallaData.getUuaaLowercase() != null
+                && !mallaData.getNamespace().contains(mallaData.getUuaaLowercase())) {
+            errores.add("Namespace no contiene la UUAA en minúsculas");
         }
     }
     private boolean esNuloOVacio(String valor) {

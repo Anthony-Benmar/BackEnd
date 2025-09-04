@@ -49,12 +49,8 @@ public class IngestaService {
 
         validarRequest(request);
 
-        if (request.getSchemaRawBase64() == null || request.getSchemaRawBase64().isEmpty()) {
-            throw new IllegalArgumentException("Schema Raw es requerido");
-        }
-        if (request.getSchemaMasterBase64() == null || request.getSchemaMasterBase64().isEmpty()) {
-            throw new IllegalArgumentException("Schema Master es requerido");
-        }
+        validarSchemas(request);
+
         List<Map<String, Object>> rawData = parsearCsvDesdeBase64(request.getSchemaRawBase64());
         List<Map<String, Object>> masterData = parsearCsvDesdeBase64(request.getSchemaMasterBase64());
 
@@ -108,6 +104,14 @@ public class IngestaService {
             // Continuar con el proceso
         }
         return zipGenerator.crearZip(archivosBytes);
+    }
+    private void validarSchemas(IngestaRequestDto request) {
+        if (request.getSchemaRawBase64() == null || request.getSchemaRawBase64().isEmpty()) {
+            throw new IllegalArgumentException("Schema Raw es requerido");
+        }
+        if (request.getSchemaMasterBase64() == null || request.getSchemaMasterBase64().isEmpty()) {
+            throw new IllegalArgumentException("Schema Master es requerido");
+        }
     }
 
     private List<Map<String, Object>> parsearCsvDesdeBase64(String csvBase64) throws HandledException {

@@ -37,18 +37,18 @@ public class OptimizedGitRepositoryService{
     private static final String TOKEN = "BBDC-NTI1OTcxMTI4NDQyOnP5X4fegftIyIfXzQAECnloBO2p"; //poner en varables de entorno
 
     private final String sessionId = java.util.UUID.randomUUID().toString().substring(0, 8);
-    private final String TEMP_REPO_PATH = System.getProperty("java.io.tmpdir") + "/optimized-controlm-cache-" + sessionId;
+    private final String tempRepoPath = System.getProperty("java.io.tmpdir") + "/optimized-controlm-cache-" + sessionId;
+    private static final String PATH_DELIMITER = "/";
 
     public String getRepositoryPath() throws MallaGenerationException {
         try {
-            Path tempPath = Paths.get(TEMP_REPO_PATH);
+            Path tempPath = Paths.get(tempRepoPath);
 
-            // Crear directorio temporal si no existe
             if (!Files.exists(tempPath)) {
                 Files.createDirectories(tempPath);
             }
 
-            return TEMP_REPO_PATH;
+            return tempRepoPath;
 
         } catch (Exception e) {
             throw MallaGenerationException.configurationError(
@@ -59,9 +59,9 @@ public class OptimizedGitRepositoryService{
     public String getUuaaDirectoryPath(String uuaa, String countryType) throws MallaGenerationException {
         try {
             String repoPath = getRepositoryPath();
-            String uuaaPath = repoPath + "/" + countryType + "/" + uuaa.toUpperCase();
+            String uuaaPath = repoPath + PATH_DELIMITER + countryType + PATH_DELIMITER + uuaa.toUpperCase();
 
-            if (!directoryExistsInRepo(countryType + "/" + uuaa.toUpperCase())) {
+            if (!directoryExistsInRepo(countryType + PATH_DELIMITER+ uuaa.toUpperCase())) {
                 throw MallaGenerationException.configurationError(
                         "Directorio UUAA no encontrado: " + uuaaPath);
             }
@@ -96,18 +96,26 @@ public class OptimizedGitRepositoryService{
     }
 
     private void downloadUuaaXmlFiles(String uuaa, String countryType, String localPath) throws Exception {
-        String directoryPath = countryType + "/" + uuaa.toUpperCase();
+        String directoryPath = countryType + PATH_DELIMITER+ uuaa.toUpperCase();
         List<String> xmlFiles = getXmlFilesFromRepo(directoryPath);
         for (String xmlFile : xmlFiles) {
-            downloadXmlFile(directoryPath + "/" + xmlFile, localPath + "/" + xmlFile);
+            downloadXmlFile(directoryPath +PATH_DELIMITER + xmlFile, localPath +PATH_DELIMITER + xmlFile);
         }
     }
 
     private List<String> getXmlFilesFromRepo(String directoryPath) throws Exception {
-        String apiUrl = buildBrowseApiUrl(directoryPath);
-        HttpURLConnection connection = createAuthenticatedConnection(apiUrl);
+        try {
+            String apiUrl = buildBrowseApiUrl(directoryPath);
+            HttpURLConnection connection = createAuthenticatedConnection(apiUrl);
+            JsonNode response = getJsonResponse(connection);
 
-        JsonNode response = getJsonResponse(connection);
+            return extractXmlFileNames(response);
+        } catch (Exception e) {
+            throw new Exception("Error obteniendo archivos XML del repositorio", e);
+        }
+    }
+
+    private List<String> extractXmlFileNames(JsonNode response) {
         List<String> xmlFiles = new ArrayList<>();
 
         if (response != null && response.has("children")) {
@@ -123,7 +131,6 @@ public class OptimizedGitRepositoryService{
                 }
             }
         }
-
         return xmlFiles;
     }
 
@@ -137,12 +144,16 @@ public class OptimizedGitRepositoryService{
         writeStringToFile(xmlContent, localFilePath);
     }
 
-    private String documentToString(Document doc) throws Exception {
-        TransformerFactory tf = TransformerFactory.newInstance();
-        Transformer transformer = tf.newTransformer();
-        java.io.StringWriter writer = new java.io.StringWriter();
-        transformer.transform(new DOMSource(doc), new StreamResult(writer));
-        return writer.toString();
+    private String documentToString(Document doc) throws MallaGenerationException {
+        try {
+            TransformerFactory tf = TransformerFactory.newInstance();
+            Transformer transformer = tf.newTransformer();
+            java.io.StringWriter writer = new java.io.StringWriter();
+            transformer.transform(new DOMSource(doc), new StreamResult(writer));
+            return writer.toString();
+        } catch (Exception e) {
+            throw MallaGenerationException.xmlGenerationError("Error convirtiendo documento XML a string", e);
+        }
     }
 
     private void writeStringToFile(String content, String filePath) throws IOException {
@@ -179,7 +190,7 @@ public class OptimizedGitRepositoryService{
         }
     }
 
-    private Document getXmlResponse(HttpURLConnection connection) throws Exception {
+    private Document getXmlResponse(HttpURLConnection connection) throws MallaGenerationException {
         try (InputStream input = connection.getInputStream()) {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             factory.setNamespaceAware(true);
@@ -188,37 +199,63 @@ public class OptimizedGitRepositoryService{
             factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
             DocumentBuilder builder = factory.newDocumentBuilder();
             return builder.parse(input);
+        } catch (Exception e) {
+            throw MallaGenerationException.xmlGenerationError("Error procesando respuesta XML", e);
         }
     }
 
     public void cleanupCache() {
         try {
-            Path tempPath = Paths.get(TEMP_REPO_PATH);
+            Path tempPath = Paths.get(tempRepoPath);
             if (Files.exists(tempPath)) {
                 deleteDirectoryRecursively(tempPath.toFile());
             }
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Error limpiando archivos temporales: " + e.getMessage(), e);
+            LOGGER.log(
+                    Level.WARNING,
+                    e,
+                    () -> "Error limpiando archivos temporales: " + e.getMessage()
+            );
         }
     }
 
     private void deleteDirectoryRecursively(File directory) throws IOException {
-        if (directory.exists()) {
-            File[] files = directory.listFiles();
-            if (files != null) {
-                for (File file : files) {
-                    if (file.isDirectory()) {
-                        deleteDirectoryRecursively(file);
-                    } else {
-                        if (!file.delete()) {
-                            LOGGER.warning("No se pudo eliminar archivo: " + file.getAbsolutePath());
-                        }
-                    }
+        if (!directory.exists()) {
+            return;
+        }
+
+        deleteDirectoryContents(directory);
+        deleteDirectoryItself(directory);
+    }
+
+    private void deleteDirectoryContents(File directory) throws IOException {
+        File[] files = directory.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    deleteDirectoryRecursively(file);
+                } else {
+                    deleteFileWithLogging(file);
                 }
             }
-            if (!directory.delete()) {
-                LOGGER.warning("No se pudo eliminar directorio: " + directory.getAbsolutePath());
-            }
+        }
+    }
+
+    private void deleteFileWithLogging(File file) throws IOException {
+        try {
+            Files.delete(file.toPath());
+        } catch (IOException e) {
+            LOGGER.warning(() -> "No se pudo eliminar archivo: " + file.getAbsolutePath());
+            throw e;
+        }
+    }
+
+    private void deleteDirectoryItself(File directory) throws IOException {
+        try {
+            Files.delete(directory.toPath());
+        } catch (IOException e) {
+            LOGGER.warning(() -> "No se pudo eliminar directorio: " + directory.getAbsolutePath());
+            throw e;
         }
     }
 }

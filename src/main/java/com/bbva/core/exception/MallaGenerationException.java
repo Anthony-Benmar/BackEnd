@@ -1,5 +1,8 @@
 package com.bbva.core.exception;
 
+import lombok.Getter;
+
+@Getter
 public class MallaGenerationException extends Exception {
 
     private static final long serialVersionUID = 1L;
@@ -29,14 +32,6 @@ public class MallaGenerationException extends Exception {
         super(message, cause);
         this.errorCode = errorCode;
         this.details = details;
-    }
-
-    public String getErrorCode() {
-        return errorCode;
-    }
-
-    public String getDetails() {
-        return details;
     }
 
     public String getFullMessage() {

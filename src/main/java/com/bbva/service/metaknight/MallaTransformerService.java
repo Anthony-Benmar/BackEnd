@@ -12,6 +12,8 @@ public class MallaTransformerService {
     private static final String REGEX_PREFIX_OUTCOND = "^\\s*<OUTCOND[^>]*?";
     private static final String REGEX_PREFIX_DOFORCEJOB = "^\\s*<DOFORCEJOB[^>]*?";
     private static final String REGEX_CFOK_PATTERN = "^\\s*<OUTCOND[^>]*?NAME=\"[^\"]*CF@OK[^\"]*\"[^>]*?/>\\s*[\\r\\n]*";
+    private static final String SUB_APPLICATION_FWATCHER = "SUB_APPLICATION=\"CTD-FWATCHER-CCR\"";
+    private static final String JOB_PATTERN_FULL = "<JOB.*?</JOB>";
 
     public String transformarDatioToAda(String xmlDatio, MallaRequestDto mallaData) throws HandledException {
         try {
@@ -92,7 +94,7 @@ public class MallaTransformerService {
         return result.toString();
     }
     private String replaceCmdlineValueWhenSentryJob(String xmlContent) {
-        Pattern jobPattern = Pattern.compile("<JOB.*?>", Pattern.DOTALL);
+        Pattern jobPattern = Pattern.compile("<JOB[^>]*+>", Pattern.DOTALL);
         Matcher matcher = jobPattern.matcher(xmlContent);
 
         StringBuilder result = new StringBuilder();
@@ -125,14 +127,14 @@ public class MallaTransformerService {
     }
 
     private String replaceNodeidAndRunasForFilewatcher(String xmlContent) {
-        Pattern jobPattern = Pattern.compile("<JOB.*?>", Pattern.DOTALL);
+        Pattern jobPattern = Pattern.compile("<JOB[^>]*+>", Pattern.DOTALL);
         Matcher matcher = jobPattern.matcher(xmlContent);
 
         StringBuilder result = new StringBuilder();
         while (matcher.find()) {
             String jobTag = matcher.group();
 
-            if (jobTag.contains("SUB_APPLICATION=\"CTD-FWATCHER-CCR\"")) {
+            if (jobTag.contains(SUB_APPLICATION_FWATCHER)) {
                 jobTag = jobTag.replaceAll("NODEID=\"[^\"]*\"", "NODEID=\"PE-SENTRY-00\"");
                 jobTag = jobTag.replaceAll("RUN_AS=\"[^\"]*\"", "RUN_AS=\"sentry\"");
             }
@@ -144,14 +146,14 @@ public class MallaTransformerService {
     }
 
     private String addWildcardToFilewatcherPath(String xmlContent) {
-        Pattern jobPattern = Pattern.compile("<JOB.*?</JOB>", Pattern.DOTALL);
+        Pattern jobPattern = Pattern.compile(JOB_PATTERN_FULL, Pattern.DOTALL);
         Matcher jobMatcher = jobPattern.matcher(xmlContent);
 
         StringBuilder result = new StringBuilder();
         while (jobMatcher.find()) {
             String jobBlock = jobMatcher.group();
 
-            if (jobBlock.contains("SUB_APPLICATION=\"CTD-FWATCHER-CCR\"")) {
+            if (jobBlock.contains(SUB_APPLICATION_FWATCHER)) {
                 Pattern cmdlinePattern = Pattern.compile("(CMDLINE=\"[^\"]*?)(\\.csv|\\.dat)([^\"]*\")");
                 Matcher cmdlineMatcher = cmdlinePattern.matcher(jobBlock);
 
@@ -203,7 +205,7 @@ public class MallaTransformerService {
         if (datos.getTransferJobname() == null || datos.getCopyJobname() == null || datos.getFwJobname() == null) {
             return xmlContent;
         }
-        Pattern jobPattern = Pattern.compile("<JOB.*?</JOB>", Pattern.DOTALL);
+        Pattern jobPattern = Pattern.compile(JOB_PATTERN_FULL, Pattern.DOTALL);
         Matcher matcher = jobPattern.matcher(xmlContent);
 
         StringBuilder result = new StringBuilder();
@@ -224,7 +226,7 @@ public class MallaTransformerService {
         if (datos.getFwJobname() == null || datos.getCopyJobname() == null || datos.getTransferJobname() == null) {
             return xmlContent;
         }
-        Pattern jobPattern = Pattern.compile("<JOB.*?</JOB>", Pattern.DOTALL);
+        Pattern jobPattern = Pattern.compile(JOB_PATTERN_FULL, Pattern.DOTALL);
         Matcher matcher = jobPattern.matcher(xmlContent);
 
         StringBuilder result = new StringBuilder();
@@ -322,14 +324,14 @@ public class MallaTransformerService {
             return xmlContent;
         }
 
-        Pattern jobPattern = Pattern.compile("<JOB.*?</JOB>", Pattern.DOTALL);
+        Pattern jobPattern = Pattern.compile(JOB_PATTERN_FULL, Pattern.DOTALL);
         Matcher matcher = jobPattern.matcher(xmlContent);
 
         StringBuilder result = new StringBuilder();
         while (matcher.find()) {
             String jobBlock = matcher.group();
 
-            if (jobBlock.contains("SUB_APPLICATION=\"CTD-FWATCHER-CCR\"")) {
+            if (jobBlock.contains(SUB_APPLICATION_FWATCHER)) {
                 String pathToFind = "external/" + datos.getCopyUuaaRaw();
                 String pathToReplace = "datax/" + datos.getTransferUuaaRaw();
                 jobBlock = jobBlock.replace(pathToFind, pathToReplace);
