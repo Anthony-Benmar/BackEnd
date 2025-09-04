@@ -369,11 +369,19 @@ public class ReliabilityService {
     public IDataResult<TransferDetailResponse> getTransferDetail(String pack) {
         try {
             var detail = reliabilityDao.getTransferDetail(pack);
-            if (detail == null) {
-                return new ErrorDataResult<>(null, "404", PACK_NOT_FOUND);
+            if (detail == null) return new ErrorDataResult<>(null, "404", PACK_NOT_FOUND);
+
+            if (detail.getJobs() != null) {
+                for (var j : detail.getJobs()) {
+                    if (j.getFrequencyChanged() == null) {
+                        Integer orig = j.getOriginalFrequencyId();
+                        j.setFrequencyChanged(orig != null && !Objects.equals(orig, j.getFrequencyId()));
+                    }
+                }
             }
             return new SuccessDataResult<>(detail);
         } catch (Exception e) {
+            log.severe(e.getMessage());
             return new ErrorDataResult<>(null, "500", e.getMessage());
         }
     }
@@ -383,9 +391,9 @@ public class ReliabilityService {
         try {
             Integer st = reliabilityDao.getPackCurrentStatus(pack);
             if (st == null) return new ErrorDataResult<>(null, "404", PACK_NOT_FOUND);
+
             String r = role == null ? "" : role.trim().toUpperCase(java.util.Locale.ROOT);
-            java.util.function.Predicate<TransferDetailUpdateRequest.Header> onlyGeneralComment = h ->
-                    h != null && h.getComments() != null && h.getDomainId() == null && h.getUseCaseId() == null;
+
             java.util.function.Predicate<TransferDetailUpdateRequest.Job> jobOnlyComment = j ->
                     j != null &&
                             j.getJobName() != null && j.getComments() != null &&
@@ -396,22 +404,28 @@ public class ReliabilityService {
                             j.getBitBucketUrl() == null && j.getResponsible() == null &&
                             j.getJobPhaseId() == null && j.getOriginTypeId() == null &&
                             j.getException() == null;
+
             boolean headerOnlyComment =
-                    dto.getHeader() == null || onlyGeneralComment.test(dto.getHeader());
+                    dto.getHeader() == null || (dto.getHeader().getComments() != null
+                            && dto.getHeader().getDomainId() == null
+                            && dto.getHeader().getUseCaseId() == null);
+
             boolean jobsOnlyComments =
                     dto.getJobs() == null || dto.getJobs().isEmpty() ||
                             dto.getJobs().stream().allMatch(jobOnlyComment);
+
             boolean onlyComments = headerOnlyComment && jobsOnlyComments;
-            boolean onlyGeneral = dto.getHeader() != null && onlyGeneralComment.test(dto.getHeader())
-                    && (dto.getJobs() == null || dto.getJobs().isEmpty());
+
             if (st == TransferStatusPolicy.EN_PROGRESO && "SM".equals(r) && !onlyComments) {
                 return new ErrorDataResult<>(null, "409",
                         "En EN_PROGRESO solo se permiten comentarios (general y por job)");
             }
-            if (st == TransferStatusPolicy.APROBADO_PO && "KM".equals(r) && !onlyGeneral) {
+
+            if (st == TransferStatusPolicy.APROBADO_PO && "KM".equals(r) && !onlyComments) {
                 return new ErrorDataResult<>(null, "409",
-                        "KM solo puede editar el comentario general en APROBADO_PO");
+                        "KM solo puede enviar comentarios (general o por job) en APROBADO_PO");
             }
+
             reliabilityDao.updateTransferDetail(pack, dto);
             var snapshot = reliabilityDao.getTransferDetail(pack);
             return new SuccessDataResult<>(snapshot, "Detalle actualizado");

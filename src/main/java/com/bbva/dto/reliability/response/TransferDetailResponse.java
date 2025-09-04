@@ -28,6 +28,8 @@ public class TransferDetailResponse {
 
     @Getter @Setter @AllArgsConstructor @NoArgsConstructor @Builder
     public static class JobRow {
+        private Integer originalFrequencyId;
+        private Boolean frequencyChanged;
         private String  jobName;
         private String  jsonName;
         private Integer frequencyId;
