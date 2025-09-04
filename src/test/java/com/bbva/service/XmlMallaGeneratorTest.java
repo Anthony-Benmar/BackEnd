@@ -126,7 +126,7 @@ class XmlMallaGeneratorTest {
 
         assertNotNull(xmlResult);
         assertFalse(xmlResult.isEmpty());
-        assertTrue(xmlResult.length() > 0);
+        assertTrue(!xmlResult.isEmpty());
     }
 
     @Test
@@ -179,19 +179,6 @@ class XmlMallaGeneratorTest {
 
         data.setErase1Jobname("TESTE10001");
         data.setErase2Jobname("TESTE20001");
-
-        return data;
-    }
-
-    private MallaRequestDto createMinimalMallaData() {
-        MallaRequestDto data = new MallaRequestDto();
-
-        data.setCreationUser("testuser");
-        data.setUuaa("TEST");
-        data.setUuaaLowercase("test");
-        data.setTeamEmail("test@example.com");
-        data.setCreationDate("20241201");
-        data.setCreationTime("120000");
 
         return data;
     }
