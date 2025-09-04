@@ -146,14 +146,16 @@ public class OptimizedGitRepositoryService{
         }
     }
 
-    private void downloadXmlFile(String remoteFilePath, String localFilePath) throws Exception {
-        String apiUrl = buildRawApiUrl(remoteFilePath);
-        HttpURLConnection connection = createAuthenticatedConnection(apiUrl);
-
-        Document xmlDocument = getXmlResponse(connection);
-        String xmlContent = documentToString(xmlDocument);
-
-        writeStringToFile(xmlContent, localFilePath);
+    private void downloadXmlFile(String remoteFilePath, String localFilePath) throws MallaGenerationException {
+        try {
+            String apiUrl = buildRawApiUrl(remoteFilePath);
+            HttpURLConnection connection = createAuthenticatedConnection(apiUrl);
+            Document xmlDocument = getXmlResponse(connection);
+            String xmlContent = documentToString(xmlDocument);
+            writeStringToFile(xmlContent, localFilePath);
+        } catch (IOException e) {
+            throw MallaGenerationException.configurationError("Error descargando archivo XML: " + remoteFilePath);
+        }
     }
 
     private String documentToString(Document doc) throws MallaGenerationException {
