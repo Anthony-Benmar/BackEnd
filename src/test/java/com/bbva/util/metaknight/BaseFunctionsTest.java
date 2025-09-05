@@ -24,14 +24,14 @@ class BaseFunctionsTest {
 
         assertNotNull(result);
         assertTrue(result.contains("class = \"com.datio.hammurabi.rules.validity.NotNullValidationRule\""));
-        assertTrue(result.contains("config = {"));
+        assertTrue(result.contains("config {"));
         assertTrue(result.contains("column = \"test_column\""));
         assertTrue(result.contains("isCritical = true"));
         assertTrue(result.contains("minThreshold = 100"));
         assertTrue(result.contains("targetThreshold = 100"));
         assertTrue(result.contains("acceptanceMin = 100"));
-        assertTrue(result.contains("id = \"test123\""));
-        assertTrue(result.startsWith("{"));
+        assertTrue(result.contains("id = test123"));
+        assertTrue(result.startsWith("        {"));
         assertTrue(result.endsWith("}"));
     }
 
@@ -88,8 +88,8 @@ class BaseFunctionsTest {
 
         assertNotNull(result);
         assertTrue(result.contains("format = \"^[A-Z]{3}$\""));
-        assertTrue(result.contains("description = \"Test description\""));
-        assertTrue(result.contains("id = \"test_id_123\""));
+        assertTrue(result.contains("description = Test description"));
+        assertTrue(result.contains("id = test_id_123"));
     }
 
     @Test
@@ -311,8 +311,8 @@ class BaseFunctionsTest {
 
         assertNotNull(result);
         assertTrue(result.contains("class = \"test.class\""));
-        assertTrue(result.contains("config = {"));
-        assertTrue(result.endsWith("}\n}"));
+        assertTrue(result.contains("config {"));
+        assertTrue(result.endsWith("        }"));
     }
 
     @Test
@@ -344,7 +344,7 @@ class BaseFunctionsTest {
 
         assertNotNull(result);
         assertTrue(result.contains("format = \"^[A-Z]{3}\\$[0-9]+$\""));
-        assertTrue(result.contains("description = \"Test with \"quotes\" and $pecial chars\""));
+        assertTrue(result.contains("description = Test with \"quotes\" and $pecial chars"));
     }
 
     @Test
@@ -388,4 +388,264 @@ class BaseFunctionsTest {
 
         return data;
     }
+
+    @Test
+    void testConvertToCustomFormat_WithNestedMaps() {
+        Map<String, Object> nestedConfig = new HashMap<>();
+        nestedConfig.put("nestedKey", "nestedValue");
+        nestedConfig.put("nestedBoolean", true);
+        nestedConfig.put("nestedList", Arrays.asList("item1", "item2"));
+
+        Map<String, Object> config = new HashMap<>();
+        config.put("nestedMap", nestedConfig);
+        config.put("isCritical", false);
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("class", "test.class");
+        data.put("config", config);
+
+        String result = baseFunctions.convertToCustomFormat(data);
+
+        assertNotNull(result);
+        assertTrue(result.contains("nestedMap {"));
+        assertTrue(result.contains("nestedKey = nestedValue"));
+        assertTrue(result.contains("nestedBoolean = true"));
+        assertTrue(result.contains("nestedList = [item1, item2]"));
+        assertTrue(result.contains("isCritical = false"));
+    }
+
+    @Test
+    void testConvertToCustomFormat_WithDeeplyNestedMaps() {
+        Map<String, Object> deeplyNestedConfig = new HashMap<>();
+        deeplyNestedConfig.put("deepKey", "deepValue");
+        deeplyNestedConfig.put("deepList", Arrays.asList("deep1", "deep2"));
+        deeplyNestedConfig.put("deepBoolean", false);
+
+        Map<String, Object> nestedConfig = new HashMap<>();
+        nestedConfig.put("middleKey", "middleValue");
+        nestedConfig.put("deeplyNested", deeplyNestedConfig);
+
+        Map<String, Object> config = new HashMap<>();
+        config.put("topLevel", "topValue");
+        config.put("nested", nestedConfig);
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("class", "test.class");
+        data.put("config", config);
+
+        String result = baseFunctions.convertToCustomFormat(data);
+
+        assertNotNull(result);
+        assertTrue(result.contains("topLevel = topValue"));
+        assertTrue(result.contains("nested {"));
+        assertTrue(result.contains("middleKey = middleValue"));
+        assertTrue(result.contains("deeplyNested {"));
+        assertTrue(result.contains("deepKey = deepValue"));
+        assertTrue(result.contains("deepList = [deep1, deep2]"));
+        assertTrue(result.contains("deepBoolean = false"));
+    }
+
+    @Test
+    void testConvertToCustomFormat_WithMixedListTypes() {
+        Map<String, Object> config = new HashMap<>();
+        config.put("mixedColumns", Arrays.asList("col1", "col2")); // Estas deberían tener quotes por estar en KEYS_REQUIRING_QUOTES
+        config.put("numbers", Arrays.asList(1, 2, 3)); // Estas no deberían tener quotes
+        config.put("booleans", Arrays.asList(true, false));
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("class", "test.class");
+        data.put("config", config);
+
+        String result = baseFunctions.convertToCustomFormat(data);
+
+        assertNotNull(result);
+        // La key "columns" no está en el test, pero "mixedColumns" sí debería estar sin quotes
+        assertTrue(result.contains("mixedColumns = [col1, col2]")); // Sin quotes porque la key no está en KEYS_REQUIRING_QUOTES
+        assertTrue(result.contains("numbers = [1, 2, 3]"));
+        assertTrue(result.contains("booleans = [true, false]"));
+    }
+
+    @Test
+    void testConvertToCustomFormat_WithNullValues() {
+        Map<String, Object> config = new HashMap<>();
+        config.put("nullValue", null);
+        config.put("normalValue", "test");
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("class", "test.class");
+        data.put("config", config);
+
+        String result = baseFunctions.convertToCustomFormat(data);
+
+        assertNotNull(result);
+        assertTrue(result.contains("nullValue = null"));
+        assertTrue(result.contains("normalValue = test"));
+    }
+
+    @Test
+    void testGetRegularExpression_EdgeCases() {
+        // Test empty parentheses
+        assertEquals("^(.{})$", baseFunctions.getRegularExpression("ALPHANUMERIC()"));
+
+        // Test with spaces - el método mantiene los espacios
+        assertEquals("^(.{ 10 })$", baseFunctions.getRegularExpression("ALPHANUMERIC( 10 )"));
+
+        // Test case sensitivity
+        assertEquals("No se pudo definir RE para el formato lógico.",
+                baseFunctions.getRegularExpression("alphanumeric(10)"));
+
+        // Test date case sensitivity
+        assertEquals("No se pudo definir RE para el formato lógico.",
+                baseFunctions.getRegularExpression("date"));
+    }
+
+    @Test
+    void testGetRuleDescription_EdgeCases() {
+        // Test empty parentheses
+        assertEquals("Comprobación del formato alfabetico de longitud 1 al ",
+                baseFunctions.getRuleDescription("ALPHANUMERIC()"));
+
+        // Test with spaces
+        assertEquals("Comprobación del formato alfabetico de longitud 1 al  10 ",
+                baseFunctions.getRuleDescription("ALPHANUMERIC( 10 )"));
+
+        // Test case sensitivity
+        assertEquals("No se pudo describir la regla para el formato lógico",
+                baseFunctions.getRuleDescription("alphanumeric(10)"));
+    }
+
+    @Test
+    void testConvertInputToSelectedFormat_WithNullValues() {
+        Map<String, Object> options = new HashMap<>();
+        options.put("overrideSchema", "null"); // Cambiar a string "null" en lugar de null
+        options.put("includeMetadataAndDeleted", "null");
+
+        Map<String, Object> schema = new HashMap<>();
+        schema.put("path", "null");
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("options", options);
+        input.put("paths", Arrays.asList("null"));
+        input.put("schema", schema);
+        input.put("type", "null");
+
+        Map<String, Object> inputJson = new HashMap<>();
+        inputJson.put("input", input);
+
+        String result = baseFunctions.convertInputToSelectedFormat(inputJson);
+
+        assertNotNull(result);
+        assertTrue(result.contains("overrideSchema = null"));
+        assertTrue(result.contains("includeMetadataAndDeleted = null"));
+        assertTrue(result.contains("type = \"null\""));
+    }
+
+    @Test
+    void testConvertJsonToSelectedFormat_WithNullValues() {
+        Map<String, Object> inputJson = new HashMap<>();
+        inputJson.put("frequencyRuleExecution", null);
+        inputJson.put("targetPathName", null);
+        inputJson.put("physicalTargetName", null);
+        inputJson.put("uuaa", null);
+        inputJson.put("subset", null);
+
+        String result = baseFunctions.convertJsonToSelectedFormat(inputJson);
+
+        assertNotNull(result);
+        assertTrue(result.contains("frequencyRuleExecution = \"null\""));
+        assertTrue(result.contains("targetPathName = \"null\""));
+    }
+
+    @Test
+    void testConvertStagingInputToSelectedFormat_WithNullValues() {
+        Map<String, Object> options = new HashMap<>();
+        options.put("delimiter", null);
+
+        Map<String, Object> schema = new HashMap<>();
+        schema.put("path", null);
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("options", options);
+        input.put("paths", Arrays.asList((String) null));
+        input.put("schema", schema);
+        input.put("type", null);
+
+        Map<String, Object> inputJson = new HashMap<>();
+        inputJson.put("input", input);
+
+        String result = baseFunctions.convertStagingInputToSelectedFormat(inputJson);
+
+        assertNotNull(result);
+        assertTrue(result.contains("delimiter= \"null\""));
+        assertTrue(result.contains("type = \"null\""));
+    }
+
+    @Test
+    void testConvertStagingJsonToSelectedFormat_WithNullValues() {
+        Map<String, Object> inputJson = new HashMap<>();
+        inputJson.put("targetPathName", null);
+        inputJson.put("physicalTargetName", null);
+        inputJson.put("uuaa", null);
+
+        String result = baseFunctions.convertStagingJsonToSelectedFormat(inputJson);
+
+        assertNotNull(result);
+        assertTrue(result.contains("targetPathName = \"null\""));
+        assertTrue(result.contains("physicalTargetName =  \"null\""));
+    }
+
+    @Test
+    void testConvertFinalJsonToSelectedFormat_WithNullValues() {
+        Map<String, Object> params = new HashMap<>();
+        params.put("configUrl", null);
+
+        Map<String, Object> inputJson = new HashMap<>();
+        inputJson.put("_id", null);
+        inputJson.put("description", null);
+        inputJson.put("params", params);
+
+        String result = baseFunctions.convertFinalJsonToSelectedFormat(inputJson);
+
+        assertNotNull(result);
+        assertTrue(result.contains("\"_id\": \"null\""));
+        assertTrue(result.contains("\"description\": \"null\""));
+        assertTrue(result.contains("\"configUrl\": null"));
+    }
+
+    @Test
+    void testConvertToCustomFormat_WithIntegerValues() {
+        Map<String, Object> config = new HashMap<>();
+        config.put("intValue", 123);
+        config.put("longValue", 999L);
+        config.put("shortValue", (short) 42);
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("class", "test.class");
+        data.put("config", config);
+
+        String result = baseFunctions.convertToCustomFormat(data);
+
+        assertNotNull(result);
+        assertTrue(result.contains("intValue = 123"));
+        assertTrue(result.contains("longValue = 999"));
+        assertTrue(result.contains("shortValue = 42"));
+    }
+
+    @Test
+    void testConvertToCustomFormat_ListWithNonStringElements() {
+        Map<String, Object> config = new HashMap<>();
+        config.put("columns", Arrays.asList(1, 2, 3)); // Non-string elements in quoted key
+        config.put("values", Arrays.asList(true, false, null));
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("class", "test.class");
+        data.put("config", config);
+
+        String result = baseFunctions.convertToCustomFormat(data);
+
+        assertNotNull(result);
+        assertTrue(result.contains("columns = [1, 2, 3]")); // Should not add quotes to non-strings
+        assertTrue(result.contains("values = [true, false, null]"));
+    }
+
 }

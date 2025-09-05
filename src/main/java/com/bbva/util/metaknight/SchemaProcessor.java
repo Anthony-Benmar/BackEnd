@@ -61,13 +61,18 @@ public class SchemaProcessor {
         List<String> partitions = Arrays.asList(request.getParticiones().split(","));
 
         this.keys = rawData.stream()
-                .filter(row -> "True".equals(String.valueOf(row.get("Key"))))
+                .filter(row -> {
+                    Object keyValue = row.get("Key");
+                    return Boolean.TRUE.equals(keyValue) ||
+                            "True".equalsIgnoreCase(String.valueOf(keyValue)) ||
+                            "true".equalsIgnoreCase(String.valueOf(keyValue));
+                })
                 .map(row -> (String) row.get(PHYSICAL_NAME_FIELD))
                 .filter(field -> !partitions.contains(field))
                 .toList();
 
         this.keysDict = rawData.stream()
-                .filter(row -> "True".equals(String.valueOf(row.get("Key"))))
+                .filter(row -> "true".equals(String.valueOf(row.get("Key"))))
                 .filter(row -> !partitions.contains(row.get(PHYSICAL_NAME_FIELD)))
                 .collect(Collectors.toMap(
                         row -> (String) row.get(PHYSICAL_NAME_FIELD),
@@ -114,7 +119,7 @@ public class SchemaProcessor {
         this.masterArtifactoryPath = artifactoryLink + SCHEMAS_PE_PATH + request.getUuaaMaster() + "/master/" + dfMasterName + LATEST_PATH + dfMasterName + OUTPUT_SCHEMA;
         this.rawArtifactoryPath = artifactoryLink + SCHEMAS_PE_PATH + request.getUuaaMaster() + "/raw/" + dfRawName + LATEST_PATH + dfRawName + OUTPUT_SCHEMA;
 
-        this.dfStagingPath = "/in/staging/datax/" + dfUuaa + "/" + dfStagingName; // NOSONAR - Artifactory standard path, fixed value
+        this.dfStagingPath = "/in/staging/datax/" + request.getUuaaMaster() + "/" + dfStagingName; // NOSONAR - Artifactory standard path, fixed value
         this.dfRawPath = "/data/raw/" + dfUuaa + "/data/" + dfRawName;
         this.dfMasterPath = "/data/master/" + request.getUuaaMaster() + "/data/" + dfMasterName;
         this.subset = getSubset(Arrays.asList(request.getParticiones().split(",")));

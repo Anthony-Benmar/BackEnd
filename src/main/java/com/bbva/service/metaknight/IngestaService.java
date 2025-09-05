@@ -43,16 +43,14 @@ public class IngestaService {
     private ZipGenerator zipGenerator = new ZipGenerator();
 
     private IssueTicketService issueTicketService = new IssueTicketService();
+
+    private MallaGeneratorService mallaGeneratorService = new MallaGeneratorService();
     public byte[] procesarIngesta(IngestaRequestDto request) throws Exception {
 
         validarRequest(request);
 
-        if (request.getSchemaRawBase64() == null || request.getSchemaRawBase64().isEmpty()) {
-            throw new IllegalArgumentException("Schema Raw es requerido");
-        }
-        if (request.getSchemaMasterBase64() == null || request.getSchemaMasterBase64().isEmpty()) {
-            throw new IllegalArgumentException("Schema Master es requerido");
-        }
+        validarSchemas(request);
+
         List<Map<String, Object>> rawData = parsearCsvDesdeBase64(request.getSchemaRawBase64());
         List<Map<String, Object>> masterData = parsearCsvDesdeBase64(request.getSchemaMasterBase64());
 
@@ -72,6 +70,16 @@ public class IngestaService {
         if (request.isTieneL1T()) {
             Map<String, String> l1tFiles = generarConfiguracionesL1T(request);
             archivosGenerados.putAll(l1tFiles);
+        }
+
+        if (request.isGenerarMallas()) {
+            try {
+                Map<String, String> mallasXml = mallaGeneratorService.generarMallasXml(request, schemaProcessor);
+                archivosGenerados.putAll(mallasXml);
+            } catch (HandledException e) {
+                throw new HandledException("MALLA_GENERATION_FAILED",
+                        "Error generando mallas XML: " + e.getMessage(), e);
+            }
         }
 
         Map<String, byte[]> archivosBytes = new HashMap<>();
@@ -96,6 +104,14 @@ public class IngestaService {
             // Continuar con el proceso
         }
         return zipGenerator.crearZip(archivosBytes);
+    }
+    private void validarSchemas(IngestaRequestDto request) {
+        if (request.getSchemaRawBase64() == null || request.getSchemaRawBase64().isEmpty()) {
+            throw new IllegalArgumentException("Schema Raw es requerido");
+        }
+        if (request.getSchemaMasterBase64() == null || request.getSchemaMasterBase64().isEmpty()) {
+            throw new IllegalArgumentException("Schema Master es requerido");
+        }
     }
 
     private List<Map<String, Object>> parsearCsvDesdeBase64(String csvBase64) throws HandledException {
@@ -405,8 +421,8 @@ public class IngestaService {
 
         Map<String, Object> params = new HashMap<>();
         params.put(CONFIG_URL, REPO_URL_BASE +
-                request.getUuaaMaster() + "/masterdata/" + schemaProcessor.getDfMasterName() + DQ_CONF_VERSION +
-                schemaProcessor.getDfMasterName() + CONF_SUFFIX);
+                request.getUuaaMaster() + "/masterdata/" + schemaProcessor.getDfRawName() + DQ_CONF_VERSION +
+                schemaProcessor.getDfRawName() + CONF_SUFFIX);
         params.put(SPARK_HISTORY_ENABLED, "true");
         json.put(PARAMS, params);
 
@@ -572,8 +588,8 @@ public class IngestaService {
             input {
                 applyConversions = false
                 options {
-                    includeMetadataAndDeleted = "true"
-                    overrideSchema = "true"
+                    includeMetadataAndDeleted = true
+                    overrideSchema = true
                 }
                 paths=[
                     "%s"
@@ -928,8 +944,8 @@ public class IngestaService {
     private String generarHammurabiL1TJson(IngestaRequestDto request) {
         return String.format("""
         {
-            "_id" : "%s-pe-hmm-qlt-%sl1tm-01",
-            "description" : "Job %s-pe-hmm-qlt-%sl1tm-01 created with Metaknight.",
+            "_id" : "%s-pe-spk-qlt-%sl1tm-01",
+            "description" : "Job %s-pe-hmm-spk-%sl1tm-01 created with Metaknight.",
             "kind" : "processing",
             "params" : {
                 "configUrl" : "${repository.endpoint.vdc}/${repository.repo.schemas.dq}/data-quality-configs/${repository.env.dq}/per/%s/masterdata/%s_l1t/${dq.conf.version}/%s_l1t.conf",

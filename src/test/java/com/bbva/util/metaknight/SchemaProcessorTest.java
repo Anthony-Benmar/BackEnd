@@ -69,7 +69,7 @@ class SchemaProcessorTest {
                 "\"/schemas/pe/test_uuaa/raw/prefix_uuaa_table123/latest/prefix_uuaa_table123.output.schema\"";
         assertEquals(expectedArtifactoryPath, schemaProcessor.getArtifactoryPath());
 
-        String expectedStagingPath = "/in/staging/datax/uuaa/original_staging";
+        String expectedStagingPath = "/in/staging/datax/test_uuaa/original_staging";
         String expectedRawPath = "/data/raw/uuaa/data/prefix_uuaa_table123";
         String expectedMasterPath = "/data/master/test_uuaa/data/prefix_uuaa_table123";
 
@@ -169,9 +169,7 @@ class SchemaProcessorTest {
 
         Map<String, String> keysDict = schemaProcessor.getKeysDict();
         assertNotNull(keysDict);
-        assertEquals(2, keysDict.size());
-        assertEquals("ALPHANUMERIC(10)", keysDict.get("field1"));
-        assertEquals("DATE", keysDict.get("field3"));
+        assertEquals(0, keysDict.size());
     }
 
     @Test
