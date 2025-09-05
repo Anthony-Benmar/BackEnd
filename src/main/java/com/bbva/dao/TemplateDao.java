@@ -8,7 +8,6 @@ import com.bbva.dto.template.response.TemplatePaginationDtoResponse;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 
-import java.util.Comparator;
 import java.util.stream.Collectors;
 
 public class TemplateDao {
