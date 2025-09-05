@@ -19,7 +19,7 @@ public class TemplateDao {
             var templates = mapper.findActiveTemplatesByType(String.valueOf(dto.getType()));
 
             var templatesResponse = templates.stream()
-                    .map(t -> new TemplatePaginationResponse(t.template_id, t.name, t.label_one, t.orden, t.fase, t.sub_fase))
+                    .map(t -> new TemplatePaginationResponse(t.template_id, t.name, t.label_one, t.orden, t.getFase(), t.getSubFase()))
                     .collect(Collectors.toList());
 
             var counts = templates.stream().count();

@@ -16,7 +16,7 @@ public interface TemplateMapper {
             "       template.orden, " +
             "       template.type_id, " +
             "       fase.element_name AS fase, " +
-            "       template.process_code AS sub_fase " +
+            "       template.process_code AS subFase " +
             "FROM jira_template template " +
             "LEFT JOIN catalog fase " +
             "  ON template.type_id = fase.element_id " +
