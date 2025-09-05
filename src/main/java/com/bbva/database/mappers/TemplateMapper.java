@@ -10,7 +10,27 @@ import java.util.List;
 
 public interface TemplateMapper {
 
-    @Select("SELECT * FROM jira_template")
+    @Select("SELECT template.template_id, " +
+            "       template.name, " +
+            "       template.label_one, " +
+            "       template.orden, " +
+            "       template.type_id, " +
+            "       fase.element_name AS fase, " +
+            "       template.process_code AS subFase " +
+            "FROM jira_template template " +
+            "LEFT JOIN catalog fase " +
+            "  ON template.type_id = fase.element_id " +
+            " AND fase.catalog_id = 1023 " +
+            "WHERE template.status = 1 AND template.type_id = #{typeId} " +
+            "ORDER BY template.orden ASC")
+    List<Template> findActiveTemplatesByType(@Param("typeId") String typeId);
+
+    @Select("SELECT template.label_one, fase.element_name fase, template.process_code sub_fase, template.name " +
+            "FROM jira_template template " +
+            "LEFT JOIN catalog fase " +
+            "ON template.type_id = fase.element_id " +
+            "AND fase.catalog_id = 1023 " +
+            "WHERE template.status = 1")
     List<Template> list();
 
     @Select({"<script>" +

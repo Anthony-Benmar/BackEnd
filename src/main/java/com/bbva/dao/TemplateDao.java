@@ -16,19 +16,14 @@ public class TemplateDao {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         try (SqlSession session = sqlSessionFactory.openSession()) {
             TemplateMapper mapper = session.getMapper(TemplateMapper.class);
-            var templates = mapper.list();
-            templates = templates.stream().filter(t->t.type_id.equals(dto.getType()) && t.status.equals(1))
-                    .collect(Collectors.toList());
+            var templates = mapper.findActiveTemplatesByType(String.valueOf(dto.getType()));
 
-            var templatesResponse =  templates.stream().map(t -> new TemplatePaginationResponse(t.template_id,t.name,t.label_one,t.orden))
+            var templatesResponse = templates.stream()
+                    .map(t -> new TemplatePaginationResponse(t.template_id, t.name, t.label_one, t.orden, t.getFase(), t.getSubFase()))
                     .collect(Collectors.toList());
 
             var counts = templates.stream().count();
 
-            if (counts>0){
-                templatesResponse = templatesResponse.stream().sorted(Comparator.comparing(TemplatePaginationResponse::getOrden))
-                        .collect(Collectors.toList());
-            }
             return new TemplatePaginationDtoResponse((int) counts,1,templatesResponse);
         }
     }
