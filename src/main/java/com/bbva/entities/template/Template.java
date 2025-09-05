@@ -16,5 +16,7 @@ public class Template {
     public String description;
     public Integer status;
     public Integer orden;
+    public String fase;
+    public String sub_fase;
 
 }

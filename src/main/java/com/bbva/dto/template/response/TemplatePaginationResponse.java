@@ -12,4 +12,6 @@ public class TemplatePaginationResponse {
     private String template;
     private String labelOne;
     private Integer orden;
+    private String fase;
+    private String subFase;
 }
