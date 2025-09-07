@@ -697,7 +697,7 @@ class ReliabilityServiceTest {
         var h2 = new TransferDetailUpdateRequest.Header(); h2.setComments("ok"); h2.setDomainId(123); dto2.setHeader(h2);
         var r2 = reliabilityService.updateTransferDetail("P2", "KM", dto2);
         assertErr(r2, "409");
-        assertTrue(r2.message.contains("solo puede editar el comentario general"));
+        assertTrue(r2.message.contains("KM solo puede enviar comentarios"));
 
         when(reliabilityDaoMock.getPackCurrentStatus("P3")).thenReturn(TransferStatusPolicy.EN_PROGRESO);
         var dtoOk = new TransferDetailUpdateRequest();
