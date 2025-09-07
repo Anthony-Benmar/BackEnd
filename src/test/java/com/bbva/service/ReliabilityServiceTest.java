@@ -1021,4 +1021,77 @@ class ReliabilityServiceTest {
             assertEquals("", sh.getRow(1).getCell(8).getStringCellValue());
         }
     }
+
+    @Test
+    void updateJobBySm_nonCommentChanges_porCadaCampo_disparaEdicion() {
+        java.util.List<java.util.function.Consumer<UpdateJobDtoRequest>> setters = java.util.List.of(
+                d -> d.setComponentName("cmp"),
+                d -> d.setFrequencyId(9),
+                d -> d.setInputPaths("in"),
+                d -> d.setOutputPath("out"),
+                d -> d.setJobTypeId(7),
+                d -> d.setUseCaseId(5),
+                d -> d.setIsCritical(String.valueOf(1)),
+                d -> d.setDomainId(2),
+                d -> d.setBitBucketUrl("http://x"),
+                d -> d.setResponsible("u"),
+                d -> d.setJobPhaseId(3),
+                d -> d.setOriginTypeId(4),
+                d -> d.setException("boom")
+        );
+
+        for (var setOne : setters) {
+            var dto = new UpdateJobDtoRequest();
+            dto.setActorRole("SM"); dto.setPack("P"); dto.setJobName("J");
+            dto.setComments("hay comentario PERO también edición");
+            setOne.accept(dto);
+
+            when(reliabilityDaoMock.getPackCurrentStatus("P")).thenReturn(TransferStatusPolicy.DEVUELTO_PO);
+            try (org.mockito.MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
+                mocked.when(() -> TransferStatusPolicy.canEdit("SM", TransferStatusPolicy.DEVUELTO_PO)).thenReturn(1);
+
+                doNothing().when(reliabilityDaoMock).updateJobByPackAndName(dto);
+                var ok = reliabilityService.updateJobBySm(dto);
+
+                assertOk(ok);
+                verify(reliabilityDaoMock).updateJobByPackAndName(dto);
+                verify(reliabilityDaoMock, never()).updateJobComment(any(), any(), any());
+            }
+            reset(reliabilityDaoMock);
+        }
+    }
+
+    @Test
+    void updateJobBySm_nonCommentChanges_forbidden_retorna409() {
+        var dto = new UpdateJobDtoRequest();
+        dto.setActorRole("SM"); dto.setPack("P"); dto.setJobName("J");
+        dto.setComponentName("x");
+
+        when(reliabilityDaoMock.getPackCurrentStatus("P")).thenReturn(TransferStatusPolicy.EN_PROGRESO);
+        try (org.mockito.MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
+            mocked.when(() -> TransferStatusPolicy.canEdit("SM", TransferStatusPolicy.EN_PROGRESO)).thenReturn(0);
+            var err = reliabilityService.updateJobBySm(dto);
+            assertErr(err, "409");
+            verify(reliabilityDaoMock, never()).updateJobByPackAndName(any());
+            verify(reliabilityDaoMock, never()).updateJobComment(any(), any(), any());
+        }
+    }
+
+    @Test
+    void updateTransferDetail_persistenceException_devuelve404() {
+        when(reliabilityDaoMock.getPackCurrentStatus("P")).thenReturn(TransferStatusPolicy.EN_PROGRESO);
+
+        var dto = new TransferDetailUpdateRequest();
+        var h = new TransferDetailUpdateRequest.Header(); h.setComments("solo comentario"); dto.setHeader(h);
+
+        doThrow(new ReliabilityDao.PersistenceException("violación de FK", null))
+                .when(reliabilityDaoMock).updateTransferDetail("P", dto);
+
+        var res = reliabilityService.updateTransferDetail("P", "SM", dto);
+        assertErr(res, "404");
+        // Mensaje propagado
+        org.junit.jupiter.api.Assertions.assertTrue(res.message.contains("violación de FK"));
+    }
+
+
 }
