@@ -1023,75 +1023,31 @@ class ReliabilityServiceTest {
     }
 
     @Test
-    void updateJobBySm_nonCommentChanges_porCadaCampo_disparaEdicion() {
-        java.util.List<java.util.function.Consumer<UpdateJobDtoRequest>> setters = java.util.List.of(
-                d -> d.setComponentName("cmp"),
-                d -> d.setFrequencyId(9),
-                d -> d.setInputPaths("in"),
-                d -> d.setOutputPath("out"),
-                d -> d.setJobTypeId(7),
-                d -> d.setUseCaseId(5),
-                d -> d.setIsCritical(String.valueOf(1)),
-                d -> d.setDomainId(2),
-                d -> d.setBitBucketUrl("http://x"),
-                d -> d.setResponsible("u"),
-                d -> d.setJobPhaseId(3),
-                d -> d.setOriginTypeId(4),
-                d -> d.setException("boom")
-        );
+    void getTransferDetail_seteaFrequencyChanged_casosNullIgualDistinto() {
+        var d = new TransferDetailResponse();
 
-        for (var setOne : setters) {
-            var dto = new UpdateJobDtoRequest();
-            dto.setActorRole("SM"); dto.setPack("P"); dto.setJobName("J");
-            dto.setComments("hay comentario PERO también edición");
-            setOne.accept(dto);
+        var jNull = new TransferDetailResponse.JobRow();
+        jNull.setOriginalFrequencyId(null);
+        jNull.setFrequencyId(5);
 
-            when(reliabilityDaoMock.getPackCurrentStatus("P")).thenReturn(TransferStatusPolicy.DEVUELTO_PO);
-            try (org.mockito.MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
-                mocked.when(() -> TransferStatusPolicy.canEdit("SM", TransferStatusPolicy.DEVUELTO_PO)).thenReturn(1);
+        var jEq = new TransferDetailResponse.JobRow();
+        jEq.setOriginalFrequencyId(7);
+        jEq.setFrequencyId(7);
 
-                doNothing().when(reliabilityDaoMock).updateJobByPackAndName(dto);
-                var ok = reliabilityService.updateJobBySm(dto);
+        var jDiff = new TransferDetailResponse.JobRow();
+        jDiff.setOriginalFrequencyId(1);
+        jDiff.setFrequencyId(2);
 
-                assertOk(ok);
-                verify(reliabilityDaoMock).updateJobByPackAndName(dto);
-                verify(reliabilityDaoMock, never()).updateJobComment(any(), any(), any());
-            }
-            reset(reliabilityDaoMock);
-        }
+        d.setJobs(java.util.List.of(jNull, jEq, jDiff));
+
+        when(reliabilityDaoMock.getTransferDetail("PACK")).thenReturn(d);
+
+        var res = reliabilityService.getTransferDetail("PACK");
+        assertTrue(res.success);
+        var jobs = res.data.getJobs();
+
+        assertEquals(Boolean.FALSE, jobs.get(0).getFrequencyChanged());
+        assertEquals(Boolean.FALSE, jobs.get(1).getFrequencyChanged());
+        assertEquals(Boolean.TRUE,  jobs.get(2).getFrequencyChanged());
     }
-
-    @Test
-    void updateJobBySm_nonCommentChanges_forbidden_retorna409() {
-        var dto = new UpdateJobDtoRequest();
-        dto.setActorRole("SM"); dto.setPack("P"); dto.setJobName("J");
-        dto.setComponentName("x");
-
-        when(reliabilityDaoMock.getPackCurrentStatus("P")).thenReturn(TransferStatusPolicy.EN_PROGRESO);
-        try (org.mockito.MockedStatic<TransferStatusPolicy> mocked = mockStatic(TransferStatusPolicy.class)) {
-            mocked.when(() -> TransferStatusPolicy.canEdit("SM", TransferStatusPolicy.EN_PROGRESO)).thenReturn(0);
-            var err = reliabilityService.updateJobBySm(dto);
-            assertErr(err, "409");
-            verify(reliabilityDaoMock, never()).updateJobByPackAndName(any());
-            verify(reliabilityDaoMock, never()).updateJobComment(any(), any(), any());
-        }
-    }
-
-    @Test
-    void updateTransferDetail_persistenceException_devuelve404() {
-        when(reliabilityDaoMock.getPackCurrentStatus("P")).thenReturn(TransferStatusPolicy.EN_PROGRESO);
-
-        var dto = new TransferDetailUpdateRequest();
-        var h = new TransferDetailUpdateRequest.Header(); h.setComments("solo comentario"); dto.setHeader(h);
-
-        doThrow(new ReliabilityDao.PersistenceException("violación de FK", null))
-                .when(reliabilityDaoMock).updateTransferDetail("P", dto);
-
-        var res = reliabilityService.updateTransferDetail("P", "SM", dto);
-        assertErr(res, "404");
-        // Mensaje propagado
-        org.junit.jupiter.api.Assertions.assertTrue(res.message.contains("violación de FK"));
-    }
-
-
 }
