@@ -191,6 +191,28 @@ public class ReliabilityService {
         }
     }
 
+    public IDataResult<List<String>> listActiveSdatools() {
+        try {
+            var list = reliabilityDao.listActiveSdatools();
+            return new SuccessDataResult<>(list);
+        } catch (Exception e) {
+            return new ErrorDataResult<>(null, "500", e.getMessage());
+        }
+    }
+
+    public IDataResult<Void> updateJobSdatool(String jobName, String newSdatoolId) {
+        try {
+            if (jobName == null || jobName.isBlank() || newSdatoolId == null || newSdatoolId.isBlank())
+                return new ErrorDataResult<>(null, "400", "jobName y newSdatoolId son obligatorios");
+            reliabilityDao.updateJobSdatool(jobName, newSdatoolId);
+            return new SuccessDataResult<>(null, "SDATOOL de job actualizado");
+        } catch (ReliabilityDao.PersistenceException pe) {
+            return new ErrorDataResult<>(null, "404", pe.getMessage());
+        } catch (Exception e) {
+            return new ErrorDataResult<>(null, "500", e.getMessage());
+        }
+    }
+
     private String nullSafe(String value) {
         return value != null ? value : "";
     }

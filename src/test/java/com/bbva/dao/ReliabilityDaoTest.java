@@ -424,4 +424,41 @@ class ReliabilityDaoTest {
         verify(reliabilityMapperMock).getKmAllowedDomainNames("km@bbva.com");
         verify(sqlSessionMock).close();
     }
+    @Test
+    void listActiveSdatools_success() {
+        when(reliabilityMapperMock.listActiveSdatools())
+                .thenReturn(java.util.List.of("x","y"));
+        var res = reliabilityDao.listActiveSdatools();
+        assertEquals(java.util.List.of("x","y"), res);
+        verify(reliabilityMapperMock).listActiveSdatools();
+    }
+
+    @Test
+    void listActiveSdatools_mapperThrows_propagates() {
+        when(reliabilityMapperMock.listActiveSdatools())
+                .thenThrow(new RuntimeException("boom"));
+        assertThrows(RuntimeException.class, () -> reliabilityDao.listActiveSdatools());
+    }
+
+    @Test
+    void updateJobSdatool_success_commit() {
+        when(reliabilityMapperMock.updateJobSdatool("J","SD")).thenReturn(1);
+        assertDoesNotThrow(() -> reliabilityDao.updateJobSdatool("J","SD"));
+        verify(sqlSessionMock).commit();
+    }
+
+    @Test
+    void updateJobSdatool_zeroRows_persistenceException() {
+        when(reliabilityMapperMock.updateJobSdatool("J","SD")).thenReturn(0);
+        assertThrows(ReliabilityDao.PersistenceException.class,
+                () -> reliabilityDao.updateJobSdatool("J","SD"));
+        verify(sqlSessionMock, never()).commit();
+    }
+
+    @Test
+    void updateJobSdatool_mapperThrows_propagates_y_noCommit() {
+        doThrow(new RuntimeException("DB")).when(reliabilityMapperMock).updateJobSdatool("J","SD");
+        assertThrows(RuntimeException.class, () -> reliabilityDao.updateJobSdatool("J","SD"));
+        verify(sqlSessionMock, never()).commit();
+    }
 }

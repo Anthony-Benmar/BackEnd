@@ -37,9 +37,19 @@ public interface ReliabilityMapper {
     @Result(property = "jobTypeId", column = "job_type_id")
     @Result(property = "bitBucketUrl", column = "bitbucket_url")
     @Result(property = "pack", column = "pack")
+    @Result(property = "projectId", column = "project_id")
+    @Result(property = "sdatoolId", column = "sdatool_id")
     List<InventoryInputsDtoResponse> inventoryInputsFilter(
             @Param("c") InventoryInputsFilterDtoRequest c
     );
+
+    @Select("SELECT sdatool_id FROM project_info WHERE status_type = 1   -- 1 = En ejecución (catalog 1033) ORDER BY sdatool_id")
+    List<String> listActiveSdatools();
+
+    @Update("UPDATE job_bitacora SET sdatool_id = #{newSdatoolId}, update_date = NOW() WHERE job_name   = #{jobName}")
+    int updateJobSdatool(@Param("jobName") String jobName,
+                         @Param("newSdatoolId") String newSdatoolId);
+
 
     @Select("""
             SELECT element_id AS value, element_name AS label

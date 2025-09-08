@@ -1050,4 +1050,62 @@ class ReliabilityServiceTest {
         assertEquals(Boolean.FALSE, jobs.get(1).getFrequencyChanged());
         assertEquals(Boolean.TRUE,  jobs.get(2).getFrequencyChanged());
     }
+
+    @Test
+    void listActiveSdatools_ok_y_error() {
+        when(reliabilityDaoMock.listActiveSdatools()).thenReturn(java.util.List.of("sda1","sda2"));
+        var ok = reliabilityService.listActiveSdatools();
+        assertTrue(ok.success);
+        assertEquals(2, ok.data.size());
+        verify(reliabilityDaoMock).listActiveSdatools();
+
+        reset(reliabilityDaoMock);
+        when(reliabilityDaoMock.listActiveSdatools()).thenThrow(new RuntimeException("DB down"));
+        var err = reliabilityService.listActiveSdatools();
+        assertFalse(err.success);
+        assertEquals("500", err.status);
+        assertTrue(err.message.contains("DB down"));
+    }
+
+    @Test
+    void updateJobSdatool_success() {
+        // no lanza excepción → success
+        doNothing().when(reliabilityDaoMock).updateJobSdatool("JOB_A","SD2");
+        var r = reliabilityService.updateJobSdatool("JOB_A","SD2");
+        assertTrue(r.success);
+        assertEquals("SDATOOL de job actualizado", r.message);
+        verify(reliabilityDaoMock).updateJobSdatool("JOB_A","SD2");
+    }
+
+    @Test
+    void updateJobSdatool_validaciones400() {
+        var r1 = reliabilityService.updateJobSdatool(null,"SD");
+        var r2 = reliabilityService.updateJobSdatool("","SD");
+        var r3 = reliabilityService.updateJobSdatool("JOB",null);
+        var r4 = reliabilityService.updateJobSdatool("JOB","  ");
+        for (var r : java.util.List.of(r1,r2,r3,r4)) {
+            assertFalse(r.success);
+            assertEquals("400", r.status);
+            assertTrue(r.message.contains("obligatorios"));
+        }
+        verify(reliabilityDaoMock, never()).updateJobSdatool(anyString(), anyString());
+    }
+
+    @Test
+    void updateJobSdatool_dao404_y_500() {
+        doThrow(new PersistenceException("no existe", null))
+                .when(reliabilityDaoMock).updateJobSdatool("JOB_X","SD3");
+        var r404 = reliabilityService.updateJobSdatool("JOB_X","SD3");
+        assertFalse(r404.success);
+        assertEquals("404", r404.status);
+        assertTrue(r404.message.contains("no existe"));
+
+        reset(reliabilityDaoMock);
+        doThrow(new RuntimeException("DB fatal"))
+                .when(reliabilityDaoMock).updateJobSdatool("JOB_Y","SD4");
+        var r500 = reliabilityService.updateJobSdatool("JOB_Y","SD4");
+        assertFalse(r500.success);
+        assertEquals("500", r500.status);
+        assertTrue(r500.message.contains("DB fatal"));
+    }
 }

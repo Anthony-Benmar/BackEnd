@@ -426,4 +426,34 @@ class ReliabilityResourceTest {
         assertEquals("500", err.status);
         verify(reliabilityServiceMock).updateTransferDetail(eq("PACK_ERR"), eq("KM"), any(TransferDetailUpdateRequest.class));
     }
+
+    @Test
+    void listActiveSdatools_success() {
+        var esperado = java.util.List.of("toolA","toolB");
+        when(reliabilityServiceMock.listActiveSdatools())
+                .thenReturn(new SuccessDataResult<>(esperado));
+
+        var res = reliabilityResource.listActiveSdatools();
+
+        assertTrue(res.success);
+        assertEquals(esperado, res.data);
+        verify(reliabilityServiceMock).listActiveSdatools();
+    }
+
+    @Test
+    void updateJobSdatool_success_y_error() {
+        when(reliabilityServiceMock.updateJobSdatool("JOB_X","SD1"))
+                .thenReturn(new SuccessDataResult<>(null, "ok"));
+        var ok = reliabilityResource.updateJobSdatool("JOB_X","SD1");
+        assertTrue(ok.success);
+        assertEquals("ok", ok.message);
+        verify(reliabilityServiceMock).updateJobSdatool("JOB_X","SD1");
+
+        reset(reliabilityServiceMock);
+        when(reliabilityServiceMock.updateJobSdatool("JOB_404","SD1"))
+                .thenReturn(new ErrorDataResult<>(null,"404","job no encontrado"));
+        var err = reliabilityResource.updateJobSdatool("JOB_404","SD1");
+        assertFalse(err.success);
+        assertEquals("404", err.status);
+    }
 }
