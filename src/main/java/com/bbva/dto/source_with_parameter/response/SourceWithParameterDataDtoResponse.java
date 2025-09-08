@@ -52,6 +52,9 @@ public class SourceWithParameterDataDtoResponse {
     private String tag3;
     private String tag4;
     private String rawPath;
+    private String userId;
+    private String userName;
+    private String tdsComments;
     public List<String> getTags() {
         return Arrays.asList(tag1, tag2, tag3, tag4);
     }

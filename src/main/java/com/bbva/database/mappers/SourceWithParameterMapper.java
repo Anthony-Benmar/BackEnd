@@ -2,9 +2,7 @@ package com.bbva.database.mappers;
 
 import com.bbva.dto.source_with_parameter.request.SourceWithParameterPaginationDtoRequest;
 import com.bbva.dto.source_with_parameter.response.SourceWithParameterDataDtoResponse;
-import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Result;
-import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.*;
 
 import java.util.List;
 
@@ -118,4 +116,53 @@ public interface SourceWithParameterMapper {
             @Result(property = "tag4", column = "tag4")
             @Result(property = "rawPath", column = "raw_path")
     SourceWithParameterDataDtoResponse getSourceWithParameterById(@Param("sourceWithParameterId") String sourceWithParameterId);
+
+    @Select("SELECT status FROM sources WHERE id = #{sourceId}")
+    String getStatusById(@Param("sourceId") String sourceId);
+
+    @Select("SELECT COUNT(1) FROM sources WHERE id = #{replacementId}")
+    int countById(@Param("replacementId") String replacementId);
+
+    @Select("SELECT id FROM sources " +
+            "WHERE id REGEXP '^[0-9]+(\\.[0-9]+)?$' " +
+            "ORDER BY CAST(id AS DECIMAL(20,10)) DESC LIMIT 1")
+    String getMaxSourceId();
+
+    @Insert("INSERT INTO sources (" +
+            "id, tds_description, tds_source, origin_type, source_origin, status, " +
+            "replacement_id, model_owner, tds_comments, " +
+            "create_audit_user, create_audit_user_name, create_audit_date) " +
+            "VALUES (" +
+            "#{dto.id}, #{dto.tdsDescription}, #{dto.tdsSource}, #{dto.originType}, #{dto.sourceOrigin}, #{dto.status}, " +
+            "NULL, #{dto.modelOwner}, #{dto.tdsComments}, " +
+            "#{dto.userId}, #{dto.userName}, NOW())")
+    int insertSource(@Param("dto") SourceWithParameterDataDtoResponse dto);
+
+    @Update("UPDATE sources SET status = 'Reemplazado', replacement_id = #{newReplacementIds} " +
+            "WHERE id = #{oldId}")
+    void updateReplacementId(@Param("newReplacementIds") String newReplacementIds, @Param("oldId") String oldId);
+
+    @Select("SELECT replacement_id FROM sources WHERE id = #{id}")
+    String getReplacementIds(@Param("id") String id);
+
+    @Update("UPDATE sources SET " +
+            "tds_description = #{dto.tdsDescription}, tds_source = #{dto.tdsSource}, source_origin = #{dto.sourceOrigin}, " +
+            "origin_type = #{dto.originType}, status = #{dto.status}, replacement_id = #{dto.replacementId}, " +
+            "model_owner = #{dto.modelOwner}, master_registered_board = #{dto.masterRegisteredBoard}, " +
+            "datalake_layer = #{dto.dataLakeLayer}, uuaa_raw = #{dto.uuaaRaw}, uuaa_master = #{dto.uuaaMaster}, " +
+            "tds_opinion_debt = #{dto.tdsOpinionDebt}, debt_level = #{dto.debtLevel}, inherited_source_id = #{dto.inheritedSourceId}, " +
+            "opinion_debt_comments = #{dto.opinionDebtComments}, missing_certification = #{dto.missingCertification}, " +
+            "missing_field_profiling = #{dto.missingFieldProfiling}, incomplete_opinion = #{dto.incompleteOpinion}, " +
+            "pdco_processing_use = #{dto.pdcoProcessingUse}, effectiveness_debt = #{dto.effectivenessDebt}, " +
+            "ingestion_type = #{dto.ingestionType}, ingestion_layer = #{dto.ingestionLayer}, datio_download_type = #{dto.datioDownloadType}, " +
+            "processing_input_table_ids = #{dto.processingInputTableIds}, periodicity = #{dto.periodicity}, periodicity_detail = #{dto.periodicityDetail}, " +
+            "folder_url = #{dto.folderUrl}, typology = #{dto.typology}, critical_table = #{dto.criticalTable}, " +
+            "critical_table_owner = #{dto.criticalTableOwner}, l1t = #{dto.l1t}, hem = #{dto.hem}, his = #{dto.his}, " +
+            "err = #{dto.err}, log = #{dto.log}, mlg = #{dto.mlg}, quality = #{dto.quality}, " +
+            "tag1 = #{dto.tag1}, tag2 = #{dto.tag2}, tag3 = #{dto.tag3}, tag4 = #{dto.tag4}, raw_path = #{dto.rawPath}, " +
+            "update_audit_user = #{dto.userId}, update_audit_user_name = #{dto.userName}, update_audit_date = NOW() " +
+            "WHERE id = #{dto.id}")
+    int updateSource(@Param("dto") SourceWithParameterDataDtoResponse dto);
+
+
 }
