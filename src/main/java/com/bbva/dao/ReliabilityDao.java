@@ -65,6 +65,20 @@ public class ReliabilityDao {
         return response;
     }
 
+    public List<String> listActiveSdatools() {
+        try (var s = MyBatisConnectionFactory.getInstance().openSession()) {
+            return s.getMapper(ReliabilityMapper.class).listActiveSdatools();
+        }
+    }
+    public void updateJobSdatool(String jobName, String newSdatoolId) {
+        try (var s = MyBatisConnectionFactory.getInstance().openSession()) {
+            int rows = s.getMapper(ReliabilityMapper.class)
+                    .updateJobSdatool(jobName, newSdatoolId);
+            if (rows == 0) throw new PersistenceException("job_name no encontrado", null);
+            s.commit();
+        }
+    }
+
     public List<PendingCustodyJobsDtoResponse> getPendingCustodyJobs(String sdatoolId) {
         SqlSessionFactory sqlSessionFactory = MyBatisConnectionFactory.getInstance();
         List<PendingCustodyJobsDtoResponse> pendingCustodyJobsList;

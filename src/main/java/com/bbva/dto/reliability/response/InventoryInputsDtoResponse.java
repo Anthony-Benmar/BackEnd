@@ -25,4 +25,6 @@ public class InventoryInputsDtoResponse {
     private Integer jobTypeId;
     private String bitBucketUrl;
     private String pack;
+    private Integer projectId;
+    private String  sdatoolId;
 }

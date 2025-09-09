@@ -30,6 +30,23 @@ public class ReliabilityResource {
     public IDataResult<InventoryInputsFilterDtoResponse> inventoryInputsFilter(InventoryInputsFilterDtoRequest dto) {
         return reliabilityService.inventoryInputsFilter(dto);
     }
+
+    @GET
+    @Path("/projects/sdatools/active")
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<List<String>> listActiveSdatools() {
+        return reliabilityService.listActiveSdatools();
+    }
+
+    @PUT
+    @Path("/jobs/{jobName}/sdatool/{newSdatoolId}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<Void> updateJobSdatool(
+            @PathParam("jobName") String jobName,
+            @PathParam("newSdatoolId") String newSdatoolId
+    ) { return reliabilityService.updateJobSdatool(jobName, newSdatoolId); }
+
     @GET
     @Path("/pending_custody_jobs/{sdatoolId}")
     @Consumes(MediaType.APPLICATION_JSON)

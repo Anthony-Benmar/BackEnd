@@ -37,9 +37,19 @@ public interface ReliabilityMapper {
     @Result(property = "jobTypeId", column = "job_type_id")
     @Result(property = "bitBucketUrl", column = "bitbucket_url")
     @Result(property = "pack", column = "pack")
+    @Result(property = "projectId", column = "project_id")
+    @Result(property = "sdatoolId", column = "sdatool_id")
     List<InventoryInputsDtoResponse> inventoryInputsFilter(
             @Param("c") InventoryInputsFilterDtoRequest c
     );
+
+    @Select("SELECT sdatool_id FROM project_info WHERE status_type = 1   -- 1 = En ejecución (catalog 1033) ORDER BY sdatool_id")
+    List<String> listActiveSdatools();
+
+    @Update("UPDATE job_bitacora SET sdatool_id = #{newSdatoolId}, update_date = NOW() WHERE job_name   = #{jobName}")
+    int updateJobSdatool(@Param("jobName") String jobName,
+                         @Param("newSdatoolId") String newSdatoolId);
+
 
     @Select("""
             SELECT element_id AS value, element_name AS label
@@ -232,6 +242,7 @@ public interface ReliabilityMapper {
     @Result(property = "jobCount", column = "jobCount")
     @Result(property = "statusId", column = "statusId")
     @Result(property = "statusName", column = "status_name")
+    @Result(property = "createdAt", column = "createdAt")
     List<ReliabilityPacksDtoResponse> listTransfersByStatus(
             @Param("domainName") String domainNameCsv,
             @Param("useCase") String useCaseCsv,
@@ -256,16 +267,34 @@ public interface ReliabilityMapper {
     TransferDetailResponse.Header getTransferHeader(@Param("pack") String pack);
 
     @Select("""
-        SELECT
-            job_name       AS jobName, component_name AS jsonName,
-            frequency_id   AS frequencyId, job_type_id    AS jobTypeId,
-            job_phase_id   AS jobPhaseId, origin_type_id AS originTypeId,
-            input_paths    AS inputPaths, output_path    AS outputPath,
-            bitbucket_url  AS bitBucketUrl, responsible    AS responsible,
-            use_case_id    AS useCaseId, domain_id      AS domainId,
-            is_critical    AS isCritical, status_id      AS statusId,
-            comments       AS comments
-        FROM job_stock WHERE pack = #{pack} ORDER BY job_name
-        """)
+      SELECT
+      js.job_name       AS jobName, js.component_name AS jsonName,
+      js.frequency_id   AS frequencyId, js.job_type_id    AS jobTypeId,
+      js.job_phase_id   AS jobPhaseId, js.origin_type_id AS originTypeId,
+      js.input_paths    AS inputPaths, js.output_path    AS outputPath,
+      js.bitbucket_url  AS bitBucketUrl, js.responsible    AS responsible,
+      js.use_case_id    AS useCaseId, js.domain_id      AS domainId,
+      js.is_critical    AS isCritical, js.status_id      AS statusId,
+      js.comments       AS comments, inf.element_id    AS originalFrequencyId,
+      CASE
+        WHEN inf.element_id IS NULL OR js.frequency_id IS NULL THEN 0
+        WHEN js.frequency_id <> inf.element_id THEN 1
+        ELSE 0
+      END AS frequencyChanged
+      FROM job_stock js
+      LEFT JOIN job j
+         ON j.job_name = js.job_name
+      LEFT JOIN catalog inf
+         ON inf.catalog_id = 1004
+        AND inf.element_name = CASE
+            WHEN j.folder LIKE '%DIA%' OR j.folder LIKE '%DAY%' THEN 'Diaria'
+            WHEN j.folder LIKE '%MON%' OR j.folder LIKE '%MEN%' THEN 'Mensual'
+            WHEN j.folder LIKE '%EVE%'                          THEN 'Eventual'
+            WHEN j.folder LIKE '%SEM%'                          THEN 'Semanal'
+            ELSE NULL
+          END
+      WHERE js.pack = #{pack}
+      ORDER BY js.job_name
+    """)
     List<TransferDetailResponse.JobRow> getTransferJobs(@Param("pack") String pack);
 }
