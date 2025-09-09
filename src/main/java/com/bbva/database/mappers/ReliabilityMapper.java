@@ -242,6 +242,7 @@ public interface ReliabilityMapper {
     @Result(property = "jobCount", column = "jobCount")
     @Result(property = "statusId", column = "statusId")
     @Result(property = "statusName", column = "status_name")
+    @Result(property = "createdAt", column = "createdAt")
     List<ReliabilityPacksDtoResponse> listTransfersByStatus(
             @Param("domainName") String domainNameCsv,
             @Param("useCase") String useCaseCsv,

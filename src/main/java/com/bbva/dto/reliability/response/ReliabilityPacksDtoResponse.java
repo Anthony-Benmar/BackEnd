@@ -22,4 +22,5 @@ public class ReliabilityPacksDtoResponse {
     private Integer statusId;
     private String  statusName;
     private Integer cambiedit;
+    private String  createdAt;
 }

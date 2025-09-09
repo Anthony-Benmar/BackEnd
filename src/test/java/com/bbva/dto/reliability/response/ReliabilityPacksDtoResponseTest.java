@@ -23,6 +23,7 @@ class ReliabilityPacksDtoResponseTest {
                 .statusId(2)
                 .statusName("Aprobado por PO")
                 .cambiedit(1)
+                .createdAt("2025-09-08T10:15:30Z")
                 .build();
 
         assertEquals("PACK123", dto.getPack());
@@ -39,25 +40,27 @@ class ReliabilityPacksDtoResponseTest {
         assertEquals(2, dto.getStatusId());
         assertEquals("Aprobado por PO", dto.getStatusName());
         assertEquals(1, dto.getCambiedit());
+        assertEquals("2025-09-08T10:15:30Z", dto.getCreatedAt());
     }
 
     @Test
     void testAllArgsConstructor() {
         ReliabilityPacksDtoResponse dto = new ReliabilityPacksDtoResponse(
-                "PACK999",                 // pack
-                2001,                      // domainId
-                "DOMX",                    // domainName
-                "po2@bbva.com",            // productOwnerEmail
-                302,                       // useCaseId
-                "Use Case Y",              // useCase
-                402,                       // projectId
-                "SDATOOL_999",             // sdaToolId
-                "USR_502",                 // creatorUser
+                "PACK999",                   // pack
+                2001,                        // domainId
+                "DOMX",                      // domainName
+                "po2@bbva.com",              // productOwnerEmail
+                302,                         // useCaseId
+                "Use Case Y",                // useCase
+                402,                         // projectId
+                "SDATOOL_999",               // sdaToolId
+                "USR_502",                   // creatorUser
                 "https://bbva.com/file.pdf", // pdfLink
-                5,                         // jobCount
-                1,                         // statusId
-                "Aprobado por Reliability",// statusName
-                0                          // cambiedit
+                5,                           // jobCount
+                1,                           // statusId
+                "Aprobado por Reliability",  // statusName
+                0,                           // cambiedit
+                "2025-09-08T11:00:00Z"       // createdAt
         );
 
         assertEquals("PACK999", dto.getPack());
@@ -74,6 +77,7 @@ class ReliabilityPacksDtoResponseTest {
         assertEquals(1, dto.getStatusId());
         assertEquals("Aprobado por Reliability", dto.getStatusName());
         assertEquals(0, dto.getCambiedit());
+        assertEquals("2025-09-08T11:00:00Z", dto.getCreatedAt());
     }
 
     @Test
@@ -89,6 +93,7 @@ class ReliabilityPacksDtoResponseTest {
         dto.setStatusId(5);
         dto.setStatusName("Devuelto por Reliability");
         dto.setCambiedit(1);
+        dto.setCreatedAt("2025-09-08T12:00:00Z");
 
         assertEquals("PACK000", dto.getPack());
         assertEquals(1111, dto.getDomainId());
@@ -99,5 +104,6 @@ class ReliabilityPacksDtoResponseTest {
         assertEquals(5, dto.getStatusId());
         assertEquals("Devuelto por Reliability", dto.getStatusName());
         assertEquals(1, dto.getCambiedit());
+        assertEquals("2025-09-08T12:00:00Z", dto.getCreatedAt());
     }
 }
