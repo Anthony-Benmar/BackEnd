@@ -163,8 +163,6 @@ public class SourceWithParameterService {
         try {
             return sourceWithParameterDao.existsReplacementId(replacementId);
         } catch (Exception e) {
-            Logger log = Logger.getLogger(SourceWithParameterService.class.getName());
-            log.log(Level.SEVERE, "Error verificando replacementId: " + e.getMessage(), e);
             return false;
         }
     }

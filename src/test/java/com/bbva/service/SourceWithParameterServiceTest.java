@@ -98,4 +98,100 @@ class SourceWithParameterServiceTest {
         assertEquals(2, effectivenessDebts.size());
         assertTrue(effectivenessDebts.contains("Effective"));
     }
+    @Test
+    void testUpdateSourceWithParameter_success() {
+        SourceWithParameterDataDtoResponse dto = new SourceWithParameterDataDtoResponse();
+        when(sourceWithParameterDao.update(dto)).thenReturn(true);
+
+        IDataResult<Boolean> result = sourceWithParameterService.updateSourceWithParameter(dto);
+
+        assertTrue(result.success);
+        assertTrue(result.data);
+        assertEquals("Exitoso", result.message);
+    }
+
+    @Test
+    void testUpdateSourceWithParameter_failure() {
+        SourceWithParameterDataDtoResponse dto = new SourceWithParameterDataDtoResponse();
+        when(sourceWithParameterDao.update(dto)).thenReturn(false);
+
+        IDataResult<Boolean> result = sourceWithParameterService.updateSourceWithParameter(dto);
+
+        assertFalse(result.success);
+        assertFalse(result.data);
+        assertEquals("Error", result.message);
+    }
+
+    @Test
+    void testExportCommentsBySourceId_returnsComments() {
+        when(sourceWithParameterDao.getCommentsBySourceIdAndType("1", "type"))
+                .thenReturn(List.of("Comment1", "Comment2"));
+
+        List<String> comments = sourceWithParameterService.exportCommentsBySourceId("1", "type");
+
+        assertEquals(2, comments.size());
+        assertTrue(comments.contains("Comment1"));
+    }
+
+    @Test
+    void testExportCommentsBySourceId_emptySourceId() {
+        List<String> comments = sourceWithParameterService.exportCommentsBySourceId("", "type");
+        assertTrue(comments.isEmpty());
+    }
+
+    @Test
+    void testSaveComment_validInput_callsDao() {
+        sourceWithParameterService.saveComment("1", "type", "comment");
+    }
+
+    @Test
+    void testSaveComment_invalidInput_throwsException() {
+        assertThrows(IllegalArgumentException.class,
+                () -> sourceWithParameterService.saveComment("", "type", "comment"));
+    }
+
+    @Test
+    void testInsertSource_success() {
+        SourceWithParameterDataDtoResponse dto = new SourceWithParameterDataDtoResponse();
+        when(sourceWithParameterDao.insert(dto)).thenReturn(true);
+
+        boolean result = sourceWithParameterService.insertSource(dto);
+        assertTrue(result);
+    }
+
+    @Test
+    void testInsertSource_failure() {
+        SourceWithParameterDataDtoResponse dto = new SourceWithParameterDataDtoResponse();
+        when(sourceWithParameterDao.insert(dto)).thenThrow(new RuntimeException("DB error"));
+        boolean result = sourceWithParameterService.insertSource(dto);
+        assertFalse(result);
+    }
+
+
+    @Test
+    void testGetMaxSourceId_returnsValue() {
+        when(sourceWithParameterDao.getMaxSourceId()).thenReturn("MAX123");
+        String maxId = sourceWithParameterService.getMaxSourceId();
+        assertEquals("MAX123", maxId);
+    }
+
+    @Test
+    void testExistsReplacementId_true() {
+        when(sourceWithParameterDao.existsReplacementId("R1")).thenReturn(true);
+        assertTrue(sourceWithParameterService.existsReplacementId("R1"));
+    }
+
+    @Test
+    void testExistsReplacementId_false() {
+        when(sourceWithParameterDao.existsReplacementId("R2")).thenThrow(new RuntimeException());
+        assertFalse(sourceWithParameterService.existsReplacementId("R2"));
+    }
+
+    @Test
+    void testGetStatusById_returnsValue() {
+        when(sourceWithParameterDao.getStatusById("1")).thenReturn("ACTIVE");
+        String status = sourceWithParameterService.getStatusById("1");
+        assertEquals("ACTIVE", status);
+    }
+
 }

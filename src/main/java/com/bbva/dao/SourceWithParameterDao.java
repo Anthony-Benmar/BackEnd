@@ -6,13 +6,6 @@ import com.bbva.dto.source_with_parameter.request.SourceWithParameterPaginationD
 import com.bbva.dto.source_with_parameter.response.SourceWithParameterDataDtoResponse;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
 import java.util.List;
 import java.util.logging.Logger;
 

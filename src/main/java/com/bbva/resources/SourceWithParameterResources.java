@@ -22,7 +22,7 @@ import javax.ws.rs.core.Response;
 @Produces(MediaType.APPLICATION_JSON)
 public class SourceWithParameterResources {
     private static final Logger LOGGER = Logger.getLogger(SourceWithParameterResources.class.getName());
-
+    private static final String INTERNAL_SERVER_ERROR_JSON = "{\"error\":\"Internal Server Error\"}";
     private SourceWithParameterService sourceWithParameterService = new SourceWithParameterService();
     private final Helper helper = new Helper();
 
@@ -117,7 +117,7 @@ public class SourceWithParameterResources {
                                   @QueryParam("type") String commentType) {
         if (sourceId == null || sourceId.isEmpty() || commentType == null || commentType.isEmpty()) {
             return Response.status(400)
-                    .entity("{\"error\":\"sourceId or commentType is missing\"}")
+                    .entity(INTERNAL_SERVER_ERROR_JSON)
                     .build();
         }
 
@@ -138,7 +138,7 @@ public class SourceWithParameterResources {
         } catch (Exception e) {
             e.printStackTrace();
             return Response.status(500)
-                    .entity("{\"error\":\"Internal Server Error\"}")
+                    .entity(INTERNAL_SERVER_ERROR_JSON)
                     .build();
         }
     }
@@ -170,7 +170,7 @@ public class SourceWithParameterResources {
         } catch (Exception e) {
             e.printStackTrace();
             return Response.status(500)
-                    .entity("{\"error\":\"Internal Server Error\"}")
+                    .entity(INTERNAL_SERVER_ERROR_JSON)
                     .build();
         }
     }
@@ -204,7 +204,7 @@ public class SourceWithParameterResources {
         } catch (Exception e) {
             e.printStackTrace();
             return Response.status(500)
-                    .entity("{\"error\":\"Internal Server Error\"}")
+                    .entity(INTERNAL_SERVER_ERROR_JSON)
                     .build();
         }
     }
@@ -245,7 +245,7 @@ public class SourceWithParameterResources {
         } catch (Exception e) {
             e.printStackTrace();
             return Response.status(500)
-                    .entity("{\"error\":\"Internal Server Error\"}")
+                    .entity(INTERNAL_SERVER_ERROR_JSON)
                     .build();
         }
     }
@@ -254,7 +254,6 @@ public class SourceWithParameterResources {
     @Path("/existsReplacementId/{replacementId}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response existsReplacementId(@PathParam("replacementId") String replacementId) {
-        LOGGER.info("existsReplacementId request: " + replacementId);
         try {
             boolean exists = sourceWithParameterService.existsReplacementId(replacementId);
             Map<String, Object> response = Map.of(
@@ -263,9 +262,8 @@ public class SourceWithParameterResources {
             );
             return Response.ok(new ObjectMapper().writeValueAsString(response)).build();
         } catch (Exception e) {
-            LOGGER.severe("Error verificando replacementId: " + e.getMessage());
             return Response.status(500)
-                    .entity("{\"error\":\"Internal Server Error\"}")
+                    .entity(INTERNAL_SERVER_ERROR_JSON)
                     .build();
         }
     }
@@ -274,7 +272,6 @@ public class SourceWithParameterResources {
     @Path("/status/{sourceId}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getStatusById(@PathParam("sourceId") String sourceId) {
-        LOGGER.info("getStatusById request: " + sourceId);
         try {
             String status = sourceWithParameterService.getStatusById(sourceId);
             if (status == null) {
@@ -288,9 +285,8 @@ public class SourceWithParameterResources {
             );
             return Response.ok(new ObjectMapper().writeValueAsString(response)).build();
         } catch (Exception e) {
-            LOGGER.severe("Error obteniendo status: " + e.getMessage());
             return Response.status(500)
-                    .entity("{\"error\":\"Internal Server Error\"}")
+                    .entity(INTERNAL_SERVER_ERROR_JSON)
                     .build();
         }
     }
