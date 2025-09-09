@@ -25,6 +25,25 @@ public class SourceWithParameterResources {
     private static final String INTERNAL_SERVER_ERROR_JSON = "{\"error\":\"Internal Server Error\"}";
     private SourceWithParameterService sourceWithParameterService = new SourceWithParameterService();
     private final Helper helper = new Helper();
+    private Response buildJsonResponse(Map<String, Object> data) {
+        try {
+            String json = new ObjectMapper().writeValueAsString(data);
+            return Response.ok(json).build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.status(500).entity(INTERNAL_SERVER_ERROR_JSON).build();
+        }
+    }
+    private Response validateDto(SourceWithParameterDataDtoResponse dto) {
+        if (dto == null || dto.getId() == null || dto.getId().isEmpty() ||
+                dto.getUserId() == null || dto.getUserId().isEmpty() ||
+                dto.getUserName() == null || dto.getUserName().isEmpty()) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("{\"error\":\"id, userId y userName son obligatorios\"}")
+                    .build();
+        }
+        return null;
+    }
 
     @GET
     @Path("/getSourceWithParameter")
@@ -159,10 +178,7 @@ public class SourceWithParameterResources {
 
         try {
             sourceWithParameterService.saveComment(sourceId, commentType, comment);
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", "Comment saved successfully");
-            return Response.ok(new ObjectMapper().writeValueAsString(response)).build();
-
+            return buildJsonResponse(Map.of("message", "Comment saved successfully"));
         } catch (IllegalArgumentException e) {
             return Response.status(400)
                     .entity("{\"error\":\"" + e.getMessage() + "\"}")
@@ -173,6 +189,7 @@ public class SourceWithParameterResources {
                     .entity(INTERNAL_SERVER_ERROR_JSON)
                     .build();
         }
+
     }
     @POST
     @Path("/saveModifyHistory")
@@ -180,23 +197,12 @@ public class SourceWithParameterResources {
     @Consumes(MediaType.APPLICATION_JSON)
     public Response saveModifyHistory(SourceWithParameterDataDtoResponse dto) {
 
-        if (dto == null || dto.getId() == null || dto.getId().isEmpty() ||
-                dto.getUserId() == null || dto.getUserId().isEmpty() ||
-                dto.getUserName() == null || dto.getUserName().isEmpty()) {
-
-            return Response.status(400)
-                    .entity("{\"error\":\"id, userId o userName son obligatorios\"}")
-                    .build();
-        }
+        Response validation = validateDto(dto);
+        if (validation != null) return validation;
 
         try {
-
             sourceWithParameterService.saveModifyHistory(dto);
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", "Histórico guardado correctamente");
-            return Response.ok(new ObjectMapper().writeValueAsString(response)).build();
-
+            return buildJsonResponse(Map.of("message", "Histórico guardado correctamente"));
         } catch (IllegalArgumentException e) {
             return Response.status(400)
                     .entity("{\"error\":\"" + e.getMessage() + "\"}")
@@ -213,24 +219,18 @@ public class SourceWithParameterResources {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     public Response insertSource(SourceWithParameterDataDtoResponse dto) {
-        if (dto == null || dto.getId() == null || dto.getId().isEmpty() ||
-                dto.getUserId() == null || dto.getUserId().isEmpty() ||
-                dto.getUserName() == null || dto.getUserName().isEmpty()) {
-
-            return Response.status(Response.Status.BAD_REQUEST)
-                    .entity("{\"error\":\"id, userId y userName son obligatorios\"}")
-                    .build();
-        }
+        Response validation = validateDto(dto);
+        if (validation != null) return validation;
 
         boolean inserted = sourceWithParameterService.insertSource(dto);
-
         if (inserted) {
-            return Response.ok("{\"message\":\"Registro insertado correctamente\"}").build();
+            return buildJsonResponse(Map.of("message", "Registro insertado correctamente"));
         } else {
             return Response.status(Response.Status.CONFLICT)
                     .entity("{\"error\":\"El ID ya existe o no se pudo insertar\"}")
                     .build();
         }
+
     }
     @GET
     @Path("/getMaxSourceId")

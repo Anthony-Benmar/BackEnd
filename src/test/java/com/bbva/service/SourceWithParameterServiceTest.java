@@ -14,8 +14,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 class SourceWithParameterServiceTest {
     private SourceWithParameterDao sourceWithParameterDao;
@@ -141,8 +140,14 @@ class SourceWithParameterServiceTest {
 
     @Test
     void testSaveComment_validInput_callsDao() {
-        sourceWithParameterService.saveComment("1", "type", "comment");
+        String sourceId = "1";
+        String type = "type";
+        String comment = "comment";
+        sourceWithParameterService.saveComment(sourceId, type, comment);
+        verify(sourceWithParameterDao).saveCommentBySourceIdAndType(sourceId, type, comment);
     }
+
+
 
     @Test
     void testSaveComment_invalidInput_throwsException() {
@@ -192,6 +197,64 @@ class SourceWithParameterServiceTest {
         when(sourceWithParameterDao.getStatusById("1")).thenReturn("ACTIVE");
         String status = sourceWithParameterService.getStatusById("1");
         assertEquals("ACTIVE", status);
+    }
+    @Test
+    void testSaveModifyHistory_validInput_callsDao() {
+        SourceWithParameterDataDtoResponse dto = new SourceWithParameterDataDtoResponse();
+        dto.setId("1");
+        dto.setUserId("U1");
+        dto.setUserName("User");
+
+        sourceWithParameterService.saveModifyHistory(dto);
+
+        verify(sourceWithParameterDao).insertModifyHistory(dto);
+    }
+
+    @Test
+    void testSaveModifyHistory_nullDto_throwsException() {
+        assertThrows(IllegalArgumentException.class, () -> sourceWithParameterService.saveModifyHistory(null));
+    }
+
+    @Test
+    void testSaveModifyHistory_emptyId_throwsException() {
+        SourceWithParameterDataDtoResponse dto = new SourceWithParameterDataDtoResponse();
+        dto.setId("");
+        dto.setUserId("U1");
+        dto.setUserName("User");
+
+        assertThrows(IllegalArgumentException.class, () -> sourceWithParameterService.saveModifyHistory(dto));
+    }
+
+    @Test
+    void testSaveModifyHistory_emptyUserId_throwsException() {
+        SourceWithParameterDataDtoResponse dto = new SourceWithParameterDataDtoResponse();
+        dto.setId("1");
+        dto.setUserId("");
+        dto.setUserName("User");
+
+        assertThrows(IllegalArgumentException.class, () -> sourceWithParameterService.saveModifyHistory(dto));
+    }
+
+    @Test
+    void testSaveModifyHistory_emptyUserName_throwsException() {
+        SourceWithParameterDataDtoResponse dto = new SourceWithParameterDataDtoResponse();
+        dto.setId("1");
+        dto.setUserId("U1");
+        dto.setUserName("");
+
+        assertThrows(IllegalArgumentException.class, () -> sourceWithParameterService.saveModifyHistory(dto));
+    }
+
+    @Test
+    void testUpdateSourceWithParameter_throwsException_returnsErrorDataResult() {
+        SourceWithParameterDataDtoResponse dto = new SourceWithParameterDataDtoResponse();
+        when(sourceWithParameterDao.update(dto)).thenThrow(new RuntimeException("DB error"));
+
+        IDataResult<Boolean> result = sourceWithParameterService.updateSourceWithParameter(dto);
+
+        assertFalse(result.success);
+        assertFalse(result.data);
+        assertEquals("DB error", result.message);
     }
 
 }
