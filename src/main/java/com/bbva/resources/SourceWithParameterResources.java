@@ -25,6 +25,7 @@ public class SourceWithParameterResources {
     private static final String INTERNAL_SERVER_ERROR_JSON = "{\"error\":\"Internal Server Error\"}";
     private SourceWithParameterService sourceWithParameterService = new SourceWithParameterService();
     private final Helper helper = new Helper();
+    private static final String ERROR_KEY = "error";
     private static final String MESSAGE_KEY = "message";
     private Response buildJsonResponse(Map<String, Object> data) {
         try {
@@ -145,7 +146,7 @@ public class SourceWithParameterResources {
 
         if (comments == null || comments.isEmpty()) {
             return Response.status(404)
-                    .entity("{\"error\":\"No comment found for the given sourceId and type\"}")
+                    .entity(Map.of(ERROR_KEY, "No comment found for the given sourceId and type"))
                     .build();
         }
 
@@ -173,7 +174,7 @@ public class SourceWithParameterResources {
                 commentType == null || commentType.isEmpty() ||
                 comment == null || comment.isEmpty()) {
             return Response.status(400)
-                    .entity("{\"error\":\"sourceId, commentType or comment is missing\"}")
+                    .entity(Map.of(ERROR_KEY, "sourceId, commentType or comment is missing"))
                     .build();
         }
 
@@ -182,7 +183,7 @@ public class SourceWithParameterResources {
             return buildJsonResponse(Map.of(MESSAGE_KEY, "Comment saved successfully"));
         } catch (IllegalArgumentException e) {
             return Response.status(400)
-                    .entity("{\"error\":\"" + e.getMessage() + "\"}")
+                    .entity(Map.of(ERROR_KEY, e.getMessage()))
                     .build();
         } catch (Exception e) {
             e.printStackTrace();
