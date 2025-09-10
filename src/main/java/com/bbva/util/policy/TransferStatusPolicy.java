@@ -111,14 +111,12 @@ public class TransferStatusPolicy {
     }
 
     private static int nextForKm(int status, Action action) {
-        if (status == APROBADO_PO) {
-            if (action == Action.APPROVE) return APROBADO_RLB;
-            if (action == Action.RETURN)  return DEVUELTO_RLB;
-            if (action == Action.DESESTIMAR)  return DESESTIMADO;
-        }
-        if (status == DESESTIMADO) {
-            if (action == Action.RETURN)      return DEVUELTO_RLB;
-        }
+        if (status == APROBADO_PO && action == Action.APPROVE)     return APROBADO_RLB;
+        if (status == APROBADO_PO && action == Action.RETURN)      return DEVUELTO_RLB;
+        if (status == APROBADO_PO && action == Action.DESESTIMAR)  return DESESTIMADO;
+
+        if (status == DESESTIMADO && action == Action.RETURN)      return DEVUELTO_RLB;
+
         throw new IllegalStateException("No se pudo calcular la transición");
     }
 
