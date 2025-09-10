@@ -1,5 +1,6 @@
 package com.bbva.util.policy;
 
+import com.bbva.dto.reliability.response.ReliabilityPacksDtoResponse;
 import org.junit.jupiter.api.Test;
 
 import java.util.Set;
@@ -192,5 +193,71 @@ class TransferStatusPolicyTest {
     @Test
     void canWriteJobComment_statusNull_es0() {
         assertEquals(0, canWriteJobComment("SM", null));
+    }
+
+    @Test
+    void compute_KM_APROBADO_PO_DESESTIMAR_va_A_DESESTIMADO() {
+        assertEquals(DESESTIMADO, computeNextStatusOrThrow("KM", APROBADO_PO, Action.DESESTIMAR));
+    }
+
+    @Test
+    void compute_KM_DESESTIMADO_RETURN_va_A_DEVUELTO_RLB() {
+        assertEquals(DEVUELTO_RLB, computeNextStatusOrThrow("KM", DESESTIMADO, Action.RETURN));
+    }
+
+    @Test
+    void buildPacksFilter_KM_filtraPorDominiosPermitidos() {
+        var allowed = new java.util.HashSet<>(java.util.Arrays.asList("CS", "DBM"));
+        var pred = TransferStatusPolicy.buildPacksFilter("KM", "km@bbva.com", allowed);
+
+        var ok  = new ReliabilityPacksDtoResponse(); ok.setDomainName("CS");
+        var bad = new ReliabilityPacksDtoResponse(); bad.setDomainName("OTRO");
+
+        assertTrue(pred.test(ok));
+        assertFalse(pred.test(bad));
+    }
+
+    @Test
+    void buildPacksFilter_PO_comparaProductOwnerEmail_caseInsensitive() {
+        var pred = TransferStatusPolicy.buildPacksFilter("PO", "po@bbva.com", java.util.Collections.emptySet());
+
+        var ok  = new ReliabilityPacksDtoResponse(); ok.setProductOwnerEmail("PO@BBVA.COM");
+        var bad = new ReliabilityPacksDtoResponse(); bad.setProductOwnerEmail("other@bbva.com");
+
+        assertTrue(pred.test(ok));
+        assertFalse(pred.test(bad));
+    }
+
+    @Test
+    void buildPacksFilter_SM_comparaCreatorUser_caseInsensitive() {
+        var pred = TransferStatusPolicy.buildPacksFilter("SM", "scrum@bbva.com", java.util.Collections.emptySet());
+
+        var ok  = new ReliabilityPacksDtoResponse(); ok.setCreatorUser("SCRUM@BBVA.COM");
+        var bad = new ReliabilityPacksDtoResponse(); bad.setCreatorUser("otro@bbva.com");
+
+        assertTrue(pred.test(ok));
+        assertFalse(pred.test(bad));
+    }
+
+    @Test
+    void buildPacksFilter_rolDesconocido_dejaPasarTodo() {
+        var pred = TransferStatusPolicy.buildPacksFilter("NA", "", java.util.Collections.emptySet());
+        var row = new ReliabilityPacksDtoResponse(); row.setDomainName("X");
+        assertTrue(pred.test(row));
+    }
+
+    @Test
+    void canWriteGeneralComment_KM_enAprobadoPO_es1() {
+        assertEquals(1, canWriteGeneralComment("KM", APROBADO_PO));
+    }
+
+    @Test
+    void canWriteGeneralComment_SM_enEnProgreso_es1() {
+        assertEquals(1, canWriteGeneralComment("SM", EN_PROGRESO));
+    }
+
+    @Test
+    void canWriteGeneralComment_otros_es0() {
+        assertEquals(0, canWriteGeneralComment("SM", APROBADO_PO));
     }
 }
