@@ -411,6 +411,17 @@ public class ReliabilityDao {
         }
     }
 
+    public ServicePermissionResponse getServicePermissionByName(String serviceName) {
+        try (var s = MyBatisConnectionFactory.getInstance().openSession()) {
+            var m = s.getMapper(ReliabilityMapper.class);
+            Boolean can = m.canDeleteJobs(serviceName);
+            return new ServicePermissionResponse(serviceName, Boolean.TRUE.equals(can));
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Error getServicePermissionByName", e);
+            return new ServicePermissionResponse(serviceName, false);
+        }
+    }
+
     public List<String> getKmAllowedDomainNames(String email) {
         try (SqlSession s = MyBatisConnectionFactory.getInstance().openSession()) {
             return s.getMapper(ReliabilityMapper.class).getKmAllowedDomainNames(email);

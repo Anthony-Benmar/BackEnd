@@ -3,6 +3,7 @@ package com.bbva.resources;
 
 import com.bbva.common.HttpStatusCodes;
 import com.bbva.core.abstracts.IDataResult;
+import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dto.catalog.response.DropDownDto;
 import com.bbva.dto.reliability.request.*;
 import com.bbva.dto.reliability.response.*;
@@ -233,5 +234,14 @@ public class ReliabilityResource {
             TransferDetailUpdateRequest body,
             @HeaderParam("X-USER-ROLE") String roleFromHeader) {
         return reliabilityService.updateTransferDetail(pack, roleFromHeader, body);
+    }
+
+    @GET
+    @Path("/services/{service}/can_delete")
+    @Produces(MediaType.APPLICATION_JSON)
+    public IDataResult<Boolean> canDelete(@PathParam("service") String service) {
+        ServicePermissionResponse dto = reliabilityService.getServicePermissionByName(service);
+        boolean flag = dto != null && Boolean.TRUE.equals(dto.getCanDeleteJobs());
+        return new SuccessDataResult<>(flag);
     }
 }

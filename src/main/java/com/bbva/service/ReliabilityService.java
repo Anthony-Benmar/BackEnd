@@ -458,4 +458,8 @@ public class ReliabilityService {
             return new ErrorDataResult<>(null, "500", e.getMessage());
         }
     }
+
+    public ServicePermissionResponse getServicePermissionByName(String serviceName) {
+        return reliabilityDao.getServicePermissionByName(serviceName);
+    }
 }
