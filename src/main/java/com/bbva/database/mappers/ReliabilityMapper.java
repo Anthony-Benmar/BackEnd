@@ -218,6 +218,9 @@ public interface ReliabilityMapper {
     @Select("SELECT c.element_name FROM reliability_km_access a JOIN catalog c ON c.catalog_id=1027 AND c.element_id=a.domain_id WHERE a.status_type=1 AND LOWER(a.email)=LOWER(#{email}) ORDER BY c.element_name")
     List<String> getKmAllowedDomainNames(@Param("email") String email);
 
+    @Select("SELECT sp.can_delete_jobs FROM service_permissions sp JOIN catalog c ON c.catalog_id = sp.catalog_id AND c.element_id = sp.domain_element_id WHERE sp.status_type = 1 AND sp.catalog_id = 1027  AND UPPER(c.element_name) = UPPER(#{serviceName})  LIMIT 1")
+    Boolean canDeleteJobs(@Param("serviceName") String serviceName);
+
     @Update("UPDATE reliability_packs SET status_id = #{estado} WHERE pack = #{pack}")
     void updateReliabilityStatus(@Param("pack") String pack, @Param("estado") int estado);
 

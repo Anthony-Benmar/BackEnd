@@ -1108,4 +1108,37 @@ class ReliabilityServiceTest {
         assertEquals("500", r500.status);
         assertTrue(r500.message.contains("DB fatal"));
     }
+
+    @Test
+    void getServicePermissionByName_ok() {
+        var resp = new ServicePermissionResponse("CS", true);
+        when(reliabilityDaoMock.getServicePermissionByName("CS")).thenReturn(resp);
+
+        var out = reliabilityService.getServicePermissionByName("CS");
+
+        assertSame(resp, out);
+        verify(reliabilityDaoMock).getServicePermissionByName("CS");
+    }
+
+    @Test
+    void getServicePermissionByName_daoThrows() {
+        when(reliabilityDaoMock.getServicePermissionByName("FIN"))
+                .thenThrow(new RuntimeException("DB down"));
+
+        assertThrows(RuntimeException.class,
+                () -> reliabilityService.getServicePermissionByName("FIN"));
+        verify(reliabilityDaoMock).getServicePermissionByName("FIN");
+    }
+
+    @Test
+    void getServicePermissionByName_errorPropagado() {
+        when(reliabilityDaoMock.getServicePermissionByName("FIN"))
+                .thenThrow(new RuntimeException("DB down"));
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> reliabilityService.getServicePermissionByName("FIN"));
+
+        assertTrue(ex.getMessage().contains("DB down"));
+        verify(reliabilityDaoMock).getServicePermissionByName("FIN");
+    }
 }

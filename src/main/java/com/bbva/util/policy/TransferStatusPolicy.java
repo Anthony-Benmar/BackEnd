@@ -40,7 +40,7 @@ public class TransferStatusPolicy {
     private static final Map<String, Map<String, String>> MATRIX = new HashMap<>();
     static {
         var km = new HashMap<String, String>();
-        km.put(TAB_EN_PROGRESO, "2,5");
+        km.put(TAB_EN_PROGRESO, "2,5,6");
         km.put(TAB_APROBADOS,   "1");
         MATRIX.put(ROLE_KM, km);
 
@@ -62,7 +62,7 @@ public class TransferStatusPolicy {
         return perRole.getOrDefault(t, perRole.get(TAB_EN_PROGRESO));
     }
 
-    public enum Action { APPROVE, RETURN, RESEND }
+    public enum Action { APPROVE, RETURN, RESEND, DESESTIMAR }
 
     public static Set<Action> allowedActions(String actorRole, int currentStatus){
         String r = actorRole == null ? "" : actorRole.trim().toUpperCase(Locale.ROOT);
@@ -71,6 +71,10 @@ public class TransferStatusPolicy {
         if (ROLE_KM.equals(r)) {
             if (currentStatus == APROBADO_PO) {
                 res.add(Action.APPROVE);
+                res.add(Action.RETURN);
+                res.add(Action.DESESTIMAR);
+            }
+            if (currentStatus == DESESTIMADO) {
                 res.add(Action.RETURN);
             }
         } else { // Rol Consulta = SM/PO
@@ -107,10 +111,12 @@ public class TransferStatusPolicy {
     }
 
     private static int nextForKm(int status, Action action) {
-        if (status == APROBADO_PO) {
-            if (action == Action.APPROVE) return APROBADO_RLB;
-            if (action == Action.RETURN)  return DEVUELTO_RLB;
-        }
+        if (status == APROBADO_PO && action == Action.APPROVE)     return APROBADO_RLB;
+        if (status == APROBADO_PO && action == Action.RETURN)      return DEVUELTO_RLB;
+        if (status == APROBADO_PO && action == Action.DESESTIMAR)  return DESESTIMADO;
+
+        if (status == DESESTIMADO && action == Action.RETURN)      return DEVUELTO_RLB;
+
         throw new IllegalStateException("No se pudo calcular la transición");
     }
 

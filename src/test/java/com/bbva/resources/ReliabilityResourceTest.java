@@ -456,4 +456,33 @@ class ReliabilityResourceTest {
         assertFalse(err.success);
         assertEquals("404", err.status);
     }
+
+    @Test
+    void canDelete_true_cuandoServicioPermiteBorrado() {
+        when(reliabilityServiceMock.getServicePermissionByName("CS"))
+                .thenReturn(new ServicePermissionResponse("CS", true));
+
+        IDataResult<Boolean> res = reliabilityResource.canDelete("CS");
+
+        assertTrue(res.success);
+        assertEquals(Boolean.TRUE, res.data);
+        verify(reliabilityServiceMock).getServicePermissionByName("CS");
+    }
+
+    @Test
+    void canDelete_false_cuandoNoPermite_o_null() {
+        when(reliabilityServiceMock.getServicePermissionByName("FIN"))
+                .thenReturn(new ServicePermissionResponse("FIN", false));
+        var r1 = reliabilityResource.canDelete("FIN");
+        assertTrue(r1.success);
+        assertEquals(Boolean.FALSE, r1.data);
+        verify(reliabilityServiceMock).getServicePermissionByName("FIN");
+
+        reset(reliabilityServiceMock);
+        when(reliabilityServiceMock.getServicePermissionByName("NULO")).thenReturn(null);
+        var r2 = reliabilityResource.canDelete("NULO");
+        assertTrue(r2.success);
+        assertEquals(Boolean.FALSE, r2.data);
+        verify(reliabilityServiceMock).getServicePermissionByName("NULO");
+    }
 }

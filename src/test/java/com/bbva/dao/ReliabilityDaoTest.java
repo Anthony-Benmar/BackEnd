@@ -461,4 +461,47 @@ class ReliabilityDaoTest {
         assertThrows(RuntimeException.class, () -> reliabilityDao.updateJobSdatool("J","SD"));
         verify(sqlSessionMock, never()).commit();
     }
+
+    @Test
+    void getServicePermissionByName_ok_y_error() {
+        when(reliabilityMapperMock.canDeleteJobs("CS")).thenReturn(true);
+
+        ServicePermissionResponse ok = reliabilityDao.getServicePermissionByName("CS");
+        assertEquals("CS", ok.getServiceName());
+        assertTrue(ok.getCanDeleteJobs());
+
+        when(sqlSessionMock.getMapper(ReliabilityMapper.class))
+                .thenThrow(new RuntimeException("DB down"));
+
+        ServicePermissionResponse err = reliabilityDao.getServicePermissionByName("FIN");
+        assertEquals("FIN", err.getServiceName());
+        assertFalse(err.getCanDeleteJobs());
+    }
+
+    @Test
+    void getJobExecutionHistory_ok_y_error() {
+        var row = new JobExecutionHistoryDtoResponse();
+        when(reliabilityMapperMock.getJobExecutionHistory("J1"))
+                .thenReturn(java.util.List.of(row));
+        assertEquals(1, reliabilityDao.getJobExecutionHistory("J1").size());
+
+        when(reliabilityMapperMock.getJobExecutionHistory("J2"))
+                .thenThrow(new RuntimeException("DB"));
+        assertTrue(reliabilityDao.getJobExecutionHistory("J2").isEmpty());
+    }
+
+    @Test
+    void inventoryInputsFilter_logJson_falla_y_no_revienta() {
+        when(reliabilityMapperMock.inventoryInputsFilter(any()))
+                .thenReturn(java.util.List.of(new InventoryInputsDtoResponse()));
+
+        try (var mockedJson = mockStatic(JSONUtils.class)) {
+            mockedJson.when(() -> JSONUtils.convertFromObjectToJson(any()))
+                    .thenThrow(new RuntimeException("boom"));
+            InventoryInputsFilterDtoRequest dto = new InventoryInputsFilterDtoRequest();
+            dto.setRecordsAmount(10); dto.setPage(1);
+            var resp = reliabilityDao.inventoryInputsFilter(dto);
+            assertNotNull(resp);
+        }
+    }
 }
