@@ -63,13 +63,12 @@ class TransferStatusPolicyTest {
 
     @Test
     void toCsv_defaults_rolYTabNull_fallback_KM_EN_PROGRESO() {
-        // Por compatibilidad: null/null mantiene fallback a KM + EN_PROGRESO
-        assertEquals("2,5", toCsv(null, null));
+        assertEquals("2,5,6", toCsv(null, null));
     }
 
     @Test
     void toCsv_rolKM_tabs() {
-        assertEquals("2,5", toCsv("KM", "EN_PROGRESO"));
+        assertEquals("2,5,6", toCsv("KM", "EN_PROGRESO"));
         assertEquals("1", toCsv("KM", "APROBADOS"));
     }
 
@@ -86,12 +85,12 @@ class TransferStatusPolicyTest {
 
     @Test
     void toCsv_rolDesconocido_fallbackKM() {
-        assertEquals("2,5", toCsv("???", "EN_PROGRESO"));
+        assertEquals("2,5,6", toCsv("???", "EN_PROGRESO"));
     }
 
     @Test
     void toCsv_tabDesconocida_fallback_EN_PROGRESO() {
-        assertEquals("2,5", toCsv("KM", "NO_EXISTE"));
+        assertEquals("2,5,6", toCsv("KM", "NO_EXISTE"));
         assertEquals("3,2,4,5", toCsv("SM", "   "));
         assertEquals("3,2,4", toCsv("PO", "   "));
     }

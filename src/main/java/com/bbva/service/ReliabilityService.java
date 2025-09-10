@@ -416,6 +416,11 @@ public class ReliabilityService {
 
             String r = role == null ? "" : role.trim().toUpperCase(java.util.Locale.ROOT);
 
+            if (st == TransferStatusPolicy.DESESTIMADO) {
+                return new ErrorDataResult<>(null, "409",
+                        "No se puede editar el detalle cuando el pack está desestimado");
+            }
+
             java.util.function.Predicate<TransferDetailUpdateRequest.Job> jobOnlyComment = j ->
                     j != null &&
                             j.getJobName() != null && j.getComments() != null &&
