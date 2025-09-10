@@ -25,6 +25,7 @@ public class SourceWithParameterResources {
     private static final String INTERNAL_SERVER_ERROR_JSON = "{\"error\":\"Internal Server Error\"}";
     private SourceWithParameterService sourceWithParameterService = new SourceWithParameterService();
     private final Helper helper = new Helper();
+    private static final String MESSAGE_KEY = "message";
     private Response buildJsonResponse(Map<String, Object> data) {
         try {
             String json = new ObjectMapper().writeValueAsString(data);
@@ -178,7 +179,7 @@ public class SourceWithParameterResources {
 
         try {
             sourceWithParameterService.saveComment(sourceId, commentType, comment);
-            return buildJsonResponse(Map.of("message", "Comment saved successfully"));
+            return buildJsonResponse(Map.of(MESSAGE_KEY, "Comment saved successfully"));
         } catch (IllegalArgumentException e) {
             return Response.status(400)
                     .entity("{\"error\":\"" + e.getMessage() + "\"}")
@@ -202,7 +203,7 @@ public class SourceWithParameterResources {
 
         try {
             sourceWithParameterService.saveModifyHistory(dto);
-            return buildJsonResponse(Map.of("message", "Histórico guardado correctamente"));
+            return buildJsonResponse(Map.of(MESSAGE_KEY, "Histórico guardado correctamente"));
         } catch (IllegalArgumentException e) {
             return Response.status(400)
                     .entity("{\"error\":\"" + e.getMessage() + "\"}")
@@ -224,7 +225,7 @@ public class SourceWithParameterResources {
 
         boolean inserted = sourceWithParameterService.insertSource(dto);
         if (inserted) {
-            return buildJsonResponse(Map.of("message", "Registro insertado correctamente"));
+            return buildJsonResponse(Map.of(MESSAGE_KEY, "Registro insertado correctamente"));
         } else {
             return Response.status(Response.Status.CONFLICT)
                     .entity("{\"error\":\"El ID ya existe o no se pudo insertar\"}")
@@ -290,5 +291,6 @@ public class SourceWithParameterResources {
                     .build();
         }
     }
+
 
 }

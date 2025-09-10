@@ -215,35 +215,6 @@ class SourceWithParameterServiceTest {
         assertThrows(IllegalArgumentException.class, () -> sourceWithParameterService.saveModifyHistory(null));
     }
 
-    @Test
-    void testSaveModifyHistory_emptyId_throwsException() {
-        SourceWithParameterDataDtoResponse dto = new SourceWithParameterDataDtoResponse();
-        dto.setId("");
-        dto.setUserId("U1");
-        dto.setUserName("User");
-
-        assertThrows(IllegalArgumentException.class, () -> sourceWithParameterService.saveModifyHistory(dto));
-    }
-
-    @Test
-    void testSaveModifyHistory_emptyUserId_throwsException() {
-        SourceWithParameterDataDtoResponse dto = new SourceWithParameterDataDtoResponse();
-        dto.setId("1");
-        dto.setUserId("");
-        dto.setUserName("User");
-
-        assertThrows(IllegalArgumentException.class, () -> sourceWithParameterService.saveModifyHistory(dto));
-    }
-
-    @Test
-    void testSaveModifyHistory_emptyUserName_throwsException() {
-        SourceWithParameterDataDtoResponse dto = new SourceWithParameterDataDtoResponse();
-        dto.setId("1");
-        dto.setUserId("U1");
-        dto.setUserName("");
-
-        assertThrows(IllegalArgumentException.class, () -> sourceWithParameterService.saveModifyHistory(dto));
-    }
 
     @Test
     void testUpdateSourceWithParameter_throwsException_returnsErrorDataResult() {
@@ -255,6 +226,26 @@ class SourceWithParameterServiceTest {
         assertFalse(result.success);
         assertFalse(result.data);
         assertEquals("DB error", result.message);
+    }
+    @Test
+    void testSaveModifyHistory_invalidFields_throwsException() {
+        SourceWithParameterDataDtoResponse dto1 = new SourceWithParameterDataDtoResponse();
+        dto1.setId("");
+        dto1.setUserId("U1");
+        dto1.setUserName("User");
+        assertThrows(IllegalArgumentException.class, () -> sourceWithParameterService.saveModifyHistory(dto1));
+
+        SourceWithParameterDataDtoResponse dto2 = new SourceWithParameterDataDtoResponse();
+        dto2.setId("1");
+        dto2.setUserId("");
+        dto2.setUserName("User");
+        assertThrows(IllegalArgumentException.class, () -> sourceWithParameterService.saveModifyHistory(dto2));
+
+        SourceWithParameterDataDtoResponse dto3 = new SourceWithParameterDataDtoResponse();
+        dto3.setId("1");
+        dto3.setUserId("U1");
+        dto3.setUserName("");
+        assertThrows(IllegalArgumentException.class, () -> sourceWithParameterService.saveModifyHistory(dto3));
     }
 
 }

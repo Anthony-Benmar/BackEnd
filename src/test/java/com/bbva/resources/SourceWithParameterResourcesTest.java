@@ -6,6 +6,7 @@ import com.bbva.dto.source_with_parameter.request.SourceWithReadyOnlyDtoRequest;
 import com.bbva.dto.source_with_parameter.response.SourceWithParameterDataDtoResponse;
 import com.bbva.dto.source_with_parameter.response.SourceWithParameterReadOnlyDtoResponse;
 import com.bbva.service.SourceWithParameterService;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -258,6 +259,41 @@ class SourceWithParameterResourcesTest {
     }
 
 
+    @Test
+    void testGetDistinctStatuses_exception() {
+        org.mockito.Mockito.when(sourceWithParameterServiceMock.getDistinctStatuses())
+                .thenThrow(new RuntimeException("Unexpected error"));
+        Assertions.assertThrows(RuntimeException.class, () -> sourceWithParameterResources.getDistinctStatuses());
+    }
+
+    @Test
+    void testGetDistinctOriginTypes_exception() {
+        org.mockito.Mockito.when(sourceWithParameterServiceMock.getDistinctOriginTypes())
+                .thenThrow(new RuntimeException("Unexpected error"));
+        Assertions.assertThrows(RuntimeException.class, () -> sourceWithParameterResources.getDistinctOriginTypes());
+    }
+
+    @Test
+    void testGetDistinctTdsOpinionDebts_exception() {
+        org.mockito.Mockito.when(sourceWithParameterServiceMock.getDistinctTdsOpinionDebts())
+                .thenThrow(new RuntimeException("Unexpected error"));
+        Assertions.assertThrows(RuntimeException.class, () -> sourceWithParameterResources.getDistinctTdsOpinionDebts());
+    }
+
+    @Test
+    void testGetDistinctEffectivenessDebts_exception() {
+        org.mockito.Mockito.when(sourceWithParameterServiceMock.getDistinctEffectivenessDebts())
+                .thenThrow(new RuntimeException("Unexpected error"));
+        Assertions.assertThrows(RuntimeException.class, () -> sourceWithParameterResources.getDistinctEffectivenessDebts());
+    }
+
+    @Test
+    void testGetMaxSourceId_exception() {
+        org.mockito.Mockito.when(sourceWithParameterServiceMock.getMaxSourceId())
+                .thenThrow(new RuntimeException("Unexpected error"));
+        Response response = sourceWithParameterResources.getMaxSourceId();
+        Assertions.assertEquals(500, response.getStatus());
+    }
 
 
 }
