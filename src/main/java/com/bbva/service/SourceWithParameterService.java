@@ -8,13 +8,18 @@ import com.bbva.dto.source_with_parameter.request.SourceWithReadyOnlyDtoRequest;
 import com.bbva.dto.source_with_parameter.response.SourceWithParameterPaginatedResponseDTO;
 import com.bbva.dto.source_with_parameter.response.SourceWithParameterDataDtoResponse;
 import com.bbva.dto.source_with_parameter.response.SourceWithParameterReadOnlyDtoResponse;
+import com.bbva.core.results.ErrorDataResult;
 
+import java.util.Collections;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.List;
 
 import static com.bbva.database.MyBatisConnectionFactory.getSqlSessionFactory;
 
 public class SourceWithParameterService {
     private  final SourceWithParameterDao sourceWithParameterDao;
+
     public SourceWithParameterService(SourceWithParameterDao sourceWithParameterDao) {
         this.sourceWithParameterDao = sourceWithParameterDao;
     }
@@ -30,10 +35,8 @@ public class SourceWithParameterService {
         return new SuccessDataResult<>(response);
     }
     public IDataResult<SourceWithParameterReadOnlyDtoResponse> readOnly(SourceWithReadyOnlyDtoRequest request) {
-        // Implementa la lógica de detalle si la necesitas
         SourceWithParameterDataDtoResponse data = sourceWithParameterDao.getSourceWithParameterById(request.getSourceWithParameterId());
         SourceWithParameterReadOnlyDtoResponse response = new SourceWithParameterReadOnlyDtoResponse();
-        // Map fields if data is not null
         if (data != null) {
             response.setId(data.getId());
             response.setTdsDescription(data.getTdsDescription());
@@ -81,7 +84,6 @@ public class SourceWithParameterService {
         }
         return new SuccessDataResult<>(response);
     }
-    // Métodos para combos
     public List<String> getDistinctStatuses() {
         return sourceWithParameterDao.getDistinctStatuses();
     }
@@ -94,4 +96,79 @@ public class SourceWithParameterService {
     public List<String> getDistinctEffectivenessDebts() {
         return sourceWithParameterDao.getDistinctEffectivenessDebts();
     }
+
+    public IDataResult<Boolean> updateSourceWithParameter(SourceWithParameterDataDtoResponse dto) {
+        try {
+            boolean success = sourceWithParameterDao.update(dto);
+            if (success) {
+                return new SuccessDataResult<>(true, "Exitoso");
+            } else {
+                return new ErrorDataResult<>(false, "500", "Error");
+            }
+        } catch (Exception e) {
+            Logger log = Logger.getLogger(SourceWithParameterService.class.getName());
+            log.log(Level.SEVERE, e.getMessage(), e);
+            return new ErrorDataResult<>(false, "500", e.getMessage());
+        }
+    }
+    public List<String> exportCommentsBySourceId(String sourceId, String commentType) {
+        if (sourceId == null || sourceId.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return sourceWithParameterDao.getCommentsBySourceIdAndType(sourceId, commentType);
+    }
+
+    public void saveComment(String sourceId, String commentType, String comment) {
+        if (sourceId == null || sourceId.isEmpty()) {
+            throw new IllegalArgumentException("El ID de la fuente no puede estar vacío");
+        }
+        if (comment == null || comment.isEmpty()) {
+            throw new IllegalArgumentException("El comentario no puede estar vacío");
+        }
+        sourceWithParameterDao.saveCommentBySourceIdAndType(sourceId, commentType, comment);
+    }
+
+    public void saveModifyHistory(SourceWithParameterDataDtoResponse dto) {
+        if (dto == null) {
+            throw new IllegalArgumentException("El objeto DTO no puede ser nulo");
+        }
+        if (dto.getId() == null || dto.getId().isEmpty()) {
+            throw new IllegalArgumentException("El ID de la fuente no puede estar vacío");
+        }
+        if (dto.getUserId() == null || dto.getUserId().isEmpty()) {
+            throw new IllegalArgumentException("El ID de usuario no puede estar vacío");
+        }
+        if (dto.getUserName() == null || dto.getUserName().isEmpty()) {
+            throw new IllegalArgumentException("El nombre de usuario no puede estar vacío");
+        }
+
+        sourceWithParameterDao.insertModifyHistory(dto);
+    }
+
+    public boolean insertSource(SourceWithParameterDataDtoResponse dto) {
+        try {
+            return sourceWithParameterDao.insert(dto);
+        } catch (Exception e) {
+            Logger log = Logger.getLogger(SourceWithParameterService.class.getName());
+            log.log(Level.SEVERE, e.getMessage(), e);
+            return false;
+        }
+    }
+
+    public String getMaxSourceId() {
+        return sourceWithParameterDao.getMaxSourceId();
+    }
+
+    public boolean existsReplacementId(String replacementId) {
+        try {
+            return sourceWithParameterDao.existsReplacementId(replacementId);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public String getStatusById(String sourceId) {
+        return sourceWithParameterDao.getStatusById(sourceId);
+    }
+    
 }

@@ -2,9 +2,7 @@ package com.bbva.database.mappers;
 
 import com.bbva.dto.source_with_parameter.request.SourceWithParameterPaginationDtoRequest;
 import com.bbva.dto.source_with_parameter.response.SourceWithParameterDataDtoResponse;
-import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Result;
-import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.*;
 
 import java.util.List;
 
@@ -118,4 +116,65 @@ public interface SourceWithParameterMapper {
             @Result(property = "tag4", column = "tag4")
             @Result(property = "rawPath", column = "raw_path")
     SourceWithParameterDataDtoResponse getSourceWithParameterById(@Param("sourceWithParameterId") String sourceWithParameterId);
+
+    @Select("CALL sidedb.SP_GET_STATUS_BY_ID(#{sourceId})")
+    String getStatusById(@Param("sourceId") String sourceId);
+
+    @Select("CALL sidedb.SP_COUNT_SOURCE_BY_ID(#{replacementId})")
+    int countById(@Param("replacementId") String replacementId);
+
+    @Select("{CALL sidedb.SP_GET_MAX_SOURCE_ID()}")
+    String getMaxSourceId();
+
+    @Select("CALL SP_INSERT_NEW_SOURCE(" +
+            "#{dto.id}, #{dto.tdsDescription}, #{dto.tdsSource}, " +
+            "#{dto.originType}, #{dto.sourceOrigin}, #{dto.status}, " +
+            "#{dto.replacementId}, #{dto.modelOwner}, #{dto.tdsComments}, " +
+            "#{dto.userId}, #{dto.userName})")
+    void insertSource(@Param("dto") SourceWithParameterDataDtoResponse dto);
+    @Update("CALL sidedb.SP_UPDATE_REPLACEMENT_ID(#{newReplacementIds}, #{oldId})")
+    void updateReplacementId(@Param("newReplacementIds") String newReplacementIds,
+                             @Param("oldId") String oldId);
+
+
+    @Select("CALL sidedb.SP_GET_REPLACEMENT_IDS(#{id})")
+    String getReplacementIds(@Param("id") String id);
+
+    @Select("CALL SP_NEW_UPDATE_SOURCE(" +
+            "#{dto.id}, #{dto.tdsDescription}, #{dto.tdsSource}, #{dto.sourceOrigin}, #{dto.originType}, #{dto.status}, " +
+            "#{dto.replacementId}, #{dto.modelOwner}, #{dto.masterRegisteredBoard}, #{dto.dataLakeLayer}, " +
+            "#{dto.uuaaRaw}, #{dto.uuaaMaster}, #{dto.tdsOpinionDebt}, #{dto.debtLevel}, #{dto.inheritedSourceId}, " +
+            "#{dto.opinionDebtComments}, #{dto.missingCertification}, #{dto.missingFieldProfiling}, #{dto.incompleteOpinion}, " +
+            "#{dto.pdcoProcessingUse}, #{dto.effectivenessDebt}, #{dto.ingestionType}, #{dto.ingestionLayer}, " +
+            "#{dto.datioDownloadType}, #{dto.processingInputTableIds}, #{dto.periodicity}, #{dto.periodicityDetail}, " +
+            "#{dto.folderUrl}, #{dto.typology}, #{dto.criticalTable}, #{dto.criticalTableOwner}, " +
+            "#{dto.l1t}, #{dto.hem}, #{dto.his}, #{dto.err}, #{dto.log}, #{dto.mlg}, #{dto.quality}, " +
+            "#{dto.tag1}, #{dto.tag2}, #{dto.tag3}, #{dto.tag4}, #{dto.rawPath}, " +
+            "#{dto.userId}, #{dto.userName})")
+    void updateSource(@Param("dto") SourceWithParameterDataDtoResponse dto);
+
+    @Select("{CALL sidedb.SP_GET_COMMENTS_BY_SOURCE_AND_TYPE(#{sourceId, jdbcType=VARCHAR}, #{commentType, jdbcType=VARCHAR})}")
+    List<String> getCommentsBySourceIdAndType(@Param("sourceId") String sourceId,
+                                              @Param("commentType") String commentType);
+
+    @Insert("{CALL sidedb.SP_SAVE_COMMENT_BY_SOURCE_AND_TYPE(" +
+            "#{sourceId, jdbcType=VARCHAR}, " +
+            "#{commentType, jdbcType=VARCHAR}, " +
+            "#{comment, jdbcType=LONGVARCHAR})}")
+    @Options(statementType = org.apache.ibatis.mapping.StatementType.CALLABLE)
+    void saveCommentBySourceIdAndType(@Param("sourceId") String sourceId,
+                                      @Param("commentType") String commentType,
+                                      @Param("comment") String comment);
+
+    @Select("CALL SP_INSERT_MODIFY_HISTORY(" +
+            "#{dto.id}, #{dto.userId}, #{dto.userName}, #{dto.tdsDescription}, #{dto.tdsSource}, #{dto.sourceOrigin}, " +
+            "#{dto.originType}, #{dto.status}, #{dto.replacementId}, #{dto.modelOwner}, #{dto.masterRegisteredBoard}, " +
+            "#{dto.dataLakeLayer}, #{dto.uuaaRaw}, #{dto.uuaaMaster}, #{dto.tdsOpinionDebt}, #{dto.debtLevel}, " +
+            "#{dto.inheritedSourceId}, #{dto.opinionDebtComments}, #{dto.missingCertification}, #{dto.missingFieldProfiling}, " +
+            "#{dto.incompleteOpinion}, #{dto.pdcoProcessingUse}, #{dto.effectivenessDebt}, #{dto.ingestionType}, " +
+            "#{dto.ingestionLayer}, #{dto.datioDownloadType}, #{dto.processingInputTableIds}, #{dto.periodicity}, " +
+            "#{dto.periodicityDetail}, #{dto.folderUrl}, #{dto.typology}, #{dto.criticalTable}, #{dto.criticalTableOwner}, " +
+            "#{dto.l1t}, #{dto.hem}, #{dto.his}, #{dto.err}, #{dto.log}, #{dto.mlg}, #{dto.quality}, " +
+            "#{dto.tag1}, #{dto.tag2}, #{dto.tag3}, #{dto.tag4}, #{dto.rawPath})")
+    void insertModifyHistory(@Param("dto") SourceWithParameterDataDtoResponse dto);
 }
