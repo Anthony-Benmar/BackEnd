@@ -26,6 +26,7 @@ class TransferDetailResponseTest {
                 .sn2Id(21)
                 .sn2Desc("DEDRRA-RISK ANALYTICS-85225")
                 .productOwnerEmail("po@bbva.com")
+                .dataOwnerEmail("data.owner@bbva.com") // nuevo
                 .build();
     }
 
@@ -46,6 +47,8 @@ class TransferDetailResponseTest {
                 .isCritical("NO")
                 .statusId(3)
                 .comments("")
+                .aplicativoSip("SIP-MOD") // nuevo
+                .details("Detalle del job") // nuevo
                 .build();
     }
 
@@ -69,6 +72,7 @@ class TransferDetailResponseTest {
         assertEquals(21, dto.getHeader().getSn2Id());
         assertEquals("DEDRRA-RISK ANALYTICS-85225", dto.getHeader().getSn2Desc());
         assertEquals("po@bbva.com", dto.getHeader().getProductOwnerEmail());
+        assertEquals("data.owner@bbva.com", dto.getHeader().getDataOwnerEmail()); // nuevo
     }
 
     @Test
@@ -93,6 +97,9 @@ class TransferDetailResponseTest {
         assertEquals("NO", j0.getIsCritical());
         assertEquals(3, j0.getStatusId());
         assertEquals("", j0.getComments());
+        // nuevos
+        assertEquals("SIP-MOD", j0.getAplicativoSip());
+        assertEquals("Detalle del job", j0.getDetails());
     }
 
     @Test
@@ -110,10 +117,13 @@ class TransferDetailResponseTest {
         assertEquals("SDATOOL-33319", root.path("header").path("sdaToolId").asText());
         assertEquals(3, root.path("header").path("statusId").asInt());
         assertEquals("po@bbva.com", root.path("header").path("productOwnerEmail").asText());
+        assertEquals("data.owner@bbva.com", root.path("header").path("dataOwnerEmail").asText()); // nuevo
 
         assertEquals(1, root.path("jobs").size());
         assertEquals("PKBRBCP4028", root.path("jobs").get(0).path("jobName").asText());
         assertEquals(3, root.path("jobs").get(0).path("statusId").asInt());
+        assertEquals("SIP-MOD", root.path("jobs").get(0).path("aplicativoSip").asText()); // nuevo
+        assertEquals("Detalle del job", root.path("jobs").get(0).path("details").asText()); // nuevo
     }
 
     @Test
@@ -129,8 +139,11 @@ class TransferDetailResponseTest {
 
         assertEquals(dto.getHeader().getPack(), back.getHeader().getPack());
         assertEquals(dto.getHeader().getProductOwnerEmail(), back.getHeader().getProductOwnerEmail());
+        assertEquals(dto.getHeader().getDataOwnerEmail(), back.getHeader().getDataOwnerEmail()); // nuevo
         assertEquals(dto.getJobs().get(0).getJobName(), back.getJobs().get(0).getJobName());
         assertEquals(dto.getJobs().get(0).getStatusId(), back.getJobs().get(0).getStatusId());
+        assertEquals(dto.getJobs().get(0).getAplicativoSip(), back.getJobs().get(0).getAplicativoSip()); // nuevo
+        assertEquals(dto.getJobs().get(0).getDetails(), back.getJobs().get(0).getDetails()); // nuevo
     }
 
     @Test
@@ -150,6 +163,7 @@ class TransferDetailResponseTest {
                 .sn2Id(null)
                 .sn2Desc(null)
                 .productOwnerEmail(null)
+                .dataOwnerEmail(null) // nuevo
                 .build();
 
         var dto = TransferDetailResponse.builder().header(header).jobs(List.of()).build();
@@ -161,5 +175,6 @@ class TransferDetailResponseTest {
         var back = mapper.readValue(json, TransferDetailResponse.class);
         assertEquals("PACK0001", back.getHeader().getPack());
         assertEquals(0, back.getJobs().size());
+        assertNull(back.getHeader().getDataOwnerEmail()); // nuevo
     }
 }

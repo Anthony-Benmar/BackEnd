@@ -26,7 +26,10 @@ class UpdateJobDtoRequestTest {
         dto.setJobPhaseId(1);
         dto.setOriginTypeId(1004);
         dto.setException("sin_excepcion");
-        dto.setComments("nota de prueba"); // <-- nuevo campo
+        dto.setComments("nota de prueba");
+        // NUEVOS CAMPOS
+        dto.setAplicativoSip("APP-SIP-02");
+        dto.setDetails("Detalle corto del job");
 
         assertEquals("SM", dto.getActorRole());
         assertEquals("@-AEAL_PACK_004_25.07.2025", dto.getPack());
@@ -44,6 +47,9 @@ class UpdateJobDtoRequestTest {
         assertEquals(1, dto.getJobPhaseId());
         assertEquals(1004, dto.getOriginTypeId());
         assertEquals("sin_excepcion", dto.getException());
-        assertEquals("nota de prueba", dto.getComments()); // <-- aserción para comments
+        assertEquals("nota de prueba", dto.getComments());
+        // Asserts nuevos
+        assertEquals("APP-SIP-02", dto.getAplicativoSip());
+        assertEquals("Detalle corto del job", dto.getDetails());
     }
 }

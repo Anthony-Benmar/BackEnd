@@ -23,5 +23,7 @@ public class UpdateJobDtoRequest {
     private Integer originTypeId;
     private String exception;
     private String comments;
+    private String aplicativoSip;
+    private String details;
 }
 
