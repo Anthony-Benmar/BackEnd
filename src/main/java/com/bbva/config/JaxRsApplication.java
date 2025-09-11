@@ -44,6 +44,7 @@ public class JaxRsApplication extends Application {
         classes.add(ReliabilityResource.class);
         classes.add(UseCaseResources.class);
         classes.add(MetaKnightResources.class);
+        classes.add(VisaSourcesResources.class);
         return classes;
     }
 }
