@@ -60,20 +60,9 @@ public class VisaSourcesDao {
         UpdateEntity result = new UpdateEntity();
         try(SqlSession session = sqlSessionFactory.openSession()) {
             VisaSourcesMapper mapper = session.getMapper(VisaSourcesMapper.class);
-            dto.setStatus("Pendiente");
             result = mapper.updateVisaSourceEntity(dto);
         } catch (Exception e) {
             log.info("Error en updateVisaSource: " + e.getMessage());
-        }
-        return result;
-    }
-    public VisaSourcesDataDtoResponse getVisaSourceById(int id) {
-        VisaSourcesDataDtoResponse result = new VisaSourcesDataDtoResponse();
-        try(SqlSession session = sqlSessionFactory.openSession()) {
-            VisaSourcesMapper mapper = session.getMapper(VisaSourcesMapper.class);
-            result = mapper.getVisaSourceById(id);
-        } catch (Exception e){
-            log.info(("Error en getVisaSourceById"));
         }
         return result;
     }
@@ -84,16 +73,6 @@ public class VisaSourcesDao {
             result = mapper.approveVisaSource(dto);
         } catch (Exception e){
             log.info("Error en approveVisaSource : " + JSONUtils.convertFromObjectToJson(e.getMessage()));
-        }
-        return result;
-    }
-    public Boolean updateStatusVisaSource(UpdateStatusVisaSourceDtoRequest dto) {
-        Boolean result = true;
-        try(SqlSession session = sqlSessionFactory.openSession()) {
-            VisaSourcesMapper mapper = session.getMapper(VisaSourcesMapper.class);
-            mapper.updateStatusVisaSource(dto);
-        } catch (Exception e) {
-            log.info("Error en updateStatusVisaSource: " + JSONUtils.convertFromObjectToJson(e.getMessage()));
         }
         return result;
     }

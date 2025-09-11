@@ -105,31 +105,6 @@ public interface VisaSourcesMapper {
         @Result(property = "updated_register", column = "updated_register")
     UpdateEntity updateVisaSourceEntity(RegisterVisaSourceDtoRequest entity);
 
-    @Select("SELECT * FROM visa_sources WHERE id = #{id}")
-        @Result(property = "id", column = "id")
-        @Result(property = "sourceType", column = "source_type")
-        @Result(property = "userStory", column = "user_story")
-        @Result(property = "quarter", column = "quarter")
-        @Result(property = "registerDate", column = "register_date")
-        @Result(property = "sdatoolProject", column = "sdatool_project")
-        @Result(property = "sdatoolFinal", column = "sdatool_final")
-        @Result(property = "functionalAnalist", column = "functional_analist")
-        @Result(property = "domain", column = "domain")
-        @Result(property = "folio", column = "folio")
-        @Result(property = "tdsProposalName", column = "tds_proposal_name")
-        @Result(property = "tdsDescription", column = "tds_description")
-        @Result(property = "tdsProof", column = "tds_proof")
-        @Result(property = "originSource", column = "origin_source")
-        @Result(property = "originType", column = "origin_type")
-        @Result(property = "ownerModel", column = "owner_model")
-        @Result(property = "uuaaRaw", column = "uuaa_raw")
-        @Result(property = "uuaaMaster", column = "uuaa_master")
-        @Result(property = "criticalTable", column = "critical_table")
-        @Result(property = "functionalChecklist", column = "functional_checklist")
-        @Result(property = "structure", column = "structure")
-        @Result(property = "status", column = "status")
-    VisaSourcesDataDtoResponse getVisaSourceById(Integer id);
-
     @Select("CALL SP_APPROVE_VISA_SOURCE(" +
         "#{dto.id}," +
         "#{dto.isSubstitution}," +
@@ -138,9 +113,6 @@ public interface VisaSourcesMapper {
         @Result(property = "message", column = "message")
         @Result(property = "id", column = "id")
     VisaSourceApproveDtoResponse approveVisaSource(@Param("dto") ApproveVisaSourceDtoRequest dto);
-
-    @Select("UPDATE visa_sources SET status = #{dto.status} WHERE id = #{dto.id}")
-    void updateStatusVisaSource(@Param("dto") UpdateStatusVisaSourceDtoRequest dto);
 
     @Select("SELECT id, replacement_id as replacementId FROM sources WHERE FIND_IN_SET(id, #{ids});")
     List<SourceWithParameterDataDtoResponse> validateSourceIds(String ids);

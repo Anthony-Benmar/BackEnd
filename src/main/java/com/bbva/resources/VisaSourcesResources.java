@@ -90,17 +90,6 @@ public class VisaSourcesResources {
         return visaSourcesService.approveVisaSource(dto);
     }
 
-    @POST
-    @Path("/updateStatusVisaSource")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public SuccessDataResult<Boolean> updateStatusVisaSource(
-        UpdateStatusVisaSourceDtoRequest dto
-    ) {
-        LOGGER.info("updateStatusVisaSource request");
-        return visaSourcesService.updateStatusVisaSource(dto);
-    }
-
     @GET
     @Path("/validateSourceIds")
     @Consumes(MediaType.APPLICATION_JSON)

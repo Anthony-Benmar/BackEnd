@@ -119,32 +119,6 @@ class VisaSourcesServiceTest {
     }
 
     @Test
-    void testUpdateStatusVisaSource_Success() {
-        UpdateStatusVisaSourceDtoRequest dto = new UpdateStatusVisaSourceDtoRequest();
-        dto.setStatus("ACTIVE");
-
-        when(visaSourcesDao.updateStatusVisaSource(dto)).thenReturn(true);
-
-        SuccessDataResult<Boolean> result = service.updateStatusVisaSource(dto);
-
-        assertTrue(result.data);
-        assertEquals("Estado de la Solicitud de visado actualizada correctamente.", result.message);
-    }
-
-    @Test
-    void testUpdateStatusVisaSource_Failure() {
-        UpdateStatusVisaSourceDtoRequest dto = new UpdateStatusVisaSourceDtoRequest();
-        dto.setStatus("INACTIVE");
-
-        when(visaSourcesDao.updateStatusVisaSource(dto)).thenReturn(false);
-
-        SuccessDataResult<Boolean> result = service.updateStatusVisaSource(dto);
-
-        assertFalse(result.data);
-        assertEquals("Falló la actualizacion de estado de solicitud de visado.", result.message);
-    }
-
-    @Test
     void testValidateSourceIds_Valid() {
         VisaSourceValidateExistDtoResponse response = new VisaSourceValidateExistDtoResponse();
         response.setValidated(true);

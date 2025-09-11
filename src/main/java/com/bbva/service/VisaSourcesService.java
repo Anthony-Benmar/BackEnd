@@ -16,6 +16,7 @@ import com.bbva.dto.visa_sources.response.VisaSourceValidateExistDtoResponse;
 import com.bbva.dto.visa_sources.response.VisaSourcesDataDtoResponse;
 import com.bbva.dto.visa_sources.response.VisaSourcesPaginationDtoResponse;
 import com.bbva.entities.InsertEntity;
+import com.bbva.entities.UpdateEntity;
 
 public class VisaSourcesService {
     private final VisaSourcesDao visaSourcesDao;
@@ -46,22 +47,16 @@ public class VisaSourcesService {
     }
 
     public SuccessDataResult<Boolean> updateVisaSource(RegisterVisaSourceDtoRequest dto) {
-        boolean result = visaSourcesDao.updateVisaSource(dto).getUpdated_register() > 0;
-        String message = result ? "Estado de la Solicitud de visado actualizada correctamente."
+        UpdateEntity response = visaSourcesDao.updateVisaSource(dto);
+        boolean success = response.getUpdated_register() == 1;
+        String message = success ? "Estado de la Solicitud de visado actualizada correctamente."
                 : "Falló la actualizacion de solicitud de visado.";
-        return new SuccessDataResult<>(result, message);
+        return new SuccessDataResult<>(success, message);
     }
 
     public IDataResult<VisaSourceApproveDtoResponse> approveVisaSource(ApproveVisaSourceDtoRequest dto) {
         VisaSourceApproveDtoResponse response = visaSourcesDao.approveVisaSource(dto);
         return new SuccessDataResult<>(response);
-    }
-
-    public SuccessDataResult<Boolean> updateStatusVisaSource(UpdateStatusVisaSourceDtoRequest dto) {
-        boolean result = visaSourcesDao.updateStatusVisaSource(dto);
-        String message = result ? "Estado de la Solicitud de visado actualizada correctamente."
-                : "Falló la actualizacion de estado de solicitud de visado.";
-        return new SuccessDataResult<>(result, message);
     }
 
     public IDataResult<VisaSourceValidateExistDtoResponse> validateSourceIds(String id) {

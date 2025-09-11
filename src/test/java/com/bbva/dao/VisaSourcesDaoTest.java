@@ -82,19 +82,7 @@ class VisaSourcesDaoTest {
         UpdateEntity result = dao.updateVisaSource(dto);
 
         assertEquals(updateEntity, result);
-        assertEquals("Pendiente", dto.getStatus());
         verify(mapper).updateVisaSourceEntity(dto);
-    }
-
-    @Test
-    void testGetVisaSourceById() {
-        VisaSourcesDataDtoResponse response = new VisaSourcesDataDtoResponse();
-        when(mapper.getVisaSourceById(1)).thenReturn(response);
-
-        VisaSourcesDataDtoResponse result = dao.getVisaSourceById(1);
-
-        assertEquals(response, result);
-        verify(mapper).getVisaSourceById(1);
     }
 
     @Test
@@ -107,16 +95,6 @@ class VisaSourcesDaoTest {
 
         assertEquals(response, result);
         verify(mapper).approveVisaSource(dto);
-    }
-
-    @Test
-    void testUpdateStatusVisaSource() {
-        UpdateStatusVisaSourceDtoRequest dto = new UpdateStatusVisaSourceDtoRequest();
-
-        Boolean result = dao.updateStatusVisaSource(dto);
-
-        assertTrue(result);
-        verify(mapper).updateStatusVisaSource(dto);
     }
 
     @Test
@@ -187,17 +165,6 @@ class VisaSourcesDaoTest {
         UpdateEntity result = dao.updateVisaSource(dto);
 
         assertNotNull(result);
-        assertEquals("Pendiente", dto.getStatus());
-        verify(sqlSession).close();
-    }
-
-    @Test
-    void testGetVisaSourceById_Exception() {
-        when(mapper.getVisaSourceById(1)).thenThrow(new RuntimeException("DB error"));
-
-        VisaSourcesDataDtoResponse result = dao.getVisaSourceById(1);
-
-        assertNotNull(result);
         verify(sqlSession).close();
     }
 
@@ -209,17 +176,6 @@ class VisaSourcesDaoTest {
         VisaSourceApproveDtoResponse result = dao.approveVisaSource(dto);
 
         assertNotNull(result);
-        verify(sqlSession).close();
-    }
-
-    @Test
-    void testUpdateStatusVisaSource_Exception() {
-        UpdateStatusVisaSourceDtoRequest dto = new UpdateStatusVisaSourceDtoRequest();
-        doThrow(new RuntimeException("DB error")).when(mapper).updateStatusVisaSource(dto);
-
-        Boolean result = dao.updateStatusVisaSource(dto);
-
-        assertTrue(result);
         verify(sqlSession).close();
     }
 

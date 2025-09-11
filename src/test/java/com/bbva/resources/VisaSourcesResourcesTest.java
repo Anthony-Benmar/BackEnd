@@ -100,21 +100,6 @@ class VisaSourcesResourcesTest {
     }
 
     @Test
-    void testUpdateStatusVisaSource() {
-        UpdateStatusVisaSourceDtoRequest dto = new UpdateStatusVisaSourceDtoRequest();
-        dto.setId(4);
-        dto.setStatus("ACTIVE");
-
-        SuccessDataResult<Boolean> expected = new SuccessDataResult<>(true);
-        when(visaSourcesService.updateStatusVisaSource(dto)).thenReturn(expected);
-
-        SuccessDataResult<Boolean> result = resources.updateStatusVisaSource(dto);
-
-        assertTrue(result.data);
-        verify(visaSourcesService).updateStatusVisaSource(dto);
-    }
-
-    @Test
     void testValidateSourceIds() {
         String ids = "1,2,3";
 
