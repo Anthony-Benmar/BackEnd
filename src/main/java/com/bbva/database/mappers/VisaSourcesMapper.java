@@ -7,7 +7,6 @@ import org.apache.ibatis.annotations.Select;
 import com.bbva.dto.source_with_parameter.response.SourceWithParameterDataDtoResponse;
 import com.bbva.dto.visa_sources.request.ApproveVisaSourceDtoRequest;
 import com.bbva.dto.visa_sources.request.RegisterVisaSourceDtoRequest;
-import com.bbva.dto.visa_sources.request.UpdateStatusVisaSourceDtoRequest;
 import com.bbva.dto.visa_sources.request.VisaSourcePaginationDtoRequest;
 import com.bbva.dto.visa_sources.response.VisaSourceApproveDtoResponse;
 import com.bbva.dto.visa_sources.response.VisaSourcesDataDtoResponse;

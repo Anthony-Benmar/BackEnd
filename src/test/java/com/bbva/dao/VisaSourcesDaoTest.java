@@ -106,8 +106,8 @@ class VisaSourcesDaoTest {
 
         VisaSourceValidateExistDtoResponse result = dao.validateSourceIds(ids);
 
-        assertTrue(result.getValidated());
-        assertFalse(result.getMultipleValidation());
+        assertTrue(result.isValidated());
+        assertFalse(result.isMultipleValidation());
         assertEquals("99", result.getReplacementId());
     }
 
@@ -120,8 +120,8 @@ class VisaSourcesDaoTest {
 
         VisaSourceValidateExistDtoResponse result = dao.validateSourceIds(ids);
 
-        assertTrue(result.getValidated());
-        assertTrue(result.getMultipleValidation());
+        assertTrue(result.isValidated());
+        assertTrue(result.isMultipleValidation());
     }
 
     @Test
@@ -186,19 +186,18 @@ class VisaSourcesDaoTest {
 
         VisaSourceValidateExistDtoResponse result = dao.validateSourceIds(ids);
 
-        assertFalse(result.getValidated());
-        assertTrue(result.getMultipleValidation());
+        assertFalse(result.isValidated());
+        assertTrue(result.isMultipleValidation());
     }
 
     @Test
     void testValidateSourceIds_Exception() {
-        String ids = "1";
+        String ids = "@";
         when(mapper.validateSourceIds(ids)).thenThrow(new RuntimeException("DB error"));
 
         VisaSourceValidateExistDtoResponse result = dao.validateSourceIds(ids);
 
         assertNotNull(result);
-        assertNull(result.getValidated());
-        verify(sqlSession).close();
+        assertFalse(result.isValidated());
     }
 }

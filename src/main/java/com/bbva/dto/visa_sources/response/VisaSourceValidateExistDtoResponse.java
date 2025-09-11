@@ -6,7 +6,7 @@ import lombok.Setter;
 @Setter
 @Getter
 public class VisaSourceValidateExistDtoResponse {
-    private Boolean multipleValidation;
-    private Boolean validated;
+    private boolean multipleValidation;
+    private boolean validated;
     private String replacementId;
 }

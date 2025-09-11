@@ -13,8 +13,8 @@ class VisaSourceValidateExistDtoResponseTest {
         dto.setValidated(false);
         dto.setReplacementId("REP-123");
 
-        assertTrue(dto.getMultipleValidation());
-        assertFalse(dto.getValidated());
+        assertTrue(dto.isMultipleValidation());
+        assertFalse(dto.isValidated());
         assertEquals("REP-123", dto.getReplacementId());
     }
 }

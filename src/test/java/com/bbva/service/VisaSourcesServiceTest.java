@@ -127,7 +127,7 @@ class VisaSourcesServiceTest {
 
         IDataResult<VisaSourceValidateExistDtoResponse> result = service.validateSourceIds("1");
 
-        assertTrue(result.data.getValidated());
+        assertTrue(result.data.isValidated());
         assertEquals("La Fuente ID es valida.", result.message);
     }
 
@@ -140,7 +140,7 @@ class VisaSourcesServiceTest {
 
         IDataResult<VisaSourceValidateExistDtoResponse> result = service.validateSourceIds("2");
 
-        assertFalse(result.data.getValidated());
+        assertFalse(result.data.isValidated());
         assertEquals("Fuente/s invalida/s.", result.message);
     }
 }

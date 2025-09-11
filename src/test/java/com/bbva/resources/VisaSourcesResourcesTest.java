@@ -114,8 +114,8 @@ class VisaSourcesResourcesTest {
 
         IDataResult<VisaSourceValidateExistDtoResponse> result = resources.validateSourceIds(ids);
 
-        assertTrue(result.data.getValidated());
-        assertTrue(result.data.getMultipleValidation());
+        assertTrue(result.data.isValidated());
+        assertTrue(result.data.isMultipleValidation());
         verify(visaSourcesService).validateSourceIds(ids);
     }
 }

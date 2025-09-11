@@ -61,7 +61,7 @@ public class VisaSourcesService {
 
     public IDataResult<VisaSourceValidateExistDtoResponse> validateSourceIds(String id) {
         VisaSourceValidateExistDtoResponse result = visaSourcesDao.validateSourceIds(id);
-        String message = result.getValidated() ? "La Fuente ID es valida." : "Fuente/s invalida/s.";
+        String message = result.isValidated() ? "La Fuente ID es valida." : "Fuente/s invalida/s.";
         return new SuccessDataResult<>(result, message);
     }
 }
