@@ -1,6 +1,5 @@
 package com.bbva.resources;
 
-import java.util.Date;
 import java.util.logging.Logger;
 
 import javax.ws.rs.Consumes;
@@ -13,17 +12,13 @@ import javax.ws.rs.core.MediaType;
 
 
 import com.bbva.core.abstracts.IDataResult;
-import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dto.visa_sources.request.ApproveVisaSourceDtoRequest;
 import com.bbva.dto.visa_sources.request.RegisterVisaSourceDtoRequest;
-import com.bbva.dto.visa_sources.request.UpdateStatusVisaSourceDtoRequest;
 import com.bbva.dto.visa_sources.request.VisaSourcePaginationDtoRequest;
 import com.bbva.dto.visa_sources.response.VisaSourceApproveDtoResponse;
 import com.bbva.dto.visa_sources.response.VisaSourceValidateExistDtoResponse;
 import com.bbva.dto.visa_sources.response.VisaSourcesPaginationDtoResponse;
 import com.bbva.service.VisaSourcesService;
-import com.bbva.util.Helper;
-import com.bbva.util.JSONUtils;
 
 @Path("/visaSources")
 @Produces(MediaType.APPLICATION_JSON)
