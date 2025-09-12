@@ -24,6 +24,7 @@ class ReliabilityPacksDtoResponseTest {
                 .statusName("Aprobado por PO")
                 .cambiedit(1)
                 .createdAt("2025-09-08T10:15:30Z")
+                .dataOwnerEmail("data.owner@bbva.com") // nuevo
                 .build();
 
         assertEquals("PACK123", dto.getPack());
@@ -41,6 +42,7 @@ class ReliabilityPacksDtoResponseTest {
         assertEquals("Aprobado por PO", dto.getStatusName());
         assertEquals(1, dto.getCambiedit());
         assertEquals("2025-09-08T10:15:30Z", dto.getCreatedAt());
+        assertEquals("data.owner@bbva.com", dto.getDataOwnerEmail()); // nuevo
     }
 
     @Test
@@ -60,7 +62,8 @@ class ReliabilityPacksDtoResponseTest {
                 1,                           // statusId
                 "Aprobado por Reliability",  // statusName
                 0,                           // cambiedit
-                "2025-09-08T11:00:00Z"       // createdAt
+                "2025-09-08T11:00:00Z",      // createdAt
+                "data.owner2@bbva.com"       // dataOwnerEmail (nuevo)
         );
 
         assertEquals("PACK999", dto.getPack());
@@ -78,6 +81,7 @@ class ReliabilityPacksDtoResponseTest {
         assertEquals("Aprobado por Reliability", dto.getStatusName());
         assertEquals(0, dto.getCambiedit());
         assertEquals("2025-09-08T11:00:00Z", dto.getCreatedAt());
+        assertEquals("data.owner2@bbva.com", dto.getDataOwnerEmail()); // nuevo
     }
 
     @Test
@@ -94,6 +98,7 @@ class ReliabilityPacksDtoResponseTest {
         dto.setStatusName("Devuelto por Reliability");
         dto.setCambiedit(1);
         dto.setCreatedAt("2025-09-08T12:00:00Z");
+        dto.setDataOwnerEmail("data.owner.test@bbva.com"); // nuevo
 
         assertEquals("PACK000", dto.getPack());
         assertEquals(1111, dto.getDomainId());
@@ -105,5 +110,6 @@ class ReliabilityPacksDtoResponseTest {
         assertEquals("Devuelto por Reliability", dto.getStatusName());
         assertEquals(1, dto.getCambiedit());
         assertEquals("2025-09-08T12:00:00Z", dto.getCreatedAt());
+        assertEquals("data.owner.test@bbva.com", dto.getDataOwnerEmail()); // nuevo
     }
 }

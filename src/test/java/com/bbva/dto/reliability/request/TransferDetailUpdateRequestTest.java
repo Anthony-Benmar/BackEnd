@@ -37,6 +37,9 @@ class TransferDetailUpdateRequestTest {
         job.setOriginTypeId(8);
         job.setException("NullPointer");
         job.setComments("Job comment");
+        // NUEVOS CAMPOS
+        job.setAplicativoSip("SIP-MOD");
+        job.setDetails("Detalle extendido para validación");
 
         assertEquals("JobTest", job.getJobName());
         assertEquals("ComponentX", job.getComponentName());
@@ -53,23 +56,25 @@ class TransferDetailUpdateRequestTest {
         assertEquals(8, job.getOriginTypeId());
         assertEquals("NullPointer", job.getException());
         assertEquals("Job comment", job.getComments());
+        // Asserts nuevos
+        assertEquals("SIP-MOD", job.getAplicativoSip());
+        assertEquals("Detalle extendido para validación", job.getDetails());
     }
 
     @Test
     void testTransferDetailUpdateRequestWithHeaderAndJobs() {
         TransferDetailUpdateRequest request = new TransferDetailUpdateRequest();
 
-        // Crear header
         TransferDetailUpdateRequest.Header header = new TransferDetailUpdateRequest.Header();
         header.setDomainId(100);
         header.setUseCaseId(200);
         header.setComments("Header comments");
 
-        // Crear job
         TransferDetailUpdateRequest.Job job = new TransferDetailUpdateRequest.Job();
         job.setJobName("MainJob");
+        job.setAplicativoSip("APP-MAIN");
+        job.setDetails("Detalle del job principal");
 
-        // Asignar en request
         request.setHeader(header);
         request.setJobs(List.of(job));
 
@@ -81,5 +86,7 @@ class TransferDetailUpdateRequestTest {
         assertNotNull(request.getJobs());
         assertEquals(1, request.getJobs().size());
         assertEquals("MainJob", request.getJobs().get(0).getJobName());
+        assertEquals("APP-MAIN", request.getJobs().get(0).getAplicativoSip());
+        assertEquals("Detalle del job principal", request.getJobs().get(0).getDetails());
     }
 }

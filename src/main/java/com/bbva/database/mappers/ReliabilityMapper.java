@@ -150,7 +150,8 @@ public interface ReliabilityMapper {
             "#{pdfLink}," +
             "#{jobCount}," +
             "#{statusId}," +
-            "#{sn2}" +
+            "#{sn2}," +
+            "#{dataOwnerEmail}" +
             ")")
     void insertTranfer(TransferInputDtoRequest dto);
 
@@ -172,6 +173,8 @@ public interface ReliabilityMapper {
             "#{outputPath}," +
             "#{responsible}," +
             "#{comments}," +
+            "#{aplicativoSip}," +
+            "#{details}," +
             "#{jobPhaseId}," +
             "#{originTypeId}," +
             "#{useCaseId}," +
@@ -195,6 +198,8 @@ public interface ReliabilityMapper {
         domain_id      = COALESCE(#{domainId},      domain_id),
         bitbucket_url  = COALESCE(#{bitBucketUrl},  bitbucket_url),
         responsible    = COALESCE(#{responsible},   responsible),
+        aplicativo_sip = COALESCE(#{aplicativoSip},  aplicativo_sip),
+        details        = COALESCE(#{details},        details),
         job_phase_id   = COALESCE(#{jobPhaseId},    job_phase_id),
         origin_type_id = COALESCE(#{originTypeId},  origin_type_id),
         exception      = COALESCE(#{exception},     exception),
@@ -246,6 +251,7 @@ public interface ReliabilityMapper {
     @Result(property = "statusId", column = "statusId")
     @Result(property = "statusName", column = "status_name")
     @Result(property = "createdAt", column = "createdAt")
+    @Result(property = "dataOwnerEmail", column = "data_owner_email")
     List<ReliabilityPacksDtoResponse> listTransfersByStatus(
             @Param("domainName") String domainNameCsv,
             @Param("useCase") String useCaseCsv,
@@ -267,6 +273,7 @@ public interface ReliabilityMapper {
     @Result(property = "sn2Id",             column = "sn2_id")
     @Result(property = "sn2Desc",           column = "sn2_desc")
     @Result(property = "productOwnerEmail", column = "product_owner_email")
+    @Result(property = "dataOwnerEmail", column = "data_owner_email")
     TransferDetailResponse.Header getTransferHeader(@Param("pack") String pack);
 
     @Select("""
@@ -276,6 +283,7 @@ public interface ReliabilityMapper {
       js.job_phase_id   AS jobPhaseId, js.origin_type_id AS originTypeId,
       js.input_paths    AS inputPaths, js.output_path    AS outputPath,
       js.bitbucket_url  AS bitBucketUrl, js.responsible    AS responsible,
+      js.aplicativo_sip AS aplicativoSip, js.details        AS details,
       js.use_case_id    AS useCaseId, js.domain_id      AS domainId,
       js.is_critical    AS isCritical, js.status_id      AS statusId,
       js.comments       AS comments, inf.element_id    AS originalFrequencyId,

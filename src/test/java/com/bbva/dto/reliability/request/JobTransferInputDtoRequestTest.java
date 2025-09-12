@@ -1,5 +1,7 @@
 package com.bbva.dto.reliability.request;
+
 import org.junit.jupiter.api.Test;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class JobTransferInputDtoRequestTest {
@@ -24,6 +26,10 @@ class JobTransferInputDtoRequestTest {
         request.setDomainId(5);
         request.setPack("com.company.migration");
         request.setStatusId(1);
+        request.setException("none");
+        // NUEVOS CAMPOS
+        request.setAplicativoSip("SIP-APP-01");
+        request.setDetails("Job para migración de datos a PROD");
 
         assertEquals(1, request.getJobTypeId());
         assertEquals("Data Migration Job", request.getJobName());
@@ -41,5 +47,9 @@ class JobTransferInputDtoRequestTest {
         assertEquals(5, request.getDomainId());
         assertEquals("com.company.migration", request.getPack());
         assertEquals(1, request.getStatusId());
+        assertEquals("none", request.getException());
+        // Asserts nuevos
+        assertEquals("SIP-APP-01", request.getAplicativoSip());
+        assertEquals("Job para migración de datos a PROD", request.getDetails());
     }
 }

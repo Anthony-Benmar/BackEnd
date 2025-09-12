@@ -24,6 +24,7 @@ public class TransferDetailResponse {
         private Integer sn2Id;
         private String  sn2Desc;
         private String  productOwnerEmail;
+        private String dataOwnerEmail;
     }
 
     @Getter @Setter @AllArgsConstructor @NoArgsConstructor @Builder
@@ -45,5 +46,7 @@ public class TransferDetailResponse {
         private String  isCritical;
         private Integer statusId;
         private String  comments;
+        private String aplicativoSip;
+        private String details;
     }
 }

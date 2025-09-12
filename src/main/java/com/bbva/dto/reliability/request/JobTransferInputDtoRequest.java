@@ -23,4 +23,6 @@ public class JobTransferInputDtoRequest {
     private String pack;
     private Integer statusId;
     private String exception;
+    private String aplicativoSip;
+    private String details;
 }

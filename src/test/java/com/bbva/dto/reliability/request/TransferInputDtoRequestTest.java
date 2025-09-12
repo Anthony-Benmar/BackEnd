@@ -25,19 +25,20 @@ class TransferInputDtoRequestTest {
 
         request.setPack("com.company.transfer");
         request.setDomainId(5);
-        request.setProductOwnerEmail("po@bbva.com");     // <= CAMBIO: ahora es email (String)
+        request.setProductOwnerEmail("po@bbva.com");
         request.setUseCaseId(201);
         request.setProjectId(301);
         request.setCreatorUserId(1002);
         request.setPdfLink("http://documents/transfer.pdf");
         request.setJobCount(2);
-        request.setStatusId(3);                          // opcional, si lo usas
-        request.setSn2(21);                              // opcional, si lo usas
+        request.setStatusId(3);
+        request.setSn2(21);
+        request.setDataOwnerEmail("data.owner@bbva.com"); // nuevo
         request.setTransferInputDtoRequests(jobList);
 
         assertEquals("com.company.transfer", request.getPack());
         assertEquals(5, request.getDomainId());
-        assertEquals("po@bbva.com", request.getProductOwnerEmail()); // <= CAMBIO en el assert
+        assertEquals("po@bbva.com", request.getProductOwnerEmail());
         assertEquals(201, request.getUseCaseId());
         assertEquals(301, request.getProjectId());
         assertEquals(1002, request.getCreatorUserId());
@@ -45,6 +46,7 @@ class TransferInputDtoRequestTest {
         assertEquals(2, request.getJobCount());
         assertEquals(3, request.getStatusId());
         assertEquals(21, request.getSn2());
+        assertEquals("data.owner@bbva.com", request.getDataOwnerEmail()); // nuevo
 
         assertNotNull(request.getTransferInputDtoRequests());
         assertEquals(2, request.getTransferInputDtoRequests().size());
@@ -58,14 +60,15 @@ class TransferInputDtoRequestTest {
     void testTransferInputDtoRequest_nullablesAreAllowed() {
         TransferInputDtoRequest request = new TransferInputDtoRequest();
         request.setPack("PCK-1");
-        // Deja campos opcionales en null para validar que no rompa
         request.setProductOwnerEmail(null);
         request.setPdfLink(null);
         request.setTransferInputDtoRequests(null);
+        request.setDataOwnerEmail(null); // nuevo
 
         assertEquals("PCK-1", request.getPack());
         assertNull(request.getProductOwnerEmail());
         assertNull(request.getPdfLink());
         assertNull(request.getTransferInputDtoRequests());
+        assertNull(request.getDataOwnerEmail()); // nuevo
     }
 }

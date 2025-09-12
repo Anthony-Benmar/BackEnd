@@ -18,5 +18,6 @@ public class TransferInputDtoRequest {
     private Integer jobCount;
     private Integer statusId;
     private Integer sn2;
+    private String dataOwnerEmail;
     private List<JobTransferInputDtoRequest> transferInputDtoRequests;
 }
