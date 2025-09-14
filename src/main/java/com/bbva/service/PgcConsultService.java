@@ -1,23 +1,22 @@
 package com.bbva.service;
 
 import com.bbva.core.abstracts.IDataResult;
-import com.bbva.core.results.SuccessDataResult;
 import com.bbva.core.results.ErrorDataResult;
+import com.bbva.core.results.SuccessDataResult;
 import com.bbva.dao.PgcConsultDao;
-import com.bbva.dto.pgc.response.PgcDocumentLisItem;
+import com.bbva.dto.pgc.response.PgcDocumentListItem;
 import com.bbva.dto.pgc.response.PgcConceptLisItem;
-import com.bbva.entities.pgc.PgcDocument;
-import com.bbva.entities.pgc.PgcConcept;
 
 import java.util.List;
 
 
-public class ConsultService {
-    private final PgcConsultDao docDao = new PgcConsultDao();
+public class PgcConsultService {
 
-    public IDataResult<List<PgcDocumentLisItem>> getProcessedForList() {
+    private final PgcConsultDao dao = new PgcConsultDao();
+
+    public IDataResult<List<PgcDocumentListItem>> getProcessedForList() {
         try {
-            List<PgcDocumentLisItem> list = docDao.getProcessedDocumentsForList();
+            List<PgcDocumentListItem> list = dao.getProcessedDocumentsForList();
             return new SuccessDataResult<>(list);
         } catch (Exception e) {
             return new ErrorDataResult<>(null, "500", "Error al listar documentos procesados (SP): " + e.getMessage());
@@ -26,7 +25,7 @@ public class ConsultService {
 
     public IDataResult<List<PgcConceptLisItem>> getListByDocumentId(int documentId) {
         try {
-            List<PgcConceptLisItem> list = docDao.getConceptsByDocumentForList(documentId);
+            List<PgcConceptLisItem> list = dao.getConceptsByDocumentForList(documentId);
             return new SuccessDataResult<>(list);
         } catch (Exception e) {
             return new ErrorDataResult<>(null, "500", "Error al listar conceptos (SP): " + e.getMessage());

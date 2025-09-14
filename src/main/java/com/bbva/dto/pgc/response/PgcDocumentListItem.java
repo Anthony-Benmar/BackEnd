@@ -10,7 +10,7 @@ import java.util.Date;
 @Getter
 @Setter
 @Builder
-public class PgcDocumentLisItem {
+public class PgcDocumentListItem {
     private Integer id;
     private String domainName;
     private String sdatool;

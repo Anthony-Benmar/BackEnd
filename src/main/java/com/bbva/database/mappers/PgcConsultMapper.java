@@ -1,7 +1,7 @@
 package com.bbva.database.mappers;
 
-import com.bbva.dto.pgc.response.PgcDocumentLisItem;
 import com.bbva.dto.pgc.response.PgcConceptLisItem;
+import com.bbva.dto.pgc.response.PgcDocumentListItem;
 import com.bbva.entities.pgc.PgcConcept;
 import org.apache.ibatis.annotations.*;
 import org.apache.ibatis.annotations.Update;
@@ -12,8 +12,8 @@ import java.util.List;
 
 public interface PgcConsultMapper {
 
-    // CONSULT-PGC
-    @Select("CALL sidedb.SP_GET_DOCUMENTS()")
+    // DOCUMENTOS (tabla principal del front)
+    @Select({"CALL sidedb.SP_GET_DOCUMENTS()"})
     @Options(statementType = StatementType.CALLABLE)
     @Results({
             @Result(property = "id",               column = "id"),
@@ -24,10 +24,10 @@ public interface PgcConsultMapper {
             @Result(property = "modificationDate", column = "modification_date", jdbcType = JdbcType.TIMESTAMP),
             @Result(property = "qRegistro",        column = "q_registro")
     })
-    List<PgcDocumentLisItem> getProcessedDocumentsForList();
+    List<PgcDocumentListItem> getProcessedDocumentsForList();
 
-    // CONSULT-PGC
-    @Select("CALL sidedb.SP_GET_CONCEPTS(#{documentId})")
+    // CONCEPTOS POR DOCUMENTO (tabla de “más detalles”)
+    @Select({"CALL sidedb.SP_GET_CONCEPTS(#{documentId})"})
     @Options(statementType = StatementType.CALLABLE)
     @Results({
             @Result(property = "dominio",                        column = "dominio"),
@@ -53,28 +53,4 @@ public interface PgcConsultMapper {
     })
     List<PgcConceptLisItem> getConceptsByDocument(@Param("documentId") Integer documentId);
 
-    @Update("""
-    UPDATE pgc_concepts
-    SET
-        dominio = #{dominio},
-        sdatool = #{sdatool},
-        grupo_datos = #{grupoDatos},
-        dato_funcional = #{datoFuncional},
-        descripcion_dato_funcional = #{descripcionDatoFuncional},
-        campo_origen_conocido = #{campoOrigenConocido},
-        fuente_origen_conocida = #{fuenteOrigenConocida},
-        descripcion_de_la_fuente_conocida = #{descripcionDeLaFuenteConocida},
-        nombre_de_sistema_origen = #{nombreDeSistemaOrigen},
-        contacto_responsable = #{contactoResponsable},
-        periodicidad_requerida = #{periodicidadRequerida},
-        informacion_adicional = #{informacionAdicional},
-        campo_mandatory = #{campoMandatory},
-        dato_relevante = #{datoRelevante},
-        user_record = #{userRecord},
-        register_date = #{registerDate},
-        application = #{application},
-        state = #{state}
-    WHERE id = #{id}
-""")
-    void updatePgcConcept(PgcConcept concept);
 }

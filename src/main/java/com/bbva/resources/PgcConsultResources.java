@@ -1,11 +1,9 @@
 package com.bbva.resources;
 
 import com.bbva.core.abstracts.IDataResult;
-import com.bbva.dto.pgc.response.PgcDocumentLisItem;
+import com.bbva.dto.pgc.response.PgcDocumentListItem;
 import com.bbva.dto.pgc.response.PgcConceptLisItem;
-import com.bbva.entities.pgc.PgcConcept;
-import com.bbva.service.ConsultService;
-import lombok.Getter;
+import com.bbva.service.PgcConsultService;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
@@ -14,18 +12,17 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import java.util.List;
 
 @Path("/pgc")
 @Produces(MediaType.APPLICATION_JSON)
-public class ConsultResources {
+public class PgcConsultResources {
 
-    private final ConsultService consultService = new ConsultService();
+    private final PgcConsultService consultService = new PgcConsultService();
 
     @GET
     @Path("/documents/processed")
-    public IDataResult<List<PgcDocumentLisItem>> listProcessed(@Context HttpServletRequest request) {
+    public IDataResult<List<PgcDocumentListItem>> listProcessed(@Context HttpServletRequest request) {
         return consultService.getProcessedForList();
     }
 
