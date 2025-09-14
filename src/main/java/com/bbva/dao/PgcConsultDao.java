@@ -1,10 +1,9 @@
 package com.bbva.dao;
 
 import com.bbva.database.MyBatisConnectionFactory;
-import com.bbva.database.mappers.ConsultPgcMapper;
+import com.bbva.database.mappers.PgcConsultMapper;
 import com.bbva.dto.pgc.response.PgcDocumentLisItem;
 import com.bbva.dto.pgc.response.PgcConceptLisItem;
-import com.bbva.entities.pgc.PgcConcept;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 
@@ -19,7 +18,7 @@ public class PgcConsultDao {
     public List<PgcDocumentLisItem> getProcessedDocumentsForList() {
         SqlSessionFactory factory = MyBatisConnectionFactory.getInstance();
         try (SqlSession session = factory.openSession()) {
-            return session.getMapper(ConsultPgcMapper.class)
+            return session.getMapper(PgcConsultMapper.class)
                     .getProcessedDocumentsForList();
         } catch (Exception e) {
             log.log(Level.SEVERE, "Error listing processed documents via SP", e);
@@ -31,7 +30,7 @@ public class PgcConsultDao {
     public List<PgcConceptLisItem> getConceptsByDocumentForList(int documentId) {
         SqlSessionFactory factory = MyBatisConnectionFactory.getInstance();
         try (SqlSession session = factory.openSession()) {
-            return session.getMapper(ConsultPgcMapper.class)
+            return session.getMapper(PgcConsultMapper.class)
                     .getConceptsByDocument(documentId);
         } catch (Exception e) {
             log.log(Level.SEVERE, "Error listing concepts by documentId via SP", e);

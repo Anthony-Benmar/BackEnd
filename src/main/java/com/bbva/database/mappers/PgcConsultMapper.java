@@ -10,7 +10,7 @@ import org.apache.ibatis.type.JdbcType;
 
 import java.util.List;
 
-public interface ConsultPgcMapper {
+public interface PgcConsultMapper {
 
     // CONSULT-PGC
     @Select("CALL sidedb.SP_GET_DOCUMENTS()")
