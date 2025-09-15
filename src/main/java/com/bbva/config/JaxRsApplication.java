@@ -1,6 +1,7 @@
 package com.bbva.config;
 
 import com.bbva.resources.*;
+import com.bbva.resources.PgcConsultResources;
 
 import javax.ws.rs.core.Application;
 import java.util.HashSet;
@@ -45,6 +46,7 @@ public class JaxRsApplication extends Application {
         classes.add(UseCaseResources.class);
         classes.add(MetaKnightResources.class);
         classes.add(VisaSourcesResources.class);
+        classes.add(PgcConsultResources.class);
         return classes;
     }
 }

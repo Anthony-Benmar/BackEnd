@@ -2,18 +2,17 @@ package com.bbva.database.mappers;
 
 import com.bbva.dto.pgc.response.PgcConceptLisItem;
 import com.bbva.dto.pgc.response.PgcDocumentListItem;
-import com.bbva.entities.pgc.PgcConcept;
 import org.apache.ibatis.annotations.*;
-import org.apache.ibatis.annotations.Update;
 import org.apache.ibatis.mapping.StatementType;
 import org.apache.ibatis.type.JdbcType;
 
 import java.util.List;
 
+@Mapper
 public interface PgcConsultMapper {
 
-    // DOCUMENTOS (tabla principal del front)
-    @Select({"CALL sidedb.SP_GET_DOCUMENTS()"})
+    // CONSULT-PGC
+    @Select("CALL sidedb.SP_GET_DOCUMENTS()")
     @Options(statementType = StatementType.CALLABLE)
     @Results({
             @Result(property = "id",               column = "id"),
@@ -26,8 +25,8 @@ public interface PgcConsultMapper {
     })
     List<PgcDocumentListItem> getProcessedDocumentsForList();
 
-    // CONCEPTOS POR DOCUMENTO (tabla de “más detalles”)
-    @Select({"CALL sidedb.SP_GET_CONCEPTS(#{documentId})"})
+    // CONSULT-PGC
+    @Select("CALL sidedb.SP_GET_CONCEPTS(#{documentId})")
     @Options(statementType = StatementType.CALLABLE)
     @Results({
             @Result(property = "dominio",                        column = "dominio"),
@@ -52,5 +51,4 @@ public interface PgcConsultMapper {
             @Result(property = "estado",                         column = "state")
     })
     List<PgcConceptLisItem> getConceptsByDocument(@Param("documentId") Integer documentId);
-
 }

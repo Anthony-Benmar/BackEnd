@@ -14,7 +14,6 @@ import java.util.Date;
 @Getter
 @Entity
 @Table(name = "pgc_concepts")
-
 public class PgcConcept {
 
     @Id
@@ -97,7 +96,4 @@ public class PgcConcept {
     @Column(name = "state")
     private String estado;
 
-    public void setId(int id) {
-        this.id = id;
-    }
 }

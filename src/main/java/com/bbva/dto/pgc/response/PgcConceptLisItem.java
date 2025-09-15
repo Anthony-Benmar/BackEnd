@@ -1,5 +1,6 @@
 package com.bbva.dto.pgc.response;
 
+
 import lombok.*;
 
 import java.util.Date;
